@@ -93,6 +93,14 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // Commons layer — 내부 슬라이스 간 상대경로 import 허용
+  {
+    files: ['src/commons/**/*'],
+    rules: {
+      'fsd/no-relative-imports': 'off',
+    },
+  },
+
   // Custom rules
   {
     rules: {
