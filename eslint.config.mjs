@@ -124,7 +124,8 @@ const eslintConfig = defineConfig([
       'no-nested-ternary': 'warn',
       eqeqeq: ['warn', 'always'],
 
-      // Import ordering — FSD 5-layer grouping
+      // Import ordering — FSD 레이어 간 순서는 fsd/ordered-imports가 담당
+      // import/order는 그룹 분리 + newlines만 담당 (알파벳 정렬은 같은 그룹 내에서만)
       'import/order': [
         'warn',
         {
@@ -134,15 +135,10 @@ const eslintConfig = defineConfig([
             { pattern: 'react-dom/**', group: 'builtin', position: 'before' },
             { pattern: 'next', group: 'builtin', position: 'before' },
             { pattern: 'next/**', group: 'builtin', position: 'before' },
-            { pattern: '@/pages/**', group: 'internal', position: 'before' },
-            { pattern: '@/modules/**', group: 'internal', position: 'before' },
-            { pattern: '@/features/**', group: 'internal', position: 'before' },
-            { pattern: '@/entities/**', group: 'internal', position: 'before' },
-            { pattern: '@/commons/**', group: 'internal', position: 'before' },
           ],
           pathGroupsExcludedImportTypes: ['react', 'next'],
           'newlines-between': 'always',
-          alphabetize: { order: 'asc', caseInsensitive: true },
+          alphabetize: { order: 'ignore' },
         },
       ],
       'import/no-duplicates': 'warn',

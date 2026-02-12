@@ -1,12 +1,7 @@
 import { redirect } from 'next/navigation';
+
 import { createClient } from '@/commons/api/supabase/server';
-
 import { KakaoLoginButton } from '@/features/auth';
-
-
-
-
-
 
 export default async function HomePage() {
   const supabase = await createClient();
