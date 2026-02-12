@@ -6,9 +6,7 @@ import { createClient } from '@/commons/api/supabase/server';
 
 export async function loginWithKakao() {
   const supabase = await createClient();
-  const origin = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000';
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
