@@ -1,12 +1,14 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 import { createClient } from '@/commons/api/supabase/server';
 
 export async function loginWithKakao() {
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  const requestHeaders = await headers();
+  const origin = requestHeaders.get('origin');
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
