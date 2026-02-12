@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import './globals.css';
-import { Providers } from './Providers';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'How Munch',

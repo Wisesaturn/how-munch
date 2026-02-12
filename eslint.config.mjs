@@ -168,6 +168,7 @@ const eslintConfig = defineConfig([
       'src/**/page.tsx',
       'src/**/layout.tsx',
       'src/**/loading.tsx',
+      'src/**/providers.tsx',
       'src/**/error.tsx',
       'src/**/not-found.tsx',
       'src/**/global-error.tsx',
