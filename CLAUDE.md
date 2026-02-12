@@ -51,6 +51,17 @@ src/
 - 같은 레이어 내 모듈 간 직접 import 금지
 - 각 슬라이스는 `index.ts`로 public API를 노출
 
+## Naming Conventions
+
+- **컴포넌트**: PascalCase (`KakaoLoginButton`, `MealCard`)
+- **함수/변수**: camelCase (`loginWithKakao`, `updateSession`)
+- **상수**: UPPER_SNAKE_CASE (`MAX_RETRY_COUNT`)
+- **타입/인터페이스**: PascalCase (`Profile`, `MealType`)
+- **폴더**: kebab-case (`auth-callback`, `meal-card`)
+- **컴포넌트 파일 (.tsx)**: PascalCase (`KakaoLoginButton.tsx`, `MealCard.tsx`)
+- **함수/유틸 파일 (.ts)**: camelCase (`useAuth.ts`, `loginWithKakao.ts`, `cn.ts`)
+- **파일 예외**: Next.js 규약 파일은 그대로 (`layout.tsx`, `page.tsx`, `route.ts`, `proxy.ts`)
+
 ## Conventions
 
 - `@/*`는 `src/*`로 매핑 (tsconfig paths)
@@ -74,6 +85,11 @@ src/
 - **fsd/no-ui-in-business-logic**: 비즈니스 로직 레이어에서 UI import 금지 (error)
 - **fsd/no-global-store-imports**: 전역 store 직접 import 금지, hooks 사용 (error)
 - **fsd/ordered-imports**: FSD 레이어 순서대로 import 정렬 (warn)
+
+### Naming (eslint-plugin-check-file)
+
+- **check-file/filename-naming-convention**: `*.tsx` → PascalCase, `*.ts` → camelCase 강제 (error), Next.js 규약 파일 예외
+- **check-file/folder-naming-convention**: `src/` 하위 폴더는 kebab-case 강제 (error)
 
 ### Code Quality
 

@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettierConfig from 'eslint-config-prettier';
+import checkFile from 'eslint-plugin-check-file';
 import fsdPlugin from 'eslint-plugin-fsd-lint';
 import unusedImports from 'eslint-plugin-unused-imports';
 
@@ -137,6 +138,48 @@ const eslintConfig = defineConfig([
         },
       ],
       'import/no-duplicates': 'warn',
+    },
+  },
+
+  // Filename & folder naming convention
+  {
+    plugins: { 'check-file': checkFile },
+    files: ['src/**/*'],
+    rules: {
+      'check-file/filename-naming-convention': [
+        'error',
+        {
+          '**/*.tsx': 'PASCAL_CASE',
+          '**/*.ts': 'CAMEL_CASE',
+        },
+        { ignoreMiddleExtensions: true },
+      ],
+      'check-file/folder-naming-convention': ['error', { 'src/**': 'KEBAB_CASE' }],
+    },
+  },
+
+  // Next.js convention files — 파일명 규칙 예외
+  {
+    files: [
+      'src/**/page.tsx',
+      'src/**/layout.tsx',
+      'src/**/loading.tsx',
+      'src/**/error.tsx',
+      'src/**/not-found.tsx',
+      'src/**/global-error.tsx',
+      'src/**/default.tsx',
+      'src/**/template.tsx',
+      'src/**/route.ts',
+      'src/**/proxy.ts',
+      'src/**/middleware.ts',
+      'src/**/opengraph-image.tsx',
+      'src/**/icon.tsx',
+      'src/**/sitemap.ts',
+      'src/**/robots.ts',
+      'src/**/manifest.ts',
+    ],
+    rules: {
+      'check-file/filename-naming-convention': 'off',
     },
   },
 
