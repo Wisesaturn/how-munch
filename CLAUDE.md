@@ -22,6 +22,7 @@ pnpm format:check # Prettier 검사
 - **Form**: @tanstack/react-form + zod (validation)
 - **Table**: @tanstack/react-table
 - **Utilities**: es-toolkit, date-fns, es-hangul, usehooks-ts
+- **Backend**: Supabase (Auth + DB), @supabase/ssr
 - **Lint/Format**: ESLint 9 (flat config) + Prettier + lint-staged + husky
 
 ## Architecture — FSD (Feature-Sliced Design)
@@ -37,7 +38,7 @@ src/
 ├── features/         # 사용자 행동 단위 (로그인, 검색, 필터 등)
 ├── entities/         # 비즈니스 엔티티 (User, Product 등)
 └── commons/          # 공유 코드 (의존성 없음)
-    ├── api/          # API 클라이언트, fetch 래퍼
+    ├── api/          # API 클라이언트 (supabase client/server/middleware)
     ├── config/       # 환경변수, 상수
     ├── lib/          # 유틸 함수 (cn 등)
     ├── types/        # 공통 타입
@@ -59,6 +60,8 @@ src/
 - react-query hooks는 해당 entity/feature의 `api/` 또는 `model/`에 위치
 - 한국어 처리: es-hangul 사용
 - type import는 `import { type Foo }` 인라인 스타일 사용
+- Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createServerClient } from '@/commons/api/supabase'` (server)
+- proxy.ts (Next.js 16 proxy convention) — Supabase 세션 리프레시
 
 ## ESLint Rules
 
