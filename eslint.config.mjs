@@ -77,7 +77,7 @@ const eslintConfig = defineConfig([
         'error',
         {
           alias: fsdAlias,
-          layers: ['features', 'entities', 'modules'],
+          layers: ['pages', 'features', 'entities', 'modules'],
         },
       ],
       'fsd/no-cross-slice-dependency': 'error',
@@ -162,23 +162,23 @@ const eslintConfig = defineConfig([
   // Next.js convention files — 파일명 규칙 예외
   {
     files: [
-      'src/**/page.tsx',
-      'src/**/layout.tsx',
-      'src/**/loading.tsx',
-      'src/**/providers.tsx',
-      'src/**/error.tsx',
-      'src/**/not-found.tsx',
-      'src/**/global-error.tsx',
-      'src/**/default.tsx',
-      'src/**/template.tsx',
-      'src/**/route.ts',
-      'src/**/proxy.ts',
-      'src/**/middleware.ts',
-      'src/**/opengraph-image.tsx',
-      'src/**/icon.tsx',
-      'src/**/sitemap.ts',
-      'src/**/robots.ts',
-      'src/**/manifest.ts',
+      'app/**/page.tsx',
+      'app/**/layout.tsx',
+      'app/**/loading.tsx',
+      'app/**/providers.tsx',
+      'app/**/error.tsx',
+      'app/**/not-found.tsx',
+      'app/**/global-error.tsx',
+      'app/**/default.tsx',
+      'app/**/template.tsx',
+      'app/**/route.ts',
+      'app/**/middleware.ts',
+      'app/**/opengraph-image.tsx',
+      'app/**/icon.tsx',
+      'app/**/sitemap.ts',
+      'app/**/robots.ts',
+      'app/**/manifest.ts',
+      'proxy.ts',
     ],
     rules: {
       'check-file/filename-naming-convention': 'off',
@@ -187,7 +187,7 @@ const eslintConfig = defineConfig([
 
   // Next.js route groups — (main) 등 괄호 폴더 naming 예외
   {
-    files: ['src/app/(**)/**/*'],
+    files: ['app/(**)/**/*'],
     rules: {
       'check-file/folder-naming-convention': 'off',
     },

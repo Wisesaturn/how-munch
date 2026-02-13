@@ -29,12 +29,14 @@ pnpm format:check # Prettier 검사
 
 ```
 project-root/
-├── app/                # Next.js App Router (라우팅만, src/ 밖)
+├── app/                # Next.js App Router (라우팅만)
 │   ├── layout.tsx      # RootLayout + Providers
+│   ├── globals.css     # Tailwind CSS + shadcn 테마
 │   ├── providers.tsx   # QueryClientProvider 등 클라이언트 프로바이더
-│   └── (routes)/       # 라우트 그룹 (page.tsx → src/pages/ import)
-├── pages/              # 빈 폴더 (Next.js Pages Router 방지용)
-├── src/
+│   └── (main)/         # 라우트 그룹 (page.tsx → src/pages/ import)
+├── pages/              # 빈 디렉토리 (Next.js app/pages 동일 레벨 충돌 방지용)
+├── proxy.ts            # Next.js 16 proxy convention (Supabase 세션 리프레시)
+├── src/                # FSD 레이어만 포함
 │   ├── pages/          # FSD 페이지 레이어 (페이지 조합 로직)
 │   ├── modules/        # 페이지 단위 조합 컴포넌트 (Header, Sidebar 등)
 │   ├── features/       # 사용자 행동 단위 (로그인, 검색, 필터 등)
@@ -50,7 +52,8 @@ project-root/
 ### FSD 의존성 규칙
 
 - **단방향**: app → pages → modules → features → entities → commons
-- app/(routes)/page.tsx는 src/pages/에서 import하는 브릿지 역할
+- app/(main)/page.tsx는 src/pages/에서 import하는 브릿지 역할
+- 루트 pages/는 빈 디렉토리 — Next.js가 app/과 src/pages/를 동일 레벨로 인식하기 위한 워크어라운드
 - 같은 레이어 내 모듈 간 직접 import 금지
 - 각 슬라이스는 `index.ts`로 public API를 노출
 
@@ -76,8 +79,8 @@ project-root/
 - react-query 조건부 실행: `enabled` 대신 `queryFn`에 `skipToken` 사용
 - 한국어 처리: es-hangul 사용
 - type import는 `import { type Foo }` 인라인 스타일 사용
-- Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createServerClient } from '@/commons/api/supabase'` (server)
-- proxy.ts (Next.js 16 proxy convention) — Supabase 세션 리프레시
+- Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createClient } from '@/commons/api/supabase/server'` (server)
+- proxy.ts — 프로젝트 루트에 위치 (Next.js 16 proxy convention, Supabase 세션 리프레시)
 
 ## ESLint Rules
 
@@ -85,7 +88,7 @@ project-root/
 
 - **fsd/forbidden-imports**: 상위→하위 단방향 import만 허용 (error)
 - **fsd/no-relative-imports**: 크로스 슬라이스 상대경로 import 금지, 같은 슬라이스 내부는 허용 (error)
-- **fsd/no-public-api-sidestep**: features/entities/modules는 반드시 index.ts를 통해 import (error)
+- **fsd/no-public-api-sidestep**: pages/features/entities/modules는 반드시 index.ts를 통해 import (error)
 - **fsd/no-cross-slice-dependency**: 같은 레이어 내 슬라이스 간 직접 import 금지 (error)
 - **fsd/no-ui-in-business-logic**: 비즈니스 로직 레이어에서 UI import 금지 (error)
 - **fsd/no-global-store-imports**: 전역 store 직접 import 금지, hooks 사용 (error)

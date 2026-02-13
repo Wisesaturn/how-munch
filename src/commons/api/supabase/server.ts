@@ -16,9 +16,14 @@ export async function createClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server Component에서 호출 시 쿠키 쓰기 불가 — 무시
+            // 세션 리프레시는 proxy.ts(middleware)에서 처리
+          }
         },
       },
     },
