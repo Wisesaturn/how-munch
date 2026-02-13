@@ -145,7 +145,7 @@ const eslintConfig = defineConfig([
   // Filename & folder naming convention
   {
     plugins: { 'check-file': checkFile },
-    files: ['src/**/*', 'app/**/*'],
+    files: ['src/**/*'],
     rules: {
       'check-file/filename-naming-convention': [
         'error',
@@ -162,23 +162,23 @@ const eslintConfig = defineConfig([
   // Next.js convention files — 파일명 규칙 예외
   {
     files: [
-      '{src,app}/**/page.tsx',
-      '{src,app}/**/layout.tsx',
-      '{src,app}/**/loading.tsx',
-      '{src,app}/**/providers.tsx',
-      '{src,app}/**/error.tsx',
-      '{src,app}/**/not-found.tsx',
-      '{src,app}/**/global-error.tsx',
-      '{src,app}/**/default.tsx',
-      '{src,app}/**/template.tsx',
-      '{src,app}/**/route.ts',
-      '{src,app}/**/proxy.ts',
-      '{src,app}/**/middleware.ts',
-      '{src,app}/**/opengraph-image.tsx',
-      '{src,app}/**/icon.tsx',
-      '{src,app}/**/sitemap.ts',
-      '{src,app}/**/robots.ts',
-      '{src,app}/**/manifest.ts',
+      'src/**/page.tsx',
+      'src/**/layout.tsx',
+      'src/**/loading.tsx',
+      'src/**/providers.tsx',
+      'src/**/error.tsx',
+      'src/**/not-found.tsx',
+      'src/**/global-error.tsx',
+      'src/**/default.tsx',
+      'src/**/template.tsx',
+      'src/**/route.ts',
+      'src/**/proxy.ts',
+      'src/**/middleware.ts',
+      'src/**/opengraph-image.tsx',
+      'src/**/icon.tsx',
+      'src/**/sitemap.ts',
+      'src/**/robots.ts',
+      'src/**/manifest.ts',
     ],
     rules: {
       'check-file/filename-naming-convention': 'off',
@@ -187,7 +187,7 @@ const eslintConfig = defineConfig([
 
   // Next.js route groups — (main) 등 괄호 폴더 naming 예외
   {
-    files: ['app/(**)/**/*'],
+    files: ['src/app/(**)/**/*'],
     rules: {
       'check-file/folder-naming-convention': 'off',
     },
