@@ -28,26 +28,29 @@ pnpm format:check # Prettier 검사
 ## Architecture — FSD (Feature-Sliced Design)
 
 ```
-src/
-├── app/              # Next.js App Router (라우팅, 레이아웃, 페이지)
-│   ├── layout.tsx    # RootLayout + Providers
-│   ├── providers.tsx # QueryClientProvider 등 클라이언트 프로바이더
-│   └── (routes)/     # 라우트 그룹
-├── pages/            # FSD 페이지 레이어 (페이지 조합 로직)
-├── modules/          # 페이지 단위 조합 컴포넌트 (Header, Sidebar 등)
-├── features/         # 사용자 행동 단위 (로그인, 검색, 필터 등)
-├── entities/         # 비즈니스 엔티티 (User, Product 등)
-└── commons/          # 공유 코드 (의존성 없음)
-    ├── api/          # API 클라이언트 (supabase client/server/middleware)
-    ├── config/       # 환경변수, 상수
-    ├── lib/          # 유틸 함수 (cn 등)
-    ├── types/        # 공통 타입
-    └── ui/           # 기본 UI 컴포넌트 (Button, Input 등)
+project-root/
+├── app/                # Next.js App Router (라우팅만, src/ 밖)
+│   ├── layout.tsx      # RootLayout + Providers
+│   ├── providers.tsx   # QueryClientProvider 등 클라이언트 프로바이더
+│   └── (routes)/       # 라우트 그룹 (page.tsx → src/pages/ import)
+├── pages/              # 빈 폴더 (Next.js Pages Router 방지용)
+├── src/
+│   ├── pages/          # FSD 페이지 레이어 (페이지 조합 로직)
+│   ├── modules/        # 페이지 단위 조합 컴포넌트 (Header, Sidebar 등)
+│   ├── features/       # 사용자 행동 단위 (로그인, 검색, 필터 등)
+│   ├── entities/       # 비즈니스 엔티티 (User, Product 등)
+│   └── commons/        # 공유 코드 (의존성 없음)
+│       ├── api/        # API 클라이언트 (supabase client/server/middleware)
+│       ├── config/     # 환경변수, 상수
+│       ├── lib/        # 유틸 함수 (cn 등)
+│       ├── types/      # 공통 타입
+│       └── ui/         # 기본 UI 컴포넌트 (Button, Input 등)
 ```
 
 ### FSD 의존성 규칙
 
 - **단방향**: app → pages → modules → features → entities → commons
+- app/(routes)/page.tsx는 src/pages/에서 import하는 브릿지 역할
 - 같은 레이어 내 모듈 간 직접 import 금지
 - 각 슬라이스는 `index.ts`로 public API를 노출
 
@@ -69,6 +72,8 @@ src/
 - Server Component가 기본. `"use client"`는 필요한 곳에만
 - zustand store는 해당 feature/entity 내부에 위치
 - react-query hooks는 해당 entity/feature의 `api/` 또는 `model/`에 위치
+- react-query hook naming: `use{작업}Query` (조회), `use{작업}Mutation` (변경)
+- react-query 조건부 실행: `enabled` 대신 `queryFn`에 `skipToken` 사용
 - 한국어 처리: es-hangul 사용
 - type import는 `import { type Foo }` 인라인 스타일 사용
 - Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createServerClient } from '@/commons/api/supabase'` (server)
@@ -84,7 +89,7 @@ src/
 - **fsd/no-cross-slice-dependency**: 같은 레이어 내 슬라이스 간 직접 import 금지 (error)
 - **fsd/no-ui-in-business-logic**: 비즈니스 로직 레이어에서 UI import 금지 (error)
 - **fsd/no-global-store-imports**: 전역 store 직접 import 금지, hooks 사용 (error)
-- **fsd/ordered-imports**: FSD 레이어 순서대로 import 정렬 (warn)
+- **fsd/ordered-imports**: off (import/order로 대체)
 
 ### Naming (eslint-plugin-check-file)
 
