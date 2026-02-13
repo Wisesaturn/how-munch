@@ -188,6 +188,14 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // Next.js route groups — (main) 등 괄호 폴더 naming 예외
+  {
+    files: ['src/app/(**)/**/*'],
+    rules: {
+      'check-file/folder-naming-convention': 'off',
+    },
+  },
+
   // Ignores
   globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
 ]);
