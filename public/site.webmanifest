@@ -1,6 +1,6 @@
 {
-  "name": "How Munch",
-  "short_name": "우리들의 냉장고와 지갑을 부탁해",
+  "name": "하우먼치",
+  "short_name": "얼마 먹었니?",
   "icons": [
     { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
