@@ -31,6 +31,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       households: {
         Row: {
@@ -51,6 +52,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       household_members: {
         Row: {
@@ -74,6 +76,7 @@ export interface Database {
           role?: 'owner' | 'member';
           created_at?: string;
         };
+        Relationships: [];
       };
       ingredients: {
         Row: {
@@ -121,6 +124,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       fridge_items: {
         Row: {
@@ -159,6 +163,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       meals: {
         Row: {
@@ -185,6 +190,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       dishes: {
         Row: {
@@ -211,6 +217,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       dish_ingredients: {
         Row: {
@@ -234,7 +241,20 @@ export interface Database {
           amount?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }
