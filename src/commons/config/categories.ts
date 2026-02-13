@@ -1,0 +1,14 @@
+export const CATEGORIES = [
+  { id: 'meat', label: '육류', emoji: '🥩' },
+  { id: 'fish', label: '수산물', emoji: '🐟' },
+  { id: 'veggie', label: '채소', emoji: '🥬' },
+  { id: 'fruit', label: '과일', emoji: '🍎' },
+  { id: 'dairy', label: '유제품', emoji: '🥛' },
+  { id: 'grain', label: '곡류', emoji: '🌾' },
+  { id: 'seasoning', label: '양념', emoji: '🧂' },
+  { id: 'snack', label: '간식', emoji: '🍪' },
+  { id: 'drink', label: '음료', emoji: '🥤' },
+  { id: 'other', label: '기타', emoji: '📦' },
+] as const;
+
+export type CategoryId = (typeof CATEGORIES)[number]['id'];
