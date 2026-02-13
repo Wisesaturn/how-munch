@@ -83,13 +83,6 @@ const eslintConfig = defineConfig([
       'fsd/no-cross-slice-dependency': 'error',
       'fsd/no-ui-in-business-logic': 'error',
       'fsd/no-global-store-imports': 'error',
-      'fsd/ordered-imports': [
-        'warn',
-        {
-          alias: fsdAlias,
-          customOrder: ['app', 'pages', 'modules', 'features', 'entities', 'commons'],
-        },
-      ],
     },
   },
 
@@ -124,17 +117,21 @@ const eslintConfig = defineConfig([
       'no-nested-ternary': 'warn',
       eqeqeq: ['warn', 'always'],
 
-      // Import ordering — FSD 레이어 간 순서는 fsd/ordered-imports가 담당
-      // import/order는 그룹 분리 + newlines만 담당 (알파벳 정렬은 같은 그룹 내에서만)
+      // Import ordering — FSD 레이어 순서 + 그룹 간 newline 강제
       'import/order': [
         'warn',
         {
           groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
           pathGroups: [
-            { pattern: 'react', group: 'builtin', position: 'before' },
-            { pattern: 'react-dom/**', group: 'builtin', position: 'before' },
-            { pattern: 'next', group: 'builtin', position: 'before' },
-            { pattern: 'next/**', group: 'builtin', position: 'before' },
+            { pattern: 'react', group: 'external', position: 'before' },
+            { pattern: 'react-dom/**', group: 'external', position: 'before' },
+            { pattern: 'next', group: 'external', position: 'before' },
+            { pattern: 'next/**', group: 'external', position: 'before' },
+            { pattern: '@/commons/**', group: 'internal', position: 'after' },
+            { pattern: '@/entities/**', group: 'internal', position: 'after' },
+            { pattern: '@/features/**', group: 'internal', position: 'after' },
+            { pattern: '@/modules/**', group: 'internal', position: 'after' },
+            { pattern: '@/pages/**', group: 'internal', position: 'after' },
           ],
           pathGroupsExcludedImportTypes: ['react', 'next'],
           'newlines-between': 'always',
@@ -148,7 +145,7 @@ const eslintConfig = defineConfig([
   // Filename & folder naming convention
   {
     plugins: { 'check-file': checkFile },
-    files: ['src/**/*'],
+    files: ['src/**/*', 'app/**/*'],
     rules: {
       'check-file/filename-naming-convention': [
         'error',
@@ -165,23 +162,23 @@ const eslintConfig = defineConfig([
   // Next.js convention files — 파일명 규칙 예외
   {
     files: [
-      'src/**/page.tsx',
-      'src/**/layout.tsx',
-      'src/**/loading.tsx',
-      'src/**/providers.tsx',
-      'src/**/error.tsx',
-      'src/**/not-found.tsx',
-      'src/**/global-error.tsx',
-      'src/**/default.tsx',
-      'src/**/template.tsx',
-      'src/**/route.ts',
-      'src/**/proxy.ts',
-      'src/**/middleware.ts',
-      'src/**/opengraph-image.tsx',
-      'src/**/icon.tsx',
-      'src/**/sitemap.ts',
-      'src/**/robots.ts',
-      'src/**/manifest.ts',
+      '{src,app}/**/page.tsx',
+      '{src,app}/**/layout.tsx',
+      '{src,app}/**/loading.tsx',
+      '{src,app}/**/providers.tsx',
+      '{src,app}/**/error.tsx',
+      '{src,app}/**/not-found.tsx',
+      '{src,app}/**/global-error.tsx',
+      '{src,app}/**/default.tsx',
+      '{src,app}/**/template.tsx',
+      '{src,app}/**/route.ts',
+      '{src,app}/**/proxy.ts',
+      '{src,app}/**/middleware.ts',
+      '{src,app}/**/opengraph-image.tsx',
+      '{src,app}/**/icon.tsx',
+      '{src,app}/**/sitemap.ts',
+      '{src,app}/**/robots.ts',
+      '{src,app}/**/manifest.ts',
     ],
     rules: {
       'check-file/filename-naming-convention': 'off',
@@ -190,7 +187,7 @@ const eslintConfig = defineConfig([
 
   // Next.js route groups — (main) 등 괄호 폴더 naming 예외
   {
-    files: ['src/app/(**)/**/*'],
+    files: ['app/(**)/**/*'],
     rules: {
       'check-file/folder-naming-convention': 'off',
     },
