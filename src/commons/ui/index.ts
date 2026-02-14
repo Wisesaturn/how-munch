@@ -8,5 +8,4 @@ export { EmptyState } from './EmptyState';
 export { Input } from './Input';
 export { ProgressBar } from './ProgressBar';
 export { Select } from './Select';
-export { ToastViewport } from './ToastViewport';
 export { Toast } from './toast';

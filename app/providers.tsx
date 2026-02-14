@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { OverlayProvider } from 'overlay-kit';
 
-import { ToastViewport } from '@/commons/ui';
+import { ToastProvider } from '@/apps/providers/ToastProvider';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -24,7 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <OverlayProvider>
         {children}
-        <ToastViewport />
+        <ToastProvider />
         <ReactQueryDevtools initialIsOpen={false} />
       </OverlayProvider>
     </QueryClientProvider>
