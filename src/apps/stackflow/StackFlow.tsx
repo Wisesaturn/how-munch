@@ -3,7 +3,7 @@
 import { basicUIPlugin } from '@stackflow/plugin-basic-ui';
 import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
-import { useActions, stackflow } from '@stackflow/react';
+import { useActions, useActivity, stackflow } from '@stackflow/react';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
@@ -12,7 +12,9 @@ import { IngredientAddScreen } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal-manager';
 
 function IdleActivity() {
-  return null;
+  const activity = useActivity();
+
+  return <div data-stackflow-idle-active={activity.isActive ? 'true' : 'false'} />;
 }
 
 function PlaceholderActivity() {
@@ -76,7 +78,7 @@ function MealEditorActivity({
 }
 
 const appStackFlow = stackflow({
-  transitionDuration: 240,
+  transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
   activities: {
     IdleActivity,
@@ -100,7 +102,7 @@ const appStackFlow = stackflow({
     }),
     basicUIPlugin({
       theme: 'cupertino',
-      rootClassName: 'pointer-events-none absolute inset-0 z-[var(--z-stackflow)]',
+      rootClassName: 'stackflow-root absolute inset-0 z-[var(--z-stackflow)]',
     }),
   ],
 });

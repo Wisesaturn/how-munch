@@ -97,6 +97,10 @@ body {
   --z-popover: 1000;
 }
 
+.stackflow-root:has([data-stackflow-idle-active='true']) {
+  pointer-events: none;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
