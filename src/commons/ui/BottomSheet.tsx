@@ -6,7 +6,6 @@ import { X } from 'lucide-react';
 
 import { cn, createSafeContext } from '../lib';
 
-import { Button } from './Button';
 import { Drawer } from './Drawer';
 
 /* -------------------------------------------------------------------------------------------------
@@ -87,49 +86,10 @@ function BottomSheetContent({ className, contentClassName, ...props }: BottomShe
 }
 BottomSheetContent.displayName = 'BottomSheet.Content';
 
-/* -------------------------------------------------------------------------------------------------
- * Footer
- * -----------------------------------------------------------------------------------------------*/
-interface BottomSheetFooterProps extends ComponentProps<'div'> {
-  actionLabel?: string;
-  onAction?: () => void;
-  actionType?: 'button' | 'submit';
-  actionDisabled?: boolean;
-}
-
-function BottomSheetFooter({
-  className,
-  actionLabel = '닫기',
-  onAction,
-  actionType = 'button',
-  actionDisabled = false,
-  children,
-  ...props
-}: BottomSheetFooterProps) {
-  const { onClose } = useBottomSheetContext('BottomSheet.Footer');
-
-  return (
-    <div className={cn('border-t px-4 py-3', className)} {...props}>
-      {children ?? (
-        <Button
-          type={actionType}
-          onClick={onAction ?? onClose}
-          disabled={actionDisabled}
-          className="w-full"
-        >
-          {actionLabel}
-        </Button>
-      )}
-    </div>
-  );
-}
-BottomSheetFooter.displayName = 'BottomSheet.Footer';
-
 const BottomSheet = Object.assign(BottomSheetRoot, {
   Root: BottomSheetRoot,
   Header: BottomSheetHeader,
   Content: BottomSheetContent,
-  Footer: BottomSheetFooter,
 });
 
 BottomSheet.displayName = 'BottomSheet';
