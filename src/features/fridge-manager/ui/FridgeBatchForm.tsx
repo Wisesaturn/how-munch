@@ -3,7 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 
-import { Button, Input } from '@/commons/ui';
+import { Button, DatePicker, Input } from '@/commons/ui';
 
 export interface FridgeBatchFormValues {
   quantity: number;
@@ -26,6 +26,12 @@ export function FridgeBatchForm({
   isPending,
   submitLabel = '저장',
 }: FridgeBatchFormProps) {
+  const parseDateValue = (value: string) => {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date;
+  };
+
   const form = useForm({
     defaultValues: {
       quantity: defaultValues?.quantity ?? 1,
@@ -67,11 +73,12 @@ export function FridgeBatchForm({
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">구매일</span>
-            <Input
-              type="date"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-              required
+            <DatePicker
+              value={parseDateValue(field.state.value)}
+              onChange={(date) =>
+                field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
+              }
+              placeholder="구매일을 선택하세요"
             />
           </label>
         )}
@@ -81,10 +88,10 @@ export function FridgeBatchForm({
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">유통기한 (선택)</span>
-            <Input
-              type="date"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
+            <DatePicker
+              value={parseDateValue(field.state.value)}
+              onChange={(date) => field.handleChange(date ? format(date, 'yyyy-MM-dd') : '')}
+              placeholder="유통기한을 선택하세요"
             />
           </label>
         )}

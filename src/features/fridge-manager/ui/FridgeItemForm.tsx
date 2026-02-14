@@ -66,12 +66,17 @@ export function FridgeItemForm({
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">카테고리</span>
-            <Select value={field.state.value} onChange={(e) => field.handleChange(e.target.value)}>
-              {CATEGORIES.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.emoji} {cat.label}
-                </option>
-              ))}
+            <Select value={field.state.value} onValueChange={field.handleChange}>
+              <Select.Trigger>
+                <Select.Value placeholder="카테고리를 선택하세요" />
+              </Select.Trigger>
+              <Select.Content>
+                {CATEGORIES.map((cat) => (
+                  <Select.Item key={cat.id} value={cat.id}>
+                    {cat.emoji} {cat.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
             </Select>
           </label>
         )}
@@ -83,10 +88,15 @@ export function FridgeItemForm({
             <span className="text-sm font-medium">단위</span>
             <Select
               value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value as 'count' | 'g')}
+              onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
             >
-              <option value="count">개</option>
-              <option value="g">g</option>
+              <Select.Trigger>
+                <Select.Value placeholder="단위를 선택하세요" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="count">개</Select.Item>
+                <Select.Item value="g">g</Select.Item>
+              </Select.Content>
             </Select>
           </label>
         )}

@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 
 import { CATEGORIES } from '@/commons/config';
-import { Button, Input, Select } from '@/commons/ui';
+import { Button, DatePicker, Input, Select } from '@/commons/ui';
 
 export interface IngredientFormValues {
   date: string;
@@ -31,6 +31,12 @@ export function IngredientForm({
   isSubmitting,
   submitLabel = '저장',
 }: IngredientFormProps) {
+  const parseDateValue = (value: string) => {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date;
+  };
+
   const form = useForm({
     defaultValues: {
       date: defaultValues?.date ?? format(new Date(), 'yyyy-MM-dd'),
@@ -60,10 +66,12 @@ export function IngredientForm({
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-gray-600">날짜</span>
-            <Input
-              type="date"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
+            <DatePicker
+              value={parseDateValue(field.state.value)}
+              onChange={(date) =>
+                field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
+              }
+              placeholder="날짜를 선택하세요"
             />
           </label>
         )}
@@ -74,12 +82,17 @@ export function IngredientForm({
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-gray-600">카테고리</span>
-            <Select value={field.state.value} onChange={(e) => field.handleChange(e.target.value)}>
-              {CATEGORIES.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.emoji} {cat.label}
-                </option>
-              ))}
+            <Select value={field.state.value} onValueChange={field.handleChange}>
+              <Select.Trigger>
+                <Select.Value placeholder="카테고리를 선택하세요" />
+              </Select.Trigger>
+              <Select.Content>
+                {CATEGORIES.map((cat) => (
+                  <Select.Item key={cat.id} value={cat.id}>
+                    {cat.emoji} {cat.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
             </Select>
           </label>
         )}
@@ -121,10 +134,15 @@ export function IngredientForm({
               <span className="text-xs font-medium text-gray-600">단위</span>
               <Select
                 value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value as 'count' | 'g')}
+                onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
               >
-                <option value="count">개</option>
-                <option value="g">g</option>
+                <Select.Trigger>
+                  <Select.Value placeholder="단위" />
+                </Select.Trigger>
+                <Select.Content>
+                  <Select.Item value="count">개</Select.Item>
+                  <Select.Item value="g">g</Select.Item>
+                </Select.Content>
               </Select>
             </label>
           )}

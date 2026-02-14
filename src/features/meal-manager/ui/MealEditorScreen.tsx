@@ -201,20 +201,25 @@ export function MealEditorScreen({
                 return (
                   <div key={`${type}-${dishIndex}-${ingredientIndex}`} className="flex gap-2">
                     <Select
-                      value={ingredient.fridge_item_id}
-                      onChange={(event) =>
+                      value={ingredient.fridge_item_id || '__none__'}
+                      onValueChange={(value) =>
                         handleIngredientChange(dishIndex, ingredientIndex, {
-                          fridge_item_id: event.target.value,
+                          fridge_item_id: value === '__none__' ? '' : value,
                         })
                       }
                     >
-                      <option value="">재료 선택</option>
-                      {fridgeItems.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name} ({Number(item.total_count)}{' '}
-                          {item.unit === 'count' ? '개' : 'g'})
-                        </option>
-                      ))}
+                      <Select.Trigger>
+                        <Select.Value placeholder="재료 선택" />
+                      </Select.Trigger>
+                      <Select.Content>
+                        <Select.Item value="__none__">재료 선택</Select.Item>
+                        {fridgeItems.map((item) => (
+                          <Select.Item key={item.id} value={item.id}>
+                            {item.name} ({Number(item.total_count)}{' '}
+                            {item.unit === 'count' ? '개' : 'g'})
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
                     </Select>
 
                     <Input
