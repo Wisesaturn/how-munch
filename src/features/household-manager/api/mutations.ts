@@ -2,7 +2,7 @@ import { addDays } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
-import { generateUuid } from '@/commons/lib';
+import { uuid } from '@/commons/lib';
 import { type Database } from '@/commons/types';
 
 import { type HouseholdInvite } from '@/entities/household';
@@ -25,7 +25,7 @@ export function useCreateHouseholdMutation() {
   return useMutation({
     mutationFn: async ({ name, userId }: { name: string; userId: string }) => {
       const supabase = createClient();
-      const householdId = generateUuid();
+      const householdId = uuid();
 
       const householdInput: HouseholdInsert = { id: householdId, name };
       const { error: householdError } = await supabase.from('households').insert(householdInput);

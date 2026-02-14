@@ -84,7 +84,7 @@ project-root/
 - type import는 `import { type Foo }` 인라인 스타일 사용
 - Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createClient } from '@/commons/api/supabase/server'` (server)
 - proxy.ts — 프로젝트 루트에 위치 (Next.js 16 proxy convention, Supabase 세션 리프레시)
-- `src/commons/lib`는 함수 하나당 파일 하나 원칙 유지 (예: `generateUuid.ts`, `cn.ts`)
+- `src/commons/lib`는 도메인(주제) 단위 파일로 구성하고, 필요 시 한 파일에 여러 유틸 함수를 함께 둔다 (예: `uuid.ts`, `string.ts`)
 
 ### Common UI Composition
 
