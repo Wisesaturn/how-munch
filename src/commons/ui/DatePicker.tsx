@@ -5,6 +5,7 @@ import * as React from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { type Matcher } from 'react-day-picker';
+import { useControlledState } from 'react-simplikit';
 
 import { cn } from '../lib';
 
@@ -41,15 +42,11 @@ function DatePicker({
   const [open, setOpen] = React.useState(false);
   const [boundaryElement, setBoundaryElement] = React.useState<HTMLDivElement | null>(null);
 
-  const [internalDate, setInternalDate] = React.useState<Date | undefined>(value);
-  const isControlled = value !== undefined;
-  const selectedDate = isControlled ? value : internalDate;
-
-  React.useEffect(() => {
-    if (isControlled) {
-      setInternalDate(value);
-    }
-  }, [isControlled, value]);
+  const [selectedDate, setSelectedDate] = useControlledState<Date | undefined>({
+    value,
+    defaultValue: undefined,
+    onChange,
+  });
 
   const baseDisabled: Matcher[] = React.useMemo(() => {
     if (!disabledDates) return [];
@@ -66,8 +63,7 @@ function DatePicker({
   );
 
   const handleSelect = (date?: Date) => {
-    if (!isControlled) setInternalDate(date);
-    onChange?.(date);
+    setSelectedDate(date);
     setOpen(false);
   };
 
