@@ -6,25 +6,44 @@ import { Drawer as DrawerPrimitive } from 'vaul';
 
 import { cn } from '../lib';
 
-function Drawer({
+/* -------------------------------------------------------------------------------------------------
+ * Root
+ * -----------------------------------------------------------------------------------------------*/
+function DrawerRoot({
   shouldScaleBackground = true,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
   return <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />;
 }
+DrawerRoot.displayName = 'Drawer';
 
+/* -------------------------------------------------------------------------------------------------
+ * Portal
+ * -----------------------------------------------------------------------------------------------*/
 function DrawerPortal(props: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
   return <DrawerPrimitive.Portal {...props} />;
 }
+DrawerPortal.displayName = 'Drawer.Portal';
 
+/* -------------------------------------------------------------------------------------------------
+ * Trigger
+ * -----------------------------------------------------------------------------------------------*/
 function DrawerTrigger(props: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
   return <DrawerPrimitive.Trigger {...props} />;
 }
+DrawerTrigger.displayName = 'Drawer.Trigger';
 
+/* -------------------------------------------------------------------------------------------------
+ * Close
+ * -----------------------------------------------------------------------------------------------*/
 function DrawerClose(props: React.ComponentProps<typeof DrawerPrimitive.Close>) {
   return <DrawerPrimitive.Close {...props} />;
 }
+DrawerClose.displayName = 'Drawer.Close';
 
+/* -------------------------------------------------------------------------------------------------
+ * Overlay
+ * -----------------------------------------------------------------------------------------------*/
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
@@ -35,8 +54,11 @@ const DrawerOverlay = React.forwardRef<
     {...props}
   />
 ));
-DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
+DrawerOverlay.displayName = 'Drawer.Overlay';
 
+/* -------------------------------------------------------------------------------------------------
+ * Content
+ * -----------------------------------------------------------------------------------------------*/
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
@@ -56,8 +78,11 @@ const DrawerContent = React.forwardRef<
     </DrawerPrimitive.Content>
   </DrawerPortal>
 ));
-DrawerContent.displayName = DrawerPrimitive.Content.displayName;
+DrawerContent.displayName = 'Drawer.Content';
 
+/* -------------------------------------------------------------------------------------------------
+ * Header
+ * -----------------------------------------------------------------------------------------------*/
 function DrawerHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
@@ -66,11 +91,19 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<'div'>) {
     />
   );
 }
+DrawerHeader.displayName = 'Drawer.Header';
 
+/* -------------------------------------------------------------------------------------------------
+ * Title
+ * -----------------------------------------------------------------------------------------------*/
 function DrawerTitle({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Title>) {
   return <DrawerPrimitive.Title className={cn('text-base font-semibold', className)} {...props} />;
 }
+DrawerTitle.displayName = 'Drawer.Title';
 
+/* -------------------------------------------------------------------------------------------------
+ * Description
+ * -----------------------------------------------------------------------------------------------*/
 function DrawerDescription({
   className,
   ...props
@@ -79,14 +112,17 @@ function DrawerDescription({
     <DrawerPrimitive.Description className={cn('text-sm text-gray-500', className)} {...props} />
   );
 }
+DrawerDescription.displayName = 'Drawer.Description';
 
-export {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerPortal,
-  DrawerTitle,
-  DrawerTrigger,
-};
+const Drawer = Object.assign(DrawerRoot, {
+  Portal: DrawerPortal,
+  Trigger: DrawerTrigger,
+  Close: DrawerClose,
+  Overlay: DrawerOverlay,
+  Content: DrawerContent,
+  Header: DrawerHeader,
+  Title: DrawerTitle,
+  Description: DrawerDescription,
+});
+
+export { Drawer };

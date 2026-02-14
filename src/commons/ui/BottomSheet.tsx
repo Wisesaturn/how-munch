@@ -1,13 +1,16 @@
 'use client';
 
-import { type ReactNode } from 'react';
+import { type ComponentProps, type ReactNode } from 'react';
 
 import { X } from 'lucide-react';
 
 import { cn } from '../lib';
 
-import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from './Drawer';
+import { Drawer } from './Drawer';
 
+/* -------------------------------------------------------------------------------------------------
+ * Root
+ * -----------------------------------------------------------------------------------------------*/
 interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
@@ -16,22 +19,46 @@ interface BottomSheetProps {
   className?: string;
 }
 
-export function BottomSheet({ open, onClose, title, children, className }: BottomSheetProps) {
+function BottomSheetRoot({ open, onClose, title, children, className }: BottomSheetProps) {
   return (
     <Drawer open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DrawerContent className={cn(className)}>
+      <Drawer.Content className={cn(className)}>
         {title && (
-          <DrawerHeader>
-            <DrawerTitle>{title}</DrawerTitle>
-            <DrawerClose asChild>
+          <Drawer.Header>
+            <Drawer.Title>{title}</Drawer.Title>
+            <Drawer.Close asChild>
               <button className="rounded-full p-1 text-gray-500 transition-colors hover:text-gray-800">
                 <X className="size-5" />
               </button>
-            </DrawerClose>
-          </DrawerHeader>
+            </Drawer.Close>
+          </Drawer.Header>
         )}
         <div className="overflow-y-auto">{children}</div>
-      </DrawerContent>
+      </Drawer.Content>
     </Drawer>
   );
 }
+BottomSheetRoot.displayName = 'BottomSheet';
+
+/* -------------------------------------------------------------------------------------------------
+ * Header
+ * -----------------------------------------------------------------------------------------------*/
+function BottomSheetHeader(props: ComponentProps<'div'>) {
+  return <Drawer.Header {...props} />;
+}
+BottomSheetHeader.displayName = 'BottomSheet.Header';
+
+/* -------------------------------------------------------------------------------------------------
+ * Footer
+ * -----------------------------------------------------------------------------------------------*/
+function BottomSheetFooter({ className, ...props }: ComponentProps<'div'>) {
+  return <div className={cn('border-t px-4 py-3', className)} {...props} />;
+}
+BottomSheetFooter.displayName = 'BottomSheet.Footer';
+
+const BottomSheet = Object.assign(BottomSheetRoot, {
+  Header: BottomSheetHeader,
+  Footer: BottomSheetFooter,
+});
+
+export { BottomSheet };
