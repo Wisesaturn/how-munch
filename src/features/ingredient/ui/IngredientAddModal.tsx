@@ -2,7 +2,8 @@
 
 import { Modal } from '@/commons/ui';
 
-import { useAddIngredientMutation, useStoreNamesQuery } from '../api/ingredientQueries';
+import { useAddIngredientMutation } from '../api/mutations';
+import { useStoreNamesQuery } from '../api/queries';
 
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
 

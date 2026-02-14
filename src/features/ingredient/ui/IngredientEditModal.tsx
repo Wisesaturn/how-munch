@@ -4,7 +4,8 @@ import { Modal } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
-import { useStoreNamesQuery, useUpdateIngredientMutation } from '../api/ingredientQueries';
+import { useUpdateIngredientMutation } from '../api/mutations';
+import { useStoreNamesQuery } from '../api/queries';
 
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
 

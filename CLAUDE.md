@@ -65,7 +65,8 @@ project-root/
 - **타입/인터페이스**: PascalCase (`Profile`, `MealType`)
 - **폴더**: kebab-case (`auth-callback`, `meal-card`)
 - **컴포넌트 파일 (.tsx)**: PascalCase (`KakaoLoginButton.tsx`, `MealCard.tsx`)
-- **함수/유틸 파일 (.ts)**: camelCase (`useAuth.ts`, `loginWithKakao.ts`, `cn.ts`)
+- **함수/유틸 파일 (.ts)**: camelCase (`useAuth.ts`, `loginWithKakao.ts`, `cn.ts`, `expiry.ts`)
+- **유틸 파일명**: `utils.ts` 지양, 도메인명 사용 (예: `expiry.ts`, `cn.ts`)
 - **파일 예외**: Next.js 규약 파일은 그대로 (`layout.tsx`, `page.tsx`, `route.ts`, `proxy.ts`)
 
 ## Conventions
@@ -74,8 +75,10 @@ project-root/
 - `cn()`, `cva` 사용: `import { cn, cva, type VariantProps } from '@/commons/lib'`
 - Server Component가 기본. `"use client"`는 필요한 곳에만
 - zustand store는 해당 feature/entity 내부에 위치
-- react-query hooks는 해당 entity/feature의 `api/` 또는 `model/`에 위치
-- react-query hook naming: `use{작업}Query` (조회), `use{작업}Mutation` (변경)
+- react-query hooks는 해당 feature의 `api/` 내에 3파일 분리:
+  - `queryKey.ts` — query key factory
+  - `queries.ts` — `use{작업}Query` hooks (조회)
+  - `mutations.ts` — `use{작업}Mutation` hooks (변경)
 - react-query 조건부 실행: `enabled` 대신 `queryFn`에 `skipToken` 사용
 - 한국어 처리: es-hangul 사용
 - type import는 `import { type Foo }` 인라인 스타일 사용

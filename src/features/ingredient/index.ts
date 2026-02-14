@@ -1,10 +1,9 @@
+export { useIngredientsQuery, useStoreNamesQuery } from './api/queries';
 export {
-  useIngredientsQuery,
-  useStoreNamesQuery,
   useAddIngredientMutation,
   useUpdateIngredientMutation,
   useDeleteIngredientMutation,
-} from './api/ingredientQueries';
+} from './api/mutations';
 export { IngredientAddModal } from './ui/IngredientAddModal';
 export { IngredientEditModal } from './ui/IngredientEditModal';
 export { IngredientList } from './ui/IngredientList';
