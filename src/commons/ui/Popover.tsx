@@ -1,0 +1,66 @@
+'use client';
+
+import * as React from 'react';
+
+import { Popover as PopoverPrimitive } from 'radix-ui';
+
+import { cn } from '../lib';
+
+/* -------------------------------------------------------------------------------------------------
+ * Root
+ * -----------------------------------------------------------------------------------------------*/
+const PopoverRoot = PopoverPrimitive.Root;
+
+/* -------------------------------------------------------------------------------------------------
+ * Trigger
+ * -----------------------------------------------------------------------------------------------*/
+const PopoverTrigger = PopoverPrimitive.Trigger;
+
+/* -------------------------------------------------------------------------------------------------
+ * Anchor
+ * -----------------------------------------------------------------------------------------------*/
+const PopoverAnchor = PopoverPrimitive.Anchor;
+
+/* -------------------------------------------------------------------------------------------------
+ * Content
+ * -----------------------------------------------------------------------------------------------*/
+const PopoverContent = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
+    container?: HTMLElement | null;
+  }
+>(({ className, align = 'center', sideOffset = 6, container, ...props }, ref) => (
+  <PopoverPrimitive.Portal container={container ?? undefined}>
+    <PopoverPrimitive.Content
+      ref={ref}
+      align={align}
+      sideOffset={sideOffset}
+      className={cn(
+        'bg-popover text-popover-foreground z-[var(--z-popover)] w-72 rounded-md border p-4 shadow-md outline-none',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out',
+        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+        'data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1',
+        'data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1',
+        className,
+      )}
+      {...props}
+    />
+  </PopoverPrimitive.Portal>
+));
+
+PopoverContent.displayName = 'Popover.Content';
+
+/* -------------------------------------------------------------------------------------------------
+ * Compound Export
+ * -----------------------------------------------------------------------------------------------*/
+const Popover = Object.assign(PopoverRoot, {
+  Root: PopoverRoot,
+  Trigger: PopoverTrigger,
+  Anchor: PopoverAnchor,
+  Content: PopoverContent,
+});
+
+Popover.displayName = 'Popover';
+
+export { Popover };
