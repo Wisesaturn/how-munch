@@ -2,6 +2,7 @@ import { addDays } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
+import { generateUuid } from '@/commons/lib';
 import { type Database } from '@/commons/types';
 
 import { type HouseholdInvite } from '@/entities/household';
@@ -24,18 +25,15 @@ export function useCreateHouseholdMutation() {
   return useMutation({
     mutationFn: async ({ name, userId }: { name: string; userId: string }) => {
       const supabase = createClient();
+      const householdId = generateUuid();
 
-      const householdInput: HouseholdInsert = { name };
-      const { data: household, error: householdError } = await supabase
-        .from('households')
-        .insert(householdInput)
-        .select()
-        .single();
+      const householdInput: HouseholdInsert = { id: householdId, name };
+      const { error: householdError } = await supabase.from('households').insert(householdInput);
 
       if (householdError) throw householdError;
 
       const memberInput: HouseholdMembersInsert = {
-        household_id: household.id,
+        household_id: householdId,
         user_id: userId,
         role: 'owner',
       };
@@ -45,12 +43,12 @@ export function useCreateHouseholdMutation() {
 
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ household_id: household.id, updated_at: new Date().toISOString() })
+        .update({ household_id: householdId, updated_at: new Date().toISOString() })
         .eq('user_id', userId);
 
       if (profileError) throw profileError;
 
-      return household.id;
+      return householdId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: householdKeys.all });
