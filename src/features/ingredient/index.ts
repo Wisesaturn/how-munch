@@ -4,7 +4,7 @@ export {
   useUpdateIngredientMutation,
   useDeleteIngredientMutation,
 } from './api/mutations';
-export { IngredientAddBottomSheet } from './ui/IngredientAddBottomSheet';
+export { IngredientAddScreen } from './ui/IngredientAddScreen';
 export { IngredientEditBottomSheet } from './ui/IngredientEditBottomSheet';
 export { IngredientList } from './ui/IngredientList';
 export { IngredientSearch } from './ui/IngredientSearch';

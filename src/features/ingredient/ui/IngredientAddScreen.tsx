@@ -1,14 +1,15 @@
 'use client';
 
-import { BottomSheet, Toast } from '@/commons/ui';
+import { AppScreen } from '@stackflow/plugin-basic-ui';
+
+import { Toast } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
 
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
 
-interface IngredientAddBottomSheetProps {
-  open: boolean;
+interface IngredientAddScreenProps {
   onClose: () => void;
   householdId: string;
   userId: string;
@@ -16,13 +17,12 @@ interface IngredientAddBottomSheetProps {
   defaultName?: string;
 }
 
-export function IngredientAddBottomSheet({
-  open,
+export function IngredientAddScreen({
   onClose,
   householdId,
   userId,
   defaultName,
-}: IngredientAddBottomSheetProps) {
+}: IngredientAddScreenProps) {
   const addMutation = useAddIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
   const getErrorMessage = (error: unknown) => {
@@ -56,9 +56,8 @@ export function IngredientAddBottomSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose}>
-      <BottomSheet.Content>
-        <BottomSheet.Header heading="장보기 추가" />
+    <AppScreen className="pointer-events-auto" appBar={{ title: '장보기 추가' }}>
+      <div className="p-4">
         <IngredientForm
           defaultValues={defaultName ? { name: defaultName } : undefined}
           storeNames={storeNames}
@@ -66,7 +65,7 @@ export function IngredientAddBottomSheet({
           isSubmitting={addMutation.isPending}
           submitLabel="추가"
         />
-      </BottomSheet.Content>
-    </BottomSheet>
+      </div>
+    </AppScreen>
   );
 }

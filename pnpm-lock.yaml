@@ -17,6 +17,9 @@ importers:
       '@stackflow/plugin-basic-ui':
         specifier: ^1.18.1
         version: 1.18.1(@stackflow/core@1.3.0)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@types/react@19.2.14)(react@19.2.3))(@types/react@19.2.14)(react@19.2.3)
+      '@stackflow/plugin-history-sync':
+        specifier: ^1.10.0
+        version: 1.10.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@types/react@19.2.14)(react@19.2.3))(@types/react@19.2.14)(react@19.2.3)
       '@stackflow/plugin-renderer-basic':
         specifier: ^1.1.13
         version: 1.1.13(@stackflow/core@1.3.0)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@types/react@19.2.14)(react@19.2.3))(@types/react@19.2.14)(react@19.2.3)
@@ -1424,6 +1427,15 @@ packages:
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
 
+  '@stackflow/plugin-history-sync@1.10.0':
+    resolution: {integrity: sha512-lRuTvbXGI8AWTTijSkc7mUmGsG1BC5k82oxlARLoZPvkzFoUXh8JUfpju7lU+7fq6Dx1/GsE3mobX2lOqfEeFQ==}
+    peerDependencies:
+      '@stackflow/config': ^1.0.1-canary.0
+      '@stackflow/core': ^1.1.0-canary.0
+      '@stackflow/react': ^1.3.2-canary.0
+      '@types/react': '>=16.8.0'
+      react: '>=16.8.0'
+
   '@stackflow/plugin-renderer-basic@1.1.13':
     resolution: {integrity: sha512-8C5QwFagDycFuBLfQ9ynVfpDeO9qeIeGYS3GkZ1Drv3nlc7lE0q1DAGJHLXGLTdra9mzsHCirrGR6sgYa1OA0w==}
     peerDependencies:
@@ -2707,6 +2719,9 @@ packages:
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
+  history@5.3.0:
+    resolution: {integrity: sha512-ZqaKwjjrAYUYfLG+htGaIIZ4nioX2L70ZUMIFysS3xvBsSG4x/n1V6TXV3N8ZYNuFGlDirFg32T7B6WOUPDYcQ==}
+
   hono@4.11.9:
     resolution: {integrity: sha512-Eaw2YTGM6WOxA6CXbckaEvslr2Ne4NFsKrvc0v97JD5awbmeBLO5w9Ho9L9kmKonrwF9RJlW6BxT1PVv/agBHQ==}
     engines: {node: '>=16.9.0'}
@@ -3605,6 +3620,11 @@ packages:
       '@types/react':
         optional: true
 
+  react18-use@0.4.1:
+    resolution: {integrity: sha512-NY59qMAOxmpjg3XJGfSotwmH9BVAD1kB4kZqjfB28yr6jQKaGh1F5i7X1N9OTn6dD5r8yqSH3X4SslcqxAxQCw==}
+    peerDependencies:
+      react: '>=18.0.0'
+
   react@19.2.3:
     resolution: {integrity: sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==}
     engines: {node: '>=0.10.0'}
@@ -4025,6 +4045,10 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  url-pattern@1.0.3:
+    resolution: {integrity: sha512-uQcEj/2puA4aq1R3A2+VNVBgaWYR24FdWjl7VNW83rnWftlhyzOZ/tBjezRiC2UkIzuxC8Top3IekN3vUf1WxA==}
+    engines: {node: '>=0.12.0'}
 
   use-callback-ref@1.3.3:
     resolution: {integrity: sha512-jQL3lRnocaFtu3V00JToYz/4QkNWswxijDaCVNZRiRTO3HQDLsdu1ZtmIUvV4yPp+rvWm5j0y0TG/S61cuijTg==}
@@ -5547,6 +5571,18 @@ snapshots:
     transitivePeerDependencies:
       - babel-plugin-macros
 
+  '@stackflow/plugin-history-sync@1.10.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@types/react@19.2.14)(react@19.2.3))(@types/react@19.2.14)(react@19.2.3)':
+    dependencies:
+      '@stackflow/config': 1.2.2
+      '@stackflow/core': 1.3.0
+      '@stackflow/react': 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@types/react@19.2.14)(react@19.2.3)
+      '@types/react': 19.2.14
+      flatted: 3.3.3
+      history: 5.3.0
+      react: 19.2.3
+      react18-use: 0.4.1(react@19.2.3)
+      url-pattern: 1.0.3
+
   '@stackflow/plugin-renderer-basic@1.1.13(@stackflow/core@1.3.0)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.0)(@types/react@19.2.14)(react@19.2.3))(@types/react@19.2.14)(react@19.2.3)':
     dependencies:
       '@stackflow/core': 1.3.0
@@ -6976,6 +7012,10 @@ snapshots:
     dependencies:
       hermes-estree: 0.25.1
 
+  history@5.3.0:
+    dependencies:
+      '@babel/runtime': 7.28.6
+
   hono@4.11.9: {}
 
   http-errors@2.0.1:
@@ -7810,6 +7850,10 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
+  react18-use@0.4.1(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+
   react@19.2.3: {}
 
   recast@0.23.11:
@@ -8379,6 +8423,8 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  url-pattern@1.0.3: {}
 
   use-callback-ref@1.3.3(@types/react@19.2.14)(react@19.2.3):
     dependencies:

@@ -11,7 +11,7 @@ export { ExpiryBadge } from './ui/ExpiryBadge';
 export { ExpiryBanner } from './ui/ExpiryBanner';
 export { FridgeItemCard } from './ui/FridgeItemCard';
 export { FridgeItemList } from './ui/FridgeItemList';
-export { FridgeItemAddBottomSheet } from './ui/FridgeItemAddBottomSheet';
+export { FridgeItemAddScreen } from './ui/FridgeItemAddScreen';
 export { FridgeItemEditBottomSheet } from './ui/FridgeItemEditBottomSheet';
 export { FridgeBatchAddBottomSheet } from './ui/FridgeBatchAddBottomSheet';
 export { FridgeBatchEditBottomSheet } from './ui/FridgeBatchEditBottomSheet';

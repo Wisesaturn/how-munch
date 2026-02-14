@@ -2,25 +2,22 @@
 
 import { useState } from 'react';
 
-import { BottomSheet, Toast } from '@/commons/ui';
+import { AppScreen } from '@stackflow/plugin-basic-ui';
+
+import { Toast } from '@/commons/ui';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
 import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
 import { type FridgeItemFormValues, FridgeItemForm } from './FridgeItemForm';
 
-interface FridgeItemAddBottomSheetProps {
-  open: boolean;
+interface FridgeItemAddScreenProps {
   onClose: () => void;
   householdId: string;
 }
 
-/** 냉장고 아이템 + 첫 배치 동시 추가 바텀시트 */
-export function FridgeItemAddBottomSheet({
-  open,
-  onClose,
-  householdId,
-}: FridgeItemAddBottomSheetProps) {
+/** 냉장고 아이템 + 첫 배치 동시 추가 화면 */
+export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
   const [step, setStep] = useState<'item' | 'batch'>('item');
   const [itemValues, setItemValues] = useState<FridgeItemFormValues | null>(null);
   const mutation = useAddFridgeItemMutation();
@@ -72,9 +69,11 @@ export function FridgeItemAddBottomSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={handleClose}>
-      <BottomSheet.Content>
-        <BottomSheet.Header heading={step === 'item' ? '재료 추가' : '수량 입력'} />
+    <AppScreen
+      className="pointer-events-auto"
+      appBar={{ title: step === 'item' ? '재료 추가' : '수량 입력' }}
+    >
+      <div className="p-4">
         {step === 'item' ? (
           <FridgeItemForm onSubmit={handleItemSubmit} submitLabel="다음" />
         ) : (
@@ -84,7 +83,7 @@ export function FridgeItemAddBottomSheet({
             submitLabel="추가"
           />
         )}
-      </BottomSheet.Content>
-    </BottomSheet>
+      </div>
+    </AppScreen>
   );
 }

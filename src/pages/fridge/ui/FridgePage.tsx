@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
+import { stackFlowActions } from '@/apps/stackflow/StackFlow';
+
 import { Button } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
@@ -13,7 +15,6 @@ import {
   ExpiryBanner,
   FridgeBatchAddBottomSheet,
   FridgeBatchEditBottomSheet,
-  FridgeItemAddBottomSheet,
   FridgeItemEditBottomSheet,
   FridgeItemList,
   FridgeSearch,
@@ -53,13 +54,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
   };
 
   const openFridgeItemAddSheet = () => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <FridgeItemAddBottomSheet
-        open={isOpen}
-        onClose={() => createOverlayCloseHandler(close, unmount)}
-        householdId={householdId}
-      />
-    ));
+    stackFlowActions.push('FridgeItemAddActivity', { householdId });
   };
 
   const openFridgeItemEditSheet = (item: FridgeItemWithBatches) => {

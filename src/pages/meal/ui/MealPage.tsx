@@ -5,13 +5,14 @@ import { useMemo, useState } from 'react';
 import { addDays, format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, PencilLine } from 'lucide-react';
-import { overlay } from 'overlay-kit';
+
+import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
 import { Button, Card } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
-import { MealEditorBottomSheet, useMealsByDateQuery } from '@/features/meal-manager';
+import { useMealsByDateQuery } from '@/features/meal-manager';
 
 interface MealPageProps {
   householdId: string;
@@ -36,24 +37,9 @@ export function MealPage({ householdId }: MealPageProps) {
     return new Map(meals.map((meal) => [meal.type, meal]));
   }, [meals]);
 
-  const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
-    close();
-    window.setTimeout(unmount, 200);
-  };
-
   const openEditor = (type: MealType) => {
     const meal = (mealMap.get(type) ?? null) as Meal | null;
-
-    overlay.open(({ isOpen, close, unmount }) => (
-      <MealEditorBottomSheet
-        open={isOpen}
-        onClose={() => createOverlayCloseHandler(close, unmount)}
-        householdId={householdId}
-        date={dateKey}
-        type={type}
-        meal={meal}
-      />
-    ));
+    stackFlowActions.push('MealEditorActivity', { householdId, date: dateKey, type, meal });
   };
 
   return (

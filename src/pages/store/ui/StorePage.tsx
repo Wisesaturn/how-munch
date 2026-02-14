@@ -7,12 +7,13 @@ import { ko } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
+import { stackFlowActions } from '@/apps/stackflow/StackFlow';
+
 import { Button } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
 import {
-  IngredientAddBottomSheet,
   IngredientEditBottomSheet,
   IngredientList,
   IngredientSearch,
@@ -57,15 +58,7 @@ export function StorePage({ householdId, userId }: StorePageProps) {
   };
 
   const openIngredientAddSheet = (defaultName?: string) => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <IngredientAddBottomSheet
-        open={isOpen}
-        onClose={() => createOverlayCloseHandler(close, unmount)}
-        householdId={householdId}
-        userId={userId}
-        defaultName={defaultName}
-      />
-    ));
+    stackFlowActions.push('IngredientAddActivity', { householdId, userId, defaultName });
   };
 
   const openIngredientEditSheet = (ingredient: Ingredient) => {

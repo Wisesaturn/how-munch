@@ -2,4 +2,4 @@ export { mealKeys } from './api/queryKey';
 export { useDeleteMealMutation, useUpsertMealMutation } from './api/mutations';
 export { useFridgeItemsForMealQuery, useMealsByDateQuery } from './api/queries';
 
-export { MealEditorBottomSheet } from './ui/MealEditorBottomSheet';
+export { MealEditorScreen } from './ui/MealEditorScreen';
