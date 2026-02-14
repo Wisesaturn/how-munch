@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { OverlayProvider } from 'overlay-kit';
 
+import { StackFlowProvider } from '@/apps/providers/StackFlowProvider';
 import { ToastProvider } from '@/apps/providers/ToastProvider';
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -23,9 +24,11 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <OverlayProvider>
-        {children}
-        <ToastProvider />
-        <ReactQueryDevtools initialIsOpen={false} />
+        <StackFlowProvider>
+          {children}
+          <ToastProvider />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </StackFlowProvider>
       </OverlayProvider>
     </QueryClientProvider>
   );
