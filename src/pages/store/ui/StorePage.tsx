@@ -136,7 +136,7 @@ export function StorePage({ householdId, userId }: StorePageProps) {
       {/* FAB 추가 버튼 */}
       <Button
         onClick={() => openIngredientAddSheet()}
-        className="fixed right-4 bottom-24 z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
+        className="safe-area-position-bottom fixed right-4 z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
         size="icon-lg"
       >
         <Plus className="size-5" />
