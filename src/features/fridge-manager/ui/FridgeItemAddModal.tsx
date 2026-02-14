@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Modal } from '@/commons/ui';
+import { BottomSheet } from '@/commons/ui';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -60,7 +60,11 @@ export function FridgeItemAddModal({ open, onClose, householdId }: FridgeItemAdd
   };
 
   return (
-    <Modal open={open} onClose={handleClose} title={step === 'item' ? '재료 추가' : '수량 입력'}>
+    <BottomSheet
+      open={open}
+      onClose={handleClose}
+      title={step === 'item' ? '재료 추가' : '수량 입력'}
+    >
       {step === 'item' ? (
         <FridgeItemForm onSubmit={handleItemSubmit} submitLabel="다음" />
       ) : (
@@ -70,6 +74,6 @@ export function FridgeItemAddModal({ open, onClose, householdId }: FridgeItemAdd
           submitLabel="추가"
         />
       )}
-    </Modal>
+    </BottomSheet>
   );
 }

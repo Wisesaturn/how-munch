@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { Plus } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 
 import { Button } from '@/commons/ui';
 
@@ -28,13 +29,6 @@ interface FridgePageProps {
 
 export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
   const [search, setSearch] = useState('');
-  const [addItemModalOpen, setAddItemModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<FridgeItemWithBatches | null>(null);
-  const [addBatchTarget, setAddBatchTarget] = useState<FridgeItemWithBatches | null>(null);
-  const [editBatchTarget, setEditBatchTarget] = useState<{
-    batch: FridgeItemBatch;
-    itemName: string;
-  } | null>(null);
 
   const { data: items = [], isLoading } = useFridgeItemsQuery(householdId);
   const deleteItemMutation = useDeleteFridgeItemMutation();
@@ -54,8 +48,51 @@ export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
     deleteBatchMutation.mutate(id);
   };
 
-  const handleEditBatch = (batch: FridgeItemBatch, itemName: string) => {
-    setEditBatchTarget({ batch, itemName });
+  const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
+    close();
+    window.setTimeout(unmount, 200);
+  };
+
+  const openFridgeItemAddSheet = () => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <FridgeItemAddModal
+        open={isOpen}
+        onClose={() => createOverlayCloseHandler(close, unmount)}
+        householdId={householdId}
+      />
+    ));
+  };
+
+  const openFridgeItemEditSheet = (item: FridgeItemWithBatches) => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <FridgeItemEditModal
+        open={isOpen}
+        onClose={() => createOverlayCloseHandler(close, unmount)}
+        item={item}
+      />
+    ));
+  };
+
+  const openFridgeBatchAddSheet = (item: FridgeItemWithBatches) => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <FridgeBatchAddModal
+        open={isOpen}
+        onClose={() => createOverlayCloseHandler(close, unmount)}
+        fridgeItemId={item.id}
+        itemName={item.name}
+      />
+    ));
+  };
+
+  const openFridgeBatchEditSheet = (batch: FridgeItemBatch, itemName: string) => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <FridgeBatchEditModal
+        open={isOpen}
+        onClose={() => createOverlayCloseHandler(close, unmount)}
+        batch={batch}
+        itemName={itemName}
+      />
+    ));
   };
 
   return (
@@ -82,58 +119,22 @@ export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
       ) : (
         <FridgeItemList
           items={filtered}
-          onEditItem={setEditTarget}
+          onEditItem={openFridgeItemEditSheet}
           onDeleteItem={handleDeleteItem}
-          onAddBatch={setAddBatchTarget}
-          onEditBatch={handleEditBatch}
+          onAddBatch={openFridgeBatchAddSheet}
+          onEditBatch={openFridgeBatchEditSheet}
           onDeleteBatch={handleDeleteBatch}
         />
       )}
 
       {/* FAB 추가 버튼 */}
       <Button
-        onClick={() => setAddItemModalOpen(true)}
+        onClick={openFridgeItemAddSheet}
         className="fixed right-4 bottom-24 z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
         size="icon-lg"
       >
         <Plus className="size-5" />
       </Button>
-
-      {/* 아이템 추가 모달 */}
-      <FridgeItemAddModal
-        open={addItemModalOpen}
-        onClose={() => setAddItemModalOpen(false)}
-        householdId={householdId}
-      />
-
-      {/* 아이템 수정 모달 */}
-      {editTarget && (
-        <FridgeItemEditModal
-          open={!!editTarget}
-          onClose={() => setEditTarget(null)}
-          item={editTarget}
-        />
-      )}
-
-      {/* 배치 추가 모달 */}
-      {addBatchTarget && (
-        <FridgeBatchAddModal
-          open={!!addBatchTarget}
-          onClose={() => setAddBatchTarget(null)}
-          fridgeItemId={addBatchTarget.id}
-          itemName={addBatchTarget.name}
-        />
-      )}
-
-      {/* 배치 수정 모달 */}
-      {editBatchTarget && (
-        <FridgeBatchEditModal
-          open={!!editBatchTarget}
-          onClose={() => setEditBatchTarget(null)}
-          batch={editBatchTarget.batch}
-          itemName={editBatchTarget.itemName}
-        />
-      )}
     </div>
   );
 }

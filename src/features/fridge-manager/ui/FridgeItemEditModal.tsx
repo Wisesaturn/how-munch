@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal } from '@/commons/ui';
+import { BottomSheet } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -36,7 +36,7 @@ export function FridgeItemEditModal({ open, onClose, item }: FridgeItemEditModal
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="재료 수정">
+    <BottomSheet open={open} onClose={onClose} title="재료 수정">
       <FridgeItemForm
         defaultValues={{
           name: item.name,
@@ -47,6 +47,6 @@ export function FridgeItemEditModal({ open, onClose, item }: FridgeItemEditModal
         onSubmit={handleSubmit}
         isPending={mutation.isPending}
       />
-    </Modal>
+    </BottomSheet>
   );
 }

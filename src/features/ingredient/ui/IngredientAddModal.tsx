@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal } from '@/commons/ui';
+import { BottomSheet } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
@@ -46,7 +46,7 @@ export function IngredientAddModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="장보기 추가">
+    <BottomSheet open={open} onClose={onClose} title="장보기 추가">
       <IngredientForm
         defaultValues={defaultName ? { name: defaultName } : undefined}
         storeNames={storeNames}
@@ -54,6 +54,6 @@ export function IngredientAddModal({
         isSubmitting={addMutation.isPending}
         submitLabel="추가"
       />
-    </Modal>
+    </BottomSheet>
   );
 }

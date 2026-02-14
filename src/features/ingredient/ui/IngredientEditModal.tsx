@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal } from '@/commons/ui';
+import { BottomSheet } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
@@ -44,7 +44,7 @@ export function IngredientEditModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="장보기 수정">
+    <BottomSheet open={open} onClose={onClose} title="장보기 수정">
       <IngredientForm
         defaultValues={{
           date: ingredient.date,
@@ -60,6 +60,6 @@ export function IngredientEditModal({
         isSubmitting={updateMutation.isPending}
         submitLabel="수정"
       />
-    </Modal>
+    </BottomSheet>
   );
 }

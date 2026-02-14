@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal } from '@/commons/ui';
+import { BottomSheet } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 
@@ -42,7 +42,7 @@ export function FridgeBatchEditModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={`${itemName} — 재고 수정`}>
+    <BottomSheet open={open} onClose={onClose} title={`${itemName} — 재고 수정`}>
       <FridgeBatchForm
         defaultValues={{
           quantity: batch.quantity,
@@ -53,6 +53,6 @@ export function FridgeBatchEditModal({
         onSubmit={handleSubmit}
         isPending={mutation.isPending}
       />
-    </Modal>
+    </BottomSheet>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal } from '@/commons/ui';
+import { BottomSheet } from '@/commons/ui';
 
 import { useAddBatchMutation } from '../api/mutations';
 
@@ -40,8 +40,8 @@ export function FridgeBatchAddModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={`${itemName} — 재고 추가`}>
+    <BottomSheet open={open} onClose={onClose} title={`${itemName} — 재고 추가`}>
       <FridgeBatchForm onSubmit={handleSubmit} isPending={mutation.isPending} submitLabel="추가" />
-    </Modal>
+    </BottomSheet>
   );
 }

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { addMonths, format, subMonths } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 
 import { Button } from '@/commons/ui';
 
@@ -28,10 +29,6 @@ interface StorePageProps {
 export function StorePage({ householdId, userId }: StorePageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [search, setSearch] = useState('');
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Ingredient | null>(null);
-  /** 검색에서 바로 추가 시 사용 */
-  const [addDefaultName, setAddDefaultName] = useState('');
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
@@ -54,14 +51,36 @@ export function StorePage({ householdId, userId }: StorePageProps) {
     deleteMutation.mutate(id);
   };
 
-  const handleAddFromSearch = () => {
-    setAddDefaultName(search.trim());
-    setAddModalOpen(true);
+  const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
+    close();
+    window.setTimeout(unmount, 200);
   };
 
-  const handleCloseAddModal = () => {
-    setAddModalOpen(false);
-    setAddDefaultName('');
+  const openIngredientAddSheet = (defaultName?: string) => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <IngredientAddModal
+        open={isOpen}
+        onClose={() => createOverlayCloseHandler(close, unmount)}
+        householdId={householdId}
+        userId={userId}
+        defaultName={defaultName}
+      />
+    ));
+  };
+
+  const openIngredientEditSheet = (ingredient: Ingredient) => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <IngredientEditModal
+        open={isOpen}
+        onClose={() => createOverlayCloseHandler(close, unmount)}
+        ingredient={ingredient}
+        householdId={householdId}
+      />
+    ));
+  };
+
+  const handleAddFromSearch = () => {
+    openIngredientAddSheet(search.trim());
   };
 
   return (
@@ -107,36 +126,21 @@ export function StorePage({ householdId, userId }: StorePageProps) {
           <span className="text-sm text-gray-400">불러오는 중...</span>
         </div>
       ) : (
-        <IngredientList ingredients={filtered} onEdit={setEditTarget} onDelete={handleDelete} />
+        <IngredientList
+          ingredients={filtered}
+          onEdit={openIngredientEditSheet}
+          onDelete={handleDelete}
+        />
       )}
 
       {/* FAB 추가 버튼 */}
       <Button
-        onClick={() => setAddModalOpen(true)}
+        onClick={() => openIngredientAddSheet()}
         className="fixed right-4 bottom-24 z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
         size="icon-lg"
       >
         <Plus className="size-5" />
       </Button>
-
-      {/* 추가 모달 */}
-      <IngredientAddModal
-        open={addModalOpen}
-        onClose={handleCloseAddModal}
-        householdId={householdId}
-        userId={userId}
-        defaultName={addDefaultName}
-      />
-
-      {/* 수정 모달 */}
-      {editTarget && (
-        <IngredientEditModal
-          open={!!editTarget}
-          onClose={() => setEditTarget(null)}
-          ingredient={editTarget}
-          householdId={householdId}
-        />
-      )}
     </div>
   );
 }
