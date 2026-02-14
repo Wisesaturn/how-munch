@@ -1,0 +1,139 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+
+import { Plus } from 'lucide-react';
+
+import { Button } from '@/commons/ui';
+
+import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
+
+import {
+  ExpiryBanner,
+  FridgeBatchAddModal,
+  FridgeBatchEditModal,
+  FridgeItemAddModal,
+  FridgeItemEditModal,
+  FridgeItemList,
+  FridgeSearch,
+  useDeleteBatchMutation,
+  useDeleteFridgeItemMutation,
+  useFridgeItemsQuery,
+} from '@/features/fridge-manager';
+
+interface FridgePageProps {
+  householdId: string;
+  userId: string;
+}
+
+export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
+  const [search, setSearch] = useState('');
+  const [addItemModalOpen, setAddItemModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<FridgeItemWithBatches | null>(null);
+  const [addBatchTarget, setAddBatchTarget] = useState<FridgeItemWithBatches | null>(null);
+  const [editBatchTarget, setEditBatchTarget] = useState<{
+    batch: FridgeItemBatch;
+    itemName: string;
+  } | null>(null);
+
+  const { data: items = [], isLoading } = useFridgeItemsQuery(householdId);
+  const deleteItemMutation = useDeleteFridgeItemMutation();
+  const deleteBatchMutation = useDeleteBatchMutation();
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.trim().toLowerCase();
+    return items.filter((item) => item.name.toLowerCase().includes(q));
+  }, [items, search]);
+
+  const handleDeleteItem = (id: string) => {
+    deleteItemMutation.mutate(id);
+  };
+
+  const handleDeleteBatch = (id: string) => {
+    deleteBatchMutation.mutate(id);
+  };
+
+  const handleEditBatch = (batch: FridgeItemBatch, itemName: string) => {
+    setEditBatchTarget({ batch, itemName });
+  };
+
+  return (
+    <div className="flex flex-col gap-4 px-4 py-5">
+      {/* 헤더 */}
+      <header>
+        <h1 className="text-lg font-bold">냉장고</h1>
+        <p className="text-xs text-gray-400">
+          총 {items.length}종 · {items.reduce((sum, i) => sum + i.total_count, 0)}개
+        </p>
+      </header>
+
+      {/* 만료 임박 배너 */}
+      {!search.trim() && <ExpiryBanner items={items} />}
+
+      {/* 검색 */}
+      <FridgeSearch value={search} onChange={setSearch} />
+
+      {/* 리스트 */}
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <span className="text-sm text-gray-400">불러오는 중...</span>
+        </div>
+      ) : (
+        <FridgeItemList
+          items={filtered}
+          onEditItem={setEditTarget}
+          onDeleteItem={handleDeleteItem}
+          onAddBatch={setAddBatchTarget}
+          onEditBatch={handleEditBatch}
+          onDeleteBatch={handleDeleteBatch}
+        />
+      )}
+
+      {/* FAB 추가 버튼 */}
+      <Button
+        onClick={() => setAddItemModalOpen(true)}
+        className="fixed right-4 bottom-24 z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
+        size="icon-lg"
+      >
+        <Plus className="size-5" />
+      </Button>
+
+      {/* 아이템 추가 모달 */}
+      <FridgeItemAddModal
+        open={addItemModalOpen}
+        onClose={() => setAddItemModalOpen(false)}
+        householdId={householdId}
+      />
+
+      {/* 아이템 수정 모달 */}
+      {editTarget && (
+        <FridgeItemEditModal
+          open={!!editTarget}
+          onClose={() => setEditTarget(null)}
+          item={editTarget}
+        />
+      )}
+
+      {/* 배치 추가 모달 */}
+      {addBatchTarget && (
+        <FridgeBatchAddModal
+          open={!!addBatchTarget}
+          onClose={() => setAddBatchTarget(null)}
+          fridgeItemId={addBatchTarget.id}
+          itemName={addBatchTarget.name}
+        />
+      )}
+
+      {/* 배치 수정 모달 */}
+      {editBatchTarget && (
+        <FridgeBatchEditModal
+          open={!!editBatchTarget}
+          onClose={() => setEditBatchTarget(null)}
+          batch={editBatchTarget.batch}
+          itemName={editBatchTarget.itemName}
+        />
+      )}
+    </div>
+  );
+}
