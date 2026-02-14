@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 
-import { format } from 'date-fns';
-
 import { createClient } from '@/commons/api/supabase/server';
 
-export default async function MealPage() {
+import { MealPage } from '@/pages/meal';
+
+export default async function MealRoute() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,25 +14,24 @@ export default async function MealPage() {
     redirect('/');
   }
 
-  const today = format(new Date(), 'yyyy년 M월 d일');
+  await supabase.rpc('ensure_current_user_household_member');
 
-  return (
-    <div className="flex flex-col gap-6 px-5 py-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-500">{today}</p>
-          <h1 className="text-xl font-bold">식단표</h1>
-        </div>
-      </header>
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
 
-      <section className="flex flex-col gap-3">
-        {['아침', '점심', '저녁'].map((meal) => (
-          <div key={meal} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-            <h2 className="mb-2 text-sm font-semibold text-gray-700">{meal}</h2>
-            <p className="text-sm text-gray-400">아직 등록된 식단이 없습니다</p>
-          </div>
-        ))}
-      </section>
-    </div>
-  );
+  const householdId = profile?.household_id;
+
+  if (!householdId) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 px-5 py-12">
+        <p className="text-sm text-gray-500">가구에 가입되어 있지 않습니다</p>
+        <p className="text-xs text-gray-400">프로필에서 가구를 생성하거나 초대를 받아 주세요</p>
+      </div>
+    );
+  }
+
+  return <MealPage householdId={householdId} />;
 }
