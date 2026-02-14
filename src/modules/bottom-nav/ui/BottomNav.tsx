@@ -18,7 +18,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="safe-area-padding-bottom fixed right-0 bottom-0 left-0 z-50 border-t border-gray-100 bg-white/95 pt-1 backdrop-blur-sm">
+    <nav className="safe-area-padding-bottom fixed right-0 bottom-0 left-0 z-50 h-[68px] border-t border-gray-100 bg-white/95 pt-1 backdrop-blur-sm">
       <div className="mx-auto w-full md:max-w-[430px]">
         <ul className="flex items-center justify-around">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {

@@ -131,7 +131,7 @@ export function FridgePage({ householdId, userId }: FridgePageProps) {
       {/* FAB 추가 버튼 */}
       <Button
         onClick={openFridgeItemAddSheet}
-        className="safe-area-position-bottom fixed right-4 z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
+        className="fixed right-4 [bottom:calc(constant(safe-area-inset-bottom)+84px)] [bottom:calc(env(safe-area-inset-bottom)+84px)] z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
         size="icon-lg"
       >
         <Plus className="size-5" />

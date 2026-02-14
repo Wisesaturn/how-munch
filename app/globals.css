@@ -136,9 +136,4 @@ body {
     padding-bottom: calc(constant(safe-area-inset-bottom) + 8px);
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
   }
-
-  .safe-area-position-bottom {
-    bottom: calc(constant(safe-area-inset-bottom) + 68px);
-    bottom: calc(env(safe-area-inset-bottom) + 68px);
-  }
 }
