@@ -85,6 +85,20 @@ project-root/
 - Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createClient } from '@/commons/api/supabase/server'` (server)
 - proxy.ts — 프로젝트 루트에 위치 (Next.js 16 proxy convention, Supabase 세션 리프레시)
 
+### Common UI Composition
+
+- 공통 컴포넌트는 SRP 원칙으로 역할 단위(`Header`, `Body`, `Footer` 등)로 분리 구현
+- export 단계에서 `Object.assign`으로 묶은 compound API를 기본으로 제공
+- 사용처에서는 `<Dialog>`, `<Dialog.Header>`, `<Dialog.Footer>` 형태를 우선 사용
+
+### Commit Convention
+
+- 커밋 타입 prefix를 사용: `feat`, `fix`, `chore`, `docs`, `refactor`, `style` 등
+- 커밋 메시지 형식:
+  - `type: 작업 내용`
+  - 빈 줄
+  - `- 작업 내용 간단 요약`
+
 ## ESLint Rules
 
 ### FSD Architecture (eslint-plugin-fsd-lint)
