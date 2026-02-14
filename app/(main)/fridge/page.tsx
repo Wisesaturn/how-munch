@@ -33,5 +33,5 @@ export default async function FridgeRoute() {
     );
   }
 
-  return <FridgePage householdId={householdId} userId={user.id} />;
+  return <FridgePage householdId={householdId} />;
 }

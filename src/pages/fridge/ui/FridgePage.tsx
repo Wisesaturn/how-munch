@@ -24,10 +24,9 @@ import {
 
 interface FridgePageProps {
   householdId: string;
-  userId: string;
 }
 
-export function FridgePage({ householdId, userId }: FridgePageProps) {
+export function FridgePage({ householdId }: FridgePageProps) {
   const [search, setSearch] = useState('');
 
   const { data: items = [], isLoading } = useFridgeItemsQuery(householdId);
@@ -59,7 +58,6 @@ export function FridgePage({ householdId, userId }: FridgePageProps) {
         open={isOpen}
         onClose={() => createOverlayCloseHandler(close, unmount)}
         householdId={householdId}
-        userId={userId}
       />
     ));
   };
