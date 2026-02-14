@@ -88,7 +88,8 @@ project-root/
 ### Common UI Composition
 
 - 공통 컴포넌트는 SRP 원칙으로 역할 단위(`Header`, `Body`, `Footer` 등)로 분리 구현
-- export 단계에서 `Object.assign`으로 묶은 compound API를 기본으로 제공
+- 컴파운드 패턴일 때만 export 단계에서 `Object.assign`으로 묶은 compound API를 제공
+- 컴파운드 패턴이 아니면 일반 단일 컴포넌트 export를 유지 (불필요한 `Object.assign` 지양)
 - 사용처에서는 `<Dialog>`, `<Dialog.Header>`, `<Dialog.Footer>` 형태를 우선 사용
 
 ### Commit Convention
