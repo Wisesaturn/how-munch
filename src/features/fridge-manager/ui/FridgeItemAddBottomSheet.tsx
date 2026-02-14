@@ -9,14 +9,18 @@ import { useAddFridgeItemMutation } from '../api/mutations';
 import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
 import { type FridgeItemFormValues, FridgeItemForm } from './FridgeItemForm';
 
-interface FridgeItemAddModalProps {
+interface FridgeItemAddBottomSheetProps {
   open: boolean;
   onClose: () => void;
   householdId: string;
 }
 
-/** 냉장고 아이템 + 첫 배치 동시 추가 모달 */
-export function FridgeItemAddModal({ open, onClose, householdId }: FridgeItemAddModalProps) {
+/** 냉장고 아이템 + 첫 배치 동시 추가 바텀시트 */
+export function FridgeItemAddBottomSheet({
+  open,
+  onClose,
+  householdId,
+}: FridgeItemAddBottomSheetProps) {
   const [step, setStep] = useState<'item' | 'batch'>('item');
   const [itemValues, setItemValues] = useState<FridgeItemFormValues | null>(null);
   const mutation = useAddFridgeItemMutation();
@@ -60,20 +64,19 @@ export function FridgeItemAddModal({ open, onClose, householdId }: FridgeItemAdd
   };
 
   return (
-    <BottomSheet
-      open={open}
-      onClose={handleClose}
-      title={step === 'item' ? '재료 추가' : '수량 입력'}
-    >
-      {step === 'item' ? (
-        <FridgeItemForm onSubmit={handleItemSubmit} submitLabel="다음" />
-      ) : (
-        <FridgeBatchForm
-          onSubmit={handleBatchSubmit}
-          isPending={mutation.isPending}
-          submitLabel="추가"
-        />
-      )}
+    <BottomSheet open={open} onClose={handleClose}>
+      <BottomSheet.Content>
+        <BottomSheet.Header heading={step === 'item' ? '재료 추가' : '수량 입력'} />
+        {step === 'item' ? (
+          <FridgeItemForm onSubmit={handleItemSubmit} submitLabel="다음" />
+        ) : (
+          <FridgeBatchForm
+            onSubmit={handleBatchSubmit}
+            isPending={mutation.isPending}
+            submitLabel="추가"
+          />
+        )}
+      </BottomSheet.Content>
     </BottomSheet>
   );
 }

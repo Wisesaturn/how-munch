@@ -7,7 +7,7 @@ import { useStoreNamesQuery } from '../api/queries';
 
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
 
-interface IngredientAddModalProps {
+interface IngredientAddBottomSheetProps {
   open: boolean;
   onClose: () => void;
   householdId: string;
@@ -16,13 +16,13 @@ interface IngredientAddModalProps {
   defaultName?: string;
 }
 
-export function IngredientAddModal({
+export function IngredientAddBottomSheet({
   open,
   onClose,
   householdId,
   userId,
   defaultName,
-}: IngredientAddModalProps) {
+}: IngredientAddBottomSheetProps) {
   const addMutation = useAddIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
 
@@ -46,14 +46,17 @@ export function IngredientAddModal({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="장보기 추가">
-      <IngredientForm
-        defaultValues={defaultName ? { name: defaultName } : undefined}
-        storeNames={storeNames}
-        onSubmit={handleSubmit}
-        isSubmitting={addMutation.isPending}
-        submitLabel="추가"
-      />
+    <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Content>
+        <BottomSheet.Header heading="장보기 추가" />
+        <IngredientForm
+          defaultValues={defaultName ? { name: defaultName } : undefined}
+          storeNames={storeNames}
+          onSubmit={handleSubmit}
+          isSubmitting={addMutation.isPending}
+          submitLabel="추가"
+        />
+      </BottomSheet.Content>
     </BottomSheet>
   );
 }

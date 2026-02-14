@@ -8,20 +8,20 @@ import { useUpdateBatchMutation } from '../api/mutations';
 
 import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
 
-interface FridgeBatchEditModalProps {
+interface FridgeBatchEditBottomSheetProps {
   open: boolean;
   onClose: () => void;
   batch: FridgeItemBatch;
   itemName: string;
 }
 
-/** 배치 수정 모달 */
-export function FridgeBatchEditModal({
+/** 배치 수정 바텀시트 */
+export function FridgeBatchEditBottomSheet({
   open,
   onClose,
   batch,
   itemName,
-}: FridgeBatchEditModalProps) {
+}: FridgeBatchEditBottomSheetProps) {
   const mutation = useUpdateBatchMutation();
 
   const handleSubmit = (values: FridgeBatchFormValues) => {
@@ -42,17 +42,20 @@ export function FridgeBatchEditModal({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={`${itemName} — 재고 수정`}>
-      <FridgeBatchForm
-        defaultValues={{
-          quantity: batch.quantity,
-          expiry_date: batch.expiry_date ?? '',
-          purchased_date: batch.purchased_date,
-          memo: batch.memo ?? '',
-        }}
-        onSubmit={handleSubmit}
-        isPending={mutation.isPending}
-      />
+    <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Content>
+        <BottomSheet.Header heading={`${itemName} — 재고 수정`} />
+        <FridgeBatchForm
+          defaultValues={{
+            quantity: batch.quantity,
+            expiry_date: batch.expiry_date ?? '',
+            purchased_date: batch.purchased_date,
+            memo: batch.memo ?? '',
+          }}
+          onSubmit={handleSubmit}
+          isPending={mutation.isPending}
+        />
+      </BottomSheet.Content>
     </BottomSheet>
   );
 }

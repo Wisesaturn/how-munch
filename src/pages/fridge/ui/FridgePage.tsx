@@ -11,10 +11,10 @@ import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fri
 
 import {
   ExpiryBanner,
-  FridgeBatchAddModal,
-  FridgeBatchEditModal,
-  FridgeItemAddModal,
-  FridgeItemEditModal,
+  FridgeBatchAddBottomSheet,
+  FridgeBatchEditBottomSheet,
+  FridgeItemAddBottomSheet,
+  FridgeItemEditBottomSheet,
   FridgeItemList,
   FridgeSearch,
   useDeleteBatchMutation,
@@ -55,7 +55,7 @@ export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
 
   const openFridgeItemAddSheet = () => {
     overlay.open(({ isOpen, close, unmount }) => (
-      <FridgeItemAddModal
+      <FridgeItemAddBottomSheet
         open={isOpen}
         onClose={() => createOverlayCloseHandler(close, unmount)}
         householdId={householdId}
@@ -65,7 +65,7 @@ export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
 
   const openFridgeItemEditSheet = (item: FridgeItemWithBatches) => {
     overlay.open(({ isOpen, close, unmount }) => (
-      <FridgeItemEditModal
+      <FridgeItemEditBottomSheet
         open={isOpen}
         onClose={() => createOverlayCloseHandler(close, unmount)}
         item={item}
@@ -75,7 +75,7 @@ export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
 
   const openFridgeBatchAddSheet = (item: FridgeItemWithBatches) => {
     overlay.open(({ isOpen, close, unmount }) => (
-      <FridgeBatchAddModal
+      <FridgeBatchAddBottomSheet
         open={isOpen}
         onClose={() => createOverlayCloseHandler(close, unmount)}
         fridgeItemId={item.id}
@@ -86,7 +86,7 @@ export function FridgePage({ householdId, userId: _userId }: FridgePageProps) {
 
   const openFridgeBatchEditSheet = (batch: FridgeItemBatch, itemName: string) => {
     overlay.open(({ isOpen, close, unmount }) => (
-      <FridgeBatchEditModal
+      <FridgeBatchEditBottomSheet
         open={isOpen}
         onClose={() => createOverlayCloseHandler(close, unmount)}
         batch={batch}

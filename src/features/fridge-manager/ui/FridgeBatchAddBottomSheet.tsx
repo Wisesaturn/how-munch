@@ -6,20 +6,20 @@ import { useAddBatchMutation } from '../api/mutations';
 
 import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
 
-interface FridgeBatchAddModalProps {
+interface FridgeBatchAddBottomSheetProps {
   open: boolean;
   onClose: () => void;
   fridgeItemId: string;
   itemName: string;
 }
 
-/** 기존 아이템에 배치 추가 모달 */
-export function FridgeBatchAddModal({
+/** 기존 아이템에 배치 추가 바텀시트 */
+export function FridgeBatchAddBottomSheet({
   open,
   onClose,
   fridgeItemId,
   itemName,
-}: FridgeBatchAddModalProps) {
+}: FridgeBatchAddBottomSheetProps) {
   const mutation = useAddBatchMutation();
 
   const handleSubmit = (values: FridgeBatchFormValues) => {
@@ -40,8 +40,15 @@ export function FridgeBatchAddModal({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={`${itemName} — 재고 추가`}>
-      <FridgeBatchForm onSubmit={handleSubmit} isPending={mutation.isPending} submitLabel="추가" />
+    <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Content>
+        <BottomSheet.Header heading={`${itemName} — 재고 추가`} />
+        <FridgeBatchForm
+          onSubmit={handleSubmit}
+          isPending={mutation.isPending}
+          submitLabel="추가"
+        />
+      </BottomSheet.Content>
     </BottomSheet>
   );
 }

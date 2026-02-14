@@ -9,19 +9,19 @@ import { useStoreNamesQuery } from '../api/queries';
 
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
 
-interface IngredientEditModalProps {
+interface IngredientEditBottomSheetProps {
   open: boolean;
   onClose: () => void;
   ingredient: Ingredient;
   householdId: string;
 }
 
-export function IngredientEditModal({
+export function IngredientEditBottomSheet({
   open,
   onClose,
   ingredient,
   householdId,
-}: IngredientEditModalProps) {
+}: IngredientEditBottomSheetProps) {
   const updateMutation = useUpdateIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
 
@@ -44,22 +44,25 @@ export function IngredientEditModal({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="장보기 수정">
-      <IngredientForm
-        defaultValues={{
-          date: ingredient.date,
-          category: ingredient.category,
-          name: ingredient.name,
-          count: ingredient.count,
-          unit: ingredient.unit,
-          store: ingredient.store ?? '',
-          price: ingredient.price,
-        }}
-        storeNames={storeNames}
-        onSubmit={handleSubmit}
-        isSubmitting={updateMutation.isPending}
-        submitLabel="수정"
-      />
+    <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Content>
+        <BottomSheet.Header heading="장보기 수정" />
+        <IngredientForm
+          defaultValues={{
+            date: ingredient.date,
+            category: ingredient.category,
+            name: ingredient.name,
+            count: ingredient.count,
+            unit: ingredient.unit,
+            store: ingredient.store ?? '',
+            price: ingredient.price,
+          }}
+          storeNames={storeNames}
+          onSubmit={handleSubmit}
+          isSubmitting={updateMutation.isPending}
+          submitLabel="수정"
+        />
+      </BottomSheet.Content>
     </BottomSheet>
   );
 }

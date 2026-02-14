@@ -12,8 +12,8 @@ import { Button } from '@/commons/ui';
 import { type Ingredient } from '@/entities/ingredient';
 
 import {
-  IngredientAddModal,
-  IngredientEditModal,
+  IngredientAddBottomSheet,
+  IngredientEditBottomSheet,
   IngredientList,
   IngredientSearch,
   useDeleteIngredientMutation,
@@ -58,7 +58,7 @@ export function StorePage({ householdId, userId }: StorePageProps) {
 
   const openIngredientAddSheet = (defaultName?: string) => {
     overlay.open(({ isOpen, close, unmount }) => (
-      <IngredientAddModal
+      <IngredientAddBottomSheet
         open={isOpen}
         onClose={() => createOverlayCloseHandler(close, unmount)}
         householdId={householdId}
@@ -70,7 +70,7 @@ export function StorePage({ householdId, userId }: StorePageProps) {
 
   const openIngredientEditSheet = (ingredient: Ingredient) => {
     overlay.open(({ isOpen, close, unmount }) => (
-      <IngredientEditModal
+      <IngredientEditBottomSheet
         open={isOpen}
         onClose={() => createOverlayCloseHandler(close, unmount)}
         ingredient={ingredient}

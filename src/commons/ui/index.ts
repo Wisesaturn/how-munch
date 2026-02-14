@@ -6,6 +6,7 @@ export { Card } from './Card';
 export { Drawer } from './Drawer';
 export { EmptyState } from './EmptyState';
 export { Input } from './Input';
-export { Modal } from './Modal';
 export { ProgressBar } from './ProgressBar';
 export { Select } from './Select';
+export { ToastViewport } from './ToastViewport';
+export { Toast } from './toast';

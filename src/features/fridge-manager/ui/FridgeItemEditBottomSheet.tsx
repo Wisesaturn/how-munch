@@ -8,14 +8,14 @@ import { useUpdateFridgeItemMutation } from '../api/mutations';
 
 import { type FridgeItemFormValues, FridgeItemForm } from './FridgeItemForm';
 
-interface FridgeItemEditModalProps {
+interface FridgeItemEditBottomSheetProps {
   open: boolean;
   onClose: () => void;
   item: FridgeItemWithBatches;
 }
 
-/** 냉장고 아이템 메타 수정 모달 */
-export function FridgeItemEditModal({ open, onClose, item }: FridgeItemEditModalProps) {
+/** 냉장고 아이템 메타 수정 바텀시트 */
+export function FridgeItemEditBottomSheet({ open, onClose, item }: FridgeItemEditBottomSheetProps) {
   const mutation = useUpdateFridgeItemMutation();
 
   const handleSubmit = (values: FridgeItemFormValues) => {
@@ -36,17 +36,20 @@ export function FridgeItemEditModal({ open, onClose, item }: FridgeItemEditModal
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="재료 수정">
-      <FridgeItemForm
-        defaultValues={{
-          name: item.name,
-          category: item.category,
-          unit: item.unit,
-          is_subdivided: item.is_subdivided,
-        }}
-        onSubmit={handleSubmit}
-        isPending={mutation.isPending}
-      />
+    <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Content>
+        <BottomSheet.Header heading="재료 수정" />
+        <FridgeItemForm
+          defaultValues={{
+            name: item.name,
+            category: item.category,
+            unit: item.unit,
+            is_subdivided: item.is_subdivided,
+          }}
+          onSubmit={handleSubmit}
+          isPending={mutation.isPending}
+        />
+      </BottomSheet.Content>
     </BottomSheet>
   );
 }
