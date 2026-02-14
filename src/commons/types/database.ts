@@ -163,7 +163,56 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'fridge_item_batches_fridge_item_id_fkey';
+            columns: ['id'];
+            isOneToOne: false;
+            referencedRelation: 'fridge_item_batches';
+            referencedColumns: ['fridge_item_id'];
+          },
+        ];
+      };
+      fridge_item_batches: {
+        Row: {
+          id: string;
+          fridge_item_id: string;
+          quantity: number;
+          expiry_date: string | null;
+          purchased_date: string;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          fridge_item_id: string;
+          quantity: number;
+          expiry_date?: string | null;
+          purchased_date?: string;
+          memo?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          fridge_item_id?: string;
+          quantity?: number;
+          expiry_date?: string | null;
+          purchased_date?: string;
+          memo?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'fridge_item_batches_fridge_item_id_fkey';
+            columns: ['fridge_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'fridge_items';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       meals: {
         Row: {

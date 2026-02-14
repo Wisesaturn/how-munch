@@ -1,1 +1,6 @@
-export type { FridgeItem, FridgeItemUnit } from './model/types';
+export type {
+  FridgeItem,
+  FridgeItemBatch,
+  FridgeItemUnit,
+  FridgeItemWithBatches,
+} from './model/types';

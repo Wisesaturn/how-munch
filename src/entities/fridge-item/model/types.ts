@@ -8,7 +8,7 @@ export interface FridgeItem {
   household_id: string;
   /** 재료명 */
   name: string;
-  /** 현재 보유 총량 (소진 시 0) */
+  /** 현재 보유 총량 (트리거로 자동 계산) */
   total_count: number;
   /** 단위 — count: 개, g: 그램 */
   unit: FridgeItemUnit;
@@ -20,4 +20,25 @@ export interface FridgeItem {
   from_grocery: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/** 냉장고 재고 배치 — 동일 재료의 구매 차수별 관리 (FIFO) */
+export interface FridgeItemBatch {
+  id: string;
+  fridge_item_id: string;
+  /** 수량 */
+  quantity: number;
+  /** 유통기한 (null이면 미입력) */
+  expiry_date: string | null;
+  /** 구매일 */
+  purchased_date: string;
+  /** 메모 */
+  memo: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 냉장고 재고 + 배치 목록 (조합 표시용) */
+export interface FridgeItemWithBatches extends FridgeItem {
+  fridge_item_batches: FridgeItemBatch[];
 }
