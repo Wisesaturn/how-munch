@@ -39,7 +39,7 @@ export function InvitePage({ code, householdName, isValid }: InvitePageProps) {
         </Card.Header>
         <Card.Content className="flex flex-col gap-3">
           <p className="text-sm text-gray-600">
-            <span className="font-semibold">{householdName ?? '알 수 없는 가구'}</span>에
+            <span className="font-semibold">{householdName ?? '초대된 가구'}</span>에
             초대되었습니다.
           </p>
           <p className="text-xs text-gray-500">코드: {code}</p>

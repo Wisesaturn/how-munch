@@ -41,9 +41,15 @@ export function InviteLinkSection({ householdId, userId }: InviteLinkSectionProp
   const handleCopy = async () => {
     if (!inviteLink) return;
 
+    const inviteText = [
+      'How Munch 가구 초대 링크를 보냈어요.',
+      '아래 링크를 열어 로그인 후 가구에 가입해 주세요.',
+      inviteLink,
+    ].join('\n');
+
     try {
-      await navigator.clipboard.writeText(inviteLink);
-      Toast.success('초대 링크를 복사했습니다');
+      await navigator.clipboard.writeText(inviteText);
+      Toast.success('안내 문구와 초대 링크를 복사했습니다');
     } catch {
       Toast.error('클립보드 복사에 실패했습니다');
     }
