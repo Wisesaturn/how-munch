@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { BottomSheet } from '@/commons/ui';
+import { BottomSheet, Toast } from '@/commons/ui';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -24,6 +24,10 @@ export function FridgeItemAddBottomSheet({
   const [step, setStep] = useState<'item' | 'batch'>('item');
   const [itemValues, setItemValues] = useState<FridgeItemFormValues | null>(null);
   const mutation = useAddFridgeItemMutation();
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    return '재료 추가 중 오류가 발생했습니다';
+  };
 
   const handleItemSubmit = (values: FridgeItemFormValues) => {
     setItemValues(values);
@@ -51,7 +55,11 @@ export function FridgeItemAddBottomSheet({
       },
       {
         onSuccess: () => {
+          Toast.success('재료가 추가되었습니다');
           handleClose();
+        },
+        onError: (error) => {
+          Toast.error(getErrorMessage(error));
         },
       },
     );

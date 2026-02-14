@@ -1,6 +1,6 @@
 'use client';
 
-import { BottomSheet } from '@/commons/ui';
+import { BottomSheet, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -17,6 +17,10 @@ interface FridgeItemEditBottomSheetProps {
 /** 냉장고 아이템 메타 수정 바텀시트 */
 export function FridgeItemEditBottomSheet({ open, onClose, item }: FridgeItemEditBottomSheetProps) {
   const mutation = useUpdateFridgeItemMutation();
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    return '재료 수정 중 오류가 발생했습니다';
+  };
 
   const handleSubmit = (values: FridgeItemFormValues) => {
     mutation.mutate(
@@ -29,7 +33,11 @@ export function FridgeItemEditBottomSheet({ open, onClose, item }: FridgeItemEdi
       },
       {
         onSuccess: () => {
+          Toast.success('재료 정보가 수정되었습니다');
           onClose();
+        },
+        onError: (error) => {
+          Toast.error(getErrorMessage(error));
         },
       },
     );

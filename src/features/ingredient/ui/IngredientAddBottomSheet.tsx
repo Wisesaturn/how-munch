@@ -1,6 +1,6 @@
 'use client';
 
-import { BottomSheet } from '@/commons/ui';
+import { BottomSheet, Toast } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
@@ -25,6 +25,10 @@ export function IngredientAddBottomSheet({
 }: IngredientAddBottomSheetProps) {
   const addMutation = useAddIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    return '장보기 추가 중 오류가 발생했습니다';
+  };
 
   const handleSubmit = (values: IngredientFormValues) => {
     addMutation.mutate(
@@ -40,7 +44,13 @@ export function IngredientAddBottomSheet({
         price: values.price,
       },
       {
-        onSuccess: () => onClose(),
+        onSuccess: () => {
+          Toast.success('장보기 항목이 추가되었습니다');
+          onClose();
+        },
+        onError: (error) => {
+          Toast.error(getErrorMessage(error));
+        },
       },
     );
   };

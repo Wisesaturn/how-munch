@@ -1,6 +1,6 @@
 'use client';
 
-import { BottomSheet } from '@/commons/ui';
+import { BottomSheet, Toast } from '@/commons/ui';
 
 import { useAddBatchMutation } from '../api/mutations';
 
@@ -21,6 +21,10 @@ export function FridgeBatchAddBottomSheet({
   itemName,
 }: FridgeBatchAddBottomSheetProps) {
   const mutation = useAddBatchMutation();
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    return '재고 추가 중 오류가 발생했습니다';
+  };
 
   const handleSubmit = (values: FridgeBatchFormValues) => {
     mutation.mutate(
@@ -33,7 +37,11 @@ export function FridgeBatchAddBottomSheet({
       },
       {
         onSuccess: () => {
+          Toast.success('재고가 추가되었습니다');
           onClose();
+        },
+        onError: (error) => {
+          Toast.error(getErrorMessage(error));
         },
       },
     );

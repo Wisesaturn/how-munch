@@ -1,6 +1,6 @@
 'use client';
 
-import { BottomSheet } from '@/commons/ui';
+import { BottomSheet, Toast } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 
@@ -23,6 +23,10 @@ export function FridgeBatchEditBottomSheet({
   itemName,
 }: FridgeBatchEditBottomSheetProps) {
   const mutation = useUpdateBatchMutation();
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    return '재고 수정 중 오류가 발생했습니다';
+  };
 
   const handleSubmit = (values: FridgeBatchFormValues) => {
     mutation.mutate(
@@ -35,7 +39,11 @@ export function FridgeBatchEditBottomSheet({
       },
       {
         onSuccess: () => {
+          Toast.success('재고가 수정되었습니다');
           onClose();
+        },
+        onError: (error) => {
+          Toast.error(getErrorMessage(error));
         },
       },
     );

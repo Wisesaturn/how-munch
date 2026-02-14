@@ -1,6 +1,6 @@
 'use client';
 
-import { BottomSheet } from '@/commons/ui';
+import { BottomSheet, Toast } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
@@ -24,6 +24,10 @@ export function IngredientEditBottomSheet({
 }: IngredientEditBottomSheetProps) {
   const updateMutation = useUpdateIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    return '장보기 수정 중 오류가 발생했습니다';
+  };
 
   const handleSubmit = (values: IngredientFormValues) => {
     updateMutation.mutate(
@@ -38,7 +42,13 @@ export function IngredientEditBottomSheet({
         price: values.price,
       },
       {
-        onSuccess: () => onClose(),
+        onSuccess: () => {
+          Toast.success('장보기 항목이 수정되었습니다');
+          onClose();
+        },
+        onError: (error) => {
+          Toast.error(getErrorMessage(error));
+        },
       },
     );
   };
