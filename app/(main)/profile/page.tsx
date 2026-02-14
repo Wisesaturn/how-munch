@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation';
 
 import { createClient } from '@/commons/api/supabase/server';
 
-export default async function ProfilePage() {
+import { ProfilePage } from '@/pages/profile';
+
+export default async function ProfileRoute() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -12,12 +14,11 @@ export default async function ProfilePage() {
     redirect('/');
   }
 
-  return (
-    <div className="flex flex-col gap-6 px-5 py-6">
-      <header>
-        <h1 className="text-xl font-bold">프로필</h1>
-      </header>
-      <p className="text-sm text-gray-400">준비 중입니다</p>
-    </div>
-  );
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  return <ProfilePage userId={user.id} householdId={profile?.household_id ?? null} />;
 }
