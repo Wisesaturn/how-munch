@@ -18,27 +18,29 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t border-gray-100 bg-white/95 pb-4 backdrop-blur-sm">
-      <ul className="flex h-16 items-center justify-around">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname?.startsWith(href) ?? false;
+    <nav className="fixed right-0 bottom-0 left-0 z-50 border-t border-gray-100 bg-white/95 backdrop-blur-sm">
+      <div className="mx-auto w-full max-w-[430px]">
+        <ul className="flex h-16 items-center justify-around">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname?.startsWith(href) ?? false;
 
-          return (
-            <li key={href}>
-              <Link
-                href={href}
-                className={cn(
-                  'flex flex-col items-center gap-1 px-4 py-2 text-xs transition-colors',
-                  isActive ? 'text-emerald-600' : 'text-gray-400 hover:text-gray-600',
-                )}
-              >
-                <Icon className="size-5" strokeWidth={isActive ? 2.2 : 1.8} />
-                <span className={cn('text-[11px]', isActive && 'font-semibold')}>{label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className={cn(
+                    'flex flex-col items-center gap-1 px-4 py-2 text-xs transition-colors',
+                    isActive ? 'text-emerald-600' : 'text-gray-400 hover:text-gray-600',
+                  )}
+                >
+                  <Icon className="size-5" strokeWidth={isActive ? 2.2 : 1.8} />
+                  <span className={cn('text-[11px]', isActive && 'font-semibold')}>{label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </nav>
   );
 }
