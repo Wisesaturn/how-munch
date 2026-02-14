@@ -13,6 +13,7 @@ interface FridgeItemAddBottomSheetProps {
   open: boolean;
   onClose: () => void;
   householdId: string;
+  userId: string;
 }
 
 /** 냉장고 아이템 + 첫 배치 동시 추가 바텀시트 */
@@ -20,6 +21,7 @@ export function FridgeItemAddBottomSheet({
   open,
   onClose,
   householdId,
+  userId,
 }: FridgeItemAddBottomSheetProps) {
   const [step, setStep] = useState<'item' | 'batch'>('item');
   const [itemValues, setItemValues] = useState<FridgeItemFormValues | null>(null);
@@ -52,6 +54,7 @@ export function FridgeItemAddBottomSheet({
           purchased_date: batchValues.purchased_date,
           memo: batchValues.memo || null,
         },
+        userId,
       },
       {
         onSuccess: () => {
