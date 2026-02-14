@@ -14,6 +14,8 @@ export default async function FridgeRoute() {
     redirect('/');
   }
 
+  await supabase.rpc('ensure_current_user_household_member');
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('household_id')

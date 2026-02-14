@@ -14,7 +14,8 @@ export default async function StoreRoute() {
     redirect('/');
   }
 
-  // TODO: 실제 household_id는 프로필에서 조회 (가구 기능 구현 후)
+  await supabase.rpc('ensure_current_user_household_member');
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('household_id')

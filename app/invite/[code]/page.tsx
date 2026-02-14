@@ -20,34 +20,16 @@ export default async function InviteRoute({ params }: InviteRouteProps) {
     redirect('/');
   }
 
-  const normalizedCode = code.toUpperCase();
+  const normalizedCode = code.trim().toUpperCase();
+  await supabase.rpc('ensure_current_user_household_member');
 
-  const { data: invite } = await supabase
-    .from('household_invites')
-    .select('household_id')
-    .eq('code', normalizedCode)
-    .maybeSingle();
+  const { data } = await supabase.rpc('get_invite_household', {
+    invite_code: normalizedCode,
+  });
 
-  const { data: validInvite } = await supabase
-    .from('household_invites')
-    .select('id')
-    .eq('code', normalizedCode)
-    .gt('expires_at', 'now()')
-    .filter('use_count', 'lt', 'max_uses')
-    .maybeSingle();
-
-  const isValid = !!validInvite;
-
-  let householdName: string | null = null;
-  if (invite?.household_id) {
-    const { data: household } = await supabase
-      .from('households')
-      .select('name')
-      .eq('id', invite.household_id)
-      .maybeSingle();
-
-    householdName = household?.name ?? null;
-  }
+  const invite = Array.isArray(data) ? data[0] : null;
+  const householdName = invite?.household_name ?? null;
+  const isValid = invite?.is_valid ?? false;
 
   return <InvitePage code={normalizedCode} householdName={householdName} isValid={isValid} />;
 }

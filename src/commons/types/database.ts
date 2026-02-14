@@ -330,6 +330,21 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      ensure_current_user_household_member: {
+        Args: Record<PropertyKey, never>;
+        Returns: string | null;
+      };
+      get_invite_household: {
+        Args: { invite_code: string };
+        Returns: {
+          household_id: string;
+          household_name: string;
+          expires_at: string;
+          max_uses: number;
+          use_count: number;
+          is_valid: boolean;
+        }[];
+      };
       join_household: {
         Args: { invite_code: string };
         Returns: string;
