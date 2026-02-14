@@ -29,7 +29,7 @@ interface BottomSheetRootProps {
 
 function BottomSheetRoot({ open, onClose, children }: BottomSheetRootProps) {
   return (
-    <Drawer open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <Drawer direction="bottom" open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <BottomSheetProvider onClose={onClose}>{children}</BottomSheetProvider>
     </Drawer>
   );
