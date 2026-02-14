@@ -22,6 +22,7 @@ pnpm format:check # Prettier 검사
 - **Form**: @tanstack/react-form + zod (validation)
 - **Table**: @tanstack/react-table
 - **Utilities**: es-toolkit, date-fns, es-hangul, usehooks-ts
+- **UI Libraries**: lucide-react (icons), shadcn (component gen), overlay-kit (overlays), vaul (drawer), sonner (toast)
 - **Backend**: Supabase (Auth + DB), @supabase/ssr
 - **Lint/Format**: ESLint 9 (flat config) + Prettier + lint-staged + husky
 
@@ -37,6 +38,7 @@ project-root/
 ├── pages/              # 빈 디렉토리 (Next.js app/pages 동일 레벨 충돌 방지용)
 ├── proxy.ts            # Next.js 16 proxy convention (Supabase 세션 리프레시)
 ├── src/                # FSD 레이어만 포함
+│   ├── apps/           # 앱 레벨 프로바이더 (Toast 등)
 │   ├── pages/          # FSD 페이지 레이어 (페이지 조합 로직)
 │   ├── modules/        # 페이지 단위 조합 컴포넌트 (Header, Sidebar 등)
 │   ├── features/       # 사용자 행동 단위 (로그인, 검색, 필터 등)
@@ -51,7 +53,7 @@ project-root/
 
 ### FSD 의존성 규칙
 
-- **단방향**: app → pages → modules → features → entities → commons
+- **단방향**: app → apps → pages → modules → features → entities → commons
 - app/(main)/page.tsx는 src/pages/에서 import하는 브릿지 역할
 - 루트 pages/는 빈 디렉토리 — Next.js가 app/과 src/pages/를 동일 레벨로 인식하기 위한 워크어라운드
 - 같은 레이어 내 모듈 간 직접 import 금지
@@ -128,6 +130,16 @@ project-root/
 - **no-nested-ternary**: 중첩 삼항 금지
 - **eqeqeq**: === 강제
 - **prettier**: 별도 실행 (eslint-config-prettier로 충돌 방지), tailwindcss 클래스 자동 정렬
+
+## Environment
+
+`.env.local` 필요 (`.env.example` 참고):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_DB_PASSWORD=
+```
 
 ## Git Hooks
 
