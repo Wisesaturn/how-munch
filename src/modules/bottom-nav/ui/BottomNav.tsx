@@ -18,8 +18,8 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="safe-area-bottom fixed right-0 bottom-0 left-0 z-50 border-t border-gray-100 bg-white/95 py-[15px] backdrop-blur-sm [--safe-area-bottom-offset:15px]">
-      <div className="mx-auto w-full max-w-[430px]">
+    <nav className="safe-area-bottom fixed right-0 bottom-0 left-0 z-50 border-t border-gray-100 bg-white/95 pt-4 backdrop-blur-sm">
+      <div className="mx-auto w-full md:max-w-[430px]">
         <ul className="flex h-16 items-center justify-around">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const isActive = pathname?.startsWith(href) ?? false;

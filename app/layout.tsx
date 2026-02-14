@@ -38,7 +38,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-white shadow-[0_0_40px_rgba(0,0,0,0.08)]">
+        <div className="mx-auto min-h-dvh w-full bg-white shadow-[0_0_40px_rgba(0,0,0,0.08)] md:max-w-[430px]">
           <Providers>{children}</Providers>
         </div>
       </body>
