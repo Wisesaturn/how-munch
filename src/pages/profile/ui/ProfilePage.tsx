@@ -102,7 +102,9 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
               아직 가구에 가입되어 있지 않습니다. 가구를 생성하거나 초대 코드를 입력해 가입해
               주세요.
             </p>
-            <Button onClick={openCreateHouseholdSheet}>가구 생성</Button>
+            <Button variant="default" color="primary" onClick={openCreateHouseholdSheet}>
+              가구 생성
+            </Button>
             <Button variant="outline" onClick={openJoinHouseholdSheet}>
               초대 코드로 가입
             </Button>
