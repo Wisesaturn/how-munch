@@ -100,7 +100,7 @@ const appStackFlow = stackflow({
     }),
     basicUIPlugin({
       theme: 'cupertino',
-      rootClassName: 'pointer-events-none absolute inset-0 z-[60]',
+      rootClassName: 'pointer-events-none absolute inset-0 z-[var(--z-stackflow)]',
     }),
   ],
 });
