@@ -20,3 +20,21 @@ export interface HouseholdMember {
   role: HouseholdMemberRole;
   created_at: string;
 }
+
+/** 가구 초대 코드 */
+export interface HouseholdInvite {
+  id: string;
+  household_id: string;
+  code: string;
+  created_by: string;
+  expires_at: string;
+  max_uses: number;
+  use_count: number;
+  created_at: string;
+}
+
+/** 가구 멤버 + 프로필 정보 */
+export interface HouseholdMemberWithProfile extends HouseholdMember {
+  nickname: string;
+  email: string;
+}

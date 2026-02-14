@@ -78,6 +78,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      household_invites: {
+        Row: {
+          id: string;
+          household_id: string;
+          code: string;
+          created_by: string;
+          expires_at: string;
+          max_uses: number;
+          use_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          code: string;
+          created_by: string;
+          expires_at: string;
+          max_uses?: number;
+          use_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          code?: string;
+          created_by?: string;
+          expires_at?: string;
+          max_uses?: number;
+          use_count?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       ingredients: {
         Row: {
           id: string;
@@ -297,7 +330,10 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      join_household: {
+        Args: { invite_code: string };
+        Returns: string;
+      };
     };
     Enums: {
       [_ in never]: never;

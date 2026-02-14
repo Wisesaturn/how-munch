@@ -1,1 +1,7 @@
-export type { Household, HouseholdMember, HouseholdMemberRole } from './model/types';
+export type {
+  Household,
+  HouseholdInvite,
+  HouseholdMember,
+  HouseholdMemberRole,
+  HouseholdMemberWithProfile,
+} from './model/types';
