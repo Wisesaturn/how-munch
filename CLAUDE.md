@@ -22,6 +22,7 @@ pnpm format:check # Prettier 검사
 - **Form**: @tanstack/react-form + zod (validation)
 - **Table**: @tanstack/react-table
 - **Utilities**: es-toolkit, date-fns, es-hangul, usehooks-ts
+- **State Utilities**: react-simplikit (core hooks), @react-simplikit/mobile (mobile hooks/components)
 - **UI Libraries**: lucide-react (icons), shadcn (component gen), overlay-kit (overlays), vaul (drawer), sonner (toast)
 - **Backend**: Supabase (Auth + DB), @supabase/ssr
 - **Lint/Format**: ESLint 9 (flat config) + Prettier + lint-staged + husky
@@ -87,6 +88,8 @@ project-root/
 - Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createClient } from '@/commons/api/supabase/server'` (server)
 - proxy.ts — 프로젝트 루트에 위치 (Next.js 16 proxy convention, Supabase 세션 리프레시)
 - `src/commons/lib`는 도메인(주제) 단위 파일로 구성하고, 필요 시 한 파일에 여러 유틸 함수를 함께 둔다 (예: `uuid.ts`, `string.ts`)
+- 공통 UI 내부 상태가 controlled/uncontrolled를 모두 지원해야 하는 경우 `react-simplikit`의 `useControlledState`를 우선 사용한다 (예: `DatePicker`)
+- 신규 훅/유틸 도입 시 동일 목적의 기능이 `react-simplikit`(core/mobile)에 있으면 먼저 검토 후 채택한다
 
 ### Common UI Composition
 
@@ -103,6 +106,10 @@ project-root/
   - `type: 작업 내용`
   - 빈 줄
   - `- 작업 내용 간단 요약`
+- 예시:
+  - `feat: 프로필 가구 관리 기능 추가`
+  - (빈 줄)
+  - `- 가구 생성/가입/탈퇴 및 초대 링크 플로우를 구현`
 
 ## ESLint Rules
 
