@@ -61,6 +61,7 @@
   - `type: short summary`
   - blank line
   - `- bullet summary`
+- Do not write literal `\n` in commit bodies. Use real newlines via separate `-m` body arguments (example: `git commit -m "fix: ..." -m $'- line1\n- line2'`).
 - Common types: `feat`, `fix`, `refactor`, `chore`, `docs`, `style`.
 - PRs should include:
   - what changed and why
