@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { ChevronLeft } from 'lucide-react';
 
 import { useUserQuery } from '@/commons/api/auth/queries';
 import { Button, Input, ScrollArea, Toast } from '@/commons/ui';
@@ -51,7 +52,19 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
   }
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '프로필 수정' }}>
+    <AppScreen
+      className="pointer-events-auto"
+      appBar={{
+        title: '프로필 수정',
+        backButton: {
+          render: () => (
+            <button type="button" onClick={onClose} aria-label="뒤로가기" className="p-1">
+              <ChevronLeft className="size-5" />
+            </button>
+          ),
+        },
+      }}
+    >
       <ScrollArea className="h-full">
         <form onSubmit={submitProfileUpdate} className="flex flex-col gap-3 p-4">
           {isLoading || !profile ? (

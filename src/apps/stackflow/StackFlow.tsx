@@ -129,7 +129,9 @@ function MealEditorActivity({
 }
 
 function ProfileSettingsActivity() {
-  return <ProfileSettingsScreen />;
+  const { pop } = useActions();
+
+  return <ProfileSettingsScreen onClose={pop} />;
 }
 
 function ProfileEditActivity() {
