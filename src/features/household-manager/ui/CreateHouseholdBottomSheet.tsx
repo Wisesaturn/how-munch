@@ -22,7 +22,7 @@ export function CreateHouseholdBottomSheet({
   const [name, setName] = useState('');
   const mutation = useCreateHouseholdMutation();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!name.trim()) {

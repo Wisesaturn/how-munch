@@ -20,7 +20,7 @@ export function JoinHouseholdBottomSheet({
   const [code, setCode] = useState('');
   const mutation = useJoinHouseholdMutation();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!code.trim()) {

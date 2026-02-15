@@ -18,7 +18,7 @@ export function ProfileEditBottomSheet({ open, onClose, profile }: ProfileEditBo
   const [nickname, setNickname] = useState(profile.nickname);
   const mutation = useUpdateProfileMutation();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!nickname.trim()) {
