@@ -8,9 +8,17 @@ import { type Meal } from '@/entities/meal';
 import { mealKeys } from './queryKey';
 
 type FridgeItem = Database['public']['Tables']['fridge_items']['Row'];
+type FridgeItemBatch = Database['public']['Tables']['fridge_item_batches']['Row'];
 type MealRow = Database['public']['Tables']['meals']['Row'];
 type DishRow = Database['public']['Tables']['dishes']['Row'];
 type DishIngredientRow = Database['public']['Tables']['dish_ingredients']['Row'];
+
+export interface MealFridgeItemOption extends Pick<
+  FridgeItem,
+  'id' | 'name' | 'total_count' | 'unit'
+> {
+  fridge_item_batches: Array<Pick<FridgeItemBatch, 'purchased_date' | 'quantity'>>;
+}
 
 /** 특정 날짜 식단 조회 */
 export function useMealsByDateQuery(householdId: string | null, date: string) {
@@ -91,12 +99,12 @@ export function useFridgeItemsForMealQuery(householdId: string | null) {
 
           const { data, error } = await supabase
             .from('fridge_items')
-            .select('id, name, total_count, unit')
+            .select('id, name, total_count, unit, fridge_item_batches(purchased_date, quantity)')
             .eq('household_id', householdId)
             .order('name', { ascending: true });
 
           if (error) throw error;
-          return (data ?? []) as Pick<FridgeItem, 'id' | 'name' | 'total_count' | 'unit'>[];
+          return (data ?? []) as unknown as MealFridgeItemOption[];
         }
       : skipToken,
   });

@@ -36,6 +36,7 @@ export function useAddIngredientMutation() {
         category: input.category,
         unit: input.unit,
         total_count: count,
+        max_count: count,
         is_subdivided: false,
         from_grocery: true,
       };
@@ -125,6 +126,7 @@ export function useUpdateIngredientMutation() {
             category: ingredient.category,
             unit: ingredient.unit,
             total_count: ingredient.count,
+            max_count: ingredient.count,
             from_grocery: true,
           })
           .eq('id', linkedFridgeItemId);
@@ -156,6 +158,7 @@ export function useUpdateIngredientMutation() {
           category: ingredient.category,
           unit: ingredient.unit,
           total_count: ingredient.count,
+          max_count: ingredient.count,
           is_subdivided: false,
           from_grocery: true,
         })

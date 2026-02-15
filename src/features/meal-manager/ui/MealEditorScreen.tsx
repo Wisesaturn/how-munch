@@ -10,7 +10,7 @@ import { Button, Input, ScrollArea, Select, Toast } from '@/commons/ui';
 import { type Meal, type MealType } from '@/entities/meal';
 
 import { useDeleteMealMutation, useUpsertMealMutation } from '../api/mutations';
-import { useFridgeItemsForMealQuery } from '../api/queries';
+import { type MealFridgeItemOption, useFridgeItemsForMealQuery } from '../api/queries';
 
 interface MealEditorScreenProps {
   onClose: () => void;
@@ -34,6 +34,25 @@ const MEAL_TYPE_LABEL: Record<MealType, string> = {
   dinner: '저녁',
   snack: '간식',
 };
+
+function getFridgeItemSubtitle(item: MealFridgeItemOption) {
+  const validBatchDates = item.fridge_item_batches
+    .filter((batch) => Number(batch.quantity) > 0)
+    .map((batch) => batch.purchased_date)
+    .filter(Boolean);
+
+  if (validBatchDates.length === 0) return '입고일 정보 없음';
+
+  const uniqueSortedDates = [...new Set(validBatchDates)].sort((a, b) => a.localeCompare(b));
+
+  if (uniqueSortedDates.length === 1) {
+    return `${uniqueSortedDates[0]} 입고`;
+  }
+
+  const firstDate = uniqueSortedDates[0];
+  const lastDate = uniqueSortedDates[uniqueSortedDates.length - 1];
+  return `${firstDate} ~ ${lastDate} · ${uniqueSortedDates.length}개 입고일`;
+}
 
 function toEditorDishes(meal: Meal | null): EditorDish[] {
   if (!meal) return [{ name: '', ingredients: [] }];
@@ -152,7 +171,7 @@ export function MealEditorScreen({
     if (!meal) return;
 
     deleteMutation.mutate(
-      { id: meal.id },
+      { id: meal.id, householdId, date },
       {
         onSuccess: () => {
           Toast.success('식단이 삭제되었습니다');
@@ -219,8 +238,15 @@ export function MealEditorScreen({
                           <Select.Item value="__none__">재료 선택</Select.Item>
                           {fridgeItems.map((item) => (
                             <Select.Item key={item.id} value={item.id}>
-                              {item.name} ({Number(item.total_count)}{' '}
-                              {item.unit === 'count' ? '개' : 'g'})
+                              <div className="flex flex-col">
+                                <span>
+                                  {item.name} ({Number(item.total_count)}{' '}
+                                  {item.unit === 'count' ? '개' : 'g'})
+                                </span>
+                                <span className="text-[11px] text-gray-400">
+                                  {getFridgeItemSubtitle(item)}
+                                </span>
+                              </div>
                             </Select.Item>
                           ))}
                         </Select.Content>

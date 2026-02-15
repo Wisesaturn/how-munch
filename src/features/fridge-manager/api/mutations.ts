@@ -29,6 +29,7 @@ export function useAddFridgeItemMutation() {
         .insert({
           ...input.item,
           total_count: input.batch.quantity,
+          max_count: input.batch.quantity,
         })
         .select()
         .single();
@@ -117,6 +118,27 @@ export function useUpdateBatchMutation() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: BatchUpdate & { id: string }) => {
       const supabase = createClient();
+      const { data: usedRows, error: usageError } = await supabase
+        .from('meal_batch_usages')
+        .select('amount')
+        .eq('batch_id', id);
+      if (usageError) throw usageError;
+
+      const usedAmount = (usedRows ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+      const requestedTotalQuantity = updates.quantity;
+
+      if (requestedTotalQuantity !== undefined) {
+        const safeRequestedTotalQuantity = Number(requestedTotalQuantity);
+        if (
+          !Number.isFinite(safeRequestedTotalQuantity) ||
+          safeRequestedTotalQuantity < usedAmount
+        ) {
+          throw new Error(`식단에서 사용 중인 수량(${usedAmount})보다 작게 설정할 수 없습니다.`);
+        }
+
+        updates.quantity = safeRequestedTotalQuantity - usedAmount;
+      }
+
       const { data, error } = await supabase
         .from('fridge_item_batches')
         .update(updates)

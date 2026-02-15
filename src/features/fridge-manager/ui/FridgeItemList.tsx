@@ -12,7 +12,7 @@ interface FridgeItemListProps {
   onEditItem: (item: FridgeItemWithBatches) => void;
   onDeleteItem: (id: string) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, itemName: string) => void;
+  onEditBatch: (batch: FridgeItemBatch, itemName: string, usedAmount: number) => void;
   onDeleteBatch: (id: string) => void;
 }
 

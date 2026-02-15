@@ -16,7 +16,7 @@ export function useFridgeItemsQuery(householdId: string | null) {
 
           const { data, error } = await supabase
             .from('fridge_items')
-            .select('*, fridge_item_batches(*)')
+            .select('*, fridge_item_batches(*), meal_batch_usages(*)')
             .eq('household_id', householdId)
             .order('name');
 

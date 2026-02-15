@@ -10,6 +10,8 @@ export interface FridgeItem {
   name: string;
   /** 현재 보유 총량 (트리거로 자동 계산) */
   total_count: number;
+  /** 최대 보유 총량 (소진율 계산 기준) */
+  max_count: number;
   /** 단위 — count: 개, g: 그램 */
   unit: FridgeItemUnit;
   /** 소분 보관 여부 (UI 아이콘 변경) */
@@ -38,7 +40,17 @@ export interface FridgeItemBatch {
   updated_at: string;
 }
 
+export interface MealBatchUsage {
+  id: string;
+  meal_id: string;
+  fridge_item_id: string;
+  batch_id: string;
+  amount: number;
+  created_at: string;
+}
+
 /** 냉장고 재고 + 배치 목록 (조합 표시용) */
 export interface FridgeItemWithBatches extends FridgeItem {
   fridge_item_batches: FridgeItemBatch[];
+  meal_batch_usages?: MealBatchUsage[];
 }

@@ -165,6 +165,7 @@ export interface Database {
           household_id: string;
           name: string;
           total_count: number;
+          max_count: number;
           unit: 'count' | 'g';
           is_subdivided: boolean;
           category: string;
@@ -177,6 +178,7 @@ export interface Database {
           household_id: string;
           name: string;
           total_count?: number;
+          max_count?: number;
           unit?: 'count' | 'g';
           is_subdivided?: boolean;
           category?: string;
@@ -189,6 +191,7 @@ export interface Database {
           household_id?: string;
           name?: string;
           total_count?: number;
+          max_count?: number;
           unit?: 'count' | 'g';
           is_subdivided?: boolean;
           category?: string;
@@ -320,6 +323,33 @@ export interface Database {
           id?: string;
           dish_id?: string;
           fridge_item_id?: string;
+          amount?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      meal_batch_usages: {
+        Row: {
+          id: string;
+          meal_id: string;
+          fridge_item_id: string;
+          batch_id: string;
+          amount: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          meal_id: string;
+          fridge_item_id: string;
+          batch_id: string;
+          amount?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          meal_id?: string;
+          fridge_item_id?: string;
+          batch_id?: string;
           amount?: number;
           created_at?: string;
         };

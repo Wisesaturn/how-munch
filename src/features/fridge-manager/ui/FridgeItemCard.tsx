@@ -5,9 +5,8 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
 
-import { CATEGORIES } from '@/commons/config';
 import { cn } from '@/commons/lib';
-import { Badge, Button } from '@/commons/ui';
+import { Button } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -20,13 +19,20 @@ interface FridgeItemCardProps {
   onEditItem: (item: FridgeItemWithBatches) => void;
   onDeleteItem: (id: string) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, itemName: string) => void;
+  onEditBatch: (batch: FridgeItemBatch, itemName: string, usedAmount: number) => void;
   onDeleteBatch: (id: string) => void;
 }
 
-function getCategoryLabel(categoryId: string) {
-  const cat = CATEGORIES.find((c) => c.id === categoryId);
-  return cat ? `${cat.emoji} ${cat.label}` : categoryId;
+function getDepletionRate(availableCount: number, usedCount: number) {
+  const safeAvailableCount = Number(availableCount);
+  const safeUsedCount = Number(usedCount);
+  if (!Number.isFinite(safeAvailableCount) || !Number.isFinite(safeUsedCount)) return 0;
+
+  const totalStock = safeAvailableCount + safeUsedCount;
+  if (totalStock <= 0) return 0;
+
+  const depletionRatio = (safeUsedCount / totalStock) * 100;
+  return Math.max(0, Math.min(100, Math.round(depletionRatio)));
 }
 
 /** 냉장고 아이템 카드 — 접기/펼치기 지원 */
@@ -42,6 +48,18 @@ export function FridgeItemCard({
 
   const worstExpiry = getWorstExpiry(item.fridge_item_batches);
   const unitLabel = item.unit === 'count' ? '개' : 'g';
+  const usedAmountByBatchId = new Map<string, number>();
+  for (const usage of item.meal_batch_usages ?? []) {
+    const prev = usedAmountByBatchId.get(usage.batch_id) ?? 0;
+    usedAmountByBatchId.set(usage.batch_id, prev + Number(usage.amount));
+  }
+
+  const totalUsedCount = Array.from(usedAmountByBatchId.values()).reduce((sum, amount) => {
+    const safeAmount = Number(amount);
+    return Number.isFinite(safeAmount) ? sum + safeAmount : sum;
+  }, 0);
+
+  const depletionRate = getDepletionRate(item.total_count, totalUsedCount);
   const sortedBatches = [...item.fridge_item_batches].sort(
     (a, b) => new Date(a.purchased_date).getTime() - new Date(b.purchased_date).getTime(),
   );
@@ -54,14 +72,12 @@ export function FridgeItemCard({
         onClick={() => setExpanded((v) => !v)}
         className="flex w-full items-center gap-2 px-3 py-3 text-left"
       >
-        <Badge variant="secondary" className="shrink-0 text-xs">
-          {getCategoryLabel(item.category)}
-        </Badge>
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
         <span className="shrink-0 text-sm text-gray-500">
           {item.total_count}
           {unitLabel}
         </span>
+        <span className="shrink-0 text-xs text-amber-600">소진율 {depletionRate}%</span>
         <ExpiryBadge daysLeft={worstExpiry} className="shrink-0" />
         <ChevronDown
           className={cn(
@@ -97,7 +113,9 @@ export function FridgeItemCard({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      onClick={() => onEditBatch(batch, item.name)}
+                      onClick={() =>
+                        onEditBatch(batch, item.name, usedAmountByBatchId.get(batch.id) ?? 0)
+                      }
                     >
                       <Pencil className="size-3" />
                     </Button>
