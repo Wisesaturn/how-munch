@@ -51,8 +51,8 @@ export function FridgeBatchEditBottomSheet({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Header heading={`${itemName} — 재고 수정`} />
       <BottomSheet.Content>
-        <BottomSheet.Header heading={`${itemName} — 재고 수정`} />
         <FridgeBatchForm
           defaultValues={{
             quantity: batch.quantity,

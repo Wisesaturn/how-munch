@@ -2,21 +2,9 @@
 
 import { type ComponentProps, type ReactNode } from 'react';
 
-import { X } from 'lucide-react';
-
-import { cn, createSafeContext } from '../lib';
+import { cn } from '../lib';
 
 import { Drawer } from './Drawer';
-
-/* -------------------------------------------------------------------------------------------------
- * Context
- * -----------------------------------------------------------------------------------------------*/
-interface BottomSheetContextValue {
-  onClose: () => void;
-}
-
-const [BottomSheetProvider, useBottomSheetContext] =
-  createSafeContext<BottomSheetContextValue>('BottomSheet');
 
 /* -------------------------------------------------------------------------------------------------
  * Root
@@ -30,7 +18,7 @@ interface BottomSheetRootProps {
 function BottomSheetRoot({ open, onClose, children }: BottomSheetRootProps) {
   return (
     <Drawer direction="bottom" open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <BottomSheetProvider onClose={onClose}>{children}</BottomSheetProvider>
+      <Drawer.Content data-slot="bottom-sheet-content-root">{children}</Drawer.Content>
     </Drawer>
   );
 }
@@ -41,30 +29,16 @@ BottomSheetRoot.displayName = 'BottomSheet.Root';
  * -----------------------------------------------------------------------------------------------*/
 interface BottomSheetHeaderProps extends ComponentProps<'div'> {
   heading?: ReactNode;
-  withCloseButton?: boolean;
 }
 
-function BottomSheetHeader({
-  heading,
-  withCloseButton = true,
-  className,
-  children,
-  ...props
-}: BottomSheetHeaderProps) {
-  const { onClose } = useBottomSheetContext('BottomSheet.Header');
-
+function BottomSheetHeader({ heading, className, children, ...props }: BottomSheetHeaderProps) {
   return (
-    <Drawer.Header className={cn(className)} {...props}>
-      {heading ? <Drawer.Title>{heading}</Drawer.Title> : children}
-      {withCloseButton && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full p-1 text-gray-500 transition-colors hover:text-gray-800"
-        >
-          <X className="size-5" />
-        </button>
-      )}
+    <Drawer.Header
+      data-slot="bottom-sheet-header"
+      className={cn('justify-center border-b', className)}
+      {...props}
+    >
+      {heading ? <Drawer.Title className="w-full text-center">{heading}</Drawer.Title> : children}
     </Drawer.Header>
   );
 }
@@ -79,9 +53,11 @@ interface BottomSheetContentProps extends ComponentProps<'div'> {
 
 function BottomSheetContent({ className, contentClassName, ...props }: BottomSheetContentProps) {
   return (
-    <Drawer.Content className={cn(className)}>
-      <div className={cn('overflow-y-auto p-4', contentClassName)} {...props} />
-    </Drawer.Content>
+    <div
+      data-slot="bottom-sheet-content"
+      className={cn('overflow-y-auto p-4', className, contentClassName)}
+      {...props}
+    />
   );
 }
 BottomSheetContent.displayName = 'BottomSheet.Content';

@@ -55,8 +55,8 @@ export function IngredientEditBottomSheet({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Header heading="장보기 수정" />
       <BottomSheet.Content>
-        <BottomSheet.Header heading="장보기 수정" />
         <IngredientForm
           defaultValues={{
             date: ingredient.date,

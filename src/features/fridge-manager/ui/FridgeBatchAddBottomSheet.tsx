@@ -49,8 +49,8 @@ export function FridgeBatchAddBottomSheet({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Header heading={`${itemName} — 재고 추가`} />
       <BottomSheet.Content>
-        <BottomSheet.Header heading={`${itemName} — 재고 추가`} />
         <FridgeBatchForm
           onSubmit={handleSubmit}
           isPending={mutation.isPending}

@@ -95,6 +95,9 @@ body {
   --z-stackflow: 60;
   /* Popover/Select/DatePicker 등 플로팅 UI */
   --z-popover: 1000;
+  /* Drawer/BottomSheet (항상 최상단) */
+  --z-drawer-overlay: 2000;
+  --z-drawer-content: 2001;
 }
 
 .stackflow-root:has([data-stackflow-idle-active='true']) {

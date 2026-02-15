@@ -47,8 +47,8 @@ export function JoinHouseholdBottomSheet({
 
   return (
     <BottomSheet open={open} onClose={onClose}>
+      <BottomSheet.Header heading="초대 코드로 가입" />
       <BottomSheet.Content>
-        <BottomSheet.Header heading="초대 코드로 가입" />
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-gray-600">초대 코드</span>

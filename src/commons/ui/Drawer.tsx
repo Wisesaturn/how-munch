@@ -50,7 +50,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
-    className={cn('fixed inset-0 z-50 bg-black/40', className)}
+    className={cn('fixed inset-0 z-[var(--z-drawer-overlay)] bg-black/40', className)}
     {...props}
   />
 ));
@@ -68,7 +68,7 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        'safe-area-padding-bottom fixed right-0 bottom-0 left-0 z-50 mt-24 flex max-h-[85vh] flex-col rounded-t-2xl border bg-white',
+        'safe-area-padding-bottom fixed right-0 bottom-0 left-0 z-[var(--z-drawer-content)] mt-24 flex max-h-[85vh] flex-col rounded-t-2xl border bg-white',
         className,
       )}
       {...props}
@@ -85,10 +85,7 @@ DrawerContent.displayName = 'Drawer.Content';
  * -----------------------------------------------------------------------------------------------*/
 function DrawerHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <div
-      className={cn('flex items-center justify-between border-b px-4 py-3', className)}
-      {...props}
-    />
+    <div className={cn('flex items-center justify-between px-4 py-3', className)} {...props} />
   );
 }
 DrawerHeader.displayName = 'Drawer.Header';
