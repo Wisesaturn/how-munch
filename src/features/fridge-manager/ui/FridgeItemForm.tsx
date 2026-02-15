@@ -13,17 +13,23 @@ export interface FridgeItemFormValues {
 }
 
 interface FridgeItemFormProps {
+  id?: string;
   defaultValues?: Partial<FridgeItemFormValues>;
   onSubmit: (values: FridgeItemFormValues) => void;
+  onDelete?: (id: string) => void;
   isPending?: boolean;
+  isDeleting?: boolean;
   submitLabel?: string;
 }
 
 /** 냉장고 아이템 폼 (name, category, unit, is_subdivided) */
 export function FridgeItemForm({
+  id,
   defaultValues,
   onSubmit,
+  onDelete,
   isPending,
+  isDeleting,
   submitLabel = '저장',
 }: FridgeItemFormProps) {
   const form = useForm({
@@ -116,9 +122,29 @@ export function FridgeItemForm({
         )}
       </form.Field>
 
-      <Button type="submit" disabled={isPending} className="mt-2">
-        {isPending ? '저장 중...' : submitLabel}
-      </Button>
+      {id ? (
+        <div className="mt-2 flex gap-2">
+          <Button type="submit" disabled={Boolean(isPending || isDeleting)} className="flex-1">
+            {isPending ? '수정 중...' : '수정'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 text-red-600 hover:text-red-700"
+            disabled={Boolean(isPending || isDeleting)}
+            onClick={() => {
+              if (!id || !onDelete) return;
+              onDelete(id);
+            }}
+          >
+            {isDeleting ? '삭제 중...' : '삭제'}
+          </Button>
+        </div>
+      ) : (
+        <Button type="submit" disabled={isPending} className="mt-2">
+          {isPending ? '저장 중...' : submitLabel}
+        </Button>
+      )}
     </form>
   );
 }

@@ -3,10 +3,10 @@
 import { useState } from 'react';
 
 import { format } from 'date-fns';
-import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
-import { Button } from '@/commons/ui';
+import { Button, ProgressBar } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -17,10 +17,8 @@ import { ExpiryBadge } from './ExpiryBadge';
 interface FridgeItemCardProps {
   item: FridgeItemWithBatches;
   onEditItem: (item: FridgeItemWithBatches) => void;
-  onDeleteItem: (id: string) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, itemName: string, unit: 'count' | 'g') => void;
-  onDeleteBatch: (id: string) => void;
+  onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g') => void;
 }
 
 function getDepletionRate(availableCount: number, usedCount: number) {
@@ -36,14 +34,7 @@ function getDepletionRate(availableCount: number, usedCount: number) {
 }
 
 /** 냉장고 아이템 카드 — 접기/펼치기 지원 */
-export function FridgeItemCard({
-  item,
-  onEditItem,
-  onDeleteItem,
-  onAddBatch,
-  onEditBatch,
-  onDeleteBatch,
-}: FridgeItemCardProps) {
+export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: FridgeItemCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const worstExpiry = getWorstExpiry(item.fridge_item_batches);
@@ -66,33 +57,41 @@ export function FridgeItemCard({
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white">
-      {/* 접힌 상태 — 요약 행 */}
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2 px-3 py-3 text-left"
-      >
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <span className="truncate text-sm font-medium">{item.name}</span>
-          {item.is_subdivided ? (
-            <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-              소분
+      <div className="flex items-start gap-2 px-3 py-3">
+        <button type="button" onClick={() => onEditItem(item)} className="min-w-0 flex-1 text-left">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate text-base font-normal text-gray-900">{item.name}</span>
+              {item.is_subdivided ? (
+                <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                  소분
+                </span>
+              ) : null}
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-gray-900">
+              {item.total_count}
+              {unitLabel}
             </span>
-          ) : null}
-        </div>
-        <span className="shrink-0 text-sm text-gray-500">
-          {item.total_count}
-          {unitLabel}
-        </span>
-        <span className="shrink-0 text-xs text-amber-600">소진율 {depletionRate}%</span>
-        <ExpiryBadge daysLeft={worstExpiry} className="shrink-0" />
-        <ChevronDown
-          className={cn(
-            'size-4 shrink-0 text-gray-400 transition-transform',
-            expanded && 'rotate-180',
-          )}
-        />
-      </button>
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <ProgressBar value={depletionRate} className="h-1.5 flex-1" />
+            <span className="shrink-0 text-[11px] text-amber-600">소진율 {depletionRate}%</span>
+            <ExpiryBadge daysLeft={worstExpiry} className="shrink-0" />
+          </div>
+        </button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="mt-0.5 shrink-0"
+          onClick={() => setExpanded((value) => !value)}
+          aria-label={expanded ? '재고 상세 접기' : '재고 상세 펼치기'}
+        >
+          <ChevronDown
+            className={cn('size-4 text-gray-400 transition-transform', expanded && 'rotate-180')}
+          />
+        </Button>
+      </div>
 
       {/* 펼친 상태 — 배치 목록 */}
       {expanded && (
@@ -102,64 +101,35 @@ export function FridgeItemCard({
           ) : (
             <ul className="divide-y divide-gray-50">
               {sortedBatches.map((batch) => (
-                <li key={batch.id} className="flex items-center gap-2 py-2 text-xs">
-                  <span className="text-gray-500">
-                    {format(new Date(batch.purchased_date), 'MM.dd')}
-                  </span>
-                  <span className="font-medium">
-                    {batch.quantity}
-                    {unitLabel}
-                  </span>
-                  <ExpiryBadge
-                    daysLeft={batch.expiry_date ? getDaysUntilExpiry(batch.expiry_date) : null}
-                  />
-                  {batch.memo && (
-                    <span className="min-w-0 flex-1 truncate text-gray-400">{batch.memo}</span>
-                  )}
-                  <div className="ml-auto flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => onEditBatch(batch, item.name, item.unit)}
-                    >
-                      <Pencil className="size-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => {
-                        if (window.confirm('이 재고를 삭제하시겠습니까?')) {
-                          onDeleteBatch(batch.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="size-3" />
-                    </Button>
-                  </div>
+                <li key={batch.id}>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 py-2 text-left text-xs"
+                    onClick={() => onEditBatch(batch, item.unit)}
+                  >
+                    <span className="text-gray-500">
+                      {format(new Date(batch.purchased_date), 'MM.dd')}
+                    </span>
+                    <span className="font-medium">
+                      {batch.quantity}
+                      {unitLabel}
+                    </span>
+                    <ExpiryBadge
+                      daysLeft={batch.expiry_date ? getDaysUntilExpiry(batch.expiry_date) : null}
+                    />
+                    {batch.memo && (
+                      <span className="min-w-0 flex-1 truncate text-gray-400">{batch.memo}</span>
+                    )}
+                  </button>
                 </li>
               ))}
             </ul>
           )}
 
-          {/* 액션 버튼 */}
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2">
             <Button variant="outline" size="xs" onClick={() => onAddBatch(item)} className="flex-1">
               <Plus className="mr-1 size-3" />
               재고 추가
-            </Button>
-            <Button variant="ghost" size="icon-xs" onClick={() => onEditItem(item)}>
-              <Pencil className="size-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => {
-                if (window.confirm(`'${item.name}' 전체를 삭제하시겠습니까?`)) {
-                  onDeleteItem(item.id);
-                }
-              }}
-            >
-              <Trash2 className="size-3" />
             </Button>
           </div>
         </div>

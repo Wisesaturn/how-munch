@@ -16,8 +16,6 @@ import {
   FridgeBatchAddBottomSheet,
   FridgeItemList,
   FridgeSearch,
-  useDeleteBatchMutation,
-  useDeleteFridgeItemMutation,
   useFridgeItemsQuery,
 } from '@/features/fridge-manager';
 
@@ -29,22 +27,12 @@ export function FridgePage({ householdId }: FridgePageProps) {
   const [search, setSearch] = useState('');
 
   const { data: items = [], isLoading } = useFridgeItemsQuery(householdId);
-  const deleteItemMutation = useDeleteFridgeItemMutation();
-  const deleteBatchMutation = useDeleteBatchMutation();
 
   const filtered = useMemo(() => {
     if (!search.trim()) return items;
     const q = search.trim().toLowerCase();
     return items.filter((item) => item.name.toLowerCase().includes(q));
   }, [items, search]);
-
-  const handleDeleteItem = (id: string) => {
-    deleteItemMutation.mutate(id);
-  };
-
-  const handleDeleteBatch = (id: string) => {
-    deleteBatchMutation.mutate(id);
-  };
 
   const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
     close();
@@ -70,12 +58,8 @@ export function FridgePage({ householdId }: FridgePageProps) {
     ));
   };
 
-  const openFridgeBatchEditSheet = (
-    batch: FridgeItemBatch,
-    itemName: string,
-    unit: 'count' | 'g',
-  ) => {
-    stackFlowActions.push('FridgeBatchEditActivity', { batch, itemName, unit });
+  const openFridgeBatchEditSheet = (batch: FridgeItemBatch, unit: 'count' | 'g') => {
+    stackFlowActions.push('FridgeBatchEditActivity', { batch, unit });
   };
 
   return (
@@ -99,10 +83,8 @@ export function FridgePage({ householdId }: FridgePageProps) {
         <FridgeItemList
           items={filtered}
           onEditItem={openFridgeItemEditSheet}
-          onDeleteItem={handleDeleteItem}
           onAddBatch={openFridgeBatchAddSheet}
           onEditBatch={openFridgeBatchEditSheet}
-          onDeleteBatch={handleDeleteBatch}
         />
       )}
 

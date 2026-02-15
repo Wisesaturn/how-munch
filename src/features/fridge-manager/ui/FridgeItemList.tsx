@@ -10,20 +10,16 @@ import { FridgeItemCard } from './FridgeItemCard';
 interface FridgeItemListProps {
   items: FridgeItemWithBatches[];
   onEditItem: (item: FridgeItemWithBatches) => void;
-  onDeleteItem: (id: string) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, itemName: string, unit: 'count' | 'g') => void;
-  onDeleteBatch: (id: string) => void;
+  onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g') => void;
 }
 
 /** 카테고리별 그룹핑 냉장고 리스트 */
 export function FridgeItemList({
   items,
   onEditItem,
-  onDeleteItem,
   onAddBatch,
   onEditBatch,
-  onDeleteBatch,
 }: FridgeItemListProps) {
   if (items.length === 0) {
     return <EmptyState title="등록된 재고가 없습니다" description="재료를 추가해 보세요" />;
@@ -51,10 +47,8 @@ export function FridgeItemList({
                   key={item.id}
                   item={item}
                   onEditItem={onEditItem}
-                  onDeleteItem={onDeleteItem}
                   onAddBatch={onAddBatch}
                   onEditBatch={onEditBatch}
-                  onDeleteBatch={onDeleteBatch}
                 />
               ))}
             </div>
