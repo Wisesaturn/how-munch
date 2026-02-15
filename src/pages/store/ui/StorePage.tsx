@@ -22,8 +22,6 @@ import {
   WeeklyStats,
 } from '@/features/ingredient';
 
-import { MainAppBar } from '@/modules/main-app-bar';
-
 interface StorePageProps {
   householdId: string;
   userId: string;
@@ -80,23 +78,21 @@ export function StorePage({ householdId, userId }: StorePageProps) {
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
-      <MainAppBar
-        title="장보기"
-        right={
-          <span className="text-sm font-semibold text-emerald-600">
-            {totalSpending.toLocaleString()}원
-          </span>
-        }
-      />
-
-      <section className="flex items-center justify-center gap-2">
-        <Button variant="ghost" size="icon-sm" onClick={handlePrevMonth}>
-          <ChevronLeft className="size-4" />
-        </Button>
-        <h2 className="text-base font-bold">{format(currentDate, 'yyyy년 M월', { locale: ko })}</h2>
-        <Button variant="ghost" size="icon-sm" onClick={handleNextMonth}>
-          <ChevronRight className="size-4" />
-        </Button>
+      <section className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon-sm" onClick={handlePrevMonth}>
+            <ChevronLeft className="size-4" />
+          </Button>
+          <h2 className="text-base font-bold">
+            {format(currentDate, 'yyyy년 M월', { locale: ko })}
+          </h2>
+          <Button variant="ghost" size="icon-sm" onClick={handleNextMonth}>
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+        <span className="text-sm font-semibold text-emerald-600">
+          {totalSpending.toLocaleString()}원
+        </span>
       </section>
 
       {/* 검색 */}

@@ -23,8 +23,6 @@ import {
   useProfileQuery,
 } from '@/features/profile-manager';
 
-import { MainAppBar } from '@/modules/main-app-bar';
-
 interface ProfilePageProps {
   userId: string;
   householdId: string | null;
@@ -80,8 +78,6 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
-      <MainAppBar title="프로필" />
-
       {isProfileLoading || !profile ? (
         <Card>
           <Card.Content className="py-6 text-center text-sm text-gray-400">
