@@ -3,11 +3,11 @@
 import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { differenceInCalendarDays, startOfDay } from 'date-fns';
 
 import { useUserQuery } from '@/commons/api/auth/queries';
 import { Button, Input, ScrollArea, Toast } from '@/commons/ui';
 
+import { formatUpdatedDaysAgo } from '../lib/date';
 import { useProfileQuery } from '../api/queries';
 import { useUpdateProfileMutation } from '../api/mutations';
 
@@ -48,15 +48,6 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
         },
       },
     );
-  }
-
-  function formatUpdatedDaysAgo(updatedAt: string) {
-    const updatedDate = new Date(updatedAt);
-    if (Number.isNaN(updatedDate.getTime())) return '수정일 정보 없음';
-
-    const daysAgo = differenceInCalendarDays(startOfDay(new Date()), startOfDay(updatedDate));
-    if (daysAgo <= 0) return '0일 전 수정';
-    return `${daysAgo}일 전 수정`;
   }
 
   return (
