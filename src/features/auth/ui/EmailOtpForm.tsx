@@ -4,7 +4,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { Button, Input, Toast } from '@/commons/ui';
+import { Button, Input, OTP, Toast } from '@/commons/ui';
 
 import { loginWithEmailOtp, verifyEmailOtp } from '../api/login';
 
@@ -80,16 +80,23 @@ export function EmailOtpForm() {
 
       {isCodeSent && (
         <form onSubmit={handleVerifyCode} className="space-y-3">
-          <Input
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            placeholder="인증번호 6자리 입력"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            maxLength={6}
-            required
-          />
+          <div className="flex justify-center">
+            <OTP.Root
+              maxLength={6}
+              value={code}
+              inputMode="numeric"
+              size="lg"
+              onChange={setCode}
+              onComplete={(completedCode) => setCode(completedCode)}
+            >
+              <OTP.Slot index={0} />
+              <OTP.Slot index={1} />
+              <OTP.Slot index={2} />
+              <OTP.Slot index={3} />
+              <OTP.Slot index={4} />
+              <OTP.Slot index={5} />
+            </OTP.Root>
+          </div>
           <Button
             type="submit"
             className="w-full"
