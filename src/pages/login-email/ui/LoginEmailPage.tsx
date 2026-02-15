@@ -14,7 +14,7 @@ export function LoginEmailPage() {
       <EmailOtpForm />
       <Link href="/login" className="w-full max-w-[320px]">
         <Button variant="ghost" className="w-full">
-          로그인 방식 선택으로 돌아가기
+          다른 방식으로 로그인하기
         </Button>
       </Link>
     </main>
