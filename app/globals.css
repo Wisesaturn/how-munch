@@ -149,4 +149,9 @@ body {
     padding-bottom: calc(constant(safe-area-inset-bottom) + 8px);
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
   }
+
+  .safe-area-padding-bottom-with-nav {
+    padding-bottom: calc(constant(safe-area-inset-bottom) + 68px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 68px);
+  }
 }

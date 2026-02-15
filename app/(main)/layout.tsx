@@ -6,7 +6,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <MainRouteAppBar />
-      <main className="safe-area-padding-bottom">{children}</main>
+      <main className="safe-area-padding-bottom-with-nav pt-4">{children}</main>
       <BottomNav />
     </>
   );
