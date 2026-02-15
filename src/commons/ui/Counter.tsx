@@ -1,0 +1,175 @@
+import * as React from 'react';
+
+import { useControlledState } from 'react-simplikit';
+import { Minus, Plus } from 'lucide-react';
+
+import { cn } from '../lib';
+
+import { InputGroup } from './InputGroup';
+
+interface CounterProps {
+  value?: number;
+  defaultValue?: number;
+  onChange?: (value: number) => void;
+  onValueChange?: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  disabled?: boolean;
+  invalid?: boolean;
+  className?: string;
+  inputClassName?: string;
+}
+
+function clampValue(value: number, min?: number, max?: number) {
+  if (Number.isNaN(value)) return min ?? 0;
+  if (min !== undefined && value < min) return min;
+  if (max !== undefined && value > max) return max;
+  return value;
+}
+
+/** Design-system Counter 입력 규칙을 기준으로 숫자 형식만 남깁니다. */
+function sanitizeNumericText(value: string, allowNegative: boolean) {
+  const trimmed = value.replace(/\s/g, '');
+  const withSign = allowNegative ? trimmed.replace(/(?!^-)-/g, '') : trimmed.replace(/-/g, '');
+  const cleaned = withSign.replace(/[^0-9.-]/g, '');
+  const firstDotIndex = cleaned.indexOf('.');
+
+  if (firstDotIndex < 0) return cleaned;
+
+  const integerPart = cleaned.slice(0, firstDotIndex + 1);
+  const decimalPart = cleaned.slice(firstDotIndex + 1).replace(/\./g, '');
+  return `${integerPart}${decimalPart}`;
+}
+
+function Counter({
+  value,
+  defaultValue = 0,
+  onChange,
+  onValueChange,
+  min = 0,
+  max,
+  step = 1,
+  disabled = false,
+  invalid = false,
+  className,
+  inputClassName,
+}: CounterProps) {
+  const allowNegative = min < 0;
+  const [currentValue, setCurrentValue] = useControlledState<number>({
+    value,
+    defaultValue,
+    onChange: (nextValue) => {
+      onChange?.(nextValue);
+      onValueChange?.(nextValue);
+    },
+  });
+
+  const [inputValue, setInputValue] = React.useState(String(currentValue));
+
+  React.useEffect(
+    function syncInputValueFromCurrentValue() {
+      setInputValue(String(currentValue));
+    },
+    [currentValue],
+  );
+
+  function updateValue(nextValue: number) {
+    const clampedValue = clampValue(nextValue, min, max);
+    setCurrentValue(clampedValue);
+    setInputValue(String(clampedValue));
+  }
+
+  function decreaseValue() {
+    updateValue(currentValue - step);
+  }
+
+  function increaseValue() {
+    updateValue(currentValue + step);
+  }
+
+  function changeInputValue(event: React.ChangeEvent<HTMLInputElement>) {
+    const sanitizedValue = sanitizeNumericText(event.target.value, allowNegative);
+    setInputValue(sanitizedValue);
+
+    if (!sanitizedValue || sanitizedValue === '-') {
+      updateValue(min);
+      return;
+    }
+
+    const parsedValue = Number(sanitizedValue);
+    if (!Number.isFinite(parsedValue)) return;
+    updateValue(parsedValue);
+  }
+
+  function applyClampedValueOnBlur() {
+    updateValue(Number(inputValue));
+  }
+
+  function changeValueByDirection(direction: '+' | '-') {
+    if (direction === '+') {
+      increaseValue();
+      return;
+    }
+    decreaseValue();
+  }
+
+  function captureArrowKeyForStepControl(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      changeValueByDirection('+');
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      changeValueByDirection('-');
+    }
+    if (!allowNegative && event.key === '-') {
+      event.preventDefault();
+    }
+  }
+
+  const minDisabled = disabled || currentValue <= min;
+  const maxDisabled = disabled || (max !== undefined && currentValue >= max);
+
+  return (
+    <InputGroup data-slot="counter" className={className} aria-disabled={disabled}>
+      <InputGroup.Input
+        value={inputValue}
+        inputMode="decimal"
+        pattern={allowNegative ? '-?[0-9]*[.]?[0-9]*' : '[0-9]*[.]?[0-9]*'}
+        onChange={changeInputValue}
+        onBlur={applyClampedValueOnBlur}
+        onKeyDown={captureArrowKeyForStepControl}
+        disabled={disabled}
+        invalid={invalid}
+        className={cn('h-8 text-center', inputClassName)}
+      />
+      <InputGroup.Addon align="inline-start">
+        <InputGroup.Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={decreaseValue}
+          disabled={minDisabled}
+          aria-label="수량 감소"
+        >
+          <Minus className="size-3" />
+        </InputGroup.Button>
+      </InputGroup.Addon>
+      <InputGroup.Addon align="inline-end">
+        <InputGroup.Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={increaseValue}
+          disabled={maxDisabled}
+          aria-label="수량 증가"
+        >
+          <Plus className="size-3" />
+        </InputGroup.Button>
+      </InputGroup.Addon>
+    </InputGroup>
+  );
+}
+
+export { Counter, type CounterProps };
