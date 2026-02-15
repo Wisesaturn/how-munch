@@ -1,11 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Plus, Trash2 } from 'lucide-react';
 
-import { Button, Input, ScrollArea, Select, Toast } from '@/commons/ui';
+import { Button, Counter, Input, ScrollArea, Select, Toast } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
@@ -82,10 +82,6 @@ export function MealEditorScreen({
   const { data: fridgeItems = [] } = useFridgeItemsForMealQuery(householdId);
   const upsertMutation = useUpsertMealMutation();
   const deleteMutation = useDeleteMealMutation();
-
-  const fridgeItemMap = useMemo(() => {
-    return new Map(fridgeItems.map((item) => [item.id, item]));
-  }, [fridgeItems]);
 
   const handleAddDish = () => {
     setDishes((prev) => [...prev, { name: '', ingredients: [] }]);
@@ -217,10 +213,6 @@ export function MealEditorScreen({
 
               <div className="mt-3 space-y-2">
                 {dish.ingredients.map((ingredient, ingredientIndex) => {
-                  const selected = ingredient.fridge_item_id
-                    ? fridgeItemMap.get(ingredient.fridge_item_id)
-                    : null;
-
                   return (
                     <div key={`${type}-${dishIndex}-${ingredientIndex}`} className="flex gap-2">
                       <Select
@@ -252,18 +244,17 @@ export function MealEditorScreen({
                         </Select.Content>
                       </Select>
 
-                      <Input
-                        type="number"
-                        min={0}
-                        step="any"
+                      <Counter
                         value={ingredient.amount}
-                        onChange={(event) =>
+                        min={0}
+                        step={1}
+                        onChange={(nextAmount) =>
                           handleIngredientChange(dishIndex, ingredientIndex, {
-                            amount: Number(event.target.value),
+                            amount: nextAmount,
                           })
                         }
-                        placeholder={selected?.unit === 'g' ? 'g' : '개'}
                         className="w-24"
+                        inputClassName="w-12"
                       />
 
                       <Button
