@@ -17,19 +17,25 @@ export interface IngredientFormValues {
 }
 
 interface IngredientFormProps {
+  id?: string;
   defaultValues?: Partial<IngredientFormValues>;
   storeNames?: string[];
   onSubmit: (values: IngredientFormValues) => void;
+  onDelete?: (id: string) => void;
   isSubmitting?: boolean;
+  isDeleting?: boolean;
   submitLabel?: string;
 }
 
 export function IngredientForm({
+  id,
   defaultValues,
   storeNames = [],
   onSubmit,
+  onDelete,
   isSubmitting,
-  submitLabel = '저장',
+  isDeleting,
+  submitLabel,
 }: IngredientFormProps) {
   const today = new Date();
 
@@ -61,7 +67,7 @@ export function IngredientForm({
         e.stopPropagation();
         form.handleSubmit();
       }}
-      className="flex flex-col gap-4 p-4"
+      className="flex flex-col gap-4"
     >
       {/* 날짜 */}
       <form.Field name="date">
@@ -146,22 +152,30 @@ export function IngredientForm({
         </form.Field>
       </div>
 
-      {/* 구매처 (자동완성) */}
+      {/* 구매처 */}
       <form.Field name="store">
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-gray-600">구매처</span>
-            <Input
-              list="store-list"
-              placeholder="예: 이마트, 쿠팡"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <datalist id="store-list">
-              {storeNames.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
+            <Select
+              value={field.state.value || '__none__'}
+              onValueChange={(value) => field.handleChange(value === '__none__' ? '' : value)}
+            >
+              <Select.Trigger>
+                <Select.Value placeholder="구매처를 선택하세요" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="__none__">구매처 선택</Select.Item>
+                {!storeNames.includes(field.state.value) && field.state.value ? (
+                  <Select.Item value={field.state.value}>{field.state.value}</Select.Item>
+                ) : null}
+                {storeNames.map((name) => (
+                  <Select.Item key={name} value={name}>
+                    {name}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
           </label>
         )}
       </form.Field>
@@ -181,10 +195,29 @@ export function IngredientForm({
         )}
       </form.Field>
 
-      {/* 저장 버튼 */}
-      <Button type="submit" disabled={isSubmitting} className="mt-2 w-full">
-        {isSubmitting ? '저장 중...' : submitLabel}
-      </Button>
+      {id ? (
+        <div className="mt-2 flex gap-2">
+          <Button type="submit" className="flex-1" disabled={Boolean(isSubmitting || isDeleting)}>
+            {isSubmitting ? '수정 중...' : (submitLabel ?? '수정')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 text-red-600 hover:text-red-700"
+            disabled={Boolean(isSubmitting || isDeleting)}
+            onClick={() => {
+              if (!id || !onDelete) return;
+              onDelete(id);
+            }}
+          >
+            {isDeleting ? '삭제 중...' : '삭제'}
+          </Button>
+        </div>
+      ) : (
+        <Button type="submit" disabled={isSubmitting} className="mt-2 w-full">
+          {isSubmitting ? '저장 중...' : (submitLabel ?? '저장')}
+        </Button>
+      )}
     </form>
   );
 }

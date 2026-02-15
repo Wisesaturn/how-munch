@@ -64,7 +64,6 @@ export function IngredientAddScreen({
             storeNames={storeNames}
             onSubmit={handleSubmit}
             isSubmitting={addMutation.isPending}
-            submitLabel="추가"
           />
         </div>
       </ScrollArea>

@@ -6,7 +6,7 @@ import { ScrollArea, Toast } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
-import { useUpdateIngredientMutation } from '../api/mutations';
+import { useDeleteIngredientMutation, useUpdateIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
 
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
@@ -23,6 +23,7 @@ export function IngredientEditScreen({
   householdId,
 }: IngredientEditScreenProps) {
   const updateMutation = useUpdateIngredientMutation();
+  const deleteMutation = useDeleteIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
 
   function getErrorMessage(error: unknown) {
@@ -54,11 +55,26 @@ export function IngredientEditScreen({
     );
   }
 
+  function deleteIngredient() {
+    if (!window.confirm(`'${ingredient.name}' 항목을 삭제할까요?`)) return;
+
+    deleteMutation.mutate(ingredient.id, {
+      onSuccess: () => {
+        Toast.success('장보기 항목이 삭제되었습니다');
+        onClose();
+      },
+      onError: (error) => {
+        Toast.error(getErrorMessage(error));
+      },
+    });
+  }
+
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '장보기 수정' }}>
+    <AppScreen className="pointer-events-auto" appBar={{ title: '상품 수정' }}>
       <ScrollArea className="h-full">
         <div className="p-4">
           <IngredientForm
+            id={ingredient.id}
             defaultValues={{
               date: ingredient.date,
               category: ingredient.category,
@@ -70,8 +86,9 @@ export function IngredientEditScreen({
             }}
             storeNames={storeNames}
             onSubmit={handleSubmit}
+            onDelete={deleteIngredient}
             isSubmitting={updateMutation.isPending}
-            submitLabel="수정"
+            isDeleting={deleteMutation.isPending}
           />
         </div>
       </ScrollArea>

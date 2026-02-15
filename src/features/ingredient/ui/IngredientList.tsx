@@ -16,10 +16,9 @@ import { IngredientItem } from './IngredientItem';
 interface IngredientListProps {
   ingredients: Ingredient[];
   onEdit: (ingredient: Ingredient) => void;
-  onDelete: (id: string) => void;
 }
 
-export function IngredientList({ ingredients, onEdit, onDelete }: IngredientListProps) {
+export function IngredientList({ ingredients, onEdit }: IngredientListProps) {
   const grouped = useMemo(() => {
     const groups = groupBy(ingredients, (item) => item.date);
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
@@ -44,7 +43,7 @@ export function IngredientList({ ingredients, onEdit, onDelete }: IngredientList
           </h3>
           <div className="flex flex-col gap-1.5">
             {items.map((item) => (
-              <IngredientItem key={item.id} ingredient={item} onEdit={onEdit} onDelete={onDelete} />
+              <IngredientItem key={item.id} ingredient={item} onEdit={onEdit} />
             ))}
           </div>
         </div>

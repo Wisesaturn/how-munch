@@ -15,7 +15,6 @@ import { type Ingredient } from '@/entities/ingredient';
 import {
   IngredientList,
   IngredientSearch,
-  useDeleteIngredientMutation,
   useIngredientsQuery,
   WeeklyStats,
 } from '@/features/ingredient';
@@ -33,7 +32,6 @@ export function StorePage({ householdId, userId }: StorePageProps) {
   const month = currentDate.getMonth() + 1;
 
   const { data: ingredients = [], isLoading } = useIngredientsQuery(householdId, year, month);
-  const deleteMutation = useDeleteIngredientMutation();
 
   const filtered = useMemo(() => {
     if (!search.trim()) return ingredients;
@@ -45,10 +43,6 @@ export function StorePage({ householdId, userId }: StorePageProps) {
 
   const handlePrevMonth = () => setCurrentDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentDate((d) => addMonths(d, 1));
-
-  const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
-  };
 
   const openIngredientAddSheet = (defaultName?: string) => {
     stackFlowActions.push('IngredientAddActivity', { householdId, userId, defaultName });
@@ -104,11 +98,7 @@ export function StorePage({ householdId, userId }: StorePageProps) {
           <span className="text-sm text-gray-400">불러오는 중...</span>
         </div>
       ) : (
-        <IngredientList
-          ingredients={filtered}
-          onEdit={openIngredientEditSheet}
-          onDelete={handleDelete}
-        />
+        <IngredientList ingredients={filtered} onEdit={openIngredientEditSheet} />
       )}
 
       {/* FAB 추가 버튼 */}
