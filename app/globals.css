@@ -147,6 +147,38 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* -------------------------------------------------------------------------------------------------
+   * Mobile Gesture Guard
+   * - 롱프레스 컨텍스트 메뉴/텍스트 선택을 기본 차단
+   * - 두 손가락 핀치 줌을 비활성화
+   * - 입력 요소는 선택/편집 가능하도록 예외 처리
+   * -----------------------------------------------------------------------------------------------*/
+  @media (hover: none) and (pointer: coarse) {
+    :root {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      touch-action: pan-x pan-y;
+    }
+
+    * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    input,
+    textarea,
+    [contenteditable='true'],
+    [data-allow-touch-callout='true'] {
+      -webkit-touch-callout: default;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+  }
 }
 
 @layer utilities {
