@@ -98,6 +98,8 @@ project-root/
 
 - 공통 컴포넌트는 SRP 원칙으로 역할 단위(`Header`, `Body`, `Footer` 등)로 분리 구현
 - 공통 UI 파일은 섹션 단위 주석 블록(`/* ------------------------------------------------------------------------------------------------- */`)으로 `Root`, `Header`, `Content` 등 역할을 명시한다
+- 컴파운드 패턴에서 `Header`, `Content`, `Footer`는 항상 형제 구조로 분리해 사용한다 (`Content` 내부에 `Header/Footer`를 넣지 않는다)
+- `Content`는 본문 영역만 담당하며, 타이틀/액션/요약 같은 상단/하단 역할을 침범하지 않는다
 - 컴파운드 패턴일 때만 export 단계에서 `Object.assign`으로 묶은 compound API를 제공
 - 컴파운드 패턴이 아니면 일반 단일 컴포넌트 export를 유지 (불필요한 `Object.assign` 지양)
 - 사용처에서는 `<BottomSheet>`, `<BottomSheet.Header>`, `<BottomSheet.Content>` 형태를 우선 사용
