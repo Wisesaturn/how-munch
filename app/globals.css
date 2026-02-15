@@ -154,4 +154,13 @@ body {
     padding-bottom: calc(constant(safe-area-inset-bottom) + 68px);
     padding-bottom: calc(env(safe-area-inset-bottom) + 68px);
   }
+
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
 }

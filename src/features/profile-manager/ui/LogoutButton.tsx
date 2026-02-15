@@ -1,8 +1,10 @@
 'use client';
 
-import { Button, Toast } from '@/commons/ui';
+import { Toast } from '@/commons/ui';
 
 import { useLogoutMutation } from '../api/mutations';
+
+import { SettingsActionRow } from './SettingsActionRow';
 
 export function LogoutButton() {
   const logoutMutation = useLogoutMutation();
@@ -17,13 +19,10 @@ export function LogoutButton() {
   };
 
   return (
-    <Button
-      variant="outline"
+    <SettingsActionRow
+      label={logoutMutation.isPending ? '로그아웃 중...' : '로그아웃'}
       onClick={handleLogout}
       disabled={logoutMutation.isPending}
-      className="w-full"
-    >
-      {logoutMutation.isPending ? '로그아웃 중...' : '로그아웃'}
-    </Button>
+    />
   );
 }

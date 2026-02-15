@@ -16,12 +16,7 @@ import {
   useHouseholdQuery,
   useMembersQuery,
 } from '@/features/household-manager';
-import {
-  LogoutButton,
-  ProfileCard,
-  ProfileEditBottomSheet,
-  useProfileQuery,
-} from '@/features/profile-manager';
+import { ProfileCard, ProfileEditBottomSheet, useProfileQuery } from '@/features/profile-manager';
 
 interface ProfilePageProps {
   userId: string;
@@ -118,8 +113,6 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
           />
         </>
       )}
-
-      <LogoutButton />
     </div>
   );
 }

@@ -2,6 +2,12 @@
 
 import { usePathname } from 'next/navigation';
 
+import { Settings } from 'lucide-react';
+
+import { stackFlowActions } from '@/apps/stackflow/StackFlow';
+
+import { Button } from '@/commons/ui';
+
 import { MainAppBar } from '@/modules/main-app-bar';
 
 function getMainTitle(pathname: string | null) {
@@ -16,8 +22,26 @@ function getMainTitle(pathname: string | null) {
 export function MainRouteAppBar() {
   const pathname = usePathname();
   const title = getMainTitle(pathname);
+  const isProfile = pathname?.startsWith('/profile') ?? false;
 
   if (!title) return null;
 
-  return <MainAppBar title={title} className="mx-0" />;
+  return (
+    <MainAppBar
+      title={title}
+      className="mx-0"
+      right={
+        isProfile ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => stackFlowActions.push('ProfileSettingsActivity', {})}
+            aria-label="설정 열기"
+          >
+            <Settings className="size-5" />
+          </Button>
+        ) : null
+      }
+    />
+  );
 }

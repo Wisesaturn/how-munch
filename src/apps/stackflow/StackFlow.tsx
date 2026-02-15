@@ -10,6 +10,7 @@ import { type Meal, type MealType } from '@/entities/meal';
 import { FridgeItemAddScreen } from '@/features/fridge-manager';
 import { IngredientAddScreen } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal-manager';
+import { ProfileSettingsScreen } from '@/features/profile-manager';
 
 function IdleActivity() {
   const activity = useActivity();
@@ -77,6 +78,10 @@ function MealEditorActivity({
   );
 }
 
+function ProfileSettingsActivity() {
+  return <ProfileSettingsScreen />;
+}
+
 const appStackFlow = stackflow({
   transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
@@ -86,6 +91,7 @@ const appStackFlow = stackflow({
     IngredientAddActivity,
     FridgeItemAddActivity,
     MealEditorActivity,
+    ProfileSettingsActivity,
   },
   plugins: [
     basicRendererPlugin(),
@@ -96,6 +102,7 @@ const appStackFlow = stackflow({
         IngredientAddActivity: '/ingredient/add',
         FridgeItemAddActivity: '/fridge/item/add',
         MealEditorActivity: '/meal/editor',
+        ProfileSettingsActivity: '/profile/settings',
       },
       fallbackActivity: () => 'IdleActivity',
       useHash: true,

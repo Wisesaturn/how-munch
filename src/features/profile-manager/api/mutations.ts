@@ -36,3 +36,26 @@ export function useLogoutMutation() {
     },
   });
 }
+
+/** 회원 탈퇴 */
+export function useDeleteAccountMutation() {
+  return useMutation({
+    mutationFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc('delete_my_account');
+
+      if (error) {
+        if (error.code === '42883') {
+          throw new Error('회원 탈퇴 기능이 아직 연결되지 않았습니다');
+        }
+        throw error;
+      }
+
+      if (data === false) {
+        throw new Error('회원 탈퇴 처리에 실패했습니다');
+      }
+
+      window.location.href = '/';
+    },
+  });
+}
