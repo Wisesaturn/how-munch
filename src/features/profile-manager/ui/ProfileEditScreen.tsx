@@ -55,7 +55,7 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
     if (Number.isNaN(updatedDate.getTime())) return '수정일 정보 없음';
 
     const daysAgo = differenceInCalendarDays(startOfDay(new Date()), startOfDay(updatedDate));
-    if (daysAgo <= 0) return '오늘 수정됨';
+    if (daysAgo <= 0) return '0일 전 수정';
     return `${daysAgo}일 전 수정`;
   }
 
@@ -80,9 +80,7 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
                 <Input value={profile.email} disabled />
               </label>
 
-              <p className="text-xs text-gray-500">
-                수정일: {formatUpdatedDaysAgo(profile.updated_at)}
-              </p>
+              <p className="text-xs text-gray-500">{formatUpdatedDaysAgo(profile.updated_at)}</p>
 
               <Button type="submit" disabled={mutation.isPending} className="mt-2 w-full">
                 {mutation.isPending ? '수정 중...' : '수정'}
