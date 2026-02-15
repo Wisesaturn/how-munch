@@ -28,12 +28,12 @@ export function IngredientItem({ ingredient, onEdit }: IngredientItemProps) {
   return (
     <button
       type="button"
-      className="flex w-full flex-col gap-1 rounded-lg border bg-white px-3 py-2.5 text-left"
+      className="text-foreground flex w-full appearance-none flex-col gap-1 rounded-lg border bg-white px-3 py-2.5 text-left"
       onClick={() => onEdit(ingredient)}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-base font-semibold">{ingredient.name}</span>
-        <span className="ml-auto shrink-0 text-base font-semibold text-gray-700">
+        <span className="truncate text-base font-normal text-gray-900">{ingredient.name}</span>
+        <span className="ml-auto shrink-0 text-base font-semibold text-gray-900">
           {ingredient.price.toLocaleString()}원
         </span>
       </div>
