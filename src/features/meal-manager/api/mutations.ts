@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
-import { fridgeKeys } from '@/commons/query-key';
+import { fridgeKeys } from '@/commons/model/queryKey';
 import { type Database } from '@/commons/types';
 
 import { type MealType } from '@/entities/meal';

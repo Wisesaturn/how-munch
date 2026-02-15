@@ -1,4 +1,4 @@
-import { fridgeKeys as commonFridgeKeys } from '@/commons/query-key';
+import { fridgeKeys as commonFridgeKeys } from '@/commons/model/queryKey';
 
 /** query key factory */
 export const fridgeKeys = {

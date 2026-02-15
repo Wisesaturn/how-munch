@@ -1,5 +1,5 @@
 /** query key factory */
-import { ingredientKeys as commonIngredientKeys } from '@/commons/query-key';
+import { ingredientKeys as commonIngredientKeys } from '@/commons/model/queryKey';
 
 export const ingredientKeys = {
   all: commonIngredientKeys.all,
