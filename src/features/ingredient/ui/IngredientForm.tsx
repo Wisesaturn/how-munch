@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 
 import { CATEGORIES } from '@/commons/config';
-import { Button, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
+import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
 
 export interface IngredientFormValues {
   date: string;
@@ -162,25 +162,17 @@ export function IngredientForm({
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-gray-600">구매처</span>
-            <Select
-              value={field.state.value || '__none__'}
-              onValueChange={(value) => field.handleChange(value === '__none__' ? '' : value)}
-            >
-              <Select.Trigger>
-                <Select.Value placeholder="구매처를 선택하세요" />
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Item value="__none__">구매처 선택</Select.Item>
-                {!storeNames.includes(field.state.value) && field.state.value ? (
-                  <Select.Item value={field.state.value}>{field.state.value}</Select.Item>
-                ) : null}
+            <ComboBox value={field.state.value} onValueChange={field.handleChange}>
+              <ComboBox.Input placeholder="구매처를 입력하거나 선택하세요" />
+              <ComboBox.List>
+                <ComboBox.Empty>검색 결과가 없습니다</ComboBox.Empty>
                 {storeNames.map((name) => (
-                  <Select.Item key={name} value={name}>
+                  <ComboBox.Item key={name} value={name}>
                     {name}
-                  </Select.Item>
+                  </ComboBox.Item>
                 ))}
-              </Select.Content>
-            </Select>
+              </ComboBox.List>
+            </ComboBox>
           </label>
         )}
       </form.Field>

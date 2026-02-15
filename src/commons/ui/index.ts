@@ -4,6 +4,8 @@ export { BottomSheet } from './BottomSheet';
 export { Button, buttonVariants } from './Button';
 export { Calendar } from './Calendar';
 export { Card } from './Card';
+export { Command } from './Command';
+export { ComboBox, type ComboBoxProps } from './ComboBox';
 export { Counter, type CounterProps } from './Counter';
 export { DatePicker } from './DatePicker';
 export { Drawer } from './Drawer';
