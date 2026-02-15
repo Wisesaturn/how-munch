@@ -112,6 +112,24 @@ export function useCreateInviteMutation() {
   return useMutation({
     mutationFn: async ({ householdId, userId }: { householdId: string; userId: string }) => {
       const supabase = createClient();
+      const nowIso = new Date().toISOString();
+
+      // 유효 기간 내 + 사용 가능 횟수가 남은 기존 초대 링크를 우선 재사용
+      const { data: existingInvites, error: existingError } = await supabase
+        .from('household_invites')
+        .select('*')
+        .eq('household_id', householdId)
+        .gt('expires_at', nowIso)
+        .order('created_at', { ascending: false });
+
+      if (existingError) throw existingError;
+
+      const reusableInvite = (existingInvites ?? []).find(
+        (invite) => invite.use_count < invite.max_uses,
+      );
+      if (reusableInvite) {
+        return { invite: reusableInvite as HouseholdInvite, reused: true };
+      }
 
       const input: HouseholdInviteInsert = {
         household_id: householdId,
@@ -128,7 +146,7 @@ export function useCreateInviteMutation() {
         .single();
 
       if (error) throw error;
-      return data as HouseholdInvite;
+      return { invite: data as HouseholdInvite, reused: false };
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: householdKeys.invites(variables.householdId) });

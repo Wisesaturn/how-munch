@@ -8,10 +8,8 @@ import { Button, Card, Toast } from '@/commons/ui';
 
 import {
   CreateHouseholdBottomSheet,
-  HouseholdInfo,
   InviteLinkSection,
   JoinHouseholdBottomSheet,
-  LeaveHouseholdButton,
   MemberList,
   useHouseholdQuery,
   useMembersQuery,
@@ -103,14 +101,16 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
         </Card>
       ) : (
         <>
-          {household && <HouseholdInfo household={household} memberCount={members.length} />}
+          {household && (
+            <InviteLinkSection
+              household={household}
+              memberCount={members.length}
+              householdId={householdId}
+              userId={userId}
+              onLeft={() => router.refresh()}
+            />
+          )}
           <MemberList members={members} />
-          <InviteLinkSection householdId={householdId} userId={userId} />
-          <LeaveHouseholdButton
-            householdId={householdId}
-            userId={userId}
-            onLeft={() => router.refresh()}
-          />
         </>
       )}
     </div>
