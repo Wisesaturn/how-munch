@@ -73,7 +73,7 @@ export default async function InviteRoute({ params }: InviteRouteProps) {
             <span className="font-semibold">{householdName ?? '가구'}</span> 초대 링크입니다.
             가입하려면 먼저 로그인해 주세요.
           </p>
-          <Link href="/" className="mt-3 block">
+          <Link href="/login" className="mt-3 block">
             <Button className="w-full" color="primary">
               로그인하러 가기
             </Button>

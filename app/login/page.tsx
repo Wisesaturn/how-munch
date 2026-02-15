@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation';
 
 import { createClient } from '@/commons/api/supabase/server';
 
-export default async function HomePage() {
+import { LoginPage } from '@/pages/login';
+
+export default async function LoginRoute() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -12,5 +14,5 @@ export default async function HomePage() {
     redirect('/meal');
   }
 
-  redirect('/login');
+  return <LoginPage />;
 }

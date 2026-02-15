@@ -1,17 +1,16 @@
 'use client';
 
-import { Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-import { stackFlowActions } from '@/apps/stackflow/StackFlow';
+import { Mail } from 'lucide-react';
 
 import { Button, Separator } from '@/commons/ui';
 
 import { KakaoLoginButton } from './KakaoLoginButton';
 
 export function LoginMethods() {
-  const openEmailLogin = () => {
-    stackFlowActions.push('EmailLoginActivity', {});
-  };
+  const router = useRouter();
+  const openEmailLogin = () => router.push('/login/email');
 
   return (
     <div className="w-full max-w-[280px] space-y-4">

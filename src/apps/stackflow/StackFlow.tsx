@@ -7,7 +7,6 @@ import { useActions, useActivity, stackflow } from '@stackflow/react';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
-import { EmailLoginScreen } from '@/features/auth';
 import { FridgeItemAddScreen } from '@/features/fridge-manager';
 import { IngredientAddScreen } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal-manager';
@@ -83,12 +82,6 @@ function ProfileSettingsActivity() {
   return <ProfileSettingsScreen />;
 }
 
-function EmailLoginActivity() {
-  const { pop } = useActions();
-
-  return <EmailLoginScreen onClose={pop} />;
-}
-
 const appStackFlow = stackflow({
   transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
@@ -99,7 +92,6 @@ const appStackFlow = stackflow({
     FridgeItemAddActivity,
     MealEditorActivity,
     ProfileSettingsActivity,
-    EmailLoginActivity,
   },
   plugins: [
     basicRendererPlugin(),
@@ -111,7 +103,6 @@ const appStackFlow = stackflow({
         FridgeItemAddActivity: '/fridge/item/add',
         MealEditorActivity: '/meal/editor',
         ProfileSettingsActivity: '/profile/settings',
-        EmailLoginActivity: '/auth/email-login',
       },
       fallbackActivity: () => 'IdleActivity',
       useHash: true,

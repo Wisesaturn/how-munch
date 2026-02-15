@@ -11,7 +11,7 @@ export default async function MealRoute() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/');
+    redirect('/login');
   }
 
   await supabase.rpc('ensure_current_user_household_member');
