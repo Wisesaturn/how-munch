@@ -54,7 +54,7 @@ const SelectContent = React.forwardRef<
       // container/collisionBoundary를 외부 경계로 주입받아 같은 좌표계에서 위치를 계산합니다.
       collisionBoundary={collisionBoundary}
       className={cn(
-        'bg-popover text-popover-foreground z-[var(--z-popover)] max-h-80 min-w-[8rem] overflow-hidden rounded-md border shadow-md',
+        'bg-popover text-popover-foreground z-(--z-select) max-h-80 min-w-[8rem] overflow-hidden rounded-md border shadow-md',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',

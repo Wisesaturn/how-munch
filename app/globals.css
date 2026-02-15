@@ -98,6 +98,8 @@ body {
   /* Drawer/BottomSheet (항상 최상단) */
   --z-drawer-overlay: 2000;
   --z-drawer-content: 2001;
+  /* Select */
+  --z-select: 3000;
 }
 
 .stackflow-root:has([data-stackflow-idle-active='true']) {
