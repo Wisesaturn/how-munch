@@ -110,11 +110,6 @@ const InputGroup = Object.assign(InputGroupRoot, {
 
 export {
   InputGroup,
-  InputGroupRoot,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-  InputGroupText,
   inputGroupAddonVariants,
   type InputGroupAddonProps,
   type InputGroupButtonProps,

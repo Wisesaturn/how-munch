@@ -11,15 +11,7 @@ export { DatePicker } from './DatePicker';
 export { Drawer } from './Drawer';
 export { EmptyState } from './EmptyState';
 export { Input, type InputProps } from './Input';
-export {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-  InputGroupText,
-  type InputGroupAddonProps,
-  type InputGroupButtonProps,
-} from './InputGroup';
+export { InputGroup, type InputGroupAddonProps, type InputGroupButtonProps } from './InputGroup';
 export { Message, messageVariants, type MessageProps } from './Message';
 export { OTP } from './OTP';
 export { Popover } from './Popover';
