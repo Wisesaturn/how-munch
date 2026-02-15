@@ -1,4 +1,4 @@
-export { useFridgeItemsQuery } from './api/queries';
+export { useBatchUsedAmountQuery, useFridgeItemsQuery } from './api/queries';
 export {
   useAddFridgeItemMutation,
   useUpdateFridgeItemMutation,

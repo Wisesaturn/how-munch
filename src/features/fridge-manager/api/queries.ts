@@ -26,3 +26,22 @@ export function useFridgeItemsQuery(householdId: string | null) {
       : skipToken,
   });
 }
+
+/** 배치별 식단 사용량 합계 조회 */
+export function useBatchUsedAmountQuery(batchId: string | null) {
+  return useQuery({
+    queryKey: fridgeKeys.batchUsage(batchId ?? ''),
+    queryFn: batchId
+      ? async () => {
+          const supabase = createClient();
+          const { data, error } = await supabase
+            .from('meal_batch_usages')
+            .select('amount')
+            .eq('batch_id', batchId);
+          if (error) throw error;
+
+          return (data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+        }
+      : skipToken,
+  });
+}

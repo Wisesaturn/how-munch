@@ -19,7 +19,7 @@ interface FridgeItemCardProps {
   onEditItem: (item: FridgeItemWithBatches) => void;
   onDeleteItem: (id: string) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, itemName: string, usedAmount: number) => void;
+  onEditBatch: (batch: FridgeItemBatch, itemName: string) => void;
   onDeleteBatch: (id: string) => void;
 }
 
@@ -113,9 +113,7 @@ export function FridgeItemCard({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      onClick={() =>
-                        onEditBatch(batch, item.name, usedAmountByBatchId.get(batch.id) ?? 0)
-                      }
+                      onClick={() => onEditBatch(batch, item.name)}
                     >
                       <Pencil className="size-3" />
                     </Button>

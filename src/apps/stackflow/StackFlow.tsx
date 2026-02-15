@@ -79,19 +79,11 @@ function FridgeBatchEditActivity({
   params: {
     batch: FridgeItemBatch;
     itemName: string;
-    usedAmount: number;
   };
 }) {
   const { pop } = useActions();
 
-  return (
-    <FridgeBatchEditScreen
-      onClose={pop}
-      batch={params.batch}
-      itemName={params.itemName}
-      usedAmount={params.usedAmount}
-    />
-  );
+  return <FridgeBatchEditScreen onClose={pop} batch={params.batch} itemName={params.itemName} />;
 }
 
 function IngredientEditActivity({

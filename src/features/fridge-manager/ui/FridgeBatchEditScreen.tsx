@@ -7,6 +7,7 @@ import { ScrollArea, Toast } from '@/commons/ui';
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 
 import { useUpdateBatchMutation } from '../api/mutations';
+import { useBatchUsedAmountQuery } from '../api/queries';
 
 import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
 
@@ -14,17 +15,12 @@ interface FridgeBatchEditScreenProps {
   onClose: () => void;
   batch: FridgeItemBatch;
   itemName: string;
-  usedAmount: number;
 }
 
 /** 냉장고 배치 수정 화면 */
-export function FridgeBatchEditScreen({
-  onClose,
-  batch,
-  itemName,
-  usedAmount,
-}: FridgeBatchEditScreenProps) {
+export function FridgeBatchEditScreen({ onClose, batch, itemName }: FridgeBatchEditScreenProps) {
   const mutation = useUpdateBatchMutation();
+  const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
   const totalQuantity = Number(batch.quantity) + Number(usedAmount);
 
   function getErrorMessage(error: unknown) {
@@ -57,10 +53,6 @@ export function FridgeBatchEditScreen({
     <AppScreen className="pointer-events-auto" appBar={{ title: `${itemName} — 재고 수정` }}>
       <ScrollArea className="h-full">
         <div className="p-4">
-          <p className="mb-3 text-xs text-gray-500">
-            식단 사용량 {usedAmount}
-            {usedAmount > 0 ? ` · 최소 입력 ${usedAmount}` : ''}
-          </p>
           <FridgeBatchForm
             defaultValues={{
               quantity: totalQuantity,
@@ -68,6 +60,7 @@ export function FridgeBatchEditScreen({
               purchased_date: batch.purchased_date,
               memo: batch.memo ?? '',
             }}
+            quantityMin={usedAmount}
             onSubmit={handleSubmit}
             isPending={mutation.isPending}
           />
