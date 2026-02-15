@@ -32,6 +32,7 @@
 - Expose slice APIs through `index.ts`; avoid cross-slice direct imports in the same layer.
 - Server Components are default; add `"use client"` only where needed.
 - Use inline type imports (example: `import { type Profile } from '@/entities/profile'`).
+- Common UI files should use section comment blocks (e.g., `Root`, `Header`, `Content`) in the same style as existing shared UI components.
 - React Query pattern per feature `api/`: `queryKey.ts`, `queries.ts`, `mutations.ts`; prefer `skipToken` over `enabled`.
 - For shared UI context, use `createSafeContext` from `src/commons/lib/context.ts`.
 - Prefer project-standard utilities first:
