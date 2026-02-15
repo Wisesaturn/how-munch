@@ -330,6 +330,10 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      delete_my_account: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       ensure_current_user_household_member: {
         Args: Record<PropertyKey, never>;
         Returns: string | null;
