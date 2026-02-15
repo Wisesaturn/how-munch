@@ -6,9 +6,15 @@ import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
 import { type Meal, type MealType } from '@/entities/meal';
+import { type Ingredient } from '@/entities/ingredient';
+import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 
-import { FridgeItemAddScreen } from '@/features/fridge-manager';
-import { IngredientAddScreen } from '@/features/ingredient';
+import {
+  FridgeBatchEditScreen,
+  FridgeItemAddScreen,
+  FridgeItemEditScreen,
+} from '@/features/fridge-manager';
+import { IngredientAddScreen, IngredientEditScreen } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal-manager';
 import { ProfileSettingsScreen } from '@/features/profile-manager';
 
@@ -55,6 +61,50 @@ function FridgeItemAddActivity({
   return <FridgeItemAddScreen onClose={pop} householdId={params.householdId} />;
 }
 
+function FridgeItemEditActivity({
+  params,
+}: {
+  params: {
+    item: FridgeItemWithBatches;
+  };
+}) {
+  const { pop } = useActions();
+
+  return <FridgeItemEditScreen onClose={pop} item={params.item} />;
+}
+
+function FridgeBatchEditActivity({
+  params,
+}: {
+  params: {
+    batch: FridgeItemBatch;
+    itemName: string;
+  };
+}) {
+  const { pop } = useActions();
+
+  return <FridgeBatchEditScreen onClose={pop} batch={params.batch} itemName={params.itemName} />;
+}
+
+function IngredientEditActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    ingredient: Ingredient;
+  };
+}) {
+  const { pop } = useActions();
+
+  return (
+    <IngredientEditScreen
+      onClose={pop}
+      householdId={params.householdId}
+      ingredient={params.ingredient}
+    />
+  );
+}
+
 function MealEditorActivity({
   params,
 }: {
@@ -89,7 +139,10 @@ const appStackFlow = stackflow({
     IdleActivity,
     PlaceholderActivity,
     IngredientAddActivity,
+    IngredientEditActivity,
     FridgeItemAddActivity,
+    FridgeItemEditActivity,
+    FridgeBatchEditActivity,
     MealEditorActivity,
     ProfileSettingsActivity,
   },
@@ -100,7 +153,10 @@ const appStackFlow = stackflow({
         IdleActivity: '/idle',
         PlaceholderActivity: '/placeholder',
         IngredientAddActivity: '/ingredient/add',
+        IngredientEditActivity: '/ingredient/edit',
         FridgeItemAddActivity: '/fridge/item/add',
+        FridgeItemEditActivity: '/fridge/item/edit',
+        FridgeBatchEditActivity: '/fridge/batch/edit',
         MealEditorActivity: '/meal/editor',
         ProfileSettingsActivity: '/profile/settings',
       },

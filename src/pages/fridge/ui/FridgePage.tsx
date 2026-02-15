@@ -14,8 +14,6 @@ import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fri
 import {
   ExpiryBanner,
   FridgeBatchAddBottomSheet,
-  FridgeBatchEditBottomSheet,
-  FridgeItemEditBottomSheet,
   FridgeItemList,
   FridgeSearch,
   useDeleteBatchMutation,
@@ -58,13 +56,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
   };
 
   const openFridgeItemEditSheet = (item: FridgeItemWithBatches) => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <FridgeItemEditBottomSheet
-        open={isOpen}
-        onClose={() => createOverlayCloseHandler(close, unmount)}
-        item={item}
-      />
-    ));
+    stackFlowActions.push('FridgeItemEditActivity', { item });
   };
 
   const openFridgeBatchAddSheet = (item: FridgeItemWithBatches) => {
@@ -79,14 +71,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
   };
 
   const openFridgeBatchEditSheet = (batch: FridgeItemBatch, itemName: string) => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <FridgeBatchEditBottomSheet
-        open={isOpen}
-        onClose={() => createOverlayCloseHandler(close, unmount)}
-        batch={batch}
-        itemName={itemName}
-      />
-    ));
+    stackFlowActions.push('FridgeBatchEditActivity', { batch, itemName });
   };
 
   return (

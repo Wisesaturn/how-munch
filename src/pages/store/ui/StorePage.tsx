@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import { addMonths, format, subMonths } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { overlay } from 'overlay-kit';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
@@ -14,7 +13,6 @@ import { Button } from '@/commons/ui';
 import { type Ingredient } from '@/entities/ingredient';
 
 import {
-  IngredientEditBottomSheet,
   IngredientList,
   IngredientSearch,
   useDeleteIngredientMutation,
@@ -52,24 +50,12 @@ export function StorePage({ householdId, userId }: StorePageProps) {
     deleteMutation.mutate(id);
   };
 
-  const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
-    close();
-    window.setTimeout(unmount, 200);
-  };
-
   const openIngredientAddSheet = (defaultName?: string) => {
     stackFlowActions.push('IngredientAddActivity', { householdId, userId, defaultName });
   };
 
   const openIngredientEditSheet = (ingredient: Ingredient) => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <IngredientEditBottomSheet
-        open={isOpen}
-        onClose={() => createOverlayCloseHandler(close, unmount)}
-        ingredient={ingredient}
-        householdId={householdId}
-      />
-    ));
+    stackFlowActions.push('IngredientEditActivity', { householdId, ingredient });
   };
 
   const handleAddFromSearch = () => {
