@@ -8,6 +8,7 @@ export { DatePicker } from './DatePicker';
 export { Drawer } from './Drawer';
 export { EmptyState } from './EmptyState';
 export { Input } from './Input';
+export { OTP } from './OTP';
 export { Popover } from './Popover';
 export { ProgressBar } from './ProgressBar';
 export { ScrollArea } from './ScrollArea';
