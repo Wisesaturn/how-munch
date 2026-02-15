@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { createClient } from '@/commons/api/supabase/server';
 
-import { KakaoLoginButton } from '@/features/auth';
+import { LoginMethods } from '@/features/auth';
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -20,9 +20,7 @@ export default async function HomePage() {
         <h1 className="text-2xl font-bold">How Munch</h1>
         <p className="text-sm text-gray-500">나의 식단을 기록하세요</p>
       </div>
-      <div className="w-full max-w-[280px]">
-        <KakaoLoginButton />
-      </div>
+      <LoginMethods />
     </main>
   );
 }

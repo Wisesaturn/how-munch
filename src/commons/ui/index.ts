@@ -11,5 +11,6 @@ export { Input } from './Input';
 export { Popover } from './Popover';
 export { ProgressBar } from './ProgressBar';
 export { ScrollArea } from './ScrollArea';
+export { Separator, separatorVariants } from './Separator';
 export { Select } from './Select';
 export { Toast } from './toast';
