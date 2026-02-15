@@ -16,7 +16,7 @@ import {
 } from '@/features/fridge-manager';
 import { IngredientAddScreen, IngredientEditScreen } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal-manager';
-import { ProfileSettingsScreen } from '@/features/profile-manager';
+import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile-manager';
 
 function IdleActivity() {
   const activity = useActivity();
@@ -132,6 +132,12 @@ function ProfileSettingsActivity() {
   return <ProfileSettingsScreen />;
 }
 
+function ProfileEditActivity() {
+  const { pop } = useActions();
+
+  return <ProfileEditScreen onClose={pop} />;
+}
+
 const appStackFlow = stackflow({
   transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
@@ -145,6 +151,7 @@ const appStackFlow = stackflow({
     FridgeBatchEditActivity,
     MealEditorActivity,
     ProfileSettingsActivity,
+    ProfileEditActivity,
   },
   plugins: [
     basicRendererPlugin(),
@@ -159,6 +166,7 @@ const appStackFlow = stackflow({
         FridgeBatchEditActivity: '/fridge/batch/edit',
         MealEditorActivity: '/meal/editor',
         ProfileSettingsActivity: '/profile/settings',
+        ProfileEditActivity: '/profile/edit',
       },
       fallbackActivity: () => 'IdleActivity',
       useHash: true,

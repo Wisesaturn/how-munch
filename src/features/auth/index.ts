@@ -4,3 +4,4 @@ export { LoginMethods } from './ui/LoginMethods';
 export { EmailOtpForm } from './ui/EmailOtpForm';
 export { loginWithKakao } from './api/login';
 export { useRequestEmailOtpMutation, useVerifyEmailOtpMutation } from './api/mutations';
+export { useUserQuery } from './api/queries';

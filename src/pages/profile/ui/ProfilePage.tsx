@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import { overlay } from 'overlay-kit';
 
-import { Button, Card, Toast } from '@/commons/ui';
+import { Button } from '@/commons/ui';
 
 import {
   CreateHouseholdBottomSheet,
@@ -14,7 +14,7 @@ import {
   useHouseholdQuery,
   useMembersQuery,
 } from '@/features/household-manager';
-import { ProfileCard, ProfileEditBottomSheet, useProfileQuery } from '@/features/profile-manager';
+import { useProfileQuery } from '@/features/profile-manager';
 
 interface ProfilePageProps {
   userId: string;
@@ -31,21 +31,6 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
   const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
     close();
     window.setTimeout(unmount, 200);
-  };
-
-  const openProfileEditSheet = () => {
-    if (!profile) {
-      Toast.error('프로필 정보를 불러오지 못했습니다');
-      return;
-    }
-
-    overlay.open(({ isOpen, close, unmount }) => (
-      <ProfileEditBottomSheet
-        open={isOpen}
-        onClose={() => createOverlayCloseHandler(close, unmount)}
-        profile={profile}
-      />
-    ));
   };
 
   const openCreateHouseholdSheet = () => {
@@ -72,21 +57,20 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
       {isProfileLoading || !profile ? (
-        <Card>
-          <Card.Content className="py-6 text-center text-sm text-gray-400">
-            불러오는 중...
-          </Card.Content>
-        </Card>
+        <div className="py-6 text-center text-sm text-gray-400">불러오는 중...</div>
       ) : (
-        <ProfileCard profile={profile} onEdit={openProfileEditSheet} />
+        <section className="space-y-1 px-1 pt-1">
+          <h2 className="text-xl font-semibold text-gray-900">{profile.nickname}</h2>
+          <h3 className="text-sm font-medium text-gray-500">{profile.email}</h3>
+        </section>
       )}
 
       {!householdId ? (
-        <Card>
-          <Card.Header>
+        <div className="rounded-xl border border-gray-100 bg-white">
+          <div className="px-4 pt-4">
             <h2 className="text-sm font-semibold">가구 관리</h2>
-          </Card.Header>
-          <Card.Content className="flex flex-col gap-2">
+          </div>
+          <div className="flex flex-col gap-2 p-4">
             <p className="text-xs text-gray-500">
               아직 가구에 가입되어 있지 않습니다. 가구를 생성하거나 초대 코드를 입력해 가입해
               주세요.
@@ -97,8 +81,8 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
             <Button variant="outline" onClick={openJoinHouseholdSheet}>
               초대 코드로 가입
             </Button>
-          </Card.Content>
-        </Card>
+          </div>
+        </div>
       ) : (
         <>
           {household && (
