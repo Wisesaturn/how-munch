@@ -70,8 +70,12 @@ export function FridgePage({ householdId }: FridgePageProps) {
     ));
   };
 
-  const openFridgeBatchEditSheet = (batch: FridgeItemBatch, itemName: string) => {
-    stackFlowActions.push('FridgeBatchEditActivity', { batch, itemName });
+  const openFridgeBatchEditSheet = (
+    batch: FridgeItemBatch,
+    itemName: string,
+    unit: 'count' | 'g',
+  ) => {
+    stackFlowActions.push('FridgeBatchEditActivity', { batch, itemName, unit });
   };
 
   return (

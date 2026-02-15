@@ -19,7 +19,7 @@ interface FridgeItemCardProps {
   onEditItem: (item: FridgeItemWithBatches) => void;
   onDeleteItem: (id: string) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, itemName: string) => void;
+  onEditBatch: (batch: FridgeItemBatch, itemName: string, unit: 'count' | 'g') => void;
   onDeleteBatch: (id: string) => void;
 }
 
@@ -72,7 +72,14 @@ export function FridgeItemCard({
         onClick={() => setExpanded((v) => !v)}
         className="flex w-full items-center gap-2 px-3 py-3 text-left"
       >
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <span className="truncate text-sm font-medium">{item.name}</span>
+          {item.is_subdivided ? (
+            <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+              소분
+            </span>
+          ) : null}
+        </div>
         <span className="shrink-0 text-sm text-gray-500">
           {item.total_count}
           {unitLabel}
@@ -113,7 +120,7 @@ export function FridgeItemCard({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      onClick={() => onEditBatch(batch, item.name)}
+                      onClick={() => onEditBatch(batch, item.name, item.unit)}
                     >
                       <Pencil className="size-3" />
                     </Button>

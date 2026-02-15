@@ -5,6 +5,7 @@ export const CATEGORIES = [
   { id: 'fruit', label: '과일', emoji: '🍎' },
   { id: 'dairy', label: '유제품', emoji: '🥛' },
   { id: 'grain', label: '곡류', emoji: '🌾' },
+  { id: 'noodle', label: '면류', emoji: '🍜' },
   { id: 'seasoning', label: '양념', emoji: '🧂' },
   { id: 'snack', label: '간식', emoji: '🍪' },
   { id: 'drink', label: '음료', emoji: '🥤' },

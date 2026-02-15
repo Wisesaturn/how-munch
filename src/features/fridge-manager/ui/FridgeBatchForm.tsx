@@ -22,6 +22,7 @@ interface FridgeBatchFormProps {
   isPending?: boolean;
   submitLabel?: string;
   quantityMin?: number;
+  quantityUnitLabel?: string;
 }
 
 /** 냉장고 배치 폼 (quantity, expiry_date, purchased_date, memo) */
@@ -31,8 +32,11 @@ export function FridgeBatchForm({
   isPending,
   submitLabel = '저장',
   quantityMin = 0,
+  quantityUnitLabel,
 }: FridgeBatchFormProps) {
   const [quantityError, setQuantityError] = useState<string | null>(null);
+  const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
+  const today = new Date();
 
   const parseDateValue = (value: string) => {
     if (!value) return undefined;
@@ -102,7 +106,12 @@ export function FridgeBatchForm({
       <form.Field name="quantity">
         {(field) => (
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">수량</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">수량</span>
+              {quantityUnitLabel ? (
+                <span className="text-xs text-gray-500">({quantityUnitLabel})</span>
+              ) : null}
+            </div>
             <Counter
               value={field.state.value}
               min={0}
@@ -122,8 +131,25 @@ export function FridgeBatchForm({
         {(field) => (
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">구매일</span>
+            <label className="mb-1 flex items-center gap-2 text-xs text-gray-600">
+              <input
+                type="checkbox"
+                checked={isPurchasedDateUnknown}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  setIsPurchasedDateUnknown(checked);
+                  if (checked) {
+                    field.handleChange(format(today, 'yyyy-MM-dd'));
+                  }
+                }}
+                className="size-4 rounded border-gray-300"
+              />
+              구매일 모름
+            </label>
             <DatePicker
               value={parseDateValue(field.state.value)}
+              disabled={isPurchasedDateUnknown}
+              maxDate={today}
               onChange={(date) =>
                 field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
               }

@@ -15,13 +15,20 @@ interface FridgeBatchEditScreenProps {
   onClose: () => void;
   batch: FridgeItemBatch;
   itemName: string;
+  unit: 'count' | 'g';
 }
 
 /** 냉장고 배치 수정 화면 */
-export function FridgeBatchEditScreen({ onClose, batch, itemName }: FridgeBatchEditScreenProps) {
+export function FridgeBatchEditScreen({
+  onClose,
+  batch,
+  itemName: _itemName,
+  unit,
+}: FridgeBatchEditScreenProps) {
   const mutation = useUpdateBatchMutation();
   const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
   const totalQuantity = Number(batch.quantity) + Number(usedAmount);
+  const quantityUnitLabel = unit === 'count' ? '개' : 'g';
 
   function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message;
@@ -50,7 +57,7 @@ export function FridgeBatchEditScreen({ onClose, batch, itemName }: FridgeBatchE
   }
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: `${itemName} — 재고 수정` }}>
+    <AppScreen className="pointer-events-auto" appBar={{ title: '재고 수정' }}>
       <ScrollArea className="h-full">
         <div className="p-4">
           <FridgeBatchForm
@@ -61,6 +68,7 @@ export function FridgeBatchEditScreen({ onClose, batch, itemName }: FridgeBatchE
               memo: batch.memo ?? '',
             }}
             quantityMin={usedAmount}
+            quantityUnitLabel={quantityUnitLabel}
             onSubmit={handleSubmit}
             isPending={mutation.isPending}
           />

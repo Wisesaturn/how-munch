@@ -31,6 +31,8 @@ export function IngredientForm({
   isSubmitting,
   submitLabel = '저장',
 }: IngredientFormProps) {
+  const today = new Date();
+
   const parseDateValue = (value: string) => {
     if (!value) return undefined;
     const date = new Date(value);
@@ -71,6 +73,7 @@ export function IngredientForm({
               onChange={(date) =>
                 field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
               }
+              maxDate={today}
               placeholder="날짜를 선택하세요"
             />
           </label>
