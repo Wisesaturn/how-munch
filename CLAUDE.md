@@ -93,6 +93,12 @@ project-root/
 - 공통 UI 내부 상태가 controlled/uncontrolled를 모두 지원해야 하는 경우 `react-simplikit`의 `useControlledState`를 우선 사용한다 (예: `DatePicker`)
 - 신규 훅/유틸 도입 시 동일 목적의 기능이 `react-simplikit`(core/mobile)에 있으면 먼저 검토 후 채택한다
 - 성능/상태 최적화가 필요한 훅은 자체 구현보다 `react-simplikit` 기반 훅을 우선 검토하고 적극적으로 활용한다
+- 조건 분기가 필요한 effect는 `useEffect` 내부 `if` 분기 대신 `react-simplikit`의 `useConditionalEffect`를 우선 사용한다
+- `useEffect`/`useConditionalEffect` 콜백은 목적이 드러나는 기명 함수로 사용한다. `useConditionalEffect`는 호출부 인자로 인라인 기명 함수(`useConditionalEffect(function sync...(){ ... })`)를 선언하는 스타일을 우선한다
+- Context 값으로 raw `Dispatch<SetStateAction<T>>`를 노출하지 않는다. 상태 변경은 목적형 래퍼 함수(`openModal`, `setOtpEmail` 등)로 감싸서 하위 컴포넌트에 전달한다
+- 훅에서 외부로 노출하는 함수명은 `handle*` 같은 추상 접두어를 지양하고 목적이 명확한 동사형으로 작성한다 (`handleResend` 대신 `resendCode`)
+- 재사용 목적이 아닌 슬라이스 전용 훅은 과도한 props DI를 피하고, 동일 슬라이스 Context에서 가져올 수 있는 값은 훅 내부에서 직접 조회해 사용한다
+- `lib` 폴더에 함수를 추가/수정할 때는 함수 상단에 JSDoc 주석을 필수로 작성하고 `@description`으로 목적을 명시한다
 
 ### Common UI Composition
 

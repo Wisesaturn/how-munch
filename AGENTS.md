@@ -42,6 +42,12 @@
   - `es-toolkit` for general utility helpers
   - `es-hangul` for Korean text handling/search normalization
   - `react-simplikit` / `@react-simplikit/mobile` for optimized hooks and state helpers
+- For conditional effect execution, prefer `useConditionalEffect` from `react-simplikit` over branching inside `useEffect`.
+- For `useEffect`/`useConditionalEffect`, avoid anonymous callbacks and use purpose-driven named functions. For `useConditionalEffect`, prefer inline named function arguments (example: `useConditionalEffect(function sync...(){ ... })`).
+- Do not expose raw `Dispatch<SetStateAction<T>>` through Context values. Expose intent-driven wrapper methods instead (example: `setOtpEmail`, `openSettings`, `resetFilters`).
+- For functions returned from hooks, avoid abstract `handle*` names. Use explicit intent verbs instead (example: `resendCode`, `verifyCode`, `openSheet`).
+- For slice-local hooks (not intended for reuse), avoid excessive props DI. If data already exists in same-slice Context, read it inside the hook.
+- For functions in any `lib` folder, add a mandatory JSDoc comment above the function and include an `@description` line describing intent.
 
 ## Testing Guidelines
 - There is currently no dedicated unit/integration test runner configured.
