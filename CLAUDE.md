@@ -83,6 +83,8 @@ project-root/
   - `queries.ts` — `use{작업}Query` hooks (조회)
   - `mutations.ts` — `use{작업}Mutation` hooks (변경)
 - react-query 조건부 실행: `enabled` 대신 `queryFn`에 `skipToken` 사용
+- 날짜/기간 계산은 `date-fns`를 우선 사용한다
+- 범용 유틸 함수는 `es-toolkit`을 우선 사용한다
 - 한국어 처리: es-hangul 사용
 - type import는 `import { type Foo }` 인라인 스타일 사용
 - Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createClient } from '@/commons/api/supabase/server'` (server)
@@ -90,6 +92,7 @@ project-root/
 - `src/commons/lib`는 도메인(주제) 단위 파일로 구성하고, 필요 시 한 파일에 여러 유틸 함수를 함께 둔다 (예: `uuid.ts`, `string.ts`)
 - 공통 UI 내부 상태가 controlled/uncontrolled를 모두 지원해야 하는 경우 `react-simplikit`의 `useControlledState`를 우선 사용한다 (예: `DatePicker`)
 - 신규 훅/유틸 도입 시 동일 목적의 기능이 `react-simplikit`(core/mobile)에 있으면 먼저 검토 후 채택한다
+- 성능/상태 최적화가 필요한 훅은 자체 구현보다 `react-simplikit` 기반 훅을 우선 검토하고 적극적으로 활용한다
 
 ### Common UI Composition
 
