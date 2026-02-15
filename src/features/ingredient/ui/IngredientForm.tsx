@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 
 import { CATEGORIES } from '@/commons/config';
-import { Button, Counter, DatePicker, Input, Select } from '@/commons/ui';
+import { Button, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
 
 export interface IngredientFormValues {
   date: string;
@@ -184,13 +184,8 @@ export function IngredientForm({
       <form.Field name="price">
         {(field) => (
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-600">가격 (원)</span>
-            <Input
-              type="number"
-              min={0}
-              value={field.state.value}
-              onChange={(e) => field.handleChange(Number(e.target.value))}
-            />
+            <span className="text-xs font-medium text-gray-600">가격</span>
+            <PriceInput value={field.state.value} onChange={field.handleChange} />
           </label>
         )}
       </form.Field>

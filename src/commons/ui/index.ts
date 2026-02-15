@@ -21,6 +21,7 @@ export {
 export { Message, messageVariants, type MessageProps } from './Message';
 export { OTP } from './OTP';
 export { Popover } from './Popover';
+export { PriceInput, type PriceInputProps } from './PriceInput';
 export { ProgressBar } from './ProgressBar';
 export { ScrollArea } from './ScrollArea';
 export { Separator, separatorVariants } from './Separator';
