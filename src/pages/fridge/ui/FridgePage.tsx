@@ -23,6 +23,8 @@ import {
   useFridgeItemsQuery,
 } from '@/features/fridge-manager';
 
+import { MainAppBar } from '@/modules/main-app-bar';
+
 interface FridgePageProps {
   householdId: string;
 }
@@ -90,14 +92,12 @@ export function FridgePage({ householdId }: FridgePageProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-5">
-      {/* 헤더 */}
-      <header>
-        <h1 className="text-lg font-bold">냉장고</h1>
-        <p className="text-xs text-gray-400">
-          총 {items.length}종 · {items.reduce((sum, i) => sum + i.total_count, 0)}개
-        </p>
-      </header>
+    <div className="flex flex-col gap-4 px-4 pb-5">
+      <MainAppBar title="냉장고" />
+
+      <p className="text-xs text-gray-400">
+        총 {items.length}종 · {items.reduce((sum, i) => sum + i.total_count, 0)}개
+      </p>
 
       {/* 만료 임박 배너 */}
       {!search.trim() && <ExpiryBanner items={items} />}

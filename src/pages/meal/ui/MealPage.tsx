@@ -14,6 +14,8 @@ import { type Meal, type MealType } from '@/entities/meal';
 
 import { useMealsByDateQuery } from '@/features/meal-manager';
 
+import { MainAppBar } from '@/modules/main-app-bar';
+
 interface MealPageProps {
   householdId: string;
 }
@@ -43,31 +45,35 @@ export function MealPage({ householdId }: MealPageProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-5">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setSelectedDate((d) => subDays(d, 1))}
-          >
-            <ChevronLeft className="size-4" />
+    <div className="flex flex-col gap-4 px-4 pb-5">
+      <MainAppBar
+        title="식단"
+        right={
+          <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
+            오늘
           </Button>
-          <h1 className="text-base font-bold">
-            {format(selectedDate, 'M월 d일 EEEE', { locale: ko })}
-          </h1>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setSelectedDate((d) => addDays(d, 1))}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
-          오늘
+        }
+      />
+
+      <section className="flex items-center justify-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setSelectedDate((d) => subDays(d, 1))}
+        >
+          <ChevronLeft className="size-4" />
         </Button>
-      </header>
+        <h2 className="text-base font-bold">
+          {format(selectedDate, 'M월 d일 EEEE', { locale: ko })}
+        </h2>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setSelectedDate((d) => addDays(d, 1))}
+        >
+          <ChevronRight className="size-4" />
+        </Button>
+      </section>
 
       {isLoading ? (
         <div className="py-12 text-center text-sm text-gray-400">불러오는 중...</div>
