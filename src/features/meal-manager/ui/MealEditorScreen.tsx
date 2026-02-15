@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Plus, Trash2 } from 'lucide-react';
 
-import { Button, Counter, ScrollArea, Select, Toast } from '@/commons/ui';
+import { Button, Counter, Input, ScrollArea, Select, Toast } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
@@ -89,6 +89,12 @@ export function MealEditorScreen({
             }
           : dish,
       ),
+    );
+  };
+
+  const handleDishNameChange = (dishIndex: number, name: string) => {
+    setDishes((prev) =>
+      prev.map((dish, index) => (index === dishIndex ? { ...dish, name } : dish)),
     );
   };
 
@@ -188,6 +194,15 @@ export function MealEditorScreen({
                   </Button>
                 ) : null}
               </div>
+
+              <label className="mt-3 flex flex-col gap-1">
+                <span className="px-1 text-[11px] font-medium text-gray-500">메뉴명</span>
+                <Input
+                  value={dish.name}
+                  onChange={(event) => handleDishNameChange(dishIndex, event.target.value)}
+                  placeholder="메뉴명을 입력하세요"
+                />
+              </label>
 
               <div className="mt-3 space-y-2">
                 {dish.ingredients.map((ingredient, ingredientIndex) => {
