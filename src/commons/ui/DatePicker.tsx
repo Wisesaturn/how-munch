@@ -9,9 +9,9 @@ import { useControlledState } from 'react-simplikit';
 
 import { cn } from '../lib';
 
+import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 import { Calendar } from './Calendar';
-import { Popover } from './Popover';
 
 /* -------------------------------------------------------------------------------------------------
  * DatePicker
@@ -39,14 +39,22 @@ function DatePicker({
   className,
   triggerClassName,
 }: DatePickerProps) {
+  const sheetContentId = React.useId();
   const [open, setOpen] = React.useState(false);
-  const [boundaryElement, setBoundaryElement] = React.useState<HTMLDivElement | null>(null);
+  const [floatingContainer, setFloatingContainer] = React.useState<HTMLDivElement | null>(null);
 
   const [selectedDate, setSelectedDate] = useControlledState<Date | undefined>({
     value,
     defaultValue: undefined,
     onChange,
   });
+  const [draftDate, setDraftDate] = React.useState<Date | undefined>(selectedDate);
+
+  React.useEffect(() => {
+    if (open) {
+      setDraftDate(selectedDate);
+    }
+  }, [open, selectedDate]);
 
   const baseDisabled: Matcher[] = React.useMemo(() => {
     if (!disabledDates) return [];
@@ -63,45 +71,54 @@ function DatePicker({
   );
 
   const handleSelect = (date?: Date) => {
-    setSelectedDate(date);
+    setDraftDate(date);
+  };
+
+  const handleConfirm = () => {
+    setSelectedDate(draftDate);
     setOpen(false);
   };
 
   return (
-    <div ref={setBoundaryElement} className={cn('relative w-full', className)}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <Popover.Trigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            color="mono"
-            className={cn(
-              'w-full justify-between border-gray-300 text-left font-normal text-gray-900',
-              !selectedDate && 'text-gray-400',
-              triggerClassName,
-            )}
-            disabled={disabled}
-          >
-            {selectedDate ? format(selectedDate, 'yyyy-MM-dd') : placeholder}
-            <CalendarIcon className="size-4 text-gray-500" />
+    <div data-slot="date-picker" className={cn('relative w-full', className)}>
+      <Button
+        type="button"
+        variant="outline"
+        color="mono"
+        data-slot="date-picker-trigger"
+        aria-label="날짜 선택 열기"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={sheetContentId}
+        className={cn(
+          'w-full justify-between border-gray-300 text-left font-normal text-gray-900',
+          !selectedDate && 'text-gray-400',
+          triggerClassName,
+        )}
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+      >
+        {selectedDate ? format(selectedDate, 'yyyy-MM-dd') : placeholder}
+        <CalendarIcon className="size-4 text-gray-500" />
+      </Button>
+
+      <BottomSheet open={open} onClose={() => setOpen(false)}>
+        <BottomSheet.Header heading="날짜 선택" />
+        <BottomSheet.Content id={sheetContentId} contentClassName="space-y-4">
+          <div ref={setFloatingContainer}>
+            <Calendar
+              mode="single"
+              selected={draftDate}
+              onSelect={handleSelect}
+              disabled={mergedDisabled}
+              floatingContainer={floatingContainer}
+            />
+          </div>
+          <Button onClick={handleConfirm} className="w-full">
+            확인
           </Button>
-        </Popover.Trigger>
-        <Popover.Content
-          align="start"
-          side="bottom"
-          sideOffset={8}
-          collisionBoundary={boundaryElement ?? undefined}
-          container={boundaryElement}
-          className="w-auto border-none bg-transparent p-0 shadow-none"
-        >
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleSelect}
-            disabled={mergedDisabled}
-          />
-        </Popover.Content>
-      </Popover>
+        </BottomSheet.Content>
+      </BottomSheet>
     </div>
   );
 }
