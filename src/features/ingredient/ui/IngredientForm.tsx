@@ -18,6 +18,7 @@ export interface IngredientFormValues {
 
 interface IngredientFormProps {
   id?: string;
+  formId?: string;
   defaultValues?: Partial<IngredientFormValues>;
   storeNames?: string[];
   onSubmit: (values: IngredientFormValues) => void;
@@ -29,6 +30,7 @@ interface IngredientFormProps {
 
 export function IngredientForm({
   id,
+  formId,
   defaultValues,
   storeNames = [],
   onSubmit,
@@ -60,8 +62,11 @@ export function IngredientForm({
     },
   });
 
+  const isEditMode = Boolean(id);
+
   return (
     <form
+      id={formId}
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -190,7 +195,7 @@ export function IngredientForm({
         )}
       </form.Field>
 
-      {id ? (
+      {isEditMode && (
         <div className="mt-2 flex gap-2">
           <Button type="submit" className="flex-1" disabled={Boolean(isSubmitting || isDeleting)}>
             {isSubmitting ? '수정 중...' : (submitLabel ?? '수정')}
@@ -208,10 +213,6 @@ export function IngredientForm({
             {isDeleting ? '삭제 중...' : '삭제'}
           </Button>
         </div>
-      ) : (
-        <Button type="submit" disabled={isSubmitting} className="mt-2 w-full">
-          {isSubmitting ? '저장 중...' : (submitLabel ?? '저장')}
-        </Button>
       )}
     </form>
   );

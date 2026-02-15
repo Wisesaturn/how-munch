@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { ScrollArea, Toast } from '@/commons/ui';
+import { Button, ScrollArea, Toast } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
@@ -25,6 +25,7 @@ export function IngredientAddScreen({
 }: IngredientAddScreenProps) {
   const addMutation = useAddIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
+  const formId = 'ingredient-add-form';
   const getErrorMessage = (error: unknown) => {
     if (error instanceof Error) return error.message;
     return '장보기 추가 중 오류가 발생했습니다';
@@ -56,10 +57,27 @@ export function IngredientAddScreen({
   };
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '장보기 추가' }}>
+    <AppScreen
+      className="pointer-events-auto"
+      appBar={{
+        title: '장보기 추가',
+        renderRight: () => (
+          <Button
+            type="submit"
+            form={formId}
+            variant="ghost"
+            size="sm"
+            disabled={addMutation.isPending}
+          >
+            저장
+          </Button>
+        ),
+      }}
+    >
       <ScrollArea className="h-full">
         <div className="p-4">
           <IngredientForm
+            formId={formId}
             defaultValues={defaultName ? { name: defaultName } : undefined}
             storeNames={storeNames}
             onSubmit={handleSubmit}
