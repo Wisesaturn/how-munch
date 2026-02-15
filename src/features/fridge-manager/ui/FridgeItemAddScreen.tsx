@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Toast } from '@/commons/ui';
+import { ScrollArea, Toast } from '@/commons/ui';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -73,17 +73,19 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
       className="pointer-events-auto"
       appBar={{ title: step === 'item' ? '재료 추가' : '수량 입력' }}
     >
-      <div className="p-4">
-        {step === 'item' ? (
-          <FridgeItemForm onSubmit={handleItemSubmit} submitLabel="다음" />
-        ) : (
-          <FridgeBatchForm
-            onSubmit={handleBatchSubmit}
-            isPending={mutation.isPending}
-            submitLabel="추가"
-          />
-        )}
-      </div>
+      <ScrollArea className="h-full">
+        <div className="p-4">
+          {step === 'item' ? (
+            <FridgeItemForm onSubmit={handleItemSubmit} submitLabel="다음" />
+          ) : (
+            <FridgeBatchForm
+              onSubmit={handleBatchSubmit}
+              isPending={mutation.isPending}
+              submitLabel="추가"
+            />
+          )}
+        </div>
+      </ScrollArea>
     </AppScreen>
   );
 }

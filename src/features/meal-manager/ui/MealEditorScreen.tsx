@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Plus, Trash2 } from 'lucide-react';
 
-import { Button, Input, Select, Toast } from '@/commons/ui';
+import { Button, Input, ScrollArea, Select, Toast } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
@@ -171,117 +171,122 @@ export function MealEditorScreen({
       className="pointer-events-auto"
       appBar={{ title: `${MEAL_TYPE_LABEL[type]} 식단 편집` }}
     >
-      <div className="space-y-4 p-4">
-        <p className="text-xs text-gray-500">날짜: {date}</p>
+      <ScrollArea className="h-full">
+        <div className="space-y-4 p-4">
+          <p className="text-xs text-gray-500">날짜: {date}</p>
 
-        {dishes.map((dish, dishIndex) => (
-          <div key={`${type}-dish-${dishIndex}`} className="rounded-lg border border-gray-200 p-3">
-            <div className="flex items-center gap-2">
-              <Input
-                value={dish.name}
-                onChange={(event) => handleDishNameChange(dishIndex, event.target.value)}
-                placeholder="메뉴명 (예: 김치찌개)"
-              />
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={() => handleRemoveDish(dishIndex)}
-                disabled={dishes.length === 1}
-              >
-                <Trash2 className="size-4" />
-              </Button>
+          {dishes.map((dish, dishIndex) => (
+            <div
+              key={`${type}-dish-${dishIndex}`}
+              className="rounded-lg border border-gray-200 p-3"
+            >
+              <div className="flex items-center gap-2">
+                <Input
+                  value={dish.name}
+                  onChange={(event) => handleDishNameChange(dishIndex, event.target.value)}
+                  placeholder="메뉴명 (예: 김치찌개)"
+                />
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  onClick={() => handleRemoveDish(dishIndex)}
+                  disabled={dishes.length === 1}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {dish.ingredients.map((ingredient, ingredientIndex) => {
+                  const selected = ingredient.fridge_item_id
+                    ? fridgeItemMap.get(ingredient.fridge_item_id)
+                    : null;
+
+                  return (
+                    <div key={`${type}-${dishIndex}-${ingredientIndex}`} className="flex gap-2">
+                      <Select
+                        value={ingredient.fridge_item_id || '__none__'}
+                        onValueChange={(value) =>
+                          handleIngredientChange(dishIndex, ingredientIndex, {
+                            fridge_item_id: value === '__none__' ? '' : value,
+                          })
+                        }
+                      >
+                        <Select.Trigger>
+                          <Select.Value placeholder="재료 선택" />
+                        </Select.Trigger>
+                        <Select.Content>
+                          <Select.Item value="__none__">재료 선택</Select.Item>
+                          {fridgeItems.map((item) => (
+                            <Select.Item key={item.id} value={item.id}>
+                              {item.name} ({Number(item.total_count)}{' '}
+                              {item.unit === 'count' ? '개' : 'g'})
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select>
+
+                      <Input
+                        type="number"
+                        min={0}
+                        step="any"
+                        value={ingredient.amount}
+                        onChange={(event) =>
+                          handleIngredientChange(dishIndex, ingredientIndex, {
+                            amount: Number(event.target.value),
+                          })
+                        }
+                        placeholder={selected?.unit === 'g' ? 'g' : '개'}
+                        className="w-24"
+                      />
+
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => handleRemoveIngredient(dishIndex, ingredientIndex)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => handleAddIngredient(dishIndex)}
+                >
+                  재료 추가
+                </Button>
+              </div>
             </div>
+          ))}
 
-            <div className="mt-3 space-y-2">
-              {dish.ingredients.map((ingredient, ingredientIndex) => {
-                const selected = ingredient.fridge_item_id
-                  ? fridgeItemMap.get(ingredient.fridge_item_id)
-                  : null;
-
-                return (
-                  <div key={`${type}-${dishIndex}-${ingredientIndex}`} className="flex gap-2">
-                    <Select
-                      value={ingredient.fridge_item_id || '__none__'}
-                      onValueChange={(value) =>
-                        handleIngredientChange(dishIndex, ingredientIndex, {
-                          fridge_item_id: value === '__none__' ? '' : value,
-                        })
-                      }
-                    >
-                      <Select.Trigger>
-                        <Select.Value placeholder="재료 선택" />
-                      </Select.Trigger>
-                      <Select.Content>
-                        <Select.Item value="__none__">재료 선택</Select.Item>
-                        {fridgeItems.map((item) => (
-                          <Select.Item key={item.id} value={item.id}>
-                            {item.name} ({Number(item.total_count)}{' '}
-                            {item.unit === 'count' ? '개' : 'g'})
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select>
-
-                    <Input
-                      type="number"
-                      min={0}
-                      step="any"
-                      value={ingredient.amount}
-                      onChange={(event) =>
-                        handleIngredientChange(dishIndex, ingredientIndex, {
-                          amount: Number(event.target.value),
-                        })
-                      }
-                      placeholder={selected?.unit === 'g' ? 'g' : '개'}
-                      className="w-24"
-                    />
-
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      onClick={() => handleRemoveIngredient(dishIndex, ingredientIndex)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                );
-              })}
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={() => handleAddIngredient(dishIndex)}
-              >
-                재료 추가
-              </Button>
-            </div>
-          </div>
-        ))}
-
-        <Button variant="outline" className="w-full" onClick={handleAddDish}>
-          <Plus className="mr-1 size-4" /> 메뉴 추가
-        </Button>
-
-        {meal && (
-          <Button
-            variant="outline"
-            className="w-full text-red-600 hover:text-red-700"
-            onClick={handleDeleteMeal}
-            disabled={deleteMutation.isPending}
-          >
-            식단 삭제
+          <Button variant="outline" className="w-full" onClick={handleAddDish}>
+            <Plus className="mr-1 size-4" /> 메뉴 추가
           </Button>
-        )}
 
-        <Button
-          className="w-full"
-          onClick={handleSubmit}
-          disabled={upsertMutation.isPending || deleteMutation.isPending}
-        >
-          {upsertMutation.isPending ? '저장 중...' : '저장'}
-        </Button>
-      </div>
+          {meal && (
+            <Button
+              variant="outline"
+              className="w-full text-red-600 hover:text-red-700"
+              onClick={handleDeleteMeal}
+              disabled={deleteMutation.isPending}
+            >
+              식단 삭제
+            </Button>
+          )}
+
+          <Button
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={upsertMutation.isPending || deleteMutation.isPending}
+          >
+            {upsertMutation.isPending ? '저장 중...' : '저장'}
+          </Button>
+        </div>
+      </ScrollArea>
     </AppScreen>
   );
 }

@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Toast } from '@/commons/ui';
+import { ScrollArea, Toast } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
@@ -57,15 +57,17 @@ export function IngredientAddScreen({
 
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '장보기 추가' }}>
-      <div className="p-4">
-        <IngredientForm
-          defaultValues={defaultName ? { name: defaultName } : undefined}
-          storeNames={storeNames}
-          onSubmit={handleSubmit}
-          isSubmitting={addMutation.isPending}
-          submitLabel="추가"
-        />
-      </div>
+      <ScrollArea className="h-full">
+        <div className="p-4">
+          <IngredientForm
+            defaultValues={defaultName ? { name: defaultName } : undefined}
+            storeNames={storeNames}
+            onSubmit={handleSubmit}
+            isSubmitting={addMutation.isPending}
+            submitLabel="추가"
+          />
+        </div>
+      </ScrollArea>
     </AppScreen>
   );
 }
