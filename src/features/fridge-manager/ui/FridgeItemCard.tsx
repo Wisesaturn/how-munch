@@ -3,14 +3,14 @@
 import { useState } from 'react';
 
 import { format } from 'date-fns';
-import { ChevronDown, Plus } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Plus } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
 import { Button, ProgressBar } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 
-import { getDaysUntilExpiry, getWorstExpiry } from '../lib/expiry';
+import { getDaysUntilExpiry } from '../lib/expiry';
 
 import { ExpiryBadge } from './ExpiryBadge';
 
@@ -37,7 +37,6 @@ function getDepletionRate(availableCount: number, usedCount: number) {
 export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: FridgeItemCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const worstExpiry = getWorstExpiry(item.fridge_item_batches);
   const unitLabel = item.unit === 'count' ? '개' : 'g';
   const usedAmountByBatchId = new Map<string, number>();
   for (const usage of item.meal_batch_usages ?? []) {
@@ -54,6 +53,10 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
   const sortedBatches = [...item.fridge_item_batches].sort(
     (a, b) => new Date(a.purchased_date).getTime() - new Date(b.purchased_date).getTime(),
   );
+  const hasExpiredBatch = item.fridge_item_batches.some((batch) => {
+    if (!batch.expiry_date) return false;
+    return getDaysUntilExpiry(batch.expiry_date) < 0;
+  });
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white">
@@ -62,6 +65,12 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5">
               <span className="truncate text-base font-normal text-gray-900">{item.name}</span>
+              {hasExpiredBatch ? (
+                <AlertTriangle
+                  className="size-4 shrink-0 text-red-500"
+                  aria-label="만료된 재고 있음"
+                />
+              ) : null}
               {item.is_subdivided ? (
                 <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
                   소분
@@ -76,7 +85,6 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
           <div className="mt-2 flex items-center gap-2">
             <ProgressBar value={depletionRate} className="h-1.5 flex-1" />
             <span className="shrink-0 text-[11px] text-amber-600">소진율 {depletionRate}%</span>
-            <ExpiryBadge daysLeft={worstExpiry} className="shrink-0" />
           </div>
         </button>
         <Button
