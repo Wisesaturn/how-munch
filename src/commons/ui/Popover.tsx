@@ -25,7 +25,7 @@ const PopoverAnchor = PopoverPrimitive.Anchor;
  * Content
  * -----------------------------------------------------------------------------------------------*/
 const PopoverContent = React.forwardRef<
-  React.ElementRef<typeof PopoverPrimitive.Content>,
+  React.ComponentRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
     container?: HTMLElement | null;
   }

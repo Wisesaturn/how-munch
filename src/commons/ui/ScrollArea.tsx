@@ -14,7 +14,7 @@ interface ScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollAr
 }
 
 const ScrollArea = React.forwardRef<
-  React.ElementRef<typeof ScrollAreaPrimitive.Root>,
+  React.ComponentRef<typeof ScrollAreaPrimitive.Root>,
   ScrollAreaProps
 >(({ className, children, showScrollBar = false, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
@@ -35,7 +35,7 @@ ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;
  * ScrollBar
  * -----------------------------------------------------------------------------------------------*/
 const ScrollBar = React.forwardRef<
-  React.ElementRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,
+  React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>
 >(({ className, orientation = 'vertical', ...props }, ref) => (
   <ScrollAreaPrimitive.ScrollAreaScrollbar

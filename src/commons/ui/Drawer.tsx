@@ -45,7 +45,7 @@ DrawerClose.displayName = 'Drawer.Close';
  * Overlay
  * -----------------------------------------------------------------------------------------------*/
 const DrawerOverlay = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Overlay>,
+  React.ComponentRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
@@ -60,7 +60,7 @@ DrawerOverlay.displayName = 'Drawer.Overlay';
  * Content
  * -----------------------------------------------------------------------------------------------*/
 const DrawerContent = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Content>,
+  React.ComponentRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DrawerPortal>
