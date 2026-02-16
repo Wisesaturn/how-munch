@@ -4,6 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 import { z } from 'zod';
 
+import { ERROR_MSG } from '@/commons/lib';
 import { CATEGORIES } from '@/commons/config';
 import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
@@ -35,16 +36,26 @@ const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
 const ingredientFormSchema = z.object({
   date: z
     .string()
-    .min(1, '날짜를 선택해 주세요')
-    .regex(/^\d{4}-\d{2}-\d{2}$/, '날짜 형식이 올바르지 않습니다'),
+    .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '날짜' }))
+    .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '날짜' })),
   category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-    message: '카테고리를 선택해 주세요',
+    message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
   }),
-  name: z.string().trim().min(1, '품목명을 입력해 주세요'),
-  count: z.number().min(1, '수량은 1 이상이어야 합니다'),
+  name: z
+    .string()
+    .trim()
+    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '품목명' }))
+    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: '20자' })),
+  count: z
+    .number()
+    .min(1, ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: 1 }))
+    .max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
   unit: z.enum(['count', 'g']),
-  store: z.string(),
-  price: z.number().min(100, '가격은 100원 이상이어야 합니다'),
+  store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
+  price: z
+    .number()
+    .min(100, ERROR_MSG.RANGE.MIN({ fieldName: '가격', min: '100원' }))
+    .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '가격', max: '1억원' })),
 });
 
 function parseDateValue(value: string) {

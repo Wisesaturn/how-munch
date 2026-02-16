@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
+import { ERROR_MSG } from '@/commons/lib';
 import { BottomSheet, Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -18,9 +19,9 @@ const joinHouseholdSchema = z.object({
   code: z
     .string()
     .trim()
-    .min(1, '초대 코드를 입력해 주세요')
-    .max(12, '초대 코드는 12자 이하로 입력해 주세요')
-    .regex(/^[A-Z0-9]+$/, '초대 코드는 영문 대문자와 숫자만 입력할 수 있습니다'),
+    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '초대 코드' }))
+    .max(12, ERROR_MSG.RANGE.MAX({ fieldName: '초대 코드', max: '12자' }))
+    .regex(/^[A-Z0-9]+$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '초대 코드' })),
 });
 
 export function JoinHouseholdBottomSheet({

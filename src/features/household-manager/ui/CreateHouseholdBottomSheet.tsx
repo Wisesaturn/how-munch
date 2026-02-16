@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
+import { ERROR_MSG } from '@/commons/lib';
 import { BottomSheet, Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -19,8 +20,8 @@ const createHouseholdSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, '가구 이름을 입력해 주세요')
-    .max(30, '가구 이름은 30자 이하로 입력해 주세요'),
+    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '가구 이름' }))
+    .max(30, ERROR_MSG.RANGE.MAX({ fieldName: '가구 이름', max: '30자' })),
 });
 
 export function CreateHouseholdBottomSheet({

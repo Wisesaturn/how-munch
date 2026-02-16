@@ -45,6 +45,9 @@ function createFridgeBatchSchema(quantityMin: number) {
       })
       .min(quantityMin, {
         message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: quantityMin }),
+      })
+      .max(1_000_000, {
+        message: ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' }),
       }),
     expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
       message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ERROR_MSG } from '@/commons/lib';
+
 import { type FridgeStockInfo } from '../lib';
 
 /**
@@ -13,12 +15,19 @@ function createMealEditorDishesSchema(
   return z
     .array(
       z.object({
-        name: z.string().trim().min(1, '메뉴명을 입력해 주세요'),
+        name: z
+          .string()
+          .trim()
+          .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '메뉴명' }))
+          .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '메뉴명', max: '20자' })),
         ingredients: z
           .array(
             z.object({
-              fridge_item_id: z.string().trim().min(1, '재료를 선택해 주세요'),
-              amount: z.number().min(1, '재료 수량은 1 이상이어야 합니다'),
+              fridge_item_id: z
+                .string()
+                .trim()
+                .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '재료' })),
+              amount: z.number().min(1, ERROR_MSG.RANGE.MIN({ fieldName: '재료 수량', min: 1 })),
             }),
           )
           .min(1, '메뉴마다 재료를 1개 이상 추가해 주세요'),

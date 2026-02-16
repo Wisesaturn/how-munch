@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
+import { ERROR_MSG } from '@/commons/lib';
 import { CATEGORIES } from '@/commons/config';
 import { Button, Input, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
@@ -28,9 +29,13 @@ interface FridgeItemFormProps {
 const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
 
 const fridgeItemFormSchema = z.object({
-  name: z.string().trim().min(1, '재료명을 입력해 주세요'),
+  name: z
+    .string()
+    .trim()
+    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
+    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
   category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-    message: '카테고리를 선택해 주세요',
+    message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
   }),
   unit: z.enum(['count', 'g']),
   is_subdivided: z.boolean(),

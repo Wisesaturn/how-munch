@@ -85,6 +85,8 @@ project-root/
 - TanStack Form 유효성 검사는 `zod` 스키마를 작성하고 `useForm`의 `validators` 옵션에 연결한다.
   - 기본: `validators: { onSubmit: schema, onChange: schema }`
   - `onSubmit`, `onChange`는 항상 함께 설정하고, `onBlur`는 필요한 경우에만 추가한다.
+  - Zod 스키마 에러 메시지는 `src/commons/lib/errorMessage.ts`의 `ERROR_MSG`를 우선 사용한다.
+  - `ERROR_MSG`에 없는 메시지라도 공통화 가능한 패턴이면 `ERROR_MSG`에 먼저 추가한 뒤 재사용한다.
   - `useForm` 사용 중 제출 핸들러에서 `safeParse`를 별도로 중복 호출하는 패턴은 지양한다.
   - 에러 노출은 토스트보다 필드 인라인(`Form.Control` + `Form.Error`)을 우선한다.
   - 스키마는 기본적으로 컴포넌트 바깥(모듈 스코프)에 선언한다. 런타임 props/state에 따라 스키마 구조가 달라지는 경우에만 컴포넌트 내부 선언을 허용한다.

@@ -7,6 +7,7 @@ import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 import { z } from 'zod';
 
+import { ERROR_MSG } from '@/commons/lib';
 import { CATEGORIES } from '@/commons/config';
 import {
   Button,
@@ -42,20 +43,27 @@ const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
 
 const fridgeItemCreateFormSchema = z.object({
   category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-    message: '카테고리를 선택해 주세요',
+    message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
   }),
-  name: z.string().trim().min(1, '재료명을 입력해 주세요'),
-  quantity: z.number().min(1, '수량은 1 이상이어야 합니다'),
+  name: z
+    .string()
+    .trim()
+    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
+    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
+  quantity: z
+    .number()
+    .min(1, ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: 1 }))
+    .max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
   unit: z.enum(['count', 'g']),
   is_subdivided: z.boolean(),
   purchased_date: z
     .string()
-    .min(1, '구매일을 선택해 주세요')
-    .regex(/^\d{4}-\d{2}-\d{2}$/, '구매일 형식이 올바르지 않습니다'),
+    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '구매일' }))
+    .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '구매일' })),
   expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-    message: '유통기한 형식이 올바르지 않습니다',
+    message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
   }),
-  memo: z.string().max(300, '메모는 300자 이하로 입력해 주세요'),
+  memo: z.string().max(300, ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: '300자' })),
 });
 
 function parseDateValue(value: string) {

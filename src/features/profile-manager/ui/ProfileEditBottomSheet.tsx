@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
+import { ERROR_MSG } from '@/commons/lib';
 import { BottomSheet, Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -20,8 +21,8 @@ const profileEditSchema = z.object({
   nickname: z
     .string()
     .trim()
-    .min(1, '닉네임을 입력해 주세요')
-    .max(20, '닉네임은 20자 이하로 입력해 주세요'),
+    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '닉네임' }))
+    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '닉네임', max: '20자' })),
 });
 
 export function ProfileEditBottomSheet({ open, onClose, profile }: ProfileEditBottomSheetProps) {
