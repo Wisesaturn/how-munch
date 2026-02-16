@@ -9,7 +9,6 @@ interface ProgressBarProps extends React.ComponentProps<'div'> {
 
 function ProgressBar({ value, max = 100, className, ...props }: ProgressBarProps) {
   const percentage = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 0;
-  const isDepleted = percentage >= 100;
 
   return (
     <div
@@ -22,10 +21,7 @@ function ProgressBar({ value, max = 100, className, ...props }: ProgressBarProps
       {...props}
     >
       <div
-        className={cn(
-          'h-full rounded-full transition-all duration-300',
-          isDepleted ? 'bg-destructive' : 'bg-emerald-500',
-        )}
+        className={cn('h-full rounded-full bg-emerald-500 transition-all duration-300')}
         style={{ width: `${percentage}%` }}
       />
     </div>

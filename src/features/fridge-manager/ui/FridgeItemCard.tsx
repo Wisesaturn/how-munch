@@ -113,14 +113,7 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
             </div>
             <div className="mt-2 flex items-center gap-2">
               <ProgressBar value={remainingRate} className="h-1.5 flex-1" />
-              <span
-                className={cn(
-                  'shrink-0 text-[11px]',
-                  remainingRate <= 0 ? 'font-semibold text-red-600' : 'text-emerald-600',
-                )}
-              >
-                잔여율 {remainingRate}%
-              </span>
+              <span className="shrink-0 text-[11px] text-emerald-600">잔여율 {remainingRate}%</span>
             </div>
           </button>
           <Accordion.Trigger className="mt-0.5 shrink-0 py-0" aria-label="재고 상세 펼치기" />
