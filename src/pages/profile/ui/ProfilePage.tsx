@@ -12,6 +12,7 @@ import {
   InviteLinkSection,
   JoinHouseholdBottomSheet,
   MemberList,
+  MemberListSkeleton,
   useHouseholdQuery,
   useMembersQuery,
 } from '@/features/household-manager';
@@ -27,7 +28,7 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
 
   const { data: profile, isLoading: isProfileLoading } = useProfileQuery(userId);
   const { data: household } = useHouseholdQuery(householdId);
-  const { data: members = [] } = useMembersQuery(householdId);
+  const { data: members = [], isLoading: isMembersLoading } = useMembersQuery(householdId);
 
   const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
     close();
@@ -60,9 +61,13 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
       {isProfileLoading || !profile ? (
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 text-center text-sm text-gray-400 shadow-sm">
-          불러오는 중...
-        </div>
+        <section className="flex items-center justify-between gap-3 px-1 pt-1">
+          <div className="min-w-0 flex-1 px-3 py-2">
+            <div className="h-6 w-28 animate-pulse rounded bg-gray-200" />
+            <div className="mt-2 h-4 w-44 animate-pulse rounded bg-gray-100" />
+          </div>
+          <div className="size-12 animate-pulse rounded-2xl bg-gray-200" />
+        </section>
       ) : (
         <section className="flex items-center justify-between gap-3 px-1 pt-1">
           <div className="min-w-0 flex-1 px-3 py-2">
@@ -111,7 +116,7 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
             </section>
           )}
           <section>
-            <MemberList members={members} />
+            {isMembersLoading ? <MemberListSkeleton /> : <MemberList members={members} />}
           </section>
         </div>
       )}

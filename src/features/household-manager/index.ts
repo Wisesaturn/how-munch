@@ -9,5 +9,6 @@ export { CreateHouseholdBottomSheet } from './ui/CreateHouseholdBottomSheet';
 export { JoinHouseholdBottomSheet } from './ui/JoinHouseholdBottomSheet';
 export { HouseholdInfo } from './ui/HouseholdInfo';
 export { MemberList } from './ui/MemberList';
+export { MemberListSkeleton } from './ui/MemberListSkeleton';
 export { InviteLinkSection } from './ui/InviteLinkSection';
 export { LeaveHouseholdButton } from './ui/LeaveHouseholdButton';
