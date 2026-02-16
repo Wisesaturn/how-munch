@@ -48,6 +48,11 @@
 - For functions returned from hooks, avoid abstract `handle*` names. Use explicit intent verbs instead (example: `resendCode`, `verifyCode`, `openSheet`).
 - For slice-local hooks (not intended for reuse), avoid excessive props DI. If data already exists in same-slice Context, read it inside the hook.
 - For functions in any `lib` folder, add a mandatory JSDoc comment above the function and include an `@description` line describing intent.
+- For functions/hooks in `model` or `lib`, add a mandatory JSDoc comment above each exported unit and include an `@description` line for purpose and behavior.
+- FSD segment rule:
+  - `model`: stateful/behavior logic (store, schema, business logic, effectful hooks).
+  - `lib`: focused utility/library code (prefer pure helpers, no side effects).
+- Hooks that register browser/global events with `useEffect` (example: gesture/touch listeners) must be placed in `model`, not `lib`.
 
 ## Testing Guidelines
 - There is currently no dedicated unit/integration test runner configured.

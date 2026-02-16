@@ -99,6 +99,11 @@ project-root/
 - 훅에서 외부로 노출하는 함수명은 `handle*` 같은 추상 접두어를 지양하고 목적이 명확한 동사형으로 작성한다 (`handleResend` 대신 `resendCode`)
 - 재사용 목적이 아닌 슬라이스 전용 훅은 과도한 props DI를 피하고, 동일 슬라이스 Context에서 가져올 수 있는 값은 훅 내부에서 직접 조회해 사용한다
 - `lib` 폴더에 함수를 추가/수정할 때는 함수 상단에 JSDoc 주석을 필수로 작성하고 `@description`으로 목적을 명시한다
+- `model`/`lib` 폴더에 함수·훅(특히 export 단위)을 추가/수정할 때는 함수 상단에 JSDoc 주석을 필수로 작성하고 `@description`으로 목적과 동작을 명시한다
+- FSD 세그먼트 분류 기준:
+  - `model`: 상태/행동 로직(스토어, 스키마, 비즈니스 로직, 부수효과 훅)
+  - `lib`: 주제별 유틸/라이브러리 코드(가능하면 순수 함수 중심)
+- `useEffect`로 브라우저/전역 이벤트를 등록·해제하는 훅(예: gesture/touch listener)은 `lib`가 아니라 `model`에 둔다
 
 ### Common UI Composition
 
