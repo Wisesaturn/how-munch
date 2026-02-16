@@ -447,6 +447,7 @@ export interface Database {
           user_id: string;
           expiry_soon_enabled: boolean;
           expiry_remind_days: number[];
+          is_permission_asked: boolean;
           quiet_hours_start: string | null;
           quiet_hours_end: string | null;
           created_at: string;
@@ -456,6 +457,7 @@ export interface Database {
           user_id: string;
           expiry_soon_enabled?: boolean;
           expiry_remind_days?: number[];
+          is_permission_asked?: boolean;
           quiet_hours_start?: string | null;
           quiet_hours_end?: string | null;
           created_at?: string;
@@ -465,6 +467,7 @@ export interface Database {
           user_id?: string;
           expiry_soon_enabled?: boolean;
           expiry_remind_days?: number[];
+          is_permission_asked?: boolean;
           quiet_hours_start?: string | null;
           quiet_hours_end?: string | null;
           created_at?: string;

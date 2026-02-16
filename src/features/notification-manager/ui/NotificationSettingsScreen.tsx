@@ -7,23 +7,11 @@ import { useForm } from '@tanstack/react-form';
 import { ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 
-import {
-  getCurrentPushSubscription,
-  requestNotificationPermission,
-  subscribePush,
-  unsubscribePush,
-} from '@/commons/lib';
 import { useUserQuery } from '@/commons/api/auth/queries';
-import { Card, Select, Switch, Toast } from '@/commons/ui';
+import { Button, Card, Select, Switch, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
-import {
-  useDeactivatePushSubscriptionMutation,
-  useNotificationPreferencesQuery,
-  useNotificationPushSubscriptionQuery,
-  useUpsertNotificationPreferencesMutation,
-  useUpsertPushSubscriptionMutation,
-} from '../api';
+import { useNotificationPreferencesQuery, useUpsertNotificationPreferencesMutation } from '../api';
 import {
   EXPIRY_NOTIFICATION_OPTIONS,
   toExpiryNotificationOption,
@@ -40,22 +28,12 @@ const notificationSettingsSchema = z.object({
   expiryOption: z.enum(['today', 'this_week']),
 });
 
-function encodePushKey(value: ArrayBuffer | null) {
-  if (!value) return '';
-  const bytes = new Uint8Array(value);
-  const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
-  return btoa(binary);
-}
-
 /** 알림 설정 화면 */
 export function NotificationSettingsScreen({ onClose }: NotificationSettingsScreenProps) {
   const { data: user } = useUserQuery();
   const userId = user?.id ?? null;
   const { data: preferences } = useNotificationPreferencesQuery(userId);
-  const { data: pushSubscription } = useNotificationPushSubscriptionQuery(userId);
   const upsertPreferencesMutation = useUpsertNotificationPreferencesMutation();
-  const upsertPushSubscriptionMutation = useUpsertPushSubscriptionMutation();
-  const deactivatePushSubscriptionMutation = useDeactivatePushSubscriptionMutation();
 
   const form = useForm({
     defaultValues: {
@@ -90,57 +68,6 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
     );
   }
 
-  async function syncPushSubscription(nextEnabled: boolean) {
-    if (!userId) return false;
-
-    if (nextEnabled) {
-      const permission = await requestNotificationPermission();
-      if (permission !== 'granted') {
-        Toast.error('브라우저 알림 권한이 필요합니다');
-        return false;
-      }
-
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidPublicKey) {
-        Toast.error('푸시 키가 설정되지 않았습니다');
-        return false;
-      }
-
-      const subscription = await subscribePush(vapidPublicKey);
-      if (!subscription) {
-        Toast.error('푸시 구독에 실패했습니다');
-        return false;
-      }
-
-      const p256dh = encodePushKey(subscription.getKey('p256dh'));
-      const auth = encodePushKey(subscription.getKey('auth'));
-
-      if (!p256dh || !auth) {
-        Toast.error('푸시 키를 읽을 수 없습니다');
-        return false;
-      }
-
-      await upsertPushSubscriptionMutation.mutateAsync({
-        userId,
-        endpoint: subscription.endpoint,
-        p256dh,
-        auth,
-      });
-
-      return true;
-    }
-
-    const currentSubscription = await getCurrentPushSubscription();
-    const endpoint = currentSubscription?.endpoint ?? pushSubscription?.endpoint ?? null;
-    await unsubscribePush();
-
-    if (endpoint) {
-      await deactivatePushSubscriptionMutation.mutateAsync({ userId, endpoint });
-    }
-
-    return true;
-  }
-
   useEffect(
     function syncPreferencesToForm() {
       if (!preferences) return;
@@ -167,9 +94,15 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
         title: '알림 설정',
         backButton: {
           render: () => (
-            <button type="button" onClick={onClose} aria-label="뒤로가기" className="p-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={onClose}
+              aria-label="뒤로가기"
+            >
               <ChevronLeft className="size-5" />
-            </button>
+            </Button>
           ),
         },
       }}
@@ -184,18 +117,9 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                     <Form.Label>유통기한 알림</Form.Label>
                     <Switch
                       checked={field.state.value}
-                      onCheckedChange={async (checked) => {
-                        const previousEnabled = field.state.value;
-                        const nextEnabled = Boolean(checked);
-
-                        field.handleChange(nextEnabled);
-                        savePreferences(nextEnabled, form.state.values.expiryOption);
-
-                        const synced = await syncPushSubscription(nextEnabled);
-                        if (synced) return;
-
-                        field.handleChange(previousEnabled);
-                        savePreferences(previousEnabled, form.state.values.expiryOption);
+                      onCheckedChange={(checked) => {
+                        field.handleChange(checked);
+                        savePreferences(checked, form.state.values.expiryOption);
                       }}
                     />
                   </div>
