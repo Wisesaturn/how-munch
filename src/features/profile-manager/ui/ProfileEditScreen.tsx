@@ -87,9 +87,15 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
         title: '프로필 수정',
         backButton: {
           render: () => (
-            <button type="button" onClick={onClose} aria-label="뒤로가기" className="p-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={onClose}
+              aria-label="뒤로가기"
+            >
               <ChevronLeft className="size-5" />
-            </button>
+            </Button>
           ),
         },
       }}

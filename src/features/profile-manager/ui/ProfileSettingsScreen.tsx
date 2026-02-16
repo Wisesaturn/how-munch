@@ -5,6 +5,8 @@ import { ChevronLeft } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
+import { Button } from '@/commons/ui';
+
 import { DeleteAccountButton } from './DeleteAccountButton';
 import { LogoutButton } from './LogoutButton';
 import { SettingsActionRow } from './SettingsActionRow';
@@ -21,9 +23,15 @@ export function ProfileSettingsScreen({ onClose }: ProfileSettingsScreenProps) {
         title: '설정',
         backButton: {
           render: () => (
-            <button type="button" onClick={onClose} aria-label="뒤로가기" className="p-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={onClose}
+              aria-label="뒤로가기"
+            >
               <ChevronLeft className="size-5" />
-            </button>
+            </Button>
           ),
         },
       }}
