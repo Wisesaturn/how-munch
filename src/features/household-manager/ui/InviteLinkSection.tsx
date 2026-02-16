@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { Copy, LogOut, Mail } from 'lucide-react';
+import { Copy, LogOut, Mail, RotateCw } from 'lucide-react';
 
 import { Button, Card, Toast } from '@/commons/ui';
 
@@ -33,9 +33,10 @@ export function InviteLinkSection({
     if (!inviteCode || typeof window === 'undefined') return null;
     return `${window.location.origin}/invite/${inviteCode}`;
   }, [inviteCode]);
-  let createButtonLabel = '초대 링크 만들기';
-  if (inviteMutation.isPending) createButtonLabel = '확인 중...';
-  else if (inviteLink) createButtonLabel = '초대 링크 확인';
+  let inviteActionLabel = '링크 생성';
+  if (inviteMutation.isPending) inviteActionLabel = '확인 중...';
+  else if (inviteLink) inviteActionLabel = '링크 재확인';
+  const InviteActionIcon = inviteLink ? RotateCw : Mail;
 
   const handleCreate = () => {
     inviteMutation.mutate(
@@ -92,50 +93,46 @@ export function InviteLinkSection({
     <Card>
       <Card.Header className="flex flex-row items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">가구 정보</h2>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon-sm"
-            onClick={handleCreate}
-            disabled={inviteMutation.isPending}
-            aria-label={createButtonLabel}
-            title={createButtonLabel}
-          >
-            <Mail className="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            onClick={handleLeave}
-            disabled={leaveMutation.isPending}
-            aria-label={leaveMutation.isPending ? '탈퇴 처리 중' : '가구 탈퇴'}
-            title={leaveMutation.isPending ? '탈퇴 처리 중' : '가구 탈퇴'}
-            className="border-red-200 text-red-600 hover:bg-red-50"
-          >
-            <LogOut className="size-4" />
-          </Button>
-        </div>
+        <p className="text-xs text-gray-500">총 {memberCount}명</p>
       </Card.Header>
       <Card.Content className="space-y-3">
         <div className="flex flex-col gap-1 text-sm">
           <p className="font-medium">{household.name}</p>
-          <p className="text-gray-500">멤버 {memberCount}명</p>
+          <p className="text-gray-500">초대 링크를 생성해 멤버를 초대할 수 있습니다.</p>
         </div>
 
-        <h3 className="text-xs font-semibold text-gray-600">초대 링크</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            onClick={handleCreate}
+            disabled={inviteMutation.isPending}
+            className="w-full justify-center"
+          >
+            <InviteActionIcon className="size-4" />
+            {inviteActionLabel}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleLeave}
+            disabled={leaveMutation.isPending}
+            className="w-full justify-center border-red-200 text-red-600 hover:bg-red-50"
+          >
+            <LogOut className="size-4" />
+            {leaveMutation.isPending ? '탈퇴 처리 중...' : '가구 탈퇴'}
+          </Button>
+        </div>
 
         {inviteLink ? (
-          <div className="flex items-center gap-2">
-            <p className="flex-1 truncate rounded-md bg-gray-50 px-2 py-2 text-xs text-gray-600">
+          <div className="space-y-2">
+            <p className="truncate rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-xs text-gray-600">
               {inviteLink}
             </p>
-            <Button variant="outline" size="icon-sm" onClick={handleCopy}>
+            <Button variant="outline" onClick={handleCopy} className="w-full">
               <Copy className="size-4" />
+              링크 복사
             </Button>
           </div>
-        ) : (
-          <p className="text-xs text-gray-500">초대 링크를 생성하면 여기에서 복사할 수 있습니다.</p>
-        )}
+        ) : null}
       </Card.Content>
     </Card>
   );

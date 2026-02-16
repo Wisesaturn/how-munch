@@ -30,7 +30,7 @@ export function DeleteAccountButton() {
       label={deleteMutation.isPending ? '처리 중...' : '회원 탈퇴'}
       onClick={handleDeleteAccount}
       disabled={deleteMutation.isPending}
-      color="danger"
+      tone="danger"
     />
   );
 }

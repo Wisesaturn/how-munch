@@ -28,16 +28,22 @@ export function ProfileSettingsScreen({ onClose }: ProfileSettingsScreenProps) {
         },
       }}
     >
-      <div className="space-y-2 p-4">
-        <h2 className="px-1 text-xs font-semibold text-gray-500">프로필</h2>
-        <SettingsActionRow
-          label="프로필 수정"
-          onClick={() => stackFlowActions.push('ProfileEditActivity', {})}
-        />
+      <div className="space-y-4 p-4">
+        <section className="space-y-2">
+          <h2 className="px-1 text-xs font-semibold text-gray-500">프로필</h2>
+          <SettingsActionRow
+            label="프로필 수정"
+            onClick={() => stackFlowActions.push('ProfileEditActivity', {})}
+          />
+        </section>
 
-        <h2 className="px-1 text-xs font-semibold text-gray-500">계정</h2>
-        <LogoutButton />
-        <DeleteAccountButton />
+        <section className="space-y-2">
+          <h2 className="px-1 text-xs font-semibold text-gray-500">계정</h2>
+          <div className="space-y-2">
+            <LogoutButton />
+            <DeleteAccountButton />
+          </div>
+        </section>
       </div>
     </AppScreen>
   );

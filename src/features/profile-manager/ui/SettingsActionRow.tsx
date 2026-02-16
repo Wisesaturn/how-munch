@@ -1,18 +1,21 @@
 'use client';
 
-import { cn, cva, type VariantProps } from '@/commons/lib';
+import { ChevronRight } from 'lucide-react';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+import { cn } from '@/commons/lib';
 
 const settingsActionRowVariants = cva(
-  'flex h-12 w-full items-center justify-between px-4 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+  'flex min-h-12 w-full items-center justify-between rounded-lg border bg-white px-4 py-3 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400',
   {
     variants: {
-      color: {
-        default: 'text-gray-900 hover:bg-gray-50',
-        danger: 'text-red-600 hover:bg-red-50 hover:text-red-700',
+      tone: {
+        default: 'border-gray-200 text-gray-900 hover:bg-gray-50',
+        danger: 'border-red-200 text-red-600 hover:bg-red-50',
       },
     },
     defaultVariants: {
-      color: 'default',
+      tone: 'default',
     },
   },
 );
@@ -29,7 +32,7 @@ export function SettingsActionRow({
   label,
   onClick,
   disabled = false,
-  color,
+  tone,
   className,
 }: SettingsActionRowProps & SettingsActionRowVariantProps) {
   return (
@@ -37,9 +40,12 @@ export function SettingsActionRow({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={cn(settingsActionRowVariants({ color }), className)}
+      className={cn(settingsActionRowVariants({ tone }), className)}
     >
-      {label}
+      <span className="truncate">{label}</span>
+      <ChevronRight
+        className={cn('size-4', tone === 'danger' ? 'text-red-300' : 'text-gray-400')}
+      />
     </button>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 
+import { Home, Sparkles, WandSparkles } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
 import { Button } from '@/commons/ui';
@@ -54,48 +55,73 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
     ));
   };
 
+  const profileInitial = profile?.nickname?.trim().charAt(0).toUpperCase() ?? '?';
+
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
       {isProfileLoading || !profile ? (
-        <div className="py-6 text-center text-sm text-gray-400">불러오는 중...</div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 text-center text-sm text-gray-400 shadow-sm">
+          불러오는 중...
+        </div>
       ) : (
-        <section className="space-y-1 px-1 pt-1">
-          <h2 className="text-xl font-semibold text-gray-900">{profile.nickname}</h2>
-          <h3 className="text-sm font-medium text-gray-500">{profile.email}</h3>
+        <section className="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-lg font-semibold text-white shadow-sm">
+              {profileInitial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-center gap-2">
+                <h2 className="truncate text-xl font-semibold text-gray-900">{profile.nickname}</h2>
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                  {householdId ? '가구 참여 중' : '개인 모드'}
+                </span>
+              </div>
+              <h3 className="truncate text-sm font-medium text-gray-500">{profile.email}</h3>
+            </div>
+          </div>
         </section>
       )}
 
       {!householdId ? (
-        <div className="rounded-xl border border-gray-100 bg-white">
-          <div className="px-4 pt-4">
-            <h2 className="text-sm font-semibold">가구 관리</h2>
+        <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2 text-gray-800">
+            <Home className="size-4" />
+            <h2 className="text-sm font-semibold">가구 시작하기</h2>
           </div>
-          <div className="flex flex-col gap-2 p-4">
-            <p className="text-xs text-gray-500">
+          <div className="space-y-3">
+            <p className="text-sm leading-5 text-gray-600">
               아직 가구에 가입되어 있지 않습니다. 가구를 생성하거나 초대 코드를 입력해 가입해
               주세요.
             </p>
-            <Button variant="default" color="primary" onClick={openCreateHouseholdSheet}>
-              가구 생성
-            </Button>
-            <Button variant="outline" onClick={openJoinHouseholdSheet}>
-              초대 코드로 가입
-            </Button>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Button variant="default" onClick={openCreateHouseholdSheet}>
+                <Sparkles className="size-4" />
+                가구 생성
+              </Button>
+              <Button variant="outline" onClick={openJoinHouseholdSheet}>
+                <WandSparkles className="size-4" />
+                초대 코드로 가입
+              </Button>
+            </div>
           </div>
-        </div>
+        </section>
       ) : (
-        <>
+        <div className="space-y-4">
           {household && (
-            <InviteLinkSection
-              household={household}
-              memberCount={members.length}
-              householdId={householdId}
-              userId={userId}
-              onLeft={() => router.refresh()}
-            />
+            <section>
+              <InviteLinkSection
+                household={household}
+                memberCount={members.length}
+                householdId={householdId}
+                userId={userId}
+                onLeft={() => router.refresh()}
+              />
+            </section>
           )}
-          <MemberList members={members} />
-        </>
+          <section>
+            <MemberList members={members} />
+          </section>
+        </div>
       )}
     </div>
   );
