@@ -110,6 +110,7 @@ project-root/
 - Context 값으로 raw `Dispatch<SetStateAction<T>>`를 노출하지 않는다. 상태 변경은 목적형 래퍼 함수(`openModal`, `setOtpEmail` 등)로 감싸서 하위 컴포넌트에 전달한다
 - 훅에서 외부로 노출하는 함수명은 `handle*` 같은 추상 접두어를 지양하고 목적이 명확한 동사형으로 작성한다 (`handleResend` 대신 `resendCode`)
 - 재사용 목적이 아닌 슬라이스 전용 훅은 과도한 props DI를 피하고, 동일 슬라이스 Context에서 가져올 수 있는 값은 훅 내부에서 직접 조회해 사용한다
+- JSX 렌더링에서 `let section = null; if (...) section = ...` 같은 가변 누적 패턴은 지양하고, 조건부 `return` 또는 선언형 렌더링으로 작성한다
 - `lib` 폴더에 함수를 추가/수정할 때는 함수 상단에 JSDoc 주석을 필수로 작성하고 `@description`으로 목적을 명시한다
 - `model`/`lib` 폴더에 함수·훅(특히 export 단위)을 추가/수정할 때는 함수 상단에 JSDoc 주석을 필수로 작성하고 `@description`으로 목적과 동작을 명시한다
 - FSD 세그먼트 분류 기준:

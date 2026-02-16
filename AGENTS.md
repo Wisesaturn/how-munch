@@ -59,6 +59,7 @@
 - Do not expose raw `Dispatch<SetStateAction<T>>` through Context values. Expose intent-driven wrapper methods instead (example: `setOtpEmail`, `openSettings`, `resetFilters`).
 - For functions returned from hooks, avoid abstract `handle*` names. Use explicit intent verbs instead (example: `resendCode`, `verifyCode`, `openSheet`).
 - For slice-local hooks (not intended for reuse), avoid excessive props DI. If data already exists in same-slice Context, read it inside the hook.
+- Avoid mutable JSX accumulator patterns such as `let section = null; if (...) section = (...)`. Prefer explicit conditional returns or direct declarative rendering.
 - For functions in any `lib` folder, add a mandatory JSDoc comment above the function and include an `@description` line describing intent.
 - For functions/hooks in `model` or `lib`, add a mandatory JSDoc comment above each exported unit and include an `@description` line for purpose and behavior.
 - FSD segment rule:
