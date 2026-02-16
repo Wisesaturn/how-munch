@@ -50,7 +50,7 @@ function TextareaGroup({
       data-slot="textarea-group"
       className={cn(
         'border-input bg-background has-[:focus-visible]:border-ring has-[:focus-visible]:ring-ring/50 relative min-h-[80px] w-full rounded-md border transition-[color,box-shadow] has-[:focus-visible]:ring-[3px]',
-        'has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50',
+        'has-[:disabled]:cursor-not-allowed has-[:disabled]:border-gray-200 has-[:disabled]:bg-gray-50 has-[:disabled]:text-gray-400',
         'has-[[data-slot=textarea][data-invalid=true]]:border-red-500 has-[[data-slot=textarea][data-invalid=true]]:has-[:focus-visible]:border-red-600 has-[[data-slot=textarea][data-invalid=true]]:has-[:focus-visible]:ring-red-200',
         className,
       )}

@@ -35,7 +35,7 @@ function InputGroupRoot({ className, ...props }: React.ComponentProps<'div'>) {
         'border-input bg-background text-foreground flex w-full min-w-0 flex-wrap items-center overflow-hidden rounded-md border shadow-xs transition-[color,box-shadow]',
         'has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot=input-group-control]:focus-visible]:ring-[3px]',
         'has-[[data-slot=input-group-control][data-invalid=true]]:border-red-500 has-[[data-slot=input-group-control][data-invalid=true]]:has-[[data-slot=input-group-control]:focus-visible]:border-red-600 has-[[data-slot=input-group-control][data-invalid=true]]:has-[[data-slot=input-group-control]:focus-visible]:ring-red-200',
-        'has-[[data-slot=input-group-control]:disabled]:cursor-not-allowed has-[[data-slot=input-group-control]:disabled]:opacity-50',
+        'has-[[data-slot=input-group-control]:disabled]:cursor-not-allowed has-[[data-slot=input-group-control]:disabled]:border-gray-200 has-[[data-slot=input-group-control]:disabled]:bg-gray-50 has-[[data-slot=input-group-control]:disabled]:text-gray-400 has-[[data-slot=input-group-control]:disabled]:[&_*]:cursor-not-allowed',
         className,
       )}
       {...props}

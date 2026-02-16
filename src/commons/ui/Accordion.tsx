@@ -7,6 +7,7 @@ import { ChevronDown } from 'lucide-react';
 import { Accordion as AccordionPrimitive } from 'radix-ui';
 
 import { cn } from '../lib';
+import { createSafeContext } from '../lib/context';
 
 interface AccordionContextValue {
   variant: 'outlined' | 'enclosed' | 'borderless';
@@ -14,17 +15,8 @@ interface AccordionContextValue {
   disabled: boolean;
 }
 
-const AccordionContext = React.createContext<AccordionContextValue | null>(null);
-
-function useAccordionContext() {
-  const context = React.useContext(AccordionContext);
-
-  if (!context) {
-    throw new Error('Accordion components must be used within Accordion');
-  }
-
-  return context;
-}
+const [AccordionProvider, useAccordionContext] =
+  createSafeContext<AccordionContextValue>('Accordion');
 
 const ACCORDION_ROOT_VARIANTS = cva('w-full', {
   variants: {
@@ -121,7 +113,7 @@ const AccordionRoot = React.forwardRef<
   const normalizedVariant = variant ?? 'outlined';
 
   return (
-    <AccordionContext.Provider value={{ variant: normalizedVariant, invalid, disabled }}>
+    <AccordionProvider variant={normalizedVariant} invalid={invalid} disabled={disabled}>
       <AccordionPrimitive.Root
         ref={ref}
         data-slot="accordion"
@@ -133,7 +125,7 @@ const AccordionRoot = React.forwardRef<
         )}
         {...props}
       />
-    </AccordionContext.Provider>
+    </AccordionProvider>
   );
 });
 AccordionRoot.displayName = 'Accordion';
