@@ -10,7 +10,7 @@ const authQueryKeys = {
 };
 
 /** 현재 로그인 사용자 조회 */
-export function useUserQuery() {
+export function useUserSuspenseQuery() {
   return useSuspenseQuery({
     queryKey: authQueryKeys.user(),
     queryFn: async () => {

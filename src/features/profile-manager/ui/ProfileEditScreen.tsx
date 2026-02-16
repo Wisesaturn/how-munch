@@ -12,7 +12,7 @@ import { Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { formatUpdatedDaysAgo } from '../lib/date';
-import { useProfileQuery } from '../api/queries';
+import { useProfileSuspenseQuery } from '../api/queries';
 import { useUpdateProfileMutation } from '../api/mutations';
 
 interface ProfileEditScreenProps {
@@ -29,7 +29,7 @@ const profileEditSchema = z.object({
 
 export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
   const { data: user } = useUserSuspenseQuery();
-  const { data: profile, isLoading } = useProfileQuery(user.id);
+  const { data: profile } = useProfileSuspenseQuery(user.id);
   const mutation = useUpdateProfileMutation();
   const form = useForm({
     defaultValues: {
@@ -66,11 +66,7 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
     [form, profile],
   );
 
-  const updatedAtText = profile
-    ? formatUpdatedDaysAgo(profile.updated_at)
-    : isLoading
-      ? '불러오는 중...'
-      : '';
+  const updatedAtText = profile ? formatUpdatedDaysAgo(profile.updated_at) : '';
 
   return (
     <AppScreen
