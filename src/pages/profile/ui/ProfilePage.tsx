@@ -64,20 +64,13 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
           불러오는 중...
         </div>
       ) : (
-        <section className="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-lg font-semibold text-white shadow-sm">
-              {profileInitial}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center gap-2">
-                <h2 className="truncate text-xl font-semibold text-gray-900">{profile.nickname}</h2>
-                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                  {householdId ? '가구 참여 중' : '개인 모드'}
-                </span>
-              </div>
-              <h3 className="truncate text-sm font-medium text-gray-500">{profile.email}</h3>
-            </div>
+        <section className="flex items-center justify-between gap-3 px-1 pt-1">
+          <div className="min-w-0 flex-1 px-3 py-2">
+            <h2 className="truncate text-xl font-semibold text-gray-900">{profile.nickname}</h2>
+            <p className="truncate text-sm font-medium text-gray-500">{profile.email}</p>
+          </div>
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-lg font-semibold text-white shadow-sm">
+            {profileInitial}
           </div>
         </section>
       )}
@@ -111,7 +104,6 @@ export function ProfilePage({ userId, householdId }: ProfilePageProps) {
             <section>
               <InviteLinkSection
                 household={household}
-                memberCount={members.length}
                 householdId={householdId}
                 userId={userId}
                 onLeft={() => router.refresh()}

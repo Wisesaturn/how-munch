@@ -12,7 +12,6 @@ import { useCreateInviteMutation, useLeaveHouseholdMutation } from '../api/mutat
 
 interface InviteLinkSectionProps {
   household: Household;
-  memberCount: number;
   householdId: string;
   userId: string;
   onLeft?: () => void;
@@ -20,7 +19,6 @@ interface InviteLinkSectionProps {
 
 export function InviteLinkSection({
   household,
-  memberCount,
   householdId,
   userId,
   onLeft,
@@ -33,9 +31,9 @@ export function InviteLinkSection({
     if (!inviteCode || typeof window === 'undefined') return null;
     return `${window.location.origin}/invite/${inviteCode}`;
   }, [inviteCode]);
-  let inviteActionLabel = '링크 생성';
+  let inviteActionLabel = '초대 링크 생성';
   if (inviteMutation.isPending) inviteActionLabel = '확인 중...';
-  else if (inviteLink) inviteActionLabel = '링크 재확인';
+  else if (inviteLink) inviteActionLabel = '초대 링크 재확인';
   const InviteActionIcon = inviteLink ? RotateCw : Mail;
 
   const handleCreate = () => {
@@ -93,7 +91,6 @@ export function InviteLinkSection({
     <Card>
       <Card.Header className="flex flex-row items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">가구 정보</h2>
-        <p className="text-xs text-gray-500">총 {memberCount}명</p>
       </Card.Header>
       <Card.Content className="space-y-3">
         <div className="flex flex-col gap-1 text-sm">
@@ -118,7 +115,7 @@ export function InviteLinkSection({
             className="w-full justify-center border-red-200 text-red-600 hover:bg-red-50"
           >
             <LogOut className="size-4" />
-            {leaveMutation.isPending ? '탈퇴 처리 중...' : '가구 탈퇴'}
+            {leaveMutation.isPending ? '처리 중...' : '탈퇴하기'}
           </Button>
         </div>
 
