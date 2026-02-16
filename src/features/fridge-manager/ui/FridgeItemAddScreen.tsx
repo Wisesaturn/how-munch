@@ -96,140 +96,176 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
   });
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '재료 추가' }}>
+    <AppScreen
+      className="pointer-events-auto"
+      appBar={{
+        title: '재료 추가',
+        renderRight: () => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => form.handleSubmit()}
+            disabled={mutation.isPending}
+            aria-label="재료 추가"
+          >
+            {mutation.isPending ? '추가 중...' : '추가'}
+          </Button>
+        ),
+      }}
+    >
       <form
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-3 p-4"
+        className="flex flex-col gap-5 p-4"
       >
-        <form.Field name="category">
-          {(field) => (
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium">카테고리</span>
-              <Select value={field.state.value} onValueChange={field.handleChange}>
-                <Select.Trigger>
-                  <Select.Value placeholder="카테고리를 선택하세요" />
-                </Select.Trigger>
-                <Select.Content>
-                  {CATEGORIES.map((category) => (
-                    <Select.Item key={category.id} value={category.id}>
-                      {category.emoji} {category.label}
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select>
-            </label>
-          )}
-        </form.Field>
+        {/* 기본 정보 */}
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-1 text-xs font-semibold text-gray-500">기본 정보</legend>
 
-        <form.Field name="name">
-          {(field) => (
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium">재료명</span>
-              <Input
-                type="text"
-                placeholder="예: 감자"
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                required
-              />
-            </label>
-          )}
-        </form.Field>
-
-        <div className="grid grid-cols-[1fr_104px] gap-2">
-          <form.Field name="quantity">
+          <form.Field name="category">
             {(field) => (
               <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium">수량</span>
-                <Counter value={field.state.value} min={0} step={1} onChange={field.handleChange} />
-              </label>
-            )}
-          </form.Field>
-
-          <form.Field name="unit">
-            {(field) => (
-              <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium">단위</span>
-                <Select
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
-                >
+                <span className="text-sm font-medium">카테고리</span>
+                <Select value={field.state.value} onValueChange={field.handleChange}>
                   <Select.Trigger>
-                    <Select.Value placeholder="단위" />
+                    <Select.Value placeholder="카테고리를 선택하세요" />
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="count">개</Select.Item>
-                    <Select.Item value="g">g</Select.Item>
+                    {CATEGORIES.map((category) => (
+                      <Select.Item key={category.id} value={category.id}>
+                        {category.emoji} {category.label}
+                      </Select.Item>
+                    ))}
                   </Select.Content>
                 </Select>
               </label>
             )}
           </form.Field>
-        </div>
 
-        <form.Field name="is_subdivided">
-          {(field) => (
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={field.state.value}
-                onChange={(event) => field.handleChange(event.target.checked)}
-                className="size-4 rounded border-gray-300"
-              />
-              <span className="text-sm font-medium">소분 보관 여부</span>
-            </label>
-          )}
-        </form.Field>
+          <form.Field name="name">
+            {(field) => (
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">재료명</span>
+                <Input
+                  type="text"
+                  placeholder="예: 감자"
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  required
+                />
+              </label>
+            )}
+          </form.Field>
 
-        <form.Field name="purchased_date">
-          {(field) => (
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium">구매일</span>
-              <label className="mb-1 flex items-center gap-2 text-xs text-gray-600">
+          <div className="grid grid-cols-[1fr_104px] gap-2">
+            <form.Field name="quantity">
+              {(field) => (
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">수량</span>
+                  <Counter
+                    value={field.state.value}
+                    min={0}
+                    step={1}
+                    onChange={field.handleChange}
+                  />
+                </label>
+              )}
+            </form.Field>
+
+            <form.Field name="unit">
+              {(field) => (
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">단위</span>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
+                  >
+                    <Select.Trigger>
+                      <Select.Value placeholder="단위" />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="count">개</Select.Item>
+                      <Select.Item value="g">g</Select.Item>
+                    </Select.Content>
+                  </Select>
+                </label>
+              )}
+            </form.Field>
+          </div>
+
+          <form.Field name="is_subdivided">
+            {(field) => (
+              <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={isPurchasedDateUnknown}
-                  onChange={(event) => {
-                    const checked = event.target.checked;
-                    setIsPurchasedDateUnknown(checked);
-                    if (checked) {
-                      field.handleChange(format(today, 'yyyy-MM-dd'));
-                    }
-                  }}
+                  checked={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.checked)}
                   className="size-4 rounded border-gray-300"
                 />
-                구매일 모름
+                <span className="text-sm font-medium">소분 보관 여부</span>
               </label>
-              <DatePicker
-                value={parseDateValue(field.state.value)}
-                disabled={isPurchasedDateUnknown}
-                maxDate={today}
-                onChange={(date) =>
-                  field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
-                }
-                placeholder="구매일을 선택하세요"
-              />
-            </label>
-          )}
-        </form.Field>
+            )}
+          </form.Field>
+        </fieldset>
 
-        <form.Field name="expiry_date">
-          {(field) => (
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium">유통기한 (선택)</span>
-              <DatePicker
-                value={parseDateValue(field.state.value)}
-                onChange={(date) => field.handleChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                placeholder="유통기한을 선택하세요"
-              />
-            </label>
-          )}
-        </form.Field>
+        <div className="border-t border-gray-100" />
 
+        {/* 날짜 정보 */}
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-1 text-xs font-semibold text-gray-500">날짜 정보</legend>
+
+          <form.Field name="purchased_date">
+            {(field) => (
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">구매일</span>
+                <label className="mb-1 flex items-center gap-2 text-xs text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={isPurchasedDateUnknown}
+                    onChange={(event) => {
+                      const checked = event.target.checked;
+                      setIsPurchasedDateUnknown(checked);
+                      if (checked) {
+                        field.handleChange(format(today, 'yyyy-MM-dd'));
+                      }
+                    }}
+                    className="size-4 rounded border-gray-300"
+                  />
+                  구매일 모름
+                </label>
+                <DatePicker
+                  value={parseDateValue(field.state.value)}
+                  disabled={isPurchasedDateUnknown}
+                  maxDate={today}
+                  onChange={(date) =>
+                    field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
+                  }
+                  placeholder="구매일을 선택하세요"
+                />
+              </label>
+            )}
+          </form.Field>
+
+          <form.Field name="expiry_date">
+            {(field) => (
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">유통기한 (선택)</span>
+                <DatePicker
+                  value={parseDateValue(field.state.value)}
+                  onChange={(date) => field.handleChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                  placeholder="유통기한을 선택하세요"
+                />
+              </label>
+            )}
+          </form.Field>
+        </fieldset>
+
+        <div className="border-t border-gray-100" />
+
+        {/* 추가 정보 */}
         <form.Field name="memo">
           {(field) => (
             <label className="flex flex-col gap-1">
@@ -243,10 +279,6 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
             </label>
           )}
         </form.Field>
-
-        <Button type="submit" disabled={mutation.isPending} className="mt-2">
-          {mutation.isPending ? '추가 중...' : '추가'}
-        </Button>
       </form>
     </AppScreen>
   );

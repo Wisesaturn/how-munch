@@ -64,10 +64,6 @@ export function FridgePage({ householdId }: FridgePageProps) {
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
-      <p className="text-xs text-gray-400">
-        총 {items.length}종 · {items.reduce((sum, i) => sum + i.total_count, 0)}개
-      </p>
-
       {/* 만료 임박 배너 */}
       {!search.trim() && <ExpiryBanner items={items} />}
 
@@ -82,6 +78,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
       ) : (
         <FridgeItemList
           items={filtered}
+          isSearching={Boolean(search.trim())}
           onEditItem={openFridgeItemEditSheet}
           onAddBatch={openFridgeBatchAddSheet}
           onEditBatch={openFridgeBatchEditSheet}
