@@ -44,7 +44,7 @@ const ingredientFormSchema = z.object({
   count: z.number().min(1, '수량은 1 이상이어야 합니다'),
   unit: z.enum(['count', 'g']),
   store: z.string(),
-  price: z.number().min(0, '가격은 0원 이상이어야 합니다'),
+  price: z.number().min(100, '가격은 100원 이상이어야 합니다'),
 });
 
 function parseDateValue(value: string) {
@@ -73,7 +73,7 @@ export function IngredientForm({
       count: defaultValues?.count ?? 1,
       unit: (defaultValues?.unit ?? 'count') as 'count' | 'g',
       store: defaultValues?.store ?? '',
-      price: defaultValues?.price ?? 0,
+      price: defaultValues?.price ?? 100,
     },
     validators: {
       onSubmit: ingredientFormSchema,
