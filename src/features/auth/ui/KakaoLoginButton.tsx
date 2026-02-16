@@ -21,7 +21,7 @@ export function KakaoLoginButton() {
       type="button"
       onClick={() => loginWithKakao()}
       size="lg"
-      className="w-full bg-[#FEE500] text-[#191919] hover:bg-[#FDD800]"
+      className="w-full border-[#FEE500] bg-[#FEE500] text-[#191919] hover:bg-[#FDD800]"
     >
       <KakaoIcon />
       카카오 로그인
