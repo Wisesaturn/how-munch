@@ -91,6 +91,9 @@ project-root/
 - proxy.ts — 프로젝트 루트에 위치 (Next.js 16 proxy convention, Supabase 세션 리프레시)
 - `src/commons/lib`는 도메인(주제) 단위 파일로 구성하고, 필요 시 한 파일에 여러 유틸 함수를 함께 둔다 (예: `uuid.ts`, `string.ts`)
 - 공통 UI 내부 상태가 controlled/uncontrolled를 모두 지원해야 하는 경우 `react-simplikit`의 `useControlledState`를 우선 사용한다 (예: `DatePicker`)
+- 공통 UI 컴포넌트는 `disabled`, `invalid` 상태를 기본 고려해 설계한다
+  - `invalid`는 props/API로 노출하고, 상태 기반 스타일(`data-invalid`, `aria-invalid`)을 제공한다
+  - `disabled`는 opacity 축소 대신 명시된 비활성 스타일(예: gray 배경/텍스트/보더)로 표현한다
 - 신규 훅/유틸 도입 시 동일 목적의 기능이 `react-simplikit`(core/mobile)에 있으면 먼저 검토 후 채택한다
 - 성능/상태 최적화가 필요한 훅은 자체 구현보다 `react-simplikit` 기반 훅을 우선 검토하고 적극적으로 활용한다
 - 조건 분기가 필요한 effect는 `useEffect` 내부 `if` 분기 대신 `react-simplikit`의 `useConditionalEffect`를 우선 사용한다

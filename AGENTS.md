@@ -33,6 +33,9 @@
 - Server Components are default; add `"use client"` only where needed.
 - Use inline type imports (example: `import { type Profile } from '@/entities/profile'`).
 - Common UI files should use section comment blocks (e.g., `Root`, `Header`, `Content`) in the same style as existing shared UI components.
+- Common UI components must model `disabled` and `invalid` states by default:
+  - expose `invalid` via props/API and wire `data-invalid`/`aria-invalid` state styles.
+  - do not rely on opacity-only disabled styling; use explicit disabled tokens (gray background/text/border).
 - For compound components, keep `Header`/`Content`/`Footer` as sibling regions; do not nest `Header` or `Footer` inside `Content`.
 - `Content` should only render body content and must not absorb title, summary, or action areas.
 - React Query pattern per feature `api/`: `queryKey.ts`, `queries.ts`, `mutations.ts`; prefer `skipToken` over `enabled`.
