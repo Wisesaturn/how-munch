@@ -93,12 +93,15 @@ export function MealPage({ householdId }: MealPageProps) {
                 </Card.Header>
                 <Card.Content>
                   {!meal || meal.dishes.length === 0 ? (
-                    <EmptyState
-                      icon={<UtensilsCrossed className="size-5" />}
-                      title="등록된 메뉴가 없습니다"
-                      description="탭하여 메뉴를 추가하세요"
-                      className="py-6"
-                    />
+                    <EmptyState.Root>
+                      <EmptyState.Content className="py-6">
+                        <EmptyState.Indicator>
+                          <UtensilsCrossed className="size-5" />
+                        </EmptyState.Indicator>
+                        <EmptyState.Title>등록된 메뉴가 없습니다</EmptyState.Title>
+                        <EmptyState.Description>탭하여 메뉴를 추가하세요</EmptyState.Description>
+                      </EmptyState.Content>
+                    </EmptyState.Root>
                   ) : (
                     <ul className="space-y-2">
                       {meal.dishes

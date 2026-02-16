@@ -27,14 +27,25 @@ export function FridgeItemList({
   if (items.length === 0) {
     if (isSearching) {
       return (
-        <EmptyState
-          icon={<Search className="size-5" />}
-          title="검색 결과가 없습니다"
-          description="다른 키워드로 검색해 보세요"
-        />
+        <EmptyState.Root>
+          <EmptyState.Content>
+            <EmptyState.Indicator>
+              <Search className="size-5" />
+            </EmptyState.Indicator>
+            <EmptyState.Title>검색 결과가 없습니다</EmptyState.Title>
+            <EmptyState.Description>다른 키워드로 검색해 보세요</EmptyState.Description>
+          </EmptyState.Content>
+        </EmptyState.Root>
       );
     }
-    return <EmptyState title="등록된 재고가 없습니다" description="재료를 추가해 보세요" />;
+    return (
+      <EmptyState.Root>
+        <EmptyState.Content>
+          <EmptyState.Title>등록된 재고가 없습니다</EmptyState.Title>
+          <EmptyState.Description>재료를 추가해 보세요</EmptyState.Description>
+        </EmptyState.Content>
+      </EmptyState.Root>
+    );
   }
 
   const grouped = groupBy(items, (item) => item.category);

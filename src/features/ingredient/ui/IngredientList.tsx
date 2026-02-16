@@ -26,11 +26,15 @@ export function IngredientList({ ingredients, onEdit }: IngredientListProps) {
 
   if (ingredients.length === 0) {
     return (
-      <EmptyState
-        icon={<ShoppingCart className="size-10 text-gray-300" />}
-        title="장보기 내역이 없습니다"
-        description="+ 버튼을 눌러 장보기 내역을 추가해 보세요"
-      />
+      <EmptyState.Root>
+        <EmptyState.Content>
+          <EmptyState.Indicator>
+            <ShoppingCart className="size-10 text-gray-300" />
+          </EmptyState.Indicator>
+          <EmptyState.Title>장보기 내역이 없습니다</EmptyState.Title>
+          <EmptyState.Description>+ 버튼을 눌러 장보기 내역을 추가해 보세요</EmptyState.Description>
+        </EmptyState.Content>
+      </EmptyState.Root>
     );
   }
 
