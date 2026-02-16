@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Toast } from '@/commons/ui';
+import { Button, Separator, Toast } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 
@@ -22,6 +22,7 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
   const mutation = useUpdateBatchMutation();
   const deleteMutation = useDeleteBatchMutation();
   const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
+  const formId = `fridge-batch-edit-form-${batch.id}`;
   const totalQuantity = Number(batch.quantity) + Number(usedAmount);
   const quantityUnitLabel = unit === 'count' ? '개' : 'g';
 
@@ -51,10 +52,10 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
     );
   }
 
-  function deleteBatch(id: string) {
+  function deleteBatch() {
     if (!window.confirm('이 재고를 삭제하시겠습니까?')) return;
 
-    deleteMutation.mutate(id, {
+    deleteMutation.mutate(batch.id, {
       onSuccess: () => {
         Toast.success('재고가 삭제되었습니다');
         onClose();
@@ -66,10 +67,27 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
   }
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '재고 수정' }}>
+    <AppScreen
+      className="pointer-events-auto"
+      appBar={{
+        title: '재고 수정',
+        renderRight: () => (
+          <Button
+            type="submit"
+            form={formId}
+            variant="ghost"
+            size="sm"
+            disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
+          >
+            저장
+          </Button>
+        ),
+      }}
+    >
       <div className="p-4">
         <FridgeBatchForm
           id={batch.id}
+          formId={formId}
           defaultValues={{
             quantity: totalQuantity,
             expiry_date: batch.expiry_date ?? '',
@@ -79,10 +97,21 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
           quantityMin={usedAmount}
           quantityUnitLabel={quantityUnitLabel}
           onSubmit={handleSubmit}
-          onDelete={deleteBatch}
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}
         />
+
+        <Separator className="my-4" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-red-500 hover:text-red-600"
+          disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
+          onClick={deleteBatch}
+        >
+          삭제
+        </Button>
       </div>
     </AppScreen>
   );

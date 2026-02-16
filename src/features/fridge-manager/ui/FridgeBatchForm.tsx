@@ -19,6 +19,7 @@ export interface FridgeBatchFormValues {
 
 interface FridgeBatchFormProps {
   id?: string;
+  formId?: string;
   defaultValues?: Partial<FridgeBatchFormValues>;
   onSubmit: (values: FridgeBatchFormValues) => void;
   onDelete?: (id: string) => void;
@@ -65,6 +66,7 @@ function createFridgeBatchSchema(quantityMin: number) {
 /** 냉장고 배치 폼 (quantity, expiry_date, purchased_date, memo) */
 export function FridgeBatchForm({
   id,
+  formId,
   defaultValues,
   onSubmit,
   onDelete,
@@ -93,9 +95,12 @@ export function FridgeBatchForm({
       onSubmit(value);
     },
   });
+  const shouldRenderInlineEditActions = Boolean(id && onDelete);
+  const shouldRenderInlineCreateSubmit = !id;
 
   return (
     <form
+      id={formId}
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -192,7 +197,7 @@ export function FridgeBatchForm({
         )}
       </form.Field>
 
-      {id ? (
+      {shouldRenderInlineEditActions ? (
         <div className="mt-2 flex gap-2">
           <Button type="submit" disabled={Boolean(isPending || isDeleting)} className="flex-1">
             {isPending ? '수정 중...' : '수정'}
@@ -210,11 +215,11 @@ export function FridgeBatchForm({
             {isDeleting ? '삭제 중...' : '삭제'}
           </Button>
         </div>
-      ) : (
+      ) : shouldRenderInlineCreateSubmit ? (
         <Button type="submit" disabled={isPending} className="mt-2">
           {isPending ? '저장 중...' : submitLabel}
         </Button>
-      )}
+      ) : null}
     </form>
   );
 }

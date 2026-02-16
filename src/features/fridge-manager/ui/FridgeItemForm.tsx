@@ -16,6 +16,7 @@ export interface FridgeItemFormValues {
 
 interface FridgeItemFormProps {
   id?: string;
+  formId?: string;
   defaultValues?: Partial<FridgeItemFormValues>;
   onSubmit: (values: FridgeItemFormValues) => void;
   onDelete?: (id: string) => void;
@@ -38,6 +39,7 @@ const fridgeItemFormSchema = z.object({
 /** 냉장고 아이템 폼 (name, category, unit, is_subdivided) */
 export function FridgeItemForm({
   id,
+  formId,
   defaultValues,
   onSubmit,
   onDelete,
@@ -60,9 +62,12 @@ export function FridgeItemForm({
       onSubmit(value);
     },
   });
+  const shouldRenderInlineEditActions = Boolean(id && onDelete);
+  const shouldRenderInlineCreateSubmit = !id;
 
   return (
     <form
+      id={formId}
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -148,7 +153,7 @@ export function FridgeItemForm({
         )}
       </form.Field>
 
-      {id ? (
+      {shouldRenderInlineEditActions ? (
         <div className="mt-2 flex gap-2">
           <Button type="submit" disabled={Boolean(isPending || isDeleting)} className="flex-1">
             {isPending ? '수정 중...' : '수정'}
@@ -166,11 +171,11 @@ export function FridgeItemForm({
             {isDeleting ? '삭제 중...' : '삭제'}
           </Button>
         </div>
-      ) : (
+      ) : shouldRenderInlineCreateSubmit ? (
         <Button type="submit" disabled={isPending} className="mt-2">
           {isPending ? '저장 중...' : submitLabel}
         </Button>
-      )}
+      ) : null}
     </form>
   );
 }

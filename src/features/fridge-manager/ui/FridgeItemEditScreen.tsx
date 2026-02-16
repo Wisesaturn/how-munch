@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Toast } from '@/commons/ui';
+import { Button, Separator, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -19,6 +19,7 @@ interface FridgeItemEditScreenProps {
 export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProps) {
   const mutation = useUpdateFridgeItemMutation();
   const deleteMutation = useDeleteFridgeItemMutation();
+  const formId = `fridge-item-edit-form-${item.id}`;
 
   function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message;
@@ -46,10 +47,10 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
     );
   }
 
-  function deleteItem(id: string) {
+  function deleteItem() {
     if (!window.confirm(`'${item.name}' 전체를 삭제하시겠습니까?`)) return;
 
-    deleteMutation.mutate(id, {
+    deleteMutation.mutate(item.id, {
       onSuccess: () => {
         Toast.success('재료가 삭제되었습니다');
         onClose();
@@ -61,10 +62,27 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
   }
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '재료 수정' }}>
+    <AppScreen
+      className="pointer-events-auto"
+      appBar={{
+        title: '재료 수정',
+        renderRight: () => (
+          <Button
+            type="submit"
+            form={formId}
+            variant="ghost"
+            size="sm"
+            disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
+          >
+            저장
+          </Button>
+        ),
+      }}
+    >
       <div className="p-4">
         <FridgeItemForm
           id={item.id}
+          formId={formId}
           defaultValues={{
             name: item.name,
             category: item.category,
@@ -72,10 +90,21 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
             is_subdivided: item.is_subdivided,
           }}
           onSubmit={handleSubmit}
-          onDelete={deleteItem}
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}
         />
+
+        <Separator className="my-4" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-red-500 hover:text-red-600"
+          disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
+          onClick={deleteItem}
+        >
+          삭제
+        </Button>
       </div>
     </AppScreen>
   );
