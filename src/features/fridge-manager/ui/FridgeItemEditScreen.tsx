@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { ScrollArea, Toast } from '@/commons/ui';
+import { Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -62,23 +62,21 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
 
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '재료 수정' }}>
-      <ScrollArea className="h-full">
-        <div className="p-4">
-          <FridgeItemForm
-            id={item.id}
-            defaultValues={{
-              name: item.name,
-              category: item.category,
-              unit: item.unit,
-              is_subdivided: item.is_subdivided,
-            }}
-            onSubmit={handleSubmit}
-            onDelete={deleteItem}
-            isPending={mutation.isPending}
-            isDeleting={deleteMutation.isPending}
-          />
-        </div>
-      </ScrollArea>
+      <div className="p-4">
+        <FridgeItemForm
+          id={item.id}
+          defaultValues={{
+            name: item.name,
+            category: item.category,
+            unit: item.unit,
+            is_subdivided: item.is_subdivided,
+          }}
+          onSubmit={handleSubmit}
+          onDelete={deleteItem}
+          isPending={mutation.isPending}
+          isDeleting={deleteMutation.isPending}
+        />
+      </div>
     </AppScreen>
   );
 }

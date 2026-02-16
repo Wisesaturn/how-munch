@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Plus, Trash2 } from 'lucide-react';
 
-import { Button, Counter, Input, ScrollArea, Select, Toast } from '@/commons/ui';
+import { Button, Counter, Input, Select, Toast } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
@@ -169,180 +169,175 @@ export function MealEditorScreen({
         ),
       }}
     >
-      <ScrollArea className="h-full">
-        <div className="space-y-4 p-4">
-          <p className="text-xs text-gray-500">날짜: {date}</p>
+      <div className="space-y-4 p-4">
+        <p className="text-xs text-gray-500">날짜: {date}</p>
 
-          {dishes.map((dish, dishIndex) => (
-            <div
-              key={`${type}-dish-${dishIndex}`}
-              className="rounded-lg border border-gray-200 p-3"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-gray-900">
-                  {dish.name.trim() || `메뉴 ${dishIndex + 1}`}
-                </p>
-                {dishes.length > 1 ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
-                    onClick={() => handleRemoveDish(dishIndex)}
+        {dishes.map((dish, dishIndex) => (
+          <div key={`${type}-dish-${dishIndex}`} className="rounded-lg border border-gray-200 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-gray-900">
+                {dish.name.trim() || `메뉴 ${dishIndex + 1}`}
+              </p>
+              {dishes.length > 1 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700"
+                  onClick={() => handleRemoveDish(dishIndex)}
+                >
+                  <Trash2 className="size-4" />
+                  삭제
+                </Button>
+              ) : null}
+            </div>
+
+            <label className="mt-3 flex flex-col gap-1">
+              <span className="px-1 text-[11px] font-medium text-gray-500">메뉴명</span>
+              <Input
+                value={dish.name}
+                onChange={(event) => handleDishNameChange(dishIndex, event.target.value)}
+                placeholder="메뉴명을 입력하세요"
+              />
+            </label>
+
+            <div className="mt-3 space-y-2">
+              {dish.ingredients.map((ingredient, ingredientIndex) => {
+                const selectedItem = fridgeItems.find(
+                  (item) => item.id === ingredient.fridge_item_id,
+                );
+                const purchasedDateOptions = selectedItem
+                  ? [
+                      ...new Set(
+                        selectedItem.fridge_item_batches
+                          .filter((batch) => Number(batch.quantity) > 0)
+                          .map((batch) => batch.purchased_date),
+                      ),
+                    ].sort((a, b) => a.localeCompare(b))
+                  : [];
+
+                return (
+                  <div
+                    key={`${type}-${dishIndex}-${ingredientIndex}`}
+                    className="rounded-md border border-gray-100 p-2"
                   >
-                    <Trash2 className="size-4" />
-                    삭제
-                  </Button>
-                ) : null}
-              </div>
-
-              <label className="mt-3 flex flex-col gap-1">
-                <span className="px-1 text-[11px] font-medium text-gray-500">메뉴명</span>
-                <Input
-                  value={dish.name}
-                  onChange={(event) => handleDishNameChange(dishIndex, event.target.value)}
-                  placeholder="메뉴명을 입력하세요"
-                />
-              </label>
-
-              <div className="mt-3 space-y-2">
-                {dish.ingredients.map((ingredient, ingredientIndex) => {
-                  const selectedItem = fridgeItems.find(
-                    (item) => item.id === ingredient.fridge_item_id,
-                  );
-                  const purchasedDateOptions = selectedItem
-                    ? [
-                        ...new Set(
-                          selectedItem.fridge_item_batches
-                            .filter((batch) => Number(batch.quantity) > 0)
-                            .map((batch) => batch.purchased_date),
-                        ),
-                      ].sort((a, b) => a.localeCompare(b))
-                    : [];
-
-                  return (
-                    <div
-                      key={`${type}-${dishIndex}-${ingredientIndex}`}
-                      className="rounded-md border border-gray-100 p-2"
-                    >
-                      <div className="flex flex-col gap-2">
-                        <div className="grid grid-cols-[1fr_auto] items-end gap-2">
-                          <label className="flex flex-col gap-1">
-                            <span className="px-1 text-[11px] font-medium text-gray-500">재료</span>
-                            <Select
-                              value={ingredient.fridge_item_id || '__none__'}
-                              onValueChange={(value) =>
-                                handleIngredientChange(dishIndex, ingredientIndex, {
-                                  fridge_item_id: value === '__none__' ? '' : value,
-                                  purchased_date:
-                                    value === '__none__'
-                                      ? ''
-                                      : ([
-                                          ...new Set(
-                                            (
-                                              fridgeItems.find((item) => item.id === value)
-                                                ?.fridge_item_batches ?? []
-                                            )
-                                              .filter((batch) => Number(batch.quantity) > 0)
-                                              .map((batch) => batch.purchased_date),
-                                          ),
-                                        ].sort((a, b) => a.localeCompare(b))[0] ?? ''),
-                                })
-                              }
-                            >
-                              <Select.Trigger className="min-w-0">
-                                <Select.Value placeholder="재료 선택" />
-                              </Select.Trigger>
-                              <Select.Content>
-                                <Select.Item value="__none__">재료 선택</Select.Item>
-                                {fridgeItems.map((item) => (
-                                  <Select.Item key={item.id} value={item.id}>
-                                    {item.name} ({Number(item.total_count)}{' '}
-                                    {item.unit === 'count' ? '개' : 'g'})
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select>
-                          </label>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9"
-                            onClick={() => handleRemoveIngredient(dishIndex, ingredientIndex)}
+                    <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+                        <label className="flex flex-col gap-1">
+                          <span className="px-1 text-[11px] font-medium text-gray-500">재료</span>
+                          <Select
+                            value={ingredient.fridge_item_id || '__none__'}
+                            onValueChange={(value) =>
+                              handleIngredientChange(dishIndex, ingredientIndex, {
+                                fridge_item_id: value === '__none__' ? '' : value,
+                                purchased_date:
+                                  value === '__none__'
+                                    ? ''
+                                    : ([
+                                        ...new Set(
+                                          (
+                                            fridgeItems.find((item) => item.id === value)
+                                              ?.fridge_item_batches ?? []
+                                          )
+                                            .filter((batch) => Number(batch.quantity) > 0)
+                                            .map((batch) => batch.purchased_date),
+                                        ),
+                                      ].sort((a, b) => a.localeCompare(b))[0] ?? ''),
+                              })
+                            }
                           >
-                            삭제
-                          </Button>
-                        </div>
+                            <Select.Trigger className="min-w-0">
+                              <Select.Value placeholder="재료 선택" />
+                            </Select.Trigger>
+                            <Select.Content>
+                              <Select.Item value="__none__">재료 선택</Select.Item>
+                              {fridgeItems.map((item) => (
+                                <Select.Item key={item.id} value={item.id}>
+                                  {item.name} ({Number(item.total_count)}{' '}
+                                  {item.unit === 'count' ? '개' : 'g'})
+                                </Select.Item>
+                              ))}
+                            </Select.Content>
+                          </Select>
+                        </label>
 
-                        <div className="grid grid-cols-[1fr_1fr] gap-2">
-                          <label className="flex flex-col gap-1">
-                            <span className="px-1 text-[11px] font-medium text-gray-500">날짜</span>
-                            <Select
-                              value={ingredient.purchased_date || '__none__'}
-                              onValueChange={(value) =>
-                                handleIngredientChange(dishIndex, ingredientIndex, {
-                                  purchased_date: value === '__none__' ? '' : value,
-                                })
-                              }
-                              disabled={
-                                !ingredient.fridge_item_id || purchasedDateOptions.length === 0
-                              }
-                            >
-                              <Select.Trigger className="min-w-0">
-                                <Select.Value placeholder="입고일 선택" />
-                              </Select.Trigger>
-                              <Select.Content>
-                                <Select.Item value="__none__">입고일 선택</Select.Item>
-                                {purchasedDateOptions.map((purchasedDate) => (
-                                  <Select.Item
-                                    key={`${ingredient.fridge_item_id}-${purchasedDate}`}
-                                    value={purchasedDate}
-                                  >
-                                    {purchasedDate}
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select>
-                          </label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9"
+                          onClick={() => handleRemoveIngredient(dishIndex, ingredientIndex)}
+                        >
+                          삭제
+                        </Button>
+                      </div>
 
-                          <label className="flex flex-col gap-1">
-                            <span className="px-1 text-[11px] font-medium text-gray-500">수량</span>
-                            <Counter
-                              value={ingredient.amount}
-                              min={0}
-                              step={1}
-                              onChange={(nextAmount) =>
-                                handleIngredientChange(dishIndex, ingredientIndex, {
-                                  amount: nextAmount,
-                                })
-                              }
-                              className="w-full"
-                              inputClassName="w-full"
-                            />
-                          </label>
-                        </div>
+                      <div className="grid grid-cols-[1fr_1fr] gap-2">
+                        <label className="flex flex-col gap-1">
+                          <span className="px-1 text-[11px] font-medium text-gray-500">날짜</span>
+                          <Select
+                            value={ingredient.purchased_date || '__none__'}
+                            onValueChange={(value) =>
+                              handleIngredientChange(dishIndex, ingredientIndex, {
+                                purchased_date: value === '__none__' ? '' : value,
+                              })
+                            }
+                            disabled={
+                              !ingredient.fridge_item_id || purchasedDateOptions.length === 0
+                            }
+                          >
+                            <Select.Trigger className="min-w-0">
+                              <Select.Value placeholder="입고일 선택" />
+                            </Select.Trigger>
+                            <Select.Content>
+                              <Select.Item value="__none__">입고일 선택</Select.Item>
+                              {purchasedDateOptions.map((purchasedDate) => (
+                                <Select.Item
+                                  key={`${ingredient.fridge_item_id}-${purchasedDate}`}
+                                  value={purchasedDate}
+                                >
+                                  {purchasedDate}
+                                </Select.Item>
+                              ))}
+                            </Select.Content>
+                          </Select>
+                        </label>
+
+                        <label className="flex flex-col gap-1">
+                          <span className="px-1 text-[11px] font-medium text-gray-500">수량</span>
+                          <Counter
+                            value={ingredient.amount}
+                            min={0}
+                            step={1}
+                            onChange={(nextAmount) =>
+                              handleIngredientChange(dishIndex, ingredientIndex, {
+                                amount: nextAmount,
+                              })
+                            }
+                            className="w-full"
+                            inputClassName="w-full"
+                          />
+                        </label>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleAddIngredient(dishIndex)}
-                >
-                  재료 추가
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => handleAddIngredient(dishIndex)}
+              >
+                재료 추가
+              </Button>
             </div>
-          ))}
+          </div>
+        ))}
 
-          <Button variant="outline" className="w-full" onClick={handleAddDish}>
-            <Plus className="mr-1 size-4" /> 메뉴 추가
-          </Button>
-        </div>
-      </ScrollArea>
+        <Button variant="outline" className="w-full" onClick={handleAddDish}>
+          <Plus className="mr-1 size-4" /> 메뉴 추가
+        </Button>
+      </div>
     </AppScreen>
   );
 }

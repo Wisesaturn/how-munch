@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { ScrollArea, Toast } from '@/commons/ui';
+import { Toast } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
@@ -71,27 +71,25 @@ export function IngredientEditScreen({
 
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '상품 수정' }}>
-      <ScrollArea className="h-full">
-        <div className="p-4">
-          <IngredientForm
-            id={ingredient.id}
-            defaultValues={{
-              date: ingredient.date,
-              category: ingredient.category,
-              name: ingredient.name,
-              count: ingredient.count,
-              unit: ingredient.unit,
-              store: ingredient.store ?? '',
-              price: ingredient.price,
-            }}
-            storeNames={storeNames}
-            onSubmit={handleSubmit}
-            onDelete={deleteIngredient}
-            isSubmitting={updateMutation.isPending}
-            isDeleting={deleteMutation.isPending}
-          />
-        </div>
-      </ScrollArea>
+      <div className="p-4">
+        <IngredientForm
+          id={ingredient.id}
+          defaultValues={{
+            date: ingredient.date,
+            category: ingredient.category,
+            name: ingredient.name,
+            count: ingredient.count,
+            unit: ingredient.unit,
+            store: ingredient.store ?? '',
+            price: ingredient.price,
+          }}
+          storeNames={storeNames}
+          onSubmit={handleSubmit}
+          onDelete={deleteIngredient}
+          isSubmitting={updateMutation.isPending}
+          isDeleting={deleteMutation.isPending}
+        />
+      </div>
     </AppScreen>
   );
 }

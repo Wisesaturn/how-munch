@@ -6,7 +6,7 @@ import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { ChevronLeft } from 'lucide-react';
 
 import { useUserQuery } from '@/commons/api/auth/queries';
-import { Button, Input, ScrollArea, Toast } from '@/commons/ui';
+import { Button, Input, Toast } from '@/commons/ui';
 
 import { formatUpdatedDaysAgo } from '../lib/date';
 import { useProfileQuery } from '../api/queries';
@@ -65,34 +65,32 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
         },
       }}
     >
-      <ScrollArea className="h-full">
-        <form onSubmit={submitProfileUpdate} className="flex flex-col gap-3 p-4">
-          {isLoading || !profile ? (
-            <p className="py-6 text-center text-sm text-gray-400">불러오는 중...</p>
-          ) : (
-            <>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-gray-600">닉네임</span>
-                <Input
-                  value={nickname ?? profile.nickname}
-                  onChange={(event) => setNickname(event.target.value)}
-                />
-              </label>
+      <form onSubmit={submitProfileUpdate} className="flex flex-col gap-3 p-4">
+        {isLoading || !profile ? (
+          <p className="py-6 text-center text-sm text-gray-400">불러오는 중...</p>
+        ) : (
+          <>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-600">닉네임</span>
+              <Input
+                value={nickname ?? profile.nickname}
+                onChange={(event) => setNickname(event.target.value)}
+              />
+            </label>
 
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-gray-600">이메일</span>
-                <Input value={profile.email} disabled />
-              </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-600">이메일</span>
+              <Input value={profile.email} disabled />
+            </label>
 
-              <p className="text-xs text-gray-500">{formatUpdatedDaysAgo(profile.updated_at)}</p>
+            <p className="text-xs text-gray-500">{formatUpdatedDaysAgo(profile.updated_at)}</p>
 
-              <Button type="submit" disabled={mutation.isPending} className="mt-2 w-full">
-                {mutation.isPending ? '수정 중...' : '수정'}
-              </Button>
-            </>
-          )}
-        </form>
-      </ScrollArea>
+            <Button type="submit" disabled={mutation.isPending} className="mt-2 w-full">
+              {mutation.isPending ? '수정 중...' : '수정'}
+            </Button>
+          </>
+        )}
+      </form>
     </AppScreen>
   );
 }

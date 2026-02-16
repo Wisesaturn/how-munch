@@ -5,8 +5,6 @@ import { ChevronLeft } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
-import { ScrollArea } from '@/commons/ui';
-
 import { DeleteAccountButton } from './DeleteAccountButton';
 import { LogoutButton } from './LogoutButton';
 import { SettingsActionRow } from './SettingsActionRow';
@@ -30,19 +28,17 @@ export function ProfileSettingsScreen({ onClose }: ProfileSettingsScreenProps) {
         },
       }}
     >
-      <ScrollArea className="h-full">
-        <div className="space-y-2 p-4">
-          <h2 className="px-1 text-xs font-semibold text-gray-500">프로필</h2>
-          <SettingsActionRow
-            label="프로필 수정"
-            onClick={() => stackFlowActions.push('ProfileEditActivity', {})}
-          />
+      <div className="space-y-2 p-4">
+        <h2 className="px-1 text-xs font-semibold text-gray-500">프로필</h2>
+        <SettingsActionRow
+          label="프로필 수정"
+          onClick={() => stackFlowActions.push('ProfileEditActivity', {})}
+        />
 
-          <h2 className="px-1 text-xs font-semibold text-gray-500">계정</h2>
-          <LogoutButton />
-          <DeleteAccountButton />
-        </div>
-      </ScrollArea>
+        <h2 className="px-1 text-xs font-semibold text-gray-500">계정</h2>
+        <LogoutButton />
+        <DeleteAccountButton />
+      </div>
     </AppScreen>
   );
 }

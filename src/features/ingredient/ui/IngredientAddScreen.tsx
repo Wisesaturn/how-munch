@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Button, ScrollArea, Toast } from '@/commons/ui';
+import { Button, Toast } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
@@ -74,17 +74,15 @@ export function IngredientAddScreen({
         ),
       }}
     >
-      <ScrollArea className="h-full">
-        <div className="p-4">
-          <IngredientForm
-            formId={formId}
-            defaultValues={defaultName ? { name: defaultName } : undefined}
-            storeNames={storeNames}
-            onSubmit={handleSubmit}
-            isSubmitting={addMutation.isPending}
-          />
-        </div>
-      </ScrollArea>
+      <div className="p-4">
+        <IngredientForm
+          formId={formId}
+          defaultValues={defaultName ? { name: defaultName } : undefined}
+          storeNames={storeNames}
+          onSubmit={handleSubmit}
+          isSubmitting={addMutation.isPending}
+        />
+      </div>
     </AppScreen>
   );
 }

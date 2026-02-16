@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { ScrollArea, Toast } from '@/commons/ui';
+import { Toast } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 
@@ -67,25 +67,23 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
 
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '재고 수정' }}>
-      <ScrollArea className="h-full">
-        <div className="p-4">
-          <FridgeBatchForm
-            id={batch.id}
-            defaultValues={{
-              quantity: totalQuantity,
-              expiry_date: batch.expiry_date ?? '',
-              purchased_date: batch.purchased_date,
-              memo: batch.memo ?? '',
-            }}
-            quantityMin={usedAmount}
-            quantityUnitLabel={quantityUnitLabel}
-            onSubmit={handleSubmit}
-            onDelete={deleteBatch}
-            isPending={mutation.isPending}
-            isDeleting={deleteMutation.isPending}
-          />
-        </div>
-      </ScrollArea>
+      <div className="p-4">
+        <FridgeBatchForm
+          id={batch.id}
+          defaultValues={{
+            quantity: totalQuantity,
+            expiry_date: batch.expiry_date ?? '',
+            purchased_date: batch.purchased_date,
+            memo: batch.memo ?? '',
+          }}
+          quantityMin={usedAmount}
+          quantityUnitLabel={quantityUnitLabel}
+          onSubmit={handleSubmit}
+          onDelete={deleteBatch}
+          isPending={mutation.isPending}
+          isDeleting={deleteMutation.isPending}
+        />
+      </div>
     </AppScreen>
   );
 }
