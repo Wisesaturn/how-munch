@@ -81,7 +81,7 @@ const OTPGroup = React.forwardRef<HTMLDivElement, OTPGroupProps>((props, forward
       ref={forwardedRef}
       data-slot="otp-group"
       className={cn(
-        'flex items-center overflow-hidden rounded-md border border-gray-300',
+        'flex items-center overflow-hidden rounded-md border border-gray-300 bg-white',
         '[&>[data-slot=otp-slot]]:border-0',
         '[&>[data-slot=otp-slot]]:rounded-none',
         '[&>[data-slot=otp-slot]:first-child]:rounded-l-md',
@@ -101,7 +101,7 @@ OTPGroup.displayName = 'OTP.Group';
  * Slot
  * -----------------------------------------------------------------------------------------------*/
 const otpSlotVariants = cva(
-  'relative flex items-center justify-center rounded-md border border-gray-300 bg-gray-50 text-gray-900 transition-all duration-200 ring-inset',
+  'relative flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-900 transition-all duration-200 ring-inset',
   {
     variants: {
       size: {
@@ -114,7 +114,7 @@ const otpSlotVariants = cva(
         false: '',
       },
       invalid: {
-        true: 'border-red-400 bg-red-50',
+        true: 'border-red-400 bg-white',
         false: '',
       },
     },
