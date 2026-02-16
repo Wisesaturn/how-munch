@@ -1,17 +1,14 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { createClient } from '../supabase/client';
 
-const authQueryKeys = {
-  all: ['auth'] as const,
-  user: () => [...authQueryKeys.all, 'user'] as const,
-};
+import { authQueryKeys } from './queryKey';
 
 /** 현재 로그인 사용자 조회 */
-export function useUserSuspenseQuery() {
-  return useSuspenseQuery({
+export function useUserQuery() {
+  return useQuery({
     queryKey: authQueryKeys.user(),
     queryFn: async () => {
       const supabase = createClient();
