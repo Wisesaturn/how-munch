@@ -6,6 +6,7 @@ import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Plus, Trash2, X } from 'lucide-react';
+import { z } from 'zod';
 
 import { Button, Counter, Input, Select, Separator, Toast } from '@/commons/ui';
 
@@ -36,6 +37,48 @@ const MEAL_TYPE_LABEL: Record<MealType, string> = {
   dinner: '저녁',
   snack: '간식',
 };
+
+function createMealEditorSchema(maxIngredientCount: number) {
+  return z
+    .array(
+      z.object({
+        name: z.string().trim().min(1, '메뉴명을 입력해 주세요'),
+        ingredients: z
+          .array(
+            z.object({
+              fridge_item_id: z.string().trim().min(1, '재료를 선택해 주세요'),
+              amount: z.number().min(1, '재료 수량은 1 이상이어야 합니다'),
+            }),
+          )
+          .min(1, '메뉴마다 재료를 1개 이상 추가해 주세요'),
+      }),
+    )
+    .min(1, '메뉴를 1개 이상 추가해 주세요')
+    .superRefine((parsedDishes, ctx) => {
+      parsedDishes.forEach((dish, dishIndex) => {
+        if (dish.ingredients.length > maxIngredientCount) {
+          ctx.addIssue({
+            code: 'custom',
+            message: `메뉴 ${dishIndex + 1}의 재료는 최대 ${maxIngredientCount}개까지 추가할 수 있습니다`,
+            path: [dishIndex, 'ingredients'],
+          });
+        }
+
+        const usedFridgeItemIds = new Set<string>();
+        dish.ingredients.forEach((ingredient, ingredientIndex) => {
+          if (usedFridgeItemIds.has(ingredient.fridge_item_id)) {
+            ctx.addIssue({
+              code: 'custom',
+              message: `메뉴 ${dishIndex + 1}에 같은 재료를 중복으로 선택할 수 없습니다`,
+              path: [dishIndex, 'ingredients', ingredientIndex, 'fridge_item_id'],
+            });
+            return;
+          }
+          usedFridgeItemIds.add(ingredient.fridge_item_id);
+        });
+      });
+    });
+}
 
 function toEditorDishes(meal: Meal | null): EditorDish[] {
   if (!meal) return [{ name: '', ingredients: [] }];
@@ -70,6 +113,8 @@ export function MealEditorScreen({
   const { data: fridgeItems = [] } = useFridgeItemsForMealQuery(householdId);
   const upsertMutation = useUpsertMealMutation();
   const deleteMutation = useDeleteMealMutation();
+  const maxIngredientCount = fridgeItems.length;
+  const mealEditorSchema = createMealEditorSchema(maxIngredientCount);
 
   const addDish = () => {
     setDishes((prev) => [...prev, { name: '', ingredients: [] }]);
@@ -131,8 +176,14 @@ export function MealEditorScreen({
   };
 
   const saveMeal = () => {
+    const parseResult = mealEditorSchema.safeParse(dishes);
+    if (!parseResult.success) {
+      Toast.warn(parseResult.error.issues[0]?.message ?? '입력값을 확인해 주세요');
+      return;
+    }
+
     upsertMutation.mutate(
-      { householdId, date, type, dishes },
+      { householdId, date, type, dishes: parseResult.data },
       {
         onSuccess: () => {
           Toast.success('식단이 저장되었습니다');

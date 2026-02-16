@@ -39,6 +39,13 @@
 - For compound components, keep `Header`/`Content`/`Footer` as sibling regions; do not nest `Header` or `Footer` inside `Content`.
 - `Content` should only render body content and must not absorb title, summary, or action areas.
 - React Query pattern per feature `api/`: `queryKey.ts`, `queries.ts`, `mutations.ts`; prefer `skipToken` over `enabled`.
+- TanStack Form validation rule:
+  - use `zod` schema and connect it through `useForm({ validators: { onSubmit: schema, onChange: schema } })` by default.
+  - `onSubmit` and `onChange` must both be set for standard form validation flows (add `onBlur` only when needed).
+  - avoid ad-hoc `safeParse` inside submit handlers when `useForm` is already used.
+  - show field-level errors inline with shared form UI patterns (`Form.Control` + `Form.Error`) rather than toast-first validation UX.
+  - define form schema at module scope (outside component body) by default; only use component-scope schema when runtime props/state must affect schema shape.
+  - define reusable utility/helper functions at module scope (outside component body) by default to avoid recreation on each render.
 - For shared UI context, use `createSafeContext` from `src/commons/lib/context.ts`.
 - Prefer project-standard utilities first:
   - `date-fns` for date/time formatting and calculations

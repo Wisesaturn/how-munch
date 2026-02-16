@@ -82,6 +82,13 @@ project-root/
   - `queryKey.ts` — query key factory
   - `queries.ts` — `use{작업}Query` hooks (조회)
   - `mutations.ts` — `use{작업}Mutation` hooks (변경)
+- TanStack Form 유효성 검사는 `zod` 스키마를 작성하고 `useForm`의 `validators` 옵션에 연결한다.
+  - 기본: `validators: { onSubmit: schema, onChange: schema }`
+  - `onSubmit`, `onChange`는 항상 함께 설정하고, `onBlur`는 필요한 경우에만 추가한다.
+  - `useForm` 사용 중 제출 핸들러에서 `safeParse`를 별도로 중복 호출하는 패턴은 지양한다.
+  - 에러 노출은 토스트보다 필드 인라인(`Form.Control` + `Form.Error`)을 우선한다.
+  - 스키마는 기본적으로 컴포넌트 바깥(모듈 스코프)에 선언한다. 런타임 props/state에 따라 스키마 구조가 달라지는 경우에만 컴포넌트 내부 선언을 허용한다.
+  - 유틸/헬퍼 함수도 기본적으로 컴포넌트 바깥(모듈 스코프)에 선언해 렌더마다 재생성되지 않도록 한다.
 - react-query 조건부 실행: `enabled` 대신 `queryFn`에 `skipToken` 사용
 - 날짜/기간 계산은 `date-fns`를 우선 사용한다
 - 범용 유틸 함수는 `es-toolkit`을 우선 사용한다
@@ -111,6 +118,7 @@ project-root/
 ### Common UI Composition
 
 - 공통 컴포넌트는 SRP 원칙으로 역할 단위(`Header`, `Body`, `Footer` 등)로 분리 구현
+- 공통 폼 UI는 `src/commons/ui/Form.tsx`의 compound API(`Form.Field`, `Form.Label`, `Form.Control`, `Form.Error`)를 우선 사용한다
 - 공통 UI 파일은 섹션 단위 주석 블록(`/* ------------------------------------------------------------------------------------------------- */`)으로 `Root`, `Header`, `Content` 등 역할을 명시한다
 - 컴파운드 패턴에서 `Header`, `Content`, `Footer`는 항상 형제 구조로 분리해 사용한다 (`Content` 내부에 `Header/Footer`를 넣지 않는다)
 - `Content`는 본문 영역만 담당하며, 타이틀/액션/요약 같은 상단/하단 역할을 침범하지 않는다
