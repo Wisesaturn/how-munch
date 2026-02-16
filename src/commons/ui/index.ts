@@ -1,4 +1,5 @@
 // shared UI components barrel export
+export { Accordion } from './Accordion';
 export { Badge, badgeVariants } from './Badge';
 export { BottomSheet } from './BottomSheet';
 export { Button, buttonVariants } from './Button';
