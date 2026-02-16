@@ -35,6 +35,10 @@ export function ProfileSettingsScreen({ onClose }: ProfileSettingsScreenProps) {
             label="프로필 수정"
             onClick={() => stackFlowActions.push('ProfileEditActivity', {})}
           />
+          <SettingsActionRow
+            label="알림 설정"
+            onClick={() => stackFlowActions.push('NotificationSettingsActivity', {})}
+          />
         </section>
 
         <section className="space-y-2">

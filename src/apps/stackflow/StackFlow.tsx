@@ -16,6 +16,7 @@ import {
 } from '@/features/fridge-manager';
 import { IngredientAddScreen, IngredientEditScreen } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal-manager';
+import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification-manager';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile-manager';
 
 function IdleActivity() {
@@ -140,6 +141,16 @@ function ProfileEditActivity() {
   return <ProfileEditScreen onClose={pop} />;
 }
 
+function NotificationActivity() {
+  return <NotificationScreen />;
+}
+
+function NotificationSettingsActivity() {
+  const { pop } = useActions();
+
+  return <NotificationSettingsScreen onClose={pop} />;
+}
+
 const appStackFlow = stackflow({
   transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
@@ -152,6 +163,8 @@ const appStackFlow = stackflow({
     FridgeItemEditActivity,
     FridgeBatchEditActivity,
     MealEditorActivity,
+    NotificationActivity,
+    NotificationSettingsActivity,
     ProfileSettingsActivity,
     ProfileEditActivity,
   },
@@ -167,6 +180,8 @@ const appStackFlow = stackflow({
         FridgeItemEditActivity: '/fridge/item/edit',
         FridgeBatchEditActivity: '/fridge/batch/edit',
         MealEditorActivity: '/meal/editor',
+        NotificationActivity: '/notifications',
+        NotificationSettingsActivity: '/notifications/settings',
         ProfileSettingsActivity: '/profile/settings',
         ProfileEditActivity: '/profile/edit',
       },

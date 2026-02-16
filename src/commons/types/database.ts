@@ -355,6 +355,123 @@ export interface Database {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          household_id: string;
+          type: string;
+          title: string;
+          description: string;
+          payload: Json;
+          scheduled_at: string | null;
+          sent_at: string;
+          push_sent_at: string | null;
+          read_at: string | null;
+          status: 'pending' | 'sent' | 'read' | 'canceled';
+          dedupe_key: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          household_id: string;
+          type?: string;
+          title: string;
+          description: string;
+          payload?: Json;
+          scheduled_at?: string | null;
+          sent_at?: string;
+          push_sent_at?: string | null;
+          read_at?: string | null;
+          status?: 'pending' | 'sent' | 'read' | 'canceled';
+          dedupe_key: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          household_id?: string;
+          type?: string;
+          title?: string;
+          description?: string;
+          payload?: Json;
+          scheduled_at?: string | null;
+          sent_at?: string;
+          push_sent_at?: string | null;
+          read_at?: string | null;
+          status?: 'pending' | 'sent' | 'read' | 'canceled';
+          dedupe_key?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      notification_push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          endpoint?: string;
+          p256dh?: string;
+          auth?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      notification_preferences: {
+        Row: {
+          user_id: string;
+          expiry_soon_enabled: boolean;
+          expiry_remind_days: number[];
+          quiet_hours_start: string | null;
+          quiet_hours_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          expiry_soon_enabled?: boolean;
+          expiry_remind_days?: number[];
+          quiet_hours_start?: string | null;
+          quiet_hours_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          expiry_soon_enabled?: boolean;
+          expiry_remind_days?: number[];
+          quiet_hours_start?: string | null;
+          quiet_hours_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -368,6 +485,22 @@ export interface Database {
         Args: Record<PropertyKey, never>;
         Returns: string | null;
       };
+      deactivate_push_subscription_by_endpoint: {
+        Args: { p_endpoint: string };
+        Returns: boolean;
+      };
+      get_pending_push_notifications: {
+        Args: { p_limit?: number };
+        Returns: {
+          notification_id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+        }[];
+      };
       get_invite_household: {
         Args: { invite_code: string };
         Returns: {
@@ -379,9 +512,17 @@ export interface Database {
           is_valid: boolean;
         }[];
       };
+      generate_expiry_soon_notifications: {
+        Args: { p_target_date?: string };
+        Returns: number;
+      };
       join_household: {
         Args: { invite_code: string };
         Returns: string;
+      };
+      mark_notifications_push_sent: {
+        Args: { p_ids: string[] };
+        Returns: number;
       };
     };
     Enums: {
