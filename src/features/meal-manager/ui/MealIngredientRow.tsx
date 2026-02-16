@@ -1,0 +1,103 @@
+'use client';
+
+import { X } from 'lucide-react';
+
+import { Button, Select } from '@/commons/ui';
+
+import { type EditorIngredient, resolveIngredientUnitLabel, resolveSliderBoundaries } from '../lib';
+import { useMealEditorContext } from '../model';
+
+import { MealIngredientCountControl } from './MealIngredientCountControl';
+import { MealIngredientWeightControl } from './MealIngredientWeightControl';
+
+interface MealIngredientRowProps {
+  ingredient: EditorIngredient;
+  onChangeIngredientItem: (value: string) => void;
+  onChangeIngredientAmount: (value: string) => void;
+  onRemoveIngredient: () => void;
+}
+
+function MealIngredientRow({
+  ingredient,
+  onChangeIngredientItem,
+  onChangeIngredientAmount,
+  onRemoveIngredient,
+}: MealIngredientRowProps) {
+  const { fridgeItems } = useMealEditorContext('MealIngredientRow');
+
+  /* -------------------------------------------------------------------------- */
+  /* Selection Constants                                                         */
+  /* -------------------------------------------------------------------------- */
+  const emptySelectValue = '__none__';
+  const isWeightUnit = (unit: 'count' | 'g' | undefined) => unit === 'g';
+
+  const selectedIngredient = fridgeItems.find((item) => item.id === ingredient.fridge_item_id);
+
+  /* -------------------------------------------------------------------------- */
+  /* Unit / Range Constants                                                      */
+  /* -------------------------------------------------------------------------- */
+  const selectedUnit = selectedIngredient?.unit;
+  const unitLabel = resolveIngredientUnitLabel(selectedUnit);
+  const sliderBoundary = resolveSliderBoundaries(selectedIngredient?.total_count);
+
+  /* -------------------------------------------------------------------------- */
+  /* Display / Control Constants                                                 */
+  /* -------------------------------------------------------------------------- */
+  const sliderValue = ingredient.amount > 0 ? ingredient.amount : sliderBoundary.min;
+  const selectedAmount = Math.min(sliderValue, sliderBoundary.max);
+  const isAmountControlDisabled = sliderBoundary.disabled || !selectedIngredient;
+  const isCountInputDisabled = !selectedIngredient;
+  const ingredientSelectValue = ingredient.fridge_item_id || emptySelectValue;
+
+  return (
+    <div className="space-y-2.5">
+      <div className="flex items-center gap-2">
+        <Select value={ingredientSelectValue} onValueChange={onChangeIngredientItem}>
+          <Select.Trigger className="min-w-0 flex-1">
+            <Select.Value placeholder="재료 선택" />
+          </Select.Trigger>
+          <Select.Content>
+            <Select.Item value={emptySelectValue}>재료 선택</Select.Item>
+            {fridgeItems.map((item) => (
+              <Select.Item key={item.id} value={item.id}>
+                {item.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="shrink-0 text-gray-500 hover:text-red-500"
+          onClick={onRemoveIngredient}
+          aria-label="재료 삭제"
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
+
+      {isWeightUnit(selectedUnit) ? (
+        <MealIngredientWeightControl
+          min={sliderBoundary.min}
+          max={sliderBoundary.max}
+          value={selectedAmount}
+          disabled={isAmountControlDisabled}
+          unitLabel={unitLabel}
+          onChangeValue={(value) => onChangeIngredientAmount(String(value))}
+        />
+      ) : (
+        <MealIngredientCountControl
+          amount={ingredient.amount}
+          max={sliderBoundary.max}
+          unitLabel={unitLabel}
+          disabled={isCountInputDisabled}
+          onChangeAmount={onChangeIngredientAmount}
+        />
+      )}
+    </div>
+  );
+}
+
+export { MealIngredientRow };

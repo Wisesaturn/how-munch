@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import { Slot } from 'radix-ui';
 
-import { cn } from '../lib';
+import { cn, extractFieldErrorMessage } from '../lib';
 import { createSafeContext } from '../lib/context';
 
 import { Message } from './Message';
@@ -31,45 +31,8 @@ interface TanstackAnyField {
   };
 }
 
-function extractErrorMessage(error: unknown): string | null {
-  if (!error) return null;
-
-  if (typeof error === 'string') {
-    return error.trim() || null;
-  }
-
-  if (error instanceof Error) {
-    return error.message.trim() || null;
-  }
-
-  if (Array.isArray(error)) {
-    for (const item of error) {
-      const message = extractErrorMessage(item);
-      if (message) return message;
-    }
-    return null;
-  }
-
-  if (typeof error === 'object') {
-    const record = error as Record<string, unknown>;
-
-    const directMessage = extractErrorMessage(record.message);
-    if (directMessage) return directMessage;
-
-    const issuesMessage = extractErrorMessage(record.issues);
-    if (issuesMessage) return issuesMessage;
-
-    for (const value of Object.values(record)) {
-      const nestedMessage = extractErrorMessage(value);
-      if (nestedMessage) return nestedMessage;
-    }
-  }
-
-  return null;
-}
-
 function resolveFieldMessage(field: TanstackAnyField) {
-  return extractErrorMessage(field.state.meta.errors) ?? null;
+  return extractFieldErrorMessage(field.state.meta.errors) ?? null;
 }
 
 function FormField({

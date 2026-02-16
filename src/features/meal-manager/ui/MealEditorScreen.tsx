@@ -3,17 +3,23 @@
 import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { useForm } from '@tanstack/react-form';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { z } from 'zod';
 
-import { Button, Counter, Input, Select, Separator, Toast } from '@/commons/ui';
+import { extractFieldErrorMessage } from '@/commons/lib';
+import { Button, Separator, Toast } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
 import { useDeleteMealMutation, useUpsertMealMutation } from '../api/mutations';
 import { useFridgeItemsForMealQuery } from '../api/queries';
+import { appendDish, createFridgeStockInfoById } from '../lib';
+import { createMealEditorDishesSchema, MealEditorProvider, toEditorDishes } from '../model';
+
+import { MealDishCard } from './MealDishCard';
 
 interface MealEditorScreenProps {
   onClose: () => void;
@@ -23,78 +29,24 @@ interface MealEditorScreenProps {
   meal: Meal | null;
 }
 
-interface EditorDish {
-  name: string;
-  ingredients: Array<{
-    fridge_item_id: string;
-    amount: number;
-  }>;
-}
-
-const MEAL_TYPE_LABEL: Record<MealType, string> = {
+const MEAL_LABEL_BY_TYPE: Record<MealType, string> = {
   breakfast: '아침',
   lunch: '점심',
   dinner: '저녁',
   snack: '간식',
 };
 
-function createMealEditorSchema(maxIngredientCount: number) {
-  return z
-    .array(
-      z.object({
-        name: z.string().trim().min(1, '메뉴명을 입력해 주세요'),
-        ingredients: z
-          .array(
-            z.object({
-              fridge_item_id: z.string().trim().min(1, '재료를 선택해 주세요'),
-              amount: z.number().min(1, '재료 수량은 1 이상이어야 합니다'),
-            }),
-          )
-          .min(1, '메뉴마다 재료를 1개 이상 추가해 주세요'),
-      }),
-    )
-    .min(1, '메뉴를 1개 이상 추가해 주세요')
-    .superRefine((parsedDishes, ctx) => {
-      parsedDishes.forEach((dish, dishIndex) => {
-        if (dish.ingredients.length > maxIngredientCount) {
-          ctx.addIssue({
-            code: 'custom',
-            message: `메뉴 ${dishIndex + 1}의 재료는 최대 ${maxIngredientCount}개까지 추가할 수 있습니다`,
-            path: [dishIndex, 'ingredients'],
-          });
-        }
-
-        const usedFridgeItemIds = new Set<string>();
-        dish.ingredients.forEach((ingredient, ingredientIndex) => {
-          if (usedFridgeItemIds.has(ingredient.fridge_item_id)) {
-            ctx.addIssue({
-              code: 'custom',
-              message: `메뉴 ${dishIndex + 1}에 같은 재료를 중복으로 선택할 수 없습니다`,
-              path: [dishIndex, 'ingredients', ingredientIndex, 'fridge_item_id'],
-            });
-            return;
-          }
-          usedFridgeItemIds.add(ingredient.fridge_item_id);
-        });
-      });
-    });
-}
-
-function toEditorDishes(meal: Meal | null): EditorDish[] {
-  if (!meal) return [{ name: '', ingredients: [] }];
-
-  if (!meal.dishes.length) return [{ name: '', ingredients: [] }];
-
-  return meal.dishes
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .map((dish) => ({
-      name: dish.name === '[이름 없음]' ? '' : dish.name,
-      ingredients: (dish.ingredients ?? []).map((ingredient) => ({
-        fridge_item_id: ingredient.fridge_item_id,
-        amount: Number(ingredient.amount),
-      })),
-    }));
-}
+/* -------------------------------------------------------------------------- */
+/* View Constants                                                              */
+/* -------------------------------------------------------------------------- */
+const ALERT_MSG = {
+  saveSuccess: '식단이 저장되었습니다',
+  saveFailed: '식단 저장에 실패했습니다',
+  deleteSuccess: '식단이 삭제되었습니다',
+  deleteFailed: '식단 삭제에 실패했습니다',
+  invalidFallback: '입력값을 확인해 주세요',
+  deleteConfirm: '이 식단을 삭제하시겠습니까?',
+};
 
 export function MealEditorScreen({
   onClose,
@@ -103,117 +55,82 @@ export function MealEditorScreen({
   type,
   meal,
 }: MealEditorScreenProps) {
+  /* -------------------------------------------------------------------------- */
+  /* Header Constants                                                            */
+  /* -------------------------------------------------------------------------- */
   const isEditMode = meal !== null;
   const formattedDate = format(parseISO(date), 'M월 d일', { locale: ko });
-  const appBarTitle = `${formattedDate} ${MEAL_TYPE_LABEL[type]} 식단`;
-
-  const [dishes, setDishes] = useState<EditorDish[]>(() => toEditorDishes(meal));
+  const appBarTitle = `${formattedDate} ${MEAL_LABEL_BY_TYPE[type]} 식단`;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: fridgeItems = [] } = useFridgeItemsForMealQuery(householdId);
   const upsertMutation = useUpsertMealMutation();
   const deleteMutation = useDeleteMealMutation();
+
   const maxIngredientCount = fridgeItems.length;
-  const mealEditorSchema = createMealEditorSchema(maxIngredientCount);
+  const fridgeStockInfoById = createFridgeStockInfoById(fridgeItems);
+  const mealEditorFormSchema = z.object({
+    dishes: createMealEditorDishesSchema(maxIngredientCount, fridgeStockInfoById),
+  });
 
-  const addDish = () => {
-    setDishes((prev) => [...prev, { name: '', ingredients: [] }]);
-  };
-
-  const removeDish = (dishIndex: number) => {
-    setDishes((prev) => prev.filter((_, index) => index !== dishIndex));
-  };
-
-  const addIngredient = (dishIndex: number) => {
-    setDishes((prev) =>
-      prev.map((dish, index) =>
-        index === dishIndex
-          ? {
-              ...dish,
-              ingredients: [...dish.ingredients, { fridge_item_id: '', amount: 0 }],
-            }
-          : dish,
-      ),
-    );
-  };
-
-  const changeDishName = (dishIndex: number, name: string) => {
-    setDishes((prev) =>
-      prev.map((dish, index) => (index === dishIndex ? { ...dish, name } : dish)),
-    );
-  };
-
-  const removeIngredient = (dishIndex: number, ingredientIndex: number) => {
-    setDishes((prev) =>
-      prev.map((dish, index) =>
-        index === dishIndex
-          ? {
-              ...dish,
-              ingredients: dish.ingredients.filter((_, idx) => idx !== ingredientIndex),
-            }
-          : dish,
-      ),
-    );
-  };
-
-  const changeIngredient = (
-    dishIndex: number,
-    ingredientIndex: number,
-    patch: Partial<EditorDish['ingredients'][number]>,
-  ) => {
-    setDishes((prev) =>
-      prev.map((dish, index) => {
-        if (index !== dishIndex) return dish;
-
-        return {
-          ...dish,
-          ingredients: dish.ingredients.map((ingredient, idx) =>
-            idx === ingredientIndex ? { ...ingredient, ...patch } : ingredient,
-          ),
-        };
-      }),
-    );
-  };
-
-  const saveMeal = () => {
-    const parseResult = mealEditorSchema.safeParse(dishes);
-    if (!parseResult.success) {
-      Toast.warn(parseResult.error.issues[0]?.message ?? '입력값을 확인해 주세요');
-      return;
-    }
-
-    upsertMutation.mutate(
-      { householdId, date, type, dishes: parseResult.data },
-      {
-        onSuccess: () => {
-          Toast.success('식단이 저장되었습니다');
-          onClose();
+  const form = useForm({
+    defaultValues: {
+      dishes: toEditorDishes(meal),
+    },
+    validators: {
+      onSubmit: mealEditorFormSchema,
+      onChange: mealEditorFormSchema,
+    },
+    onSubmit: ({ value }) => {
+      upsertMutation.mutate(
+        { householdId, date, type, dishes: value.dishes },
+        {
+          onSuccess: () => {
+            Toast.success(ALERT_MSG.saveSuccess);
+            onClose();
+          },
+          onError: (error) => {
+            const errorMessage = error instanceof Error ? error.message : ALERT_MSG.saveFailed;
+            Toast.error(errorMessage);
+          },
         },
-        onError: (error) => {
-          const message = error instanceof Error ? error.message : '식단 저장에 실패했습니다';
-          Toast.error(message);
-        },
-      },
-    );
-  };
+      );
+    },
+    onSubmitInvalid: ({ formApi }) => {
+      const parseResult = mealEditorFormSchema.safeParse({ dishes: formApi.state.values.dishes });
+      const detailedMessage = !parseResult.success
+        ? extractFieldErrorMessage(parseResult.error.issues)
+        : undefined;
+      const submitMessage = extractFieldErrorMessage(formApi.state.errorMap.onSubmit);
+      const changeMessage = extractFieldErrorMessage(formApi.state.errorMap.onChange);
 
-  const deleteMeal = () => {
+      Toast.warn(
+        String(detailedMessage ?? submitMessage ?? changeMessage ?? ALERT_MSG.invalidFallback),
+      );
+    },
+  });
+
+  function saveMeal() {
+    form.handleSubmit();
+  }
+
+  function removeMeal() {
     if (!meal) return;
 
     deleteMutation.mutate(
       { id: meal.id, householdId, date },
       {
         onSuccess: () => {
-          Toast.success('식단이 삭제되었습니다');
+          Toast.success(ALERT_MSG.deleteSuccess);
           onClose();
         },
         onError: (error) => {
-          const message = error instanceof Error ? error.message : '식단 삭제에 실패했습니다';
-          Toast.error(message);
+          const errorMessage = error instanceof Error ? error.message : ALERT_MSG.deleteFailed;
+          Toast.error(errorMessage);
         },
       },
     );
-  };
+  }
 
   const isMutating = upsertMutation.isPending || deleteMutation.isPending;
 
@@ -224,6 +141,7 @@ export function MealEditorScreen({
         title: appBarTitle,
         renderRight: () => (
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             onClick={saveMeal}
@@ -236,105 +154,38 @@ export function MealEditorScreen({
       }}
     >
       <div className="space-y-3 p-4">
-        {dishes.map((dish, dishIndex) => (
-          <div key={`${type}-dish-${dishIndex}`} className="rounded-lg border border-gray-200 p-3">
-            <div className="flex items-center gap-2">
-              <Input
-                value={dish.name}
-                onChange={(event) => changeDishName(dishIndex, event.target.value)}
-                placeholder={`메뉴 ${dishIndex + 1}`}
-                className="flex-1"
-              />
-              {dishes.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="shrink-0 text-gray-400 hover:text-red-500"
-                  onClick={() => removeDish(dishIndex)}
-                  aria-label="메뉴 삭제"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-            </div>
-
-            {dish.ingredients.length > 0 && <Separator className="my-3" />}
-
-            <div className="space-y-2">
-              {dish.ingredients.map((ingredient, ingredientIndex) => (
-                <div
-                  key={`${type}-${dishIndex}-${ingredientIndex}`}
-                  className="flex items-center gap-2"
-                >
-                  <Select
-                    value={ingredient.fridge_item_id || '__none__'}
-                    onValueChange={(value) =>
-                      changeIngredient(dishIndex, ingredientIndex, {
-                        fridge_item_id: value === '__none__' ? '' : value,
-                      })
-                    }
-                  >
-                    <Select.Trigger className="min-w-0 flex-1">
-                      <Select.Value placeholder="재료 선택" />
-                    </Select.Trigger>
-                    <Select.Content>
-                      <Select.Item value="__none__">재료 선택</Select.Item>
-                      {fridgeItems.map((item) => (
-                        <Select.Item key={item.id} value={item.id}>
-                          {item.name} ({Number(item.total_count)}
-                          {item.unit === 'count' ? '개' : 'g'})
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select>
-
-                  <Counter
-                    value={ingredient.amount}
-                    min={0}
-                    step={1}
-                    onChange={(nextAmount) =>
-                      changeIngredient(dishIndex, ingredientIndex, { amount: nextAmount })
-                    }
-                    className="w-28 shrink-0"
-                  />
-
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="shrink-0 text-gray-400 hover:text-red-500"
-                    onClick={() => removeIngredient(dishIndex, ingredientIndex)}
-                    aria-label="재료 삭제"
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 w-full text-gray-500"
-              onClick={() => addIngredient(dishIndex)}
+        <form.Field name="dishes">
+          {(field) => (
+            <MealEditorProvider
+              dishes={field.state.value}
+              fridgeItems={fridgeItems}
+              changeDishes={field.handleChange}
             >
-              <Plus className="size-3.5" />
-              재료 추가
-            </Button>
-          </div>
-        ))}
+              {field.state.value.map((_, dishIndex) => (
+                <MealDishCard key={`${type}-dish-${dishIndex}`} dishIndex={dishIndex} />
+              ))}
 
-        <Button variant="outline" className="w-full" onClick={addDish}>
-          <Plus className="size-4" /> 메뉴 추가
-        </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => field.handleChange(appendDish(field.state.value))}
+              >
+                <Plus className="size-4" /> 메뉴 추가
+              </Button>
+            </MealEditorProvider>
+          )}
+        </form.Field>
 
-        {isEditMode && (
+        {isEditMode ? (
           <>
             <Separator className="my-2" />
             {showDeleteConfirm ? (
               <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-                <p className="mb-3 text-center text-sm text-red-700">이 식단을 삭제하시겠습니까?</p>
+                <p className="mb-3 text-center text-sm text-red-700">{ALERT_MSG.deleteConfirm}</p>
                 <div className="flex gap-2">
                   <Button
+                    type="button"
                     variant="outline"
                     className="flex-1"
                     onClick={() => setShowDeleteConfirm(false)}
@@ -343,9 +194,10 @@ export function MealEditorScreen({
                     취소
                   </Button>
                   <Button
+                    type="button"
                     variant="destructive"
                     className="flex-1"
-                    onClick={deleteMeal}
+                    onClick={removeMeal}
                     disabled={deleteMutation.isPending}
                   >
                     삭제
@@ -354,6 +206,7 @@ export function MealEditorScreen({
               </div>
             ) : (
               <Button
+                type="button"
                 variant="ghost"
                 className="w-full text-red-500 hover:text-red-600"
                 onClick={() => setShowDeleteConfirm(true)}
@@ -364,7 +217,7 @@ export function MealEditorScreen({
               </Button>
             )}
           </>
-        )}
+        ) : null}
       </div>
     </AppScreen>
   );
