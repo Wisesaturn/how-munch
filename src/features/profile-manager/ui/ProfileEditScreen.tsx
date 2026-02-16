@@ -7,12 +7,12 @@ import { useForm } from '@tanstack/react-form';
 import { ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 
-import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
+import { useUserQuery } from '@/commons/api/auth/queries';
 import { Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { formatUpdatedDaysAgo } from '../lib/date';
-import { useProfileSuspenseQuery } from '../api/queries';
+import { useProfileQuery } from '../api/queries';
 import { useUpdateProfileMutation } from '../api/mutations';
 
 interface ProfileEditScreenProps {
@@ -28,18 +28,23 @@ const profileEditSchema = z.object({
 });
 
 export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
-  const { data: user } = useUserSuspenseQuery();
-  const { data: profile } = useProfileSuspenseQuery(user.id);
+  const { data: user } = useUserQuery();
+  const { data: profile, isLoading } = useProfileQuery(user?.id ?? null);
   const mutation = useUpdateProfileMutation();
   const form = useForm({
     defaultValues: {
-      nickname: profile.nickname,
+      nickname: profile?.nickname ?? '',
     },
     validators: {
       onSubmit: profileEditSchema,
       onChange: profileEditSchema,
     },
     onSubmit: ({ value }) => {
+      if (!profile) {
+        Toast.error('프로필 정보를 불러오지 못했습니다');
+        return;
+      }
+
       const normalizedNickname = value.nickname.trim();
 
       mutation.mutate(
@@ -66,7 +71,12 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
     [form, profile],
   );
 
-  const updatedAtText = profile ? formatUpdatedDaysAgo(profile.updated_at) : '';
+  let updatedAtText = '';
+  if (profile) {
+    updatedAtText = formatUpdatedDaysAgo(profile.updated_at);
+  } else if (isLoading) {
+    updatedAtText = '불러오는 중...';
+  }
 
   return (
     <AppScreen

@@ -1,1 +1,1 @@
-export { useUserSuspenseQuery as useUserQuery } from '@/commons/api/auth/queries';
+export { useUserQuery } from '@/commons/api/auth/queries';

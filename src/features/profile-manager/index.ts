@@ -1,4 +1,4 @@
-export { useProfileSuspenseQuery, useProfileQuery } from './api/queries';
+export { useProfileQuery } from './api/queries';
 export {
   useUpdateProfileMutation,
   useLogoutMutation,
