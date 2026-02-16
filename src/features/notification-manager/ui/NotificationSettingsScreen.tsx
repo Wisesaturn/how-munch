@@ -144,6 +144,13 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   useEffect(
     function syncPreferencesToForm() {
       if (!preferences) return;
+      if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+        form.reset({
+          expiryEnabled: false,
+          expiryOption: toExpiryNotificationOption(preferences.expiry_remind_days),
+        });
+        return;
+      }
 
       form.reset({
         expiryEnabled: preferences.expiry_soon_enabled,
@@ -178,11 +185,17 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                     <Switch
                       checked={field.state.value}
                       onCheckedChange={async (checked) => {
+                        const previousEnabled = field.state.value;
                         const nextEnabled = Boolean(checked);
-                        const synced = await syncPushSubscription(nextEnabled);
-                        if (!synced) return;
+
                         field.handleChange(nextEnabled);
                         savePreferences(nextEnabled, form.state.values.expiryOption);
+
+                        const synced = await syncPushSubscription(nextEnabled);
+                        if (synced) return;
+
+                        field.handleChange(previousEnabled);
+                        savePreferences(previousEnabled, form.state.values.expiryOption);
                       }}
                     />
                   </div>

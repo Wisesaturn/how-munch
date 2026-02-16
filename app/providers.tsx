@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { OverlayProvider } from 'overlay-kit';
 
+import { NotificationPermissionSync } from '@/apps/providers/NotificationPermissionSync';
 import { StackFlowProvider } from '@/apps/providers/StackFlowProvider';
 import { ToastProvider } from '@/apps/providers/ToastProvider';
 
@@ -25,6 +26,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <OverlayProvider>
         <StackFlowProvider>
+          <NotificationPermissionSync />
           {children}
           <ToastProvider />
           <ReactQueryDevtools initialIsOpen={false} />
