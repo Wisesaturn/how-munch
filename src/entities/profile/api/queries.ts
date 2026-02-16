@@ -2,7 +2,7 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
 
-import { type Profile } from '@/entities/profile';
+import { type Profile } from '../model/types';
 
 import { profileKeys } from './queryKey';
 

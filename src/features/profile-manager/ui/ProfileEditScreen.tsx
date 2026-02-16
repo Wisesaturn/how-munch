@@ -12,8 +12,9 @@ import { useUserQuery } from '@/commons/api/auth/queries';
 import { Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import { useProfileQuery } from '@/entities/profile';
+
 import { formatUpdatedDaysAgo } from '../lib/date';
-import { useProfileQuery } from '../api/queries';
 import { useUpdateProfileMutation } from '../api/mutations';
 
 interface ProfileEditScreenProps {

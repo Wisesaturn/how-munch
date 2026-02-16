@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
 
-import { profileKeys } from './queryKey';
+import { profileKeys } from '@/entities/profile';
 
 /** 프로필 수정 (닉네임) */
 export function useUpdateProfileMutation() {

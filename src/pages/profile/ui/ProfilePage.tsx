@@ -7,6 +7,8 @@ import { overlay } from 'overlay-kit';
 
 import { Button } from '@/commons/ui';
 
+import { useProfileQuery } from '@/entities/profile';
+
 import {
   CreateHouseholdBottomSheet,
   InviteLinkSection,
@@ -16,7 +18,6 @@ import {
   useHouseholdQuery,
   useMembersQuery,
 } from '@/features/household-manager';
-import { useProfileQuery } from '@/features/profile-manager';
 
 interface ProfilePageProps {
   userId: string;

@@ -1,4 +1,3 @@
-export { useProfileQuery } from './api/queries';
 export {
   useUpdateProfileMutation,
   useLogoutMutation,
