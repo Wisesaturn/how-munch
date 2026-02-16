@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { useForm } from '@tanstack/react-form';
 import { ChevronLeft } from 'lucide-react';
+import { z } from 'zod';
 
 import { useUserQuery } from '@/commons/api/auth/queries';
 import { Button, Input, Toast } from '@/commons/ui';
+import { Form } from '@/commons/ui/Form';
 
 import { formatUpdatedDaysAgo } from '../lib/date';
 import { useProfileQuery } from '../api/queries';
@@ -16,40 +19,57 @@ interface ProfileEditScreenProps {
   onClose: () => void;
 }
 
+const profileEditSchema = z.object({
+  nickname: z
+    .string()
+    .trim()
+    .min(1, '닉네임을 입력해 주세요')
+    .max(20, '닉네임은 20자 이하로 입력해 주세요'),
+});
+
 export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
-  const [nickname, setNickname] = useState<string | null>(null);
   const { data: user } = useUserQuery();
   const mutation = useUpdateProfileMutation();
   const { data: profile, isLoading } = useProfileQuery(user?.id ?? null);
+  const form = useForm({
+    defaultValues: {
+      nickname: '',
+    },
+    validators: {
+      onSubmit: profileEditSchema,
+      onChange: profileEditSchema,
+    },
+    onSubmit: ({ value }) => {
+      if (!profile) {
+        Toast.error('프로필 정보를 불러오지 못했습니다');
+        return;
+      }
 
-  function submitProfileUpdate(event: React.ChangeEvent<HTMLFormElement>) {
-    event.preventDefault();
+      const normalizedNickname = value.nickname.trim();
 
-    if (!profile) {
-      Toast.error('프로필 정보를 불러오지 못했습니다');
-      return;
-    }
-
-    const normalizedNickname = (nickname ?? profile.nickname).trim();
-    if (!normalizedNickname) {
-      Toast.warn('닉네임을 입력해 주세요');
-      return;
-    }
-
-    mutation.mutate(
-      { userId: profile.user_id, nickname: normalizedNickname },
-      {
-        onSuccess: () => {
-          Toast.success('프로필이 수정되었습니다');
-          onClose();
+      mutation.mutate(
+        { userId: profile.user_id, nickname: normalizedNickname },
+        {
+          onSuccess: () => {
+            Toast.success('프로필이 수정되었습니다');
+            onClose();
+          },
+          onError: (error) => {
+            const message = error instanceof Error ? error.message : '프로필 수정에 실패했습니다';
+            Toast.error(message);
+          },
         },
-        onError: (error) => {
-          const message = error instanceof Error ? error.message : '프로필 수정에 실패했습니다';
-          Toast.error(message);
-        },
-      },
-    );
-  }
+      );
+    },
+  });
+
+  useEffect(
+    function syncProfileNicknameToForm() {
+      if (!profile) return;
+      form.reset({ nickname: profile.nickname });
+    },
+    [form, profile],
+  );
 
   return (
     <AppScreen
@@ -65,18 +85,33 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
         },
       }}
     >
-      <form onSubmit={submitProfileUpdate} className="flex flex-col gap-3 p-4">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          form.handleSubmit();
+        }}
+        className="flex flex-col gap-3 p-4"
+      >
         {isLoading || !profile ? (
           <p className="py-6 text-center text-sm text-gray-400">불러오는 중...</p>
         ) : (
           <>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-gray-600">닉네임</span>
-              <Input
-                value={nickname ?? profile.nickname}
-                onChange={(event) => setNickname(event.target.value)}
-              />
-            </label>
+            <form.Field name="nickname">
+              {(field) => (
+                <Form.Field field={field}>
+                  <Form.Label required>닉네임</Form.Label>
+                  <Form.Control>
+                    <Input
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                    />
+                  </Form.Control>
+                  <Form.Error />
+                </Form.Field>
+              )}
+            </form.Field>
 
             <label className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-600">이메일</span>

@@ -2,9 +2,11 @@
 
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
+import { z } from 'zod';
 
 import { CATEGORIES } from '@/commons/config';
 import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
+import { Form } from '@/commons/ui/Form';
 
 export interface IngredientFormValues {
   date: string;
@@ -28,6 +30,29 @@ interface IngredientFormProps {
   submitLabel?: string;
 }
 
+const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
+
+const ingredientFormSchema = z.object({
+  date: z
+    .string()
+    .min(1, '날짜를 선택해 주세요')
+    .regex(/^\d{4}-\d{2}-\d{2}$/, '날짜 형식이 올바르지 않습니다'),
+  category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
+    message: '카테고리를 선택해 주세요',
+  }),
+  name: z.string().trim().min(1, '품목명을 입력해 주세요'),
+  count: z.number().min(1, '수량은 1 이상이어야 합니다'),
+  unit: z.enum(['count', 'g']),
+  store: z.string(),
+  price: z.number().min(0, '가격은 0원 이상이어야 합니다'),
+});
+
+function parseDateValue(value: string) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
 export function IngredientForm({
   id,
   formId,
@@ -40,13 +65,6 @@ export function IngredientForm({
   submitLabel,
 }: IngredientFormProps) {
   const today = new Date();
-
-  const parseDateValue = (value: string) => {
-    if (!value) return undefined;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? undefined : date;
-  };
-
   const form = useForm({
     defaultValues: {
       date: defaultValues?.date ?? format(new Date(), 'yyyy-MM-dd'),
@@ -56,6 +74,10 @@ export function IngredientForm({
       unit: (defaultValues?.unit ?? 'count') as 'count' | 'g',
       store: defaultValues?.store ?? '',
       price: defaultValues?.price ?? 0,
+    },
+    validators: {
+      onSubmit: ingredientFormSchema,
+      onChange: ingredientFormSchema,
     },
     onSubmit: async ({ value }) => {
       onSubmit(value);
@@ -77,29 +99,34 @@ export function IngredientForm({
       {/* 날짜 */}
       <form.Field name="date">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-600">날짜</span>
-            <DatePicker
-              value={parseDateValue(field.state.value)}
-              onChange={(date) =>
-                field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
-              }
-              maxDate={today}
-              placeholder="날짜를 선택하세요"
-            />
-          </label>
+          <Form.Field field={field}>
+            <Form.Label required>날짜</Form.Label>
+            <Form.Control>
+              <DatePicker
+                value={parseDateValue(field.state.value)}
+                onChange={(date) =>
+                  field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
+                }
+                maxDate={today}
+                placeholder="날짜를 선택하세요"
+              />
+            </Form.Control>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 
       {/* 카테고리 */}
       <form.Field name="category">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-600">카테고리</span>
+          <Form.Field field={field}>
+            <Form.Label required>카테고리</Form.Label>
             <Select value={field.state.value} onValueChange={field.handleChange}>
-              <Select.Trigger>
-                <Select.Value placeholder="카테고리를 선택하세요" />
-              </Select.Trigger>
+              <Form.Control>
+                <Select.Trigger>
+                  <Select.Value placeholder="카테고리를 선택하세요" />
+                </Select.Trigger>
+              </Form.Control>
               <Select.Content>
                 {CATEGORIES.map((cat) => (
                   <Select.Item key={cat.id} value={cat.id}>
@@ -108,51 +135,75 @@ export function IngredientForm({
                 ))}
               </Select.Content>
             </Select>
-          </label>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 
       {/* 품목명 */}
       <form.Field name="name">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-600">품목명</span>
-            <Input
-              placeholder="예: 삼겹살"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-          </label>
+          <Form.Field field={field}>
+            <Form.Label required>품목명</Form.Label>
+            <Form.Control>
+              <Input
+                placeholder="예: 삼겹살"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            </Form.Control>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 
       {/* 수량 + 단위 */}
-      <div className="flex gap-2">
+      <div className="grid gap-1.5">
+        <div className="flex gap-2">
+          <form.Field name="count">
+            {(field) => (
+              <Form.Field field={field} className="flex-1">
+                <Form.Label required>수량</Form.Label>
+                <Form.Control>
+                  <Counter
+                    value={field.state.value}
+                    min={0}
+                    step={1}
+                    onChange={field.handleChange}
+                    invalid={Boolean(field.state.meta.errors[0])}
+                  />
+                </Form.Control>
+              </Form.Field>
+            )}
+          </form.Field>
+          <form.Field name="unit">
+            {(field) => (
+              <Form.Field field={field} className="w-24">
+                <Form.Label required>단위</Form.Label>
+                <Select
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
+                >
+                  <Form.Control>
+                    <Select.Trigger>
+                      <Select.Value placeholder="단위" />
+                    </Select.Trigger>
+                  </Form.Control>
+                  <Select.Content>
+                    <Select.Item value="count">개</Select.Item>
+                    <Select.Item value="g">g</Select.Item>
+                  </Select.Content>
+                </Select>
+              </Form.Field>
+            )}
+          </form.Field>
+        </div>
         <form.Field name="count">
           {(field) => (
-            <label className="flex flex-1 flex-col gap-1">
-              <span className="text-xs font-medium text-gray-600">수량</span>
-              <Counter value={field.state.value} min={0} step={1} onChange={field.handleChange} />
-            </label>
-          )}
-        </form.Field>
-        <form.Field name="unit">
-          {(field) => (
-            <label className="flex w-24 flex-col gap-1">
-              <span className="text-xs font-medium text-gray-600">단위</span>
-              <Select
-                value={field.state.value}
-                onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
-              >
-                <Select.Trigger>
-                  <Select.Value placeholder="단위" />
-                </Select.Trigger>
-                <Select.Content>
-                  <Select.Item value="count">개</Select.Item>
-                  <Select.Item value="g">g</Select.Item>
-                </Select.Content>
-              </Select>
-            </label>
+            <Form.Field field={field}>
+              <Form.Error />
+            </Form.Field>
           )}
         </form.Field>
       </div>
@@ -160,10 +211,12 @@ export function IngredientForm({
       {/* 구매처 */}
       <form.Field name="store">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-600">구매처</span>
+          <Form.Field field={field}>
+            <Form.Label>구매처</Form.Label>
             <ComboBox value={field.state.value} onValueChange={field.handleChange}>
-              <ComboBox.Input placeholder="구매처를 입력하거나 선택하세요" />
+              <Form.Control>
+                <ComboBox.Input placeholder="구매처를 입력하거나 선택하세요" />
+              </Form.Control>
               <ComboBox.List>
                 <ComboBox.Empty>검색 결과가 없습니다</ComboBox.Empty>
                 {storeNames.map((name) => (
@@ -173,17 +226,21 @@ export function IngredientForm({
                 ))}
               </ComboBox.List>
             </ComboBox>
-          </label>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 
       {/* 가격 */}
       <form.Field name="price">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-600">가격</span>
-            <PriceInput value={field.state.value} onChange={field.handleChange} />
-          </label>
+          <Form.Field field={field}>
+            <Form.Label required>가격</Form.Label>
+            <Form.Control>
+              <PriceInput value={field.state.value} onChange={field.handleChange} />
+            </Form.Control>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 

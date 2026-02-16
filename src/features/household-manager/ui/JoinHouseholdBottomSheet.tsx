@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 
 import { BottomSheet, Button, Input, Toast } from '@/commons/ui';
+import { Form } from '@/commons/ui/Form';
 
 import { useJoinHouseholdMutation } from '../api/mutations';
 
@@ -12,53 +14,77 @@ interface JoinHouseholdBottomSheetProps {
   onJoined?: () => void;
 }
 
+const joinHouseholdSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(1, '초대 코드를 입력해 주세요')
+    .max(12, '초대 코드는 12자 이하로 입력해 주세요')
+    .regex(/^[A-Z0-9]+$/, '초대 코드는 영문 대문자와 숫자만 입력할 수 있습니다'),
+});
+
 export function JoinHouseholdBottomSheet({
   open,
   onClose,
   onJoined,
 }: JoinHouseholdBottomSheetProps) {
-  const [code, setCode] = useState('');
   const mutation = useJoinHouseholdMutation();
-
-  const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!code.trim()) {
-      Toast.warn('초대 코드를 입력해 주세요');
-      return;
-    }
-
-    mutation.mutate(
-      { code },
-      {
-        onSuccess: () => {
-          Toast.success('가구에 가입되었습니다');
-          onJoined?.();
-          onClose();
-          setCode('');
+  const form = useForm({
+    defaultValues: {
+      code: '',
+    },
+    validators: {
+      onSubmit: joinHouseholdSchema,
+      onChange: joinHouseholdSchema,
+    },
+    onSubmit: ({ value }) => {
+      mutation.mutate(
+        { code: value.code },
+        {
+          onSuccess: () => {
+            Toast.success('가구에 가입되었습니다');
+            onJoined?.();
+            onClose();
+            form.reset();
+          },
+          onError: (error) => {
+            const message = error instanceof Error ? error.message : '가구 가입에 실패했습니다';
+            Toast.error(message);
+          },
         },
-        onError: (error) => {
-          const message = error instanceof Error ? error.message : '가구 가입에 실패했습니다';
-          Toast.error(message);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <BottomSheet open={open} onClose={onClose}>
       <BottomSheet.Header heading="초대 코드로 가입" />
       <BottomSheet.Content>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-gray-600">초대 코드</span>
-            <Input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="예: A1B2C3"
-              maxLength={12}
-            />
-          </label>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="flex flex-col gap-3"
+        >
+          <form.Field name="code">
+            {(field) => (
+              <Form.Field field={field}>
+                <Form.Label required>초대 코드</Form.Label>
+                <Form.Control>
+                  <Input
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value.toUpperCase())}
+                    placeholder="예: A1B2C3"
+                    maxLength={12}
+                  />
+                </Form.Control>
+                <Form.Error />
+              </Form.Field>
+            )}
+          </form.Field>
           <Button type="submit" disabled={mutation.isPending} className="w-full">
             {mutation.isPending ? '가입 중...' : '가입하기'}
           </Button>

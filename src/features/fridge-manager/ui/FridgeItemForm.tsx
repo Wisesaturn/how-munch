@@ -1,9 +1,11 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 
 import { CATEGORIES } from '@/commons/config';
 import { Button, Input, Select } from '@/commons/ui';
+import { Form } from '@/commons/ui/Form';
 
 export interface FridgeItemFormValues {
   name: string;
@@ -22,6 +24,17 @@ interface FridgeItemFormProps {
   submitLabel?: string;
 }
 
+const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
+
+const fridgeItemFormSchema = z.object({
+  name: z.string().trim().min(1, '재료명을 입력해 주세요'),
+  category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
+    message: '카테고리를 선택해 주세요',
+  }),
+  unit: z.enum(['count', 'g']),
+  is_subdivided: z.boolean(),
+});
+
 /** 냉장고 아이템 폼 (name, category, unit, is_subdivided) */
 export function FridgeItemForm({
   id,
@@ -39,6 +52,10 @@ export function FridgeItemForm({
       unit: defaultValues?.unit ?? ('count' as const),
       is_subdivided: defaultValues?.is_subdivided ?? false,
     },
+    validators: {
+      onSubmit: fridgeItemFormSchema,
+      onChange: fridgeItemFormSchema,
+    },
     onSubmit: ({ value }) => {
       onSubmit(value);
     },
@@ -55,27 +72,32 @@ export function FridgeItemForm({
     >
       <form.Field name="name">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">재료명</span>
-            <Input
-              type="text"
-              placeholder="예: 감자"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-              required
-            />
-          </label>
+          <Form.Field field={field}>
+            <Form.Label required>재료명</Form.Label>
+            <Form.Control>
+              <Input
+                type="text"
+                placeholder="예: 감자"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            </Form.Control>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 
       <form.Field name="category">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">카테고리</span>
+          <Form.Field field={field}>
+            <Form.Label required>카테고리</Form.Label>
             <Select value={field.state.value} onValueChange={field.handleChange}>
-              <Select.Trigger>
-                <Select.Value placeholder="카테고리를 선택하세요" />
-              </Select.Trigger>
+              <Form.Control>
+                <Select.Trigger>
+                  <Select.Value placeholder="카테고리를 선택하세요" />
+                </Select.Trigger>
+              </Form.Control>
               <Select.Content>
                 {CATEGORIES.map((cat) => (
                   <Select.Item key={cat.id} value={cat.id}>
@@ -84,27 +106,31 @@ export function FridgeItemForm({
                 ))}
               </Select.Content>
             </Select>
-          </label>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 
       <form.Field name="unit">
         {(field) => (
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">단위</span>
+          <Form.Field field={field}>
+            <Form.Label required>단위</Form.Label>
             <Select
               value={field.state.value}
               onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
             >
-              <Select.Trigger>
-                <Select.Value placeholder="단위를 선택하세요" />
-              </Select.Trigger>
+              <Form.Control>
+                <Select.Trigger>
+                  <Select.Value placeholder="단위를 선택하세요" />
+                </Select.Trigger>
+              </Form.Control>
               <Select.Content>
                 <Select.Item value="count">개</Select.Item>
                 <Select.Item value="g">g</Select.Item>
               </Select.Content>
             </Select>
-          </label>
+            <Form.Error />
+          </Form.Field>
         )}
       </form.Field>
 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
+import { z } from 'zod';
 
 import { CATEGORIES } from '@/commons/config';
 import {
@@ -17,6 +18,7 @@ import {
   Textarea,
   Toast,
 } from '@/commons/ui';
+import { Form } from '@/commons/ui/Form';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -36,24 +38,39 @@ interface FridgeItemCreateFormValues {
   memo: string;
 }
 
-/** 냉장고 아이템 + 첫 배치 동시 추가 화면 */
-export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
-  const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
-  const mutation = useAddFridgeItemMutation();
-  const today = new Date();
+const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
 
-  const parseDateValue = (value: string) => {
-    if (!value) return undefined;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? undefined : date;
-  };
+const fridgeItemCreateFormSchema = z.object({
+  category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
+    message: '카테고리를 선택해 주세요',
+  }),
+  name: z.string().trim().min(1, '재료명을 입력해 주세요'),
+  quantity: z.number().min(1, '수량은 1 이상이어야 합니다'),
+  unit: z.enum(['count', 'g']),
+  is_subdivided: z.boolean(),
+  purchased_date: z
+    .string()
+    .min(1, '구매일을 선택해 주세요')
+    .regex(/^\d{4}-\d{2}-\d{2}$/, '구매일 형식이 올바르지 않습니다'),
+  expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+    message: '유통기한 형식이 올바르지 않습니다',
+  }),
+  memo: z.string().max(300, '메모는 300자 이하로 입력해 주세요'),
+});
 
-  const getErrorMessage = (error: unknown) => {
-    if (error instanceof Error) return error.message;
-    return '재료 추가 중 오류가 발생했습니다';
-  };
+function parseDateValue(value: string) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
 
-  const defaultValues: FridgeItemCreateFormValues = {
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return '재료 추가 중 오류가 발생했습니다';
+}
+
+function createDefaultValues(today: Date): FridgeItemCreateFormValues {
+  return {
     category: 'other',
     name: '',
     quantity: 1,
@@ -63,15 +80,23 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
     expiry_date: '',
     memo: '',
   };
+}
+
+/** 냉장고 아이템 + 첫 배치 동시 추가 화면 */
+export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
+  const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
+  const mutation = useAddFridgeItemMutation();
+  const today = new Date();
+  const defaultValues = createDefaultValues(today);
 
   const form = useForm({
     defaultValues,
+    validators: {
+      onSubmit: fridgeItemCreateFormSchema,
+      onChange: fridgeItemCreateFormSchema,
+    },
     onSubmit: ({ value }) => {
       const normalizedName = value.name.trim();
-      if (!normalizedName) {
-        Toast.warn('재료명을 입력해 주세요');
-        return;
-      }
 
       mutation.mutate(
         {
@@ -136,12 +161,14 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
 
           <form.Field name="category">
             {(field) => (
-              <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium">카테고리</span>
+              <Form.Field field={field}>
+                <Form.Label required>카테고리</Form.Label>
                 <Select value={field.state.value} onValueChange={field.handleChange}>
-                  <Select.Trigger>
-                    <Select.Value placeholder="카테고리를 선택하세요" />
-                  </Select.Trigger>
+                  <Form.Control>
+                    <Select.Trigger>
+                      <Select.Value placeholder="카테고리를 선택하세요" />
+                    </Select.Trigger>
+                  </Form.Control>
                   <Select.Content>
                     {CATEGORIES.map((category) => (
                       <Select.Item key={category.id} value={category.id}>
@@ -150,57 +177,67 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                     ))}
                   </Select.Content>
                 </Select>
-              </label>
+                <Form.Error />
+              </Form.Field>
             )}
           </form.Field>
 
           <form.Field name="name">
             {(field) => (
-              <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium">재료명</span>
-                <Input
-                  type="text"
-                  placeholder="예: 감자"
-                  value={field.state.value}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                  required
-                />
-              </label>
+              <Form.Field field={field}>
+                <Form.Label required>재료명</Form.Label>
+                <Form.Control>
+                  <Input
+                    type="text"
+                    placeholder="예: 감자"
+                    value={field.state.value}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                  />
+                </Form.Control>
+                <Form.Error />
+              </Form.Field>
             )}
           </form.Field>
 
           <div className="grid grid-cols-[1fr_104px] gap-2">
             <form.Field name="quantity">
               {(field) => (
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm font-medium">수량</span>
-                  <Counter
-                    value={field.state.value}
-                    min={0}
-                    step={1}
-                    onChange={field.handleChange}
-                  />
-                </label>
+                <Form.Field field={field}>
+                  <Form.Label required>수량</Form.Label>
+                  <Form.Control>
+                    <Counter
+                      value={field.state.value}
+                      min={0}
+                      step={1}
+                      onChange={field.handleChange}
+                      invalid={Boolean(field.state.meta.errors[0])}
+                    />
+                  </Form.Control>
+                  <Form.Error />
+                </Form.Field>
               )}
             </form.Field>
 
             <form.Field name="unit">
               {(field) => (
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm font-medium">단위</span>
+                <Form.Field field={field}>
+                  <Form.Label required>단위</Form.Label>
                   <Select
                     value={field.state.value}
                     onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
                   >
-                    <Select.Trigger>
-                      <Select.Value placeholder="단위" />
-                    </Select.Trigger>
+                    <Form.Control>
+                      <Select.Trigger>
+                        <Select.Value placeholder="단위" />
+                      </Select.Trigger>
+                    </Form.Control>
                     <Select.Content>
                       <Select.Item value="count">개</Select.Item>
                       <Select.Item value="g">g</Select.Item>
                     </Select.Content>
                   </Select>
-                </label>
+                  <Form.Error />
+                </Form.Field>
               )}
             </form.Field>
           </div>
@@ -228,8 +265,8 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
 
           <form.Field name="purchased_date">
             {(field) => (
-              <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium">구매일</span>
+              <Form.Field field={field}>
+                <Form.Label required>구매일</Form.Label>
                 <label className="mb-1 flex items-center gap-2 text-xs text-gray-600">
                   <input
                     type="checkbox"
@@ -245,29 +282,35 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                   />
                   구매일 모름
                 </label>
-                <DatePicker
-                  value={parseDateValue(field.state.value)}
-                  disabled={isPurchasedDateUnknown}
-                  maxDate={today}
-                  onChange={(date) =>
-                    field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
-                  }
-                  placeholder="구매일을 선택하세요"
-                />
-              </label>
+                <Form.Control>
+                  <DatePicker
+                    value={parseDateValue(field.state.value)}
+                    disabled={isPurchasedDateUnknown}
+                    maxDate={today}
+                    onChange={(date) =>
+                      field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
+                    }
+                    placeholder="구매일을 선택하세요"
+                  />
+                </Form.Control>
+                <Form.Error />
+              </Form.Field>
             )}
           </form.Field>
 
           <form.Field name="expiry_date">
             {(field) => (
-              <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium">유통기한 (선택)</span>
-                <DatePicker
-                  value={parseDateValue(field.state.value)}
-                  onChange={(date) => field.handleChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                  placeholder="유통기한을 선택하세요"
-                />
-              </label>
+              <Form.Field field={field}>
+                <Form.Label>유통기한</Form.Label>
+                <Form.Control>
+                  <DatePicker
+                    value={parseDateValue(field.state.value)}
+                    onChange={(date) => field.handleChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                    placeholder="유통기한을 선택하세요"
+                  />
+                </Form.Control>
+                <Form.Error />
+              </Form.Field>
             )}
           </form.Field>
         </fieldset>
@@ -277,15 +320,18 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
         {/* 추가 정보 */}
         <form.Field name="memo">
           {(field) => (
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium">메모 (선택)</span>
-              <Textarea
-                placeholder="예: 냉동실 보관"
-                value={field.state.value}
-                onChange={(event) => field.handleChange(event.target.value)}
-                rows={3}
-              />
-            </label>
+            <Form.Field field={field}>
+              <Form.Label>메모</Form.Label>
+              <Form.Control>
+                <Textarea
+                  placeholder="예: 냉동실 보관"
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  rows={3}
+                />
+              </Form.Control>
+              <Form.Error />
+            </Form.Field>
           )}
         </form.Field>
       </form>
