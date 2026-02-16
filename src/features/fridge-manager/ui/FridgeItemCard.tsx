@@ -20,7 +20,7 @@ interface FridgeItemCardProps {
   onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g') => void;
 }
 
-function getDepletionRate(availableCount: number, usedCount: number) {
+function getRemainingRate(availableCount: number, usedCount: number) {
   const safeAvailableCount = Number(availableCount);
   const safeUsedCount = Number(usedCount);
   if (!Number.isFinite(safeAvailableCount) || !Number.isFinite(safeUsedCount)) return 0;
@@ -28,8 +28,8 @@ function getDepletionRate(availableCount: number, usedCount: number) {
   const totalStock = safeAvailableCount + safeUsedCount;
   if (totalStock <= 0) return 0;
 
-  const depletionRatio = (safeUsedCount / totalStock) * 100;
-  return Math.max(0, Math.min(100, Math.round(depletionRatio)));
+  const remainingRatio = (safeAvailableCount / totalStock) * 100;
+  return Math.max(0, Math.min(100, Math.round(remainingRatio)));
 }
 
 /** 냉장고 아이템 카드 — Accordion 기반 접기/펼치기 */
@@ -47,7 +47,7 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
     return Number.isFinite(safeAmount) ? sum + safeAmount : sum;
   }, 0);
 
-  const depletionRate = getDepletionRate(item.total_count, totalUsedCount);
+  const remainingRate = getRemainingRate(item.total_count, totalUsedCount);
   const sortedBatches = [...item.fridge_item_batches].sort(
     (a, b) => new Date(a.purchased_date).getTime() - new Date(b.purchased_date).getTime(),
   );
@@ -112,14 +112,14 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
               </span>
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <ProgressBar value={depletionRate} className="h-1.5 flex-1" />
+              <ProgressBar value={remainingRate} className="h-1.5 flex-1" />
               <span
                 className={cn(
                   'shrink-0 text-[11px]',
-                  depletionRate >= 100 ? 'font-semibold text-red-600' : 'text-amber-600',
+                  remainingRate <= 0 ? 'font-semibold text-red-600' : 'text-emerald-600',
                 )}
               >
-                소진율 {depletionRate}%
+                잔여율 {remainingRate}%
               </span>
             </div>
           </button>
@@ -160,11 +160,11 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
                             batch.expiry_date ? getDaysUntilExpiry(batch.expiry_date) : null
                           }
                         />
-                        {batch.memo && (
-                          <span className="min-w-0 flex-1 truncate text-gray-400">
+                        {batch.memo ? (
+                          <span className="min-w-0 flex-1 break-words whitespace-pre-wrap text-gray-400">
                             {batch.memo}
                           </span>
-                        )}
+                        ) : null}
                       </button>
                     </li>
                   );
