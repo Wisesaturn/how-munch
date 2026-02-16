@@ -4,15 +4,20 @@ import { useMemo, useState } from 'react';
 
 import { addDays, format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, PencilLine, Plus, Trash2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronRight as ChevronRightSmall,
+  UtensilsCrossed,
+} from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
-import { Button, Card, Toast } from '@/commons/ui';
+import { Badge, Button, Card, EmptyState } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
-import { useDeleteMealMutation, useMealsByDateQuery } from '@/features/meal-manager';
+import { useMealsByDateQuery } from '@/features/meal-manager';
 
 interface MealPageProps {
   householdId: string;
@@ -32,7 +37,6 @@ export function MealPage({ householdId }: MealPageProps) {
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const { data: meals = [], isLoading } = useMealsByDateQuery(householdId, dateKey);
-  const deleteMealMutation = useDeleteMealMutation();
 
   const mealMap = useMemo(() => {
     return new Map(meals.map((meal) => [meal.type, meal]));
@@ -41,21 +45,6 @@ export function MealPage({ householdId }: MealPageProps) {
   const openEditor = (type: MealType) => {
     const meal = (mealMap.get(type) ?? null) as Meal | null;
     stackFlowActions.push('MealEditorActivity', { householdId, date: dateKey, type, meal });
-  };
-
-  const deleteMeal = (mealId: string) => {
-    deleteMealMutation.mutate(
-      { id: mealId, householdId, date: dateKey },
-      {
-        onSuccess: () => {
-          Toast.success('식단이 삭제되었습니다');
-        },
-        onError: (error) => {
-          const message = error instanceof Error ? error.message : '식단 삭제에 실패했습니다';
-          Toast.error(message);
-        },
-      },
-    );
   };
 
   return (
@@ -77,7 +66,7 @@ export function MealPage({ householdId }: MealPageProps) {
             size="icon-sm"
             onClick={() => setSelectedDate((d) => addDays(d, 1))}
           >
-            <ChevronRight className="size-4" />
+            <ChevronRightSmall className="size-4" />
           </Button>
         </div>
         <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
@@ -93,48 +82,35 @@ export function MealPage({ householdId }: MealPageProps) {
             const meal = mealMap.get(type);
 
             return (
-              <Card key={type}>
+              <Card
+                key={type}
+                className="cursor-pointer transition-colors active:bg-gray-50"
+                onClick={() => openEditor(type)}
+              >
                 <Card.Header className="flex flex-row items-center justify-between">
                   <h2 className="text-sm font-semibold">{MEAL_TYPE_LABEL[type]}</h2>
-                  {meal ? (
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEditor(type)}>
-                        <PencilLine className="mr-1 size-4" /> 편집
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                        disabled={deleteMealMutation.isPending}
-                        onClick={() => {
-                          if (!window.confirm('식단을 삭제하시겠습니까?')) return;
-                          deleteMeal(meal.id);
-                        }}
-                      >
-                        <Trash2 className="mr-1 size-4" /> 삭제
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button variant="outline" size="sm" onClick={() => openEditor(type)}>
-                      <Plus className="mr-1 size-4" /> 추가
-                    </Button>
-                  )}
+                  <ChevronRight className="size-4 text-gray-400" />
                 </Card.Header>
                 <Card.Content>
                   {!meal || meal.dishes.length === 0 ? (
-                    <p className="text-sm text-gray-400">아직 등록된 메뉴가 없습니다</p>
+                    <EmptyState
+                      icon={<UtensilsCrossed className="size-5" />}
+                      title="등록된 메뉴가 없습니다"
+                      description="탭하여 메뉴를 추가하세요"
+                      className="py-6"
+                    />
                   ) : (
                     <ul className="space-y-2">
                       {meal.dishes
                         .sort((a, b) => a.sort_order - b.sort_order)
                         .map((dish) => (
                           <li key={dish.id} className="rounded-md bg-gray-50 px-3 py-2 text-sm">
-                            <p className="font-medium">{dish.name}</p>
-                            {dish.ingredients.length > 0 && (
-                              <p className="mt-1 text-xs text-gray-500">
-                                재료 {dish.ingredients.length}개 연결됨
-                              </p>
-                            )}
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium">{dish.name}</p>
+                              {dish.ingredients.length > 0 && (
+                                <Badge variant="secondary">재료 {dish.ingredients.length}</Badge>
+                              )}
+                            </div>
                           </li>
                         ))}
                     </ul>
