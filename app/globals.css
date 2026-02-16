@@ -151,6 +151,27 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* -------------------------------------------------------------------------------------------------
+   * Mobile Long-Press Guard
+   * - iOS 롱프레스(링크 컨텍스트 메뉴/새 창 열기)와 텍스트 범위 선택을 기본 차단합니다.
+   * - 입력 요소는 편집 UX를 위해 선택/콜아웃을 허용합니다.
+   * -----------------------------------------------------------------------------------------------*/
+  * {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'],
+  [data-allow-touch-callout='true'] {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
