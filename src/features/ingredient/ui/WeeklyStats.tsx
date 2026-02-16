@@ -46,7 +46,7 @@ export function WeeklyStats({ ingredients, year, month }: WeeklyStatsProps) {
   const totalSpending = ingredients.reduce((sum, item) => sum + item.price, 0);
 
   return (
-    <Accordion type="single" collapsible variant="outlined" defaultValue="weekly-stats">
+    <Accordion type="single" collapsible variant="outlined">
       <Accordion.Item value="weekly-stats">
         <Accordion.Trigger className="px-4 py-3">
           <div className="flex items-center gap-2">
