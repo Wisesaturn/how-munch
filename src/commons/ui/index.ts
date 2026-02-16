@@ -1,5 +1,6 @@
 // shared UI components barrel export
 export { Accordion } from './Accordion';
+export { Alert } from './Alert';
 export { Badge, badgeVariants } from './Badge';
 export { BottomSheet } from './BottomSheet';
 export { Button, buttonVariants } from './Button';
@@ -22,6 +23,7 @@ export { ScrollArea } from './ScrollArea';
 export { Separator, separatorVariants } from './Separator';
 export { Select } from './Select';
 export { Slider } from './Slider';
+export { Switch } from './Switch';
 export { TextareaGroup, TextareaGroupElement, type TextareaGroupProps } from './TextareaGroup';
 export { Textarea, type TextareaProps } from './Textarea';
 export { Toast } from './toast';
