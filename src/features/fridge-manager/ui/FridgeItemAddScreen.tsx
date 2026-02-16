@@ -7,7 +7,16 @@ import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 
 import { CATEGORIES } from '@/commons/config';
-import { Button, Counter, DatePicker, Input, Select, Textarea, Toast } from '@/commons/ui';
+import {
+  Button,
+  Counter,
+  DatePicker,
+  Input,
+  Select,
+  Separator,
+  Textarea,
+  Toast,
+} from '@/commons/ui';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -211,7 +220,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
           </form.Field>
         </fieldset>
 
-        <div className="border-t border-gray-100" />
+        <Separator />
 
         {/* 날짜 정보 */}
         <fieldset className="flex flex-col gap-3">
@@ -263,7 +272,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
           </form.Field>
         </fieldset>
 
-        <div className="border-t border-gray-100" />
+        <Separator />
 
         {/* 추가 정보 */}
         <form.Field name="memo">

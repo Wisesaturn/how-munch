@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '../lib';
 
-const separatorVariants = cva('shrink-0 bg-gray-200', {
+const separatorVariants = cva('shrink-0 bg-gray-100', {
   variants: {
     orientation: {
       horizontal: 'h-px w-full',
