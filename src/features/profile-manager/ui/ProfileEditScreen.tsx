@@ -7,7 +7,7 @@ import { useForm } from '@tanstack/react-form';
 import { ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 
-import { useUserQuery } from '@/commons/api/auth/queries';
+import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -28,23 +28,18 @@ const profileEditSchema = z.object({
 });
 
 export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
-  const { data: user } = useUserQuery();
+  const { data: user } = useUserSuspenseQuery();
+  const { data: profile, isLoading } = useProfileQuery(user.id);
   const mutation = useUpdateProfileMutation();
-  const { data: profile, isLoading } = useProfileQuery(user?.id ?? null);
   const form = useForm({
     defaultValues: {
-      nickname: '',
+      nickname: profile.nickname,
     },
     validators: {
       onSubmit: profileEditSchema,
       onChange: profileEditSchema,
     },
     onSubmit: ({ value }) => {
-      if (!profile) {
-        Toast.error('프로필 정보를 불러오지 못했습니다');
-        return;
-      }
-
       const normalizedNickname = value.nickname.trim();
 
       mutation.mutate(
@@ -71,6 +66,12 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
     [form, profile],
   );
 
+  const updatedAtText = profile
+    ? formatUpdatedDaysAgo(profile.updated_at)
+    : isLoading
+      ? '불러오는 중...'
+      : '';
+
   return (
     <AppScreen
       className="pointer-events-auto"
@@ -93,38 +94,32 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
         }}
         className="flex flex-col gap-3 p-4"
       >
-        {isLoading || !profile ? (
-          <p className="py-6 text-center text-sm text-gray-400">불러오는 중...</p>
-        ) : (
-          <>
-            <form.Field name="nickname">
-              {(field) => (
-                <Form.Field field={field}>
-                  <Form.Label required>닉네임</Form.Label>
-                  <Form.Control>
-                    <Input
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(event) => field.handleChange(event.target.value)}
-                    />
-                  </Form.Control>
-                  <Form.Error />
-                </Form.Field>
-              )}
-            </form.Field>
+        <form.Field name="nickname">
+          {(field) => (
+            <Form.Field field={field}>
+              <Form.Label required>닉네임</Form.Label>
+              <Form.Control>
+                <Input
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                />
+              </Form.Control>
+              <Form.Error />
+            </Form.Field>
+          )}
+        </form.Field>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-gray-600">이메일</span>
-              <Input value={profile.email} disabled />
-            </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-gray-600">이메일</span>
+          <Input value={profile?.email ?? ''} disabled />
+        </label>
 
-            <p className="text-xs text-gray-500">{formatUpdatedDaysAgo(profile.updated_at)}</p>
+        <p className="text-xs text-gray-500">{updatedAtText}</p>
 
-            <Button type="submit" disabled={mutation.isPending} className="mt-2 w-full">
-              {mutation.isPending ? '수정 중...' : '수정'}
-            </Button>
-          </>
-        )}
+        <Button type="submit" disabled={mutation.isPending} className="mt-2 w-full">
+          {mutation.isPending ? '수정 중...' : '수정'}
+        </Button>
       </form>
     </AppScreen>
   );
