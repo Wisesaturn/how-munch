@@ -17,7 +17,12 @@ import { type Meal, type MealType } from '@/entities/meal';
 import { useDeleteMealMutation, useUpsertMealMutation } from '../api/mutations';
 import { useFridgeItemsForMealQuery } from '../api/queries';
 import { appendDish, createFridgeStockInfoById } from '../lib';
-import { createMealEditorDishesSchema, MealEditorProvider, toEditorDishes } from '../model';
+import {
+  createInUseStockAmountByItemId,
+  createMealEditorDishesSchema,
+  MealEditorProvider,
+  toEditorDishes,
+} from '../model';
 
 import { MealDishCard } from './MealDishCard';
 
@@ -66,16 +71,22 @@ export function MealEditorScreen({
   const { data: fridgeItems = [] } = useFridgeItemsForMealQuery(householdId);
   const upsertMutation = useUpsertMealMutation();
   const deleteMutation = useDeleteMealMutation();
+  const initialDishes = toEditorDishes(meal);
 
   const maxIngredientCount = fridgeItems.length;
   const fridgeStockInfoById = createFridgeStockInfoById(fridgeItems);
+  const inUseStockAmountByItemId = createInUseStockAmountByItemId(initialDishes);
   const mealEditorFormSchema = z.object({
-    dishes: createMealEditorDishesSchema(maxIngredientCount, fridgeStockInfoById),
+    dishes: createMealEditorDishesSchema(
+      maxIngredientCount,
+      fridgeStockInfoById,
+      inUseStockAmountByItemId,
+    ),
   });
 
   const form = useForm({
     defaultValues: {
-      dishes: toEditorDishes(meal),
+      dishes: initialDishes,
     },
     validators: {
       onSubmit: mealEditorFormSchema,
@@ -159,6 +170,7 @@ export function MealEditorScreen({
             <MealEditorProvider
               dishes={field.state.value}
               fridgeItems={fridgeItems}
+              inUseStockAmountByItemId={inUseStockAmountByItemId}
               changeDishes={field.handleChange}
             >
               {field.state.value.map((_, dishIndex) => (

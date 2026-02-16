@@ -7,6 +7,7 @@ import { type EditorDish, type MealFridgeItem } from '../lib';
 interface MealEditorContextValue {
   dishes: EditorDish[];
   fridgeItems: MealFridgeItem[];
+  inUseStockAmountByItemId: Record<string, number>;
   changeDishes: (nextDishes: EditorDish[]) => void;
 }
 

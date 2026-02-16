@@ -8,6 +8,7 @@ import { type FridgeStockInfo } from '../lib';
 function createMealEditorDishesSchema(
   maxIngredientCount: number,
   fridgeStockInfoById: Record<string, FridgeStockInfo>,
+  inUseStockAmountByItemId: Record<string, number>,
 ) {
   return z
     .array(
@@ -25,6 +26,8 @@ function createMealEditorDishesSchema(
     )
     .min(1, '메뉴를 1개 이상 추가해 주세요')
     .superRefine((parsedDishes, ctx) => {
+      const usedAmountByItemId: Record<string, number> = {};
+
       parsedDishes.forEach((dish, dishIndex) => {
         const dishLabel = dish.name.trim() || `메뉴 ${dishIndex + 1}`;
 
@@ -50,11 +53,17 @@ function createMealEditorDishesSchema(
           usedFridgeItemIds.add(ingredient.fridge_item_id);
           const stockInfo = fridgeStockInfoById[ingredient.fridge_item_id];
           if (!stockInfo) return;
+          const inUseStockAmount = inUseStockAmountByItemId[ingredient.fridge_item_id] ?? 0;
+          // 보유 재고 + 사용 중인 재고
+          const maxAvailableAmount = stockInfo.availableAmount + inUseStockAmount;
+          const accumulatedAmount = usedAmountByItemId[ingredient.fridge_item_id] ?? 0;
+          const nextAccumulatedAmount = accumulatedAmount + ingredient.amount;
+          usedAmountByItemId[ingredient.fridge_item_id] = nextAccumulatedAmount;
 
-          if (ingredient.amount > stockInfo.availableAmount) {
+          if (nextAccumulatedAmount > maxAvailableAmount) {
             ctx.addIssue({
               code: 'custom',
-              message: `${dishLabel}의 ${stockInfo.itemName}은 최대 ${stockInfo.availableAmount}${stockInfo.unitLabel}까지 입력할 수 있습니다`,
+              message: `${dishLabel}의 ${stockInfo.itemName}은 최대 ${maxAvailableAmount}${stockInfo.unitLabel}까지 입력할 수 있습니다`,
               path: [dishIndex, 'ingredients', ingredientIndex, 'amount'],
             });
           }

@@ -23,7 +23,7 @@ function MealIngredientRow({
   onChangeIngredientAmount,
   onRemoveIngredient,
 }: MealIngredientRowProps) {
-  const { fridgeItems } = useMealEditorContext('MealIngredientRow');
+  const { fridgeItems, inUseStockAmountByItemId } = useMealEditorContext('MealIngredientRow');
 
   /* -------------------------------------------------------------------------- */
   /* Selection Constants                                                         */
@@ -32,13 +32,20 @@ function MealIngredientRow({
   const isWeightUnit = (unit: 'count' | 'g' | undefined) => unit === 'g';
 
   const selectedIngredient = fridgeItems.find((item) => item.id === ingredient.fridge_item_id);
+  const inUseStockAmount = selectedIngredient
+    ? (inUseStockAmountByItemId[selectedIngredient.id] ?? 0)
+    : 0;
+  const selectedRemainingAmount = selectedIngredient ? Number(selectedIngredient.total_count) : NaN;
+  const selectedMaxAvailableAmount = Number.isFinite(selectedRemainingAmount)
+    ? selectedRemainingAmount + inUseStockAmount
+    : selectedIngredient?.total_count;
 
   /* -------------------------------------------------------------------------- */
   /* Unit / Range Constants                                                      */
   /* -------------------------------------------------------------------------- */
   const selectedUnit = selectedIngredient?.unit;
   const unitLabel = resolveIngredientUnitLabel(selectedUnit);
-  const sliderBoundary = resolveSliderBoundaries(selectedIngredient?.total_count);
+  const sliderBoundary = resolveSliderBoundaries(selectedMaxAvailableAmount);
 
   /* -------------------------------------------------------------------------- */
   /* Display / Control Constants                                                 */

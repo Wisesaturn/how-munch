@@ -21,4 +21,19 @@ function toEditorDishes(meal: Meal | null): EditorDish[] {
     }));
 }
 
-export { toEditorDishes };
+/**
+ * @description dishes 배열에서 재료별 총 사용량 맵을 생성합니다.
+ */
+function createInUseStockAmountByItemId(dishes: EditorDish[]) {
+  return dishes.reduce<Record<string, number>>((accumulator, dish) => {
+    dish.ingredients.forEach((ingredient) => {
+      if (!ingredient.fridge_item_id) return;
+      accumulator[ingredient.fridge_item_id] =
+        (accumulator[ingredient.fridge_item_id] ?? 0) + ingredient.amount;
+    });
+
+    return accumulator;
+  }, {});
+}
+
+export { createInUseStockAmountByItemId, toEditorDishes };
