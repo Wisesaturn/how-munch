@@ -12,6 +12,7 @@ import { Button, Card, Select, Switch, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { useNotificationPreferencesQuery, useUpsertNotificationPreferencesMutation } from '../api';
+import { showPushPermissionToast, syncPushPermissionAndSubscription } from '../lib/pushPermission';
 import {
   EXPIRY_NOTIFICATION_OPTIONS,
   toExpiryNotificationOption,
@@ -47,7 +48,11 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
     onSubmit: async () => {},
   });
 
-  function savePreferences(nextEnabled: boolean, nextOption: ExpiryNotificationOption) {
+  function savePreferences(
+    nextEnabled: boolean,
+    nextOption: ExpiryNotificationOption,
+    isPermissionAsked = preferences?.is_permission_asked ?? false,
+  ) {
     if (!userId) return;
 
     upsertPreferencesMutation.mutate(
@@ -56,6 +61,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
         values: {
           expiry_soon_enabled: nextEnabled,
           expiry_remind_days: toExpiryRemindDays(nextOption),
+          is_permission_asked: isPermissionAsked,
           quiet_hours_start: null,
           quiet_hours_end: null,
         },
@@ -117,9 +123,49 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                     <Form.Label>유통기한 알림</Form.Label>
                     <Switch
                       checked={field.state.value}
-                      onCheckedChange={(checked) => {
-                        field.handleChange(checked);
-                        savePreferences(checked, form.state.values.expiryOption);
+                      onCheckedChange={async (checked) => {
+                        const nextEnabled = Boolean(checked);
+                        field.handleChange(nextEnabled);
+
+                        if (!nextEnabled) {
+                          savePreferences(false, form.state.values.expiryOption);
+                          return;
+                        }
+
+                        if (!preferences?.is_permission_asked) {
+                          if (!userId) return;
+                          const result = await syncPushPermissionAndSubscription({
+                            userId,
+                            isPermissionAsked: false,
+                          });
+
+                          showPushPermissionToast(result.promptedPermission);
+                          if (result.status !== 'granted') {
+                            if (result.status === 'unsupported') {
+                              Toast.error('브라우저 알림을 지원하지 않습니다');
+                            } else if (result.status === 'missing_vapid') {
+                              Toast.error('푸시 키가 설정되지 않았습니다');
+                            } else if (result.status === 'subscription_failed') {
+                              Toast.error('푸시 구독에 실패했습니다');
+                            }
+                            field.handleChange(false);
+                            savePreferences(
+                              false,
+                              form.state.values.expiryOption,
+                              result.isPermissionAsked,
+                            );
+                            return;
+                          }
+
+                          savePreferences(
+                            true,
+                            form.state.values.expiryOption,
+                            result.isPermissionAsked,
+                          );
+                          return;
+                        }
+
+                        savePreferences(true, form.state.values.expiryOption);
                       }}
                     />
                   </div>

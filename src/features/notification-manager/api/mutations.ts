@@ -133,7 +133,11 @@ interface UpdateNotificationPreferencesParams {
   userId: string;
   values: Pick<
     NotificationPreferenceRow,
-    'expiry_soon_enabled' | 'expiry_remind_days' | 'quiet_hours_start' | 'quiet_hours_end'
+    | 'expiry_soon_enabled'
+    | 'expiry_remind_days'
+    | 'is_permission_asked'
+    | 'quiet_hours_start'
+    | 'quiet_hours_end'
   >;
 }
 
