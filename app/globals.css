@@ -55,6 +55,13 @@ body {
 }
 
 :root {
+  /* -------------------------------------------------------------------------------------------------
+   * Mobile Tap Highlight
+   * - iOS Safari/Android WebView의 탭 하이라이트(회색/파란 플래시)를 제거합니다.
+   * - 앱처럼 보이는 터치 피드백을 위해 사용하며, 클릭/포커스 동작 자체는 유지됩니다.
+   * -----------------------------------------------------------------------------------------------*/
+  -webkit-tap-highlight-color: transparent;
+
   --radius: 0.5rem;
   --background: oklch(0.965 0 0);
   --foreground: oklch(0.145 0 0);
@@ -146,38 +153,6 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-  }
-
-  /* -------------------------------------------------------------------------------------------------
-   * Mobile Gesture Guard
-   * - 롱프레스 컨텍스트 메뉴/텍스트 선택을 기본 차단
-   * - 두 손가락 핀치 줌을 비활성화
-   * - 입력 요소는 선택/편집 가능하도록 예외 처리
-   * -----------------------------------------------------------------------------------------------*/
-  @media (hover: none) and (pointer: coarse) {
-    :root {
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
-    body {
-      touch-action: pan-x pan-y;
-    }
-
-    * {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    input,
-    textarea,
-    [contenteditable='true'],
-    [data-allow-touch-callout='true'] {
-      -webkit-touch-callout: default;
-      -webkit-user-select: text;
-      user-select: text;
-    }
   }
 }
 
