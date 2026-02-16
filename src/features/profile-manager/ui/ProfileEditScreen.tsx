@@ -25,7 +25,7 @@ const profileEditSchema = z.object({
     .string()
     .trim()
     .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '닉네임' }))
-    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '닉네임', max: '20자' })),
+    .max(10, ERROR_MSG.RANGE.MAX({ fieldName: '닉네임', max: '10자' })),
 });
 
 export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
@@ -110,6 +110,7 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
+                  maxLength={10}
                 />
               </Form.Control>
               <Form.Error />
