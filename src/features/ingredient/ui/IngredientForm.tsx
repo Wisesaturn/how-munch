@@ -244,7 +244,7 @@ export function IngredientForm({
         )}
       </form.Field>
 
-      {isEditMode && (
+      {isEditMode && onDelete ? (
         <div className="mt-2 flex gap-2">
           <Button type="submit" className="flex-1" disabled={Boolean(isSubmitting || isDeleting)}>
             {isSubmitting ? '수정 중...' : (submitLabel ?? '수정')}
@@ -262,7 +262,7 @@ export function IngredientForm({
             {isDeleting ? '삭제 중...' : '삭제'}
           </Button>
         </div>
-      )}
+      ) : null}
     </form>
   );
 }
