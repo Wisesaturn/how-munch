@@ -6,7 +6,10 @@ import { Settings } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
-import { Button } from '@/commons/ui';
+import { useUserQuery } from '@/commons/api/auth/queries';
+import { Alert, Button } from '@/commons/ui';
+
+import { useUnreadNotificationsCountQuery } from '@/features/notification-manager';
 
 import { MainAppBar } from '@/modules/main-app-bar';
 
@@ -23,15 +26,21 @@ export function MainRouteAppBar() {
   const pathname = usePathname();
   const title = getMainTitle(pathname);
   const isProfile = pathname?.startsWith('/profile') ?? false;
+  const isNotificationRoute =
+    pathname?.startsWith('/store') ||
+    pathname?.startsWith('/fridge') ||
+    pathname?.startsWith('/meal');
+  const { data: user } = useUserQuery();
+  const { data: unreadCount = 0 } = useUnreadNotificationsCountQuery(user?.id ?? null);
 
   if (!title) return null;
 
-  return (
-    <MainAppBar
-      title={title}
-      className="mx-0"
-      right={
-        isProfile ? (
+  if (isProfile) {
+    return (
+      <MainAppBar
+        title={title}
+        className="mx-0"
+        right={
           <Button
             variant="ghost"
             size="icon-sm"
@@ -40,8 +49,29 @@ export function MainRouteAppBar() {
           >
             <Settings className="size-5" />
           </Button>
-        ) : null
-      }
-    />
-  );
+        }
+      />
+    );
+  }
+
+  if (isNotificationRoute) {
+    return (
+      <MainAppBar
+        title={title}
+        className="mx-0"
+        right={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => stackFlowActions.push('NotificationActivity', {})}
+            aria-label="알림 열기"
+          >
+            <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
+          </Button>
+        }
+      />
+    );
+  }
+
+  return <MainAppBar title={title} className="mx-0" />;
 }
