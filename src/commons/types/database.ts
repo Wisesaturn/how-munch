@@ -122,7 +122,7 @@ export interface Database {
           store: string | null;
           category: string;
           count: number;
-          unit: 'count' | 'g';
+          unit: 'count' | 'g' | 'kg';
           linked_fridge_item_id: string | null;
           created_at: string;
           updated_at: string;
@@ -137,7 +137,7 @@ export interface Database {
           store?: string | null;
           category?: string;
           count?: number;
-          unit?: 'count' | 'g';
+          unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -152,7 +152,7 @@ export interface Database {
           store?: string | null;
           category?: string;
           count?: number;
-          unit?: 'count' | 'g';
+          unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -166,7 +166,7 @@ export interface Database {
           name: string;
           total_count: number;
           max_count: number;
-          unit: 'count' | 'g';
+          unit: 'count' | 'g' | 'kg';
           is_subdivided: boolean;
           category: string;
           from_grocery: boolean;
@@ -179,7 +179,7 @@ export interface Database {
           name: string;
           total_count?: number;
           max_count?: number;
-          unit?: 'count' | 'g';
+          unit?: 'count' | 'g' | 'kg';
           is_subdivided?: boolean;
           category?: string;
           from_grocery?: boolean;
@@ -192,7 +192,7 @@ export interface Database {
           name?: string;
           total_count?: number;
           max_count?: number;
-          unit?: 'count' | 'g';
+          unit?: 'count' | 'g' | 'kg';
           is_subdivided?: boolean;
           category?: string;
           from_grocery?: boolean;

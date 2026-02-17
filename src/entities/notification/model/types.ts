@@ -1,5 +1,7 @@
 import { type Database, type Json } from '@/commons/types/database';
 
+import { type IngredientUnit } from '@/entities/ingredient/@x/notification';
+
 export type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 export type NotificationPreferenceRow =
   Database['public']['Tables']['notification_preferences']['Row'];
@@ -17,7 +19,7 @@ export interface ExpirySoonPayload {
   expiryDate: string;
   daysLeft: number;
   remainingQuantity: number;
-  unit: 'count' | 'g';
+  unit: IngredientUnit;
 }
 
 export interface NotificationItem extends Omit<NotificationRow, 'type' | 'payload'> {

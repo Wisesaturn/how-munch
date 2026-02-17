@@ -1,5 +1,4 @@
-/** 장보기 항목의 수량 단위 */
-export type IngredientUnit = 'count' | 'g';
+import { type IngredientUnit } from './unit';
 
 /** 장보기 내역 — 가계부 역할, 냉장고 재료의 원천 데이터 */
 export interface Ingredient {
@@ -20,7 +19,7 @@ export interface Ingredient {
   category: string;
   /** 구매 수량 */
   count: number;
-  /** 단위 — count: 개, g: 그램 */
+  /** 단위 — count: 개, g: 그램, kg: 킬로그램 */
   unit: IngredientUnit;
   /** 연결된 냉장고 아이템 ID (1:1 관계) */
   linked_fridge_item_id: string | null;

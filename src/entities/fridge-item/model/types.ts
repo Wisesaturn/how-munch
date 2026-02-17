@@ -1,5 +1,7 @@
+import { type IngredientUnit } from '@/entities/ingredient/@x/fridge-item';
+
 /** 냉장고 재고의 수량 단위 */
-export type FridgeItemUnit = 'count' | 'g';
+export type FridgeItemUnit = IngredientUnit;
 
 /** 냉장고 재고 — 실시간 재고 관리, 소진율 추적 */
 export interface FridgeItem {
@@ -12,7 +14,7 @@ export interface FridgeItem {
   total_count: number;
   /** 최대 보유 총량 (소진율 계산 기준) */
   max_count: number;
-  /** 단위 — count: 개, g: 그램 */
+  /** 단위 — count: 개, g: 그램, kg: 킬로그램 */
   unit: FridgeItemUnit;
   /** 소분 보관 여부 (UI 아이콘 변경) */
   is_subdivided: boolean;
