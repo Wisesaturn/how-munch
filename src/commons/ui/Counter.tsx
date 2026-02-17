@@ -2,12 +2,31 @@ import * as React from 'react';
 
 import { useControlledState } from 'react-simplikit';
 import { Minus, Plus } from 'lucide-react';
+import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '../lib';
 
 import { InputGroup } from './InputGroup';
 
-interface CounterProps {
+/* -------------------------------------------------------------------------------------------------
+ * Variants
+ * -----------------------------------------------------------------------------------------------*/
+const counterInputVariants = cva('text-center', {
+  variants: {
+    size: {
+      sm: 'h-8',
+      md: 'h-9',
+    },
+  },
+  defaultVariants: {
+    size: 'md',
+  },
+});
+
+/* -------------------------------------------------------------------------------------------------
+ * Props
+ * -----------------------------------------------------------------------------------------------*/
+interface CounterProps extends VariantProps<typeof counterInputVariants> {
   value?: number;
   defaultValue?: number;
   onValueChange?: (value: number) => void;
@@ -92,6 +111,7 @@ function Counter({
   value,
   defaultValue = 0,
   onValueChange,
+  size = 'md',
   min = 0,
   max,
   step = 1,
@@ -204,7 +224,7 @@ function Counter({
         onKeyDown={captureArrowKeyForStepControl}
         disabled={disabled}
         invalid={invalid}
-        className={cn('h-8 text-center', inputClassName)}
+        className={cn(counterInputVariants({ size }), inputClassName)}
       />
       <InputGroup.Addon align="inline-start">
         <InputGroup.Button
