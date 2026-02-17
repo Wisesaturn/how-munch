@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "TEST_STRICT=0 bash ./scripts/test-ts.sh",
+    "test:strict": "TEST_STRICT=1 bash ./scripts/test-ts.sh",
     "lint": "eslint && tsc --noEmit",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
