@@ -56,6 +56,7 @@ export function FridgeItemEditBottomSheet({ open, onClose, item }: FridgeItemEdi
           }}
           onSubmit={handleSubmit}
           isPending={mutation.isPending}
+          disableUnitSelect={item.fridge_item_batches.length > 0}
         />
       </BottomSheet.Content>
     </BottomSheet>

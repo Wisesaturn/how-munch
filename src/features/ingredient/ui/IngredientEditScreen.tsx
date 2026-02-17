@@ -105,6 +105,7 @@ export function IngredientEditScreen({
           onSubmit={handleSubmit}
           isSubmitting={updateMutation.isPending}
           isDeleting={deleteMutation.isPending}
+          disableUnitSelect
         />
 
         <Separator className="my-4" />

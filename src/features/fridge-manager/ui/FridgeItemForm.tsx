@@ -26,6 +26,7 @@ interface FridgeItemFormProps {
   isPending?: boolean;
   isDeleting?: boolean;
   submitLabel?: string;
+  disableUnitSelect?: boolean;
 }
 
 const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
@@ -53,6 +54,7 @@ export function FridgeItemForm({
   isPending,
   isDeleting,
   submitLabel = '저장',
+  disableUnitSelect = false,
 }: FridgeItemFormProps) {
   const form = useForm({
     defaultValues: {
@@ -130,6 +132,7 @@ export function FridgeItemForm({
             <Select
               value={field.state.value}
               onValueChange={(value) => field.handleChange(value as IngredientUnit)}
+              disabled={disableUnitSelect}
             >
               <Form.Control>
                 <Select.Trigger>

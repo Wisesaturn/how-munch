@@ -21,6 +21,25 @@ interface CounterProps {
   inputClassName?: string;
 }
 
+/**
+ * @description step 값을 기준으로 허용할 소수점 자릿수를 계산합니다.
+ */
+function resolveDecimalScale(step: number) {
+  if (!Number.isFinite(step) || step <= 0) return 0;
+  if (Number.isInteger(step)) return 0;
+  return String(step).split('.')[1]?.length ?? 0;
+}
+
+/**
+ * @description 부호/소수점 자리수 조건에 맞는 입력 패턴 문자열을 반환합니다.
+ */
+function resolveInputPattern(allowNegative: boolean, decimalScale: number) {
+  if (decimalScale === 0) return allowNegative ? '-?[0-9]*' : '[0-9]*';
+  return allowNegative
+    ? `-?[0-9]*[.]?[0-9]{0,${decimalScale}}`
+    : `[0-9]*[.]?[0-9]{0,${decimalScale}}`;
+}
+
 function clampValue(value: number, min?: number, max?: number) {
   if (Number.isNaN(value)) return min ?? 0;
   if (min !== undefined && value < min) return min;
@@ -29,16 +48,24 @@ function clampValue(value: number, min?: number, max?: number) {
 }
 
 /** Design-system Counter 입력 규칙을 기준으로 숫자 형식만 남깁니다. */
-function sanitizeNumericText(value: string, allowNegative: boolean) {
+function sanitizeNumericText(value: string, allowNegative: boolean, decimalScale: number) {
   const trimmed = value.replace(/\s/g, '');
   const withSign = allowNegative ? trimmed.replace(/(?!^-)-/g, '') : trimmed.replace(/-/g, '');
   const cleaned = withSign.replace(/[^0-9.-]/g, '');
+
+  if (decimalScale === 0) {
+    return cleaned.replace(/\./g, '');
+  }
+
   const firstDotIndex = cleaned.indexOf('.');
 
   if (firstDotIndex < 0) return cleaned;
 
   const integerPart = cleaned.slice(0, firstDotIndex + 1);
-  const decimalPart = cleaned.slice(firstDotIndex + 1).replace(/\./g, '');
+  const decimalPart = cleaned
+    .slice(firstDotIndex + 1)
+    .replace(/\./g, '')
+    .slice(0, decimalScale);
   return `${integerPart}${decimalPart}`;
 }
 
@@ -56,6 +83,7 @@ function Counter({
   inputClassName,
 }: CounterProps) {
   const allowNegative = min < 0;
+  const decimalScale = resolveDecimalScale(step);
   const [currentValue, setCurrentValue] = useControlledState<number>({
     value,
     defaultValue,
@@ -80,6 +108,11 @@ function Counter({
     setInputValue(String(clampedValue));
   }
 
+  function updateValueWithoutSyncInput(nextValue: number) {
+    const clampedValue = clampValue(nextValue, min, max);
+    setCurrentValue(clampedValue);
+  }
+
   function decreaseValue() {
     updateValue(currentValue - step);
   }
@@ -89,20 +122,29 @@ function Counter({
   }
 
   function changeInputValue(event: React.ChangeEvent<HTMLInputElement>) {
-    const sanitizedValue = sanitizeNumericText(event.target.value, allowNegative);
+    const sanitizedValue = sanitizeNumericText(event.target.value, allowNegative, decimalScale);
     setInputValue(sanitizedValue);
 
-    if (!sanitizedValue || sanitizedValue === '-') {
-      updateValue(min);
+    if (
+      !sanitizedValue ||
+      sanitizedValue === '-' ||
+      sanitizedValue === '.' ||
+      sanitizedValue === '-.' ||
+      sanitizedValue.endsWith('.')
+    ) {
       return;
     }
 
     const parsedValue = Number(sanitizedValue);
     if (!Number.isFinite(parsedValue)) return;
-    updateValue(parsedValue);
+    updateValueWithoutSyncInput(parsedValue);
   }
 
   function applyClampedValueOnBlur() {
+    if (!inputValue || inputValue === '-' || inputValue === '.' || inputValue === '-.') {
+      updateValue(min);
+      return;
+    }
     updateValue(Number(inputValue));
   }
 
@@ -126,6 +168,9 @@ function Counter({
     if (!allowNegative && event.key === '-') {
       event.preventDefault();
     }
+    if (decimalScale === 0 && event.key === '.') {
+      event.preventDefault();
+    }
   }
 
   const minDisabled = disabled || currentValue <= min;
@@ -136,7 +181,7 @@ function Counter({
       <InputGroup.Input
         value={inputValue}
         inputMode="decimal"
-        pattern={allowNegative ? '-?[0-9]*[.]?[0-9]*' : '[0-9]*[.]?[0-9]*'}
+        pattern={resolveInputPattern(allowNegative, decimalScale)}
         onChange={changeInputValue}
         onBlur={applyClampedValueOnBlur}
         onKeyDown={captureArrowKeyForStepControl}

@@ -20,6 +20,7 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
   const mutation = useUpdateFridgeItemMutation();
   const deleteMutation = useDeleteFridgeItemMutation();
   const formId = `fridge-item-edit-form-${item.id}`;
+  const disableUnitSelect = item.fridge_item_batches.length > 0;
 
   function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message;
@@ -92,6 +93,7 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
           onSubmit={handleSubmit}
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}
+          disableUnitSelect={disableUnitSelect}
         />
 
         <Separator className="my-4" />

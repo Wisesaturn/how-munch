@@ -38,6 +38,7 @@ interface IngredientFormProps {
   isSubmitting?: boolean;
   isDeleting?: boolean;
   submitLabel?: string;
+  disableUnitSelect?: boolean;
 }
 
 const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
@@ -92,6 +93,7 @@ export function IngredientForm({
   isSubmitting,
   isDeleting,
   submitLabel,
+  disableUnitSelect = false,
 }: IngredientFormProps) {
   const today = new Date();
   const form = useForm({
@@ -216,6 +218,7 @@ export function IngredientForm({
                 <Form.Label required>단위</Form.Label>
                 <Select
                   value={field.state.value}
+                  disabled={disableUnitSelect}
                   onValueChange={(value) => {
                     const nextUnit = value as IngredientUnit;
                     const currentUnit = field.state.value;
