@@ -14,6 +14,18 @@ interface MealIngredientWeightControlProps {
   onChangeValue: (value: number) => void;
 }
 
+/**
+ * @description 슬라이더 step 자릿수에 맞춰 표시/제어 값을 정규화합니다.
+ * @example normalizeSliderValue(1.26, 0.1) // 1.3
+ * @example normalizeSliderValue(1.26, 1) // 1
+ */
+function normalizeSliderValue(value: number, step: number) {
+  if (step >= 1) return Math.round(value);
+
+  const precision = String(step).split('.')[1]?.length ?? 0;
+  return Number(value.toFixed(precision));
+}
+
 function MealIngredientWeightControl({
   disabled,
   min,
@@ -23,8 +35,7 @@ function MealIngredientWeightControl({
   unit,
   onChangeValue,
 }: MealIngredientWeightControlProps) {
-  const normalizedValue = step === 0.01 ? Number(value.toFixed(2)) : Math.round(value);
-
+  const normalizedValue = normalizeSliderValue(value, step);
   const displayAmount = formatWeightAuto(normalizedValue, unit ?? 'g');
 
   return (
