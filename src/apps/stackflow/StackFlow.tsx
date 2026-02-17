@@ -79,7 +79,7 @@ function FridgeBatchEditActivity({
 }: {
   params: {
     batch: FridgeItemBatch;
-    unit: 'count' | 'g';
+    unit: 'count' | 'g' | 'kg';
   };
 }) {
   const { pop } = useActions();

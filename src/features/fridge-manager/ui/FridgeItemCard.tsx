@@ -8,6 +8,7 @@ import { cn } from '@/commons/lib';
 import { Accordion, Button, ProgressBar } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
+import { formatIngredientAmount } from '@/entities/ingredient';
 
 import { getDaysUntilExpiry } from '../lib/expiry';
 
@@ -17,7 +18,7 @@ interface FridgeItemCardProps {
   item: FridgeItemWithBatches;
   onEditItem: (item: FridgeItemWithBatches) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g') => void;
+  onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g' | 'kg') => void;
 }
 
 function getRemainingRate(availableCount: number, usedCount: number) {
@@ -34,7 +35,6 @@ function getRemainingRate(availableCount: number, usedCount: number) {
 
 /** 냉장고 아이템 카드 — Accordion 기반 접기/펼치기 */
 export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: FridgeItemCardProps) {
-  const unitLabel = item.unit === 'count' ? '개' : 'g';
   const categoryInfo = CATEGORIES.find((c) => c.id === item.category);
   const usedAmountByBatchId = new Map<string, number>();
   for (const usage of item.meal_batch_usages ?? []) {
@@ -107,8 +107,7 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
                   isOutOfStock ? 'text-gray-400' : 'text-gray-900',
                 )}
               >
-                {item.total_count}
-                {unitLabel}
+                {formatIngredientAmount(Number(item.total_count), item.unit, true)}
               </span>
             </div>
             <div className="mt-2 flex items-center gap-2">
@@ -139,13 +138,11 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
                           {format(new Date(batch.purchased_date), 'MM.dd')}
                         </span>
                         <span className="font-medium">
-                          {batch.quantity}
-                          {unitLabel}
+                          {formatIngredientAmount(Number(batch.quantity), item.unit, true)}
                         </span>
                         {batchUsed > 0 ? (
                           <span className="text-[10px] text-gray-400">
-                            (-{batchUsed}
-                            {unitLabel} 사용)
+                            (-{formatIngredientAmount(Number(batchUsed), item.unit, true)} 사용)
                           </span>
                         ) : null}
                         <ExpiryBadge

@@ -8,10 +8,12 @@ import { CATEGORIES } from '@/commons/config';
 import { Button, Input, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import { type IngredientUnit } from '@/entities/ingredient';
+
 export interface FridgeItemFormValues {
   name: string;
   category: string;
-  unit: 'count' | 'g';
+  unit: IngredientUnit;
   is_subdivided: boolean;
 }
 
@@ -37,7 +39,7 @@ const fridgeItemFormSchema = z.object({
   category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
     message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
   }),
-  unit: z.enum(['count', 'g']),
+  unit: z.enum(['count', 'g', 'kg']),
   is_subdivided: z.boolean(),
 });
 
@@ -127,7 +129,7 @@ export function FridgeItemForm({
             <Form.Label required>단위</Form.Label>
             <Select
               value={field.state.value}
-              onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
+              onValueChange={(value) => field.handleChange(value as IngredientUnit)}
             >
               <Form.Control>
                 <Select.Trigger>
@@ -137,6 +139,7 @@ export function FridgeItemForm({
               <Select.Content>
                 <Select.Item value="count">개</Select.Item>
                 <Select.Item value="g">g</Select.Item>
+                <Select.Item value="kg">kg</Select.Item>
               </Select.Content>
             </Select>
             <Form.Error />

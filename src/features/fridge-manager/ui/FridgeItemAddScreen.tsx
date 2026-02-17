@@ -21,6 +21,8 @@ import {
 } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import { convertIngredientAmount, isWeightUnit, type IngredientUnit } from '@/entities/ingredient';
+
 import { useAddFridgeItemMutation } from '../api/mutations';
 
 interface FridgeItemAddScreenProps {
@@ -32,7 +34,7 @@ interface FridgeItemCreateFormValues {
   category: string;
   name: string;
   quantity: number;
-  unit: 'count' | 'g';
+  unit: IngredientUnit;
   is_subdivided: boolean;
   purchased_date: string;
   expiry_date: string;
@@ -54,7 +56,7 @@ const fridgeItemCreateFormSchema = z.object({
     .number()
     .min(1, ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: 1 }))
     .max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-  unit: z.enum(['count', 'g']),
+  unit: z.enum(['count', 'g', 'kg']),
   is_subdivided: z.boolean(),
   purchased_date: z
     .string()
@@ -232,7 +234,26 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                   <Form.Label required>단위</Form.Label>
                   <Select
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
+                    onValueChange={(value) => {
+                      const nextUnit = value as IngredientUnit;
+                      const currentUnit = field.state.value;
+                      const currentQuantity = form.state.values.quantity;
+                      const convertedQuantity = convertIngredientAmount(
+                        currentQuantity,
+                        currentUnit,
+                        nextUnit,
+                      );
+
+                      field.handleChange(nextUnit);
+                      if (convertedQuantity !== null) {
+                        form.setFieldValue('quantity', Number(convertedQuantity.toFixed(2)));
+                        return;
+                      }
+
+                      if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
+                        form.setFieldValue('quantity', 1);
+                      }
+                    }}
                   >
                     <Form.Control>
                       <Select.Trigger>
@@ -242,6 +263,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                     <Select.Content>
                       <Select.Item value="count">개</Select.Item>
                       <Select.Item value="g">g</Select.Item>
+                      <Select.Item value="kg">kg</Select.Item>
                     </Select.Content>
                   </Select>
                   <Form.Error />

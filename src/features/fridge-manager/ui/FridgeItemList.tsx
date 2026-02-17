@@ -13,7 +13,7 @@ interface FridgeItemListProps {
   isSearching?: boolean;
   onEditItem: (item: FridgeItemWithBatches) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g') => void;
+  onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g' | 'kg') => void;
 }
 
 /** 카테고리별 그룹핑 냉장고 리스트 */

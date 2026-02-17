@@ -14,7 +14,7 @@ import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
 interface FridgeBatchEditScreenProps {
   onClose: () => void;
   batch: FridgeItemBatch;
-  unit: 'count' | 'g';
+  unit: 'count' | 'g' | 'kg';
 }
 
 /** 냉장고 배치 수정 화면 */
@@ -24,7 +24,7 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
   const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
   const formId = `fridge-batch-edit-form-${batch.id}`;
   const totalQuantity = Number(batch.quantity) + Number(usedAmount);
-  const quantityUnitLabel = unit === 'count' ? '개' : 'g';
+  const quantityUnitLabel = unit === 'count' ? '개' : unit;
 
   function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message;

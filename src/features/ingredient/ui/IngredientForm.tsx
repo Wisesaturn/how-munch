@@ -9,12 +9,14 @@ import { CATEGORIES } from '@/commons/config';
 import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import { convertIngredientAmount, isWeightUnit, type IngredientUnit } from '@/entities/ingredient';
+
 export interface IngredientFormValues {
   date: string;
   category: string;
   name: string;
   count: number;
-  unit: 'count' | 'g';
+  unit: IngredientUnit;
   store: string;
   price: number;
 }
@@ -50,7 +52,7 @@ const ingredientFormSchema = z.object({
     .number()
     .min(1, ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: 1 }))
     .max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-  unit: z.enum(['count', 'g']),
+  unit: z.enum(['count', 'g', 'kg']),
   store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
   price: z
     .number()
@@ -82,7 +84,7 @@ export function IngredientForm({
       category: defaultValues?.category ?? 'other',
       name: defaultValues?.name ?? '',
       count: defaultValues?.count ?? 1,
-      unit: (defaultValues?.unit ?? 'count') as 'count' | 'g',
+      unit: (defaultValues?.unit ?? 'count') as IngredientUnit,
       store: defaultValues?.store ?? '',
       price: defaultValues?.price ?? 100,
     },
@@ -194,7 +196,26 @@ export function IngredientForm({
                 <Form.Label required>단위</Form.Label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value as 'count' | 'g')}
+                  onValueChange={(value) => {
+                    const nextUnit = value as IngredientUnit;
+                    const currentUnit = field.state.value;
+                    const currentCount = form.state.values.count;
+                    const convertedCount = convertIngredientAmount(
+                      currentCount,
+                      currentUnit,
+                      nextUnit,
+                    );
+
+                    field.handleChange(nextUnit);
+                    if (convertedCount !== null) {
+                      form.setFieldValue('count', Number(convertedCount.toFixed(2)));
+                      return;
+                    }
+
+                    if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
+                      form.setFieldValue('count', 1);
+                    }
+                  }}
                 >
                   <Form.Control>
                     <Select.Trigger>
@@ -204,6 +225,7 @@ export function IngredientForm({
                   <Select.Content>
                     <Select.Item value="count">개</Select.Item>
                     <Select.Item value="g">g</Select.Item>
+                    <Select.Item value="kg">kg</Select.Item>
                   </Select.Content>
                 </Select>
               </Form.Field>

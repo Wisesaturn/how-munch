@@ -58,7 +58,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
     ));
   };
 
-  const openFridgeBatchEditSheet = (batch: FridgeItemBatch, unit: 'count' | 'g') => {
+  const openFridgeBatchEditSheet = (batch: FridgeItemBatch, unit: 'count' | 'g' | 'kg') => {
     stackFlowActions.push('FridgeBatchEditActivity', { batch, unit });
   };
 

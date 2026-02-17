@@ -2,7 +2,7 @@
 
 import { CATEGORIES } from '@/commons/config';
 
-import { type Ingredient } from '@/entities/ingredient';
+import { formatIngredientAmount, type Ingredient } from '@/entities/ingredient';
 
 interface IngredientItemProps {
   ingredient: Ingredient;
@@ -14,8 +14,8 @@ function getCategoryLabel(categoryId: string) {
   return cat ? `${cat.emoji} ${cat.label}` : categoryId;
 }
 
-function formatUnit(count: number, unit: string) {
-  return unit === 'g' ? `${count}g` : `${count}개`;
+function formatUnit(count: number, unit: Ingredient['unit']) {
+  return formatIngredientAmount(count, unit, true);
 }
 
 export function IngredientItem({ ingredient, onEdit }: IngredientItemProps) {
