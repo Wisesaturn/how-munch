@@ -101,6 +101,8 @@ project-root/
 - `src/commons/lib`는 도메인(주제) 단위 파일로 구성하고, 필요 시 한 파일에 여러 유틸 함수를 함께 둔다 (예: `uuid.ts`, `string.ts`)
 - 공통 UI 내부 상태가 controlled/uncontrolled를 모두 지원해야 하는 경우 `react-simplikit`의 `useControlledState`를 우선 사용한다 (예: `DatePicker`)
 - 공통 UI 컴포넌트는 `disabled`, `invalid` 상태를 기본 고려해 설계한다
+- 공통 UI 컴포넌트(단순 네이티브 passthrough가 아닌 추상화 컴포넌트)는 `onChange` 같은 브라우저 이벤트 네이밍을 외부 API로 노출하지 않는다
+  - 값 변경 핸들러는 `onValueChange`, `onCheckedChange`, `onOpenChange`처럼 의미 기반 네이밍을 사용한다
   - `invalid`는 props/API로 노출하고, 상태 기반 스타일(`data-invalid`, `aria-invalid`)을 제공한다
   - `disabled`는 opacity 축소 대신 명시된 비활성 스타일(예: gray 배경/텍스트/보더)로 표현한다
 - 신규 훅/유틸 도입 시 동일 목적의 기능이 `react-simplikit`(core/mobile)에 있으면 먼저 검토 후 채택한다

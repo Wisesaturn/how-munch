@@ -39,6 +39,9 @@
 - Server Components are default; add `"use client"` only where needed.
 - Use inline type imports (example: `import { type Profile } from '@/entities/profile'`).
 - Common UI files should use section comment blocks (e.g., `Root`, `Header`, `Content`) in the same style as existing shared UI components.
+- For common UI components (non-native wrapper abstractions), do not expose raw browser event prop names like `onChange`.
+  - use semantic value handlers such as `onValueChange`, `onCheckedChange`, `onOpenChange` instead.
+  - keep native browser event names only for direct native element wrappers where event passthrough is the primary purpose.
 - Common UI components must model `disabled` and `invalid` states by default:
   - expose `invalid` via props/API and wire `data-invalid`/`aria-invalid` state styles.
   - do not rely on opacity-only disabled styling; use explicit disabled tokens (gray background/text/border).
