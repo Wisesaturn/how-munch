@@ -96,6 +96,14 @@ function MealIngredientRow({
       </div>
 
       {isWeightUnit(selectedUnit) ? (
+        <MealIngredientCountControl
+          amount={ingredient.amount}
+          max={sliderBoundary.max}
+          unitLabel={unitLabel}
+          disabled={isCountInputDisabled}
+          onChangeAmount={onChangeIngredientAmount}
+        />
+      ) : (
         <MealIngredientWeightControl
           min={sliderMin}
           max={sliderBoundary.max}
@@ -104,14 +112,6 @@ function MealIngredientRow({
           unit={selectedUnit}
           step={sliderStep}
           onValueChange={(value) => onChangeIngredientAmount(String(value))}
-        />
-      ) : (
-        <MealIngredientCountControl
-          amount={ingredient.amount}
-          max={sliderBoundary.max}
-          unitLabel={unitLabel}
-          disabled={isCountInputDisabled}
-          onChangeAmount={onChangeIngredientAmount}
         />
       )}
     </div>

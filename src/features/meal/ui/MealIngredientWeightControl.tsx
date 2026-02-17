@@ -2,7 +2,7 @@
 
 import { Slider } from '@/commons/ui';
 
-import { formatWeightAuto, type IngredientUnit } from '@/entities/ingredient';
+import { formatIngredientAmount, type IngredientUnit } from '@/entities/ingredient';
 
 interface MealIngredientWeightControlProps {
   disabled: boolean;
@@ -36,7 +36,9 @@ function MealIngredientWeightControl({
   onValueChange,
 }: MealIngredientWeightControlProps) {
   const normalizedValue = normalizeSliderValue(value, step);
-  const displayAmount = formatWeightAuto(normalizedValue, unit ?? 'g');
+  const displayUnit = unit ?? 'count';
+  const displayAmount = formatIngredientAmount(normalizedValue, displayUnit, true);
+  const disabledAmount = formatIngredientAmount(0, displayUnit, true);
 
   return (
     <div className="space-y-1 pl-1">
@@ -48,7 +50,9 @@ function MealIngredientWeightControl({
         disabled={disabled}
         onValueChange={(values) => onValueChange(values[0] ?? min)}
       />
-      <p className="text-right text-xs text-gray-500">{disabled ? '0g' : displayAmount}</p>
+      <p className="text-right text-xs text-gray-500">
+        {disabled ? disabledAmount : displayAmount}
+      </p>
     </div>
   );
 }
