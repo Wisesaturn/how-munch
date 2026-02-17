@@ -39,12 +39,12 @@ export function convertIngredientAmount(value: number, from: IngredientUnit, to:
 }
 
 /**
- * @description 무게 값은 1000g 이상이면 kg(소수점 2자리), 미만이면 g로 표시합니다.
+ * @description 무게 값은 1000g 이상이면 kg(소수점 1자리), 미만이면 g로 표시합니다.
  */
 export function formatWeightAuto(value: number, unit: IngredientUnit) {
   const grams = toGrams(value, unit);
   if (grams === null) return String(value);
-  if (grams >= 1000) return `${(grams / 1000).toFixed(2)}kg`;
+  if (grams >= 1000) return `${(grams / 1000).toFixed(1)}kg`;
   return `${Math.round(grams)}g`;
 }
 
@@ -55,4 +55,29 @@ export function formatIngredientAmount(value: number, unit: IngredientUnit, dyna
   if (unit === 'count') return `${value}개`;
   if (dynamicWeight) return formatWeightAuto(value, unit);
   return `${value}${unit}`;
+}
+
+/**
+ * @description 단위별 수량 입력 최소값을 반환합니다.
+ */
+export function resolveAmountMin(unit: IngredientUnit) {
+  if (unit === 'kg') return 0.1;
+  return 1;
+}
+
+/**
+ * @description 단위별 수량 입력 step 값을 반환합니다.
+ */
+export function resolveAmountStep(unit: IngredientUnit) {
+  if (unit === 'kg') return 0.1;
+  return 1;
+}
+
+/**
+ * @description 단위별 수량을 입력 규칙에 맞게 정규화합니다.
+ */
+export function normalizeAmountByUnit(value: number, unit: IngredientUnit) {
+  if (!Number.isFinite(value)) return resolveAmountMin(unit);
+  if (unit === 'kg') return Number(value.toFixed(1));
+  return Math.round(value);
 }

@@ -10,6 +10,13 @@ import { ERROR_MSG } from '@/commons/lib';
 import { Button, Counter, DatePicker, Textarea } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import {
+  normalizeAmountByUnit,
+  resolveAmountMin,
+  resolveAmountStep,
+  type IngredientUnit,
+} from '@/entities/ingredient';
+
 export interface FridgeBatchFormValues {
   quantity: number;
   expiry_date: string;
@@ -28,6 +35,7 @@ interface FridgeBatchFormProps {
   submitLabel?: string;
   quantityMin?: number;
   quantityUnitLabel?: string;
+  quantityUnit?: IngredientUnit;
 }
 
 function parseDateValue(value: string) {
@@ -36,15 +44,17 @@ function parseDateValue(value: string) {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-function createFridgeBatchSchema(quantityMin: number) {
+function createFridgeBatchSchema(quantityMin: number, quantityUnit: IngredientUnit) {
+  const minQuantity = Math.max(quantityMin, resolveAmountMin(quantityUnit));
+
   return z.object({
     quantity: z
       .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }) })
       .refine((value) => Number.isFinite(value), {
         message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }),
       })
-      .min(quantityMin, {
-        message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: quantityMin }),
+      .min(minQuantity, {
+        message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
       })
       .max(1_000_000, {
         message: ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' }),
@@ -78,10 +88,13 @@ export function FridgeBatchForm({
   submitLabel = '저장',
   quantityMin = 0,
   quantityUnitLabel,
+  quantityUnit = 'count',
 }: FridgeBatchFormProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const today = new Date();
-  const batchSchema = createFridgeBatchSchema(quantityMin);
+  const batchSchema = createFridgeBatchSchema(quantityMin, quantityUnit);
+  const quantityInputMin = Math.max(quantityMin, resolveAmountMin(quantityUnit));
+  const quantityInputStep = resolveAmountStep(quantityUnit);
 
   const form = useForm({
     defaultValues: {
@@ -120,9 +133,11 @@ export function FridgeBatchForm({
             <Form.Control>
               <Counter
                 value={field.state.value}
-                min={0}
-                step={1}
-                onChange={field.handleChange}
+                min={quantityInputMin}
+                step={quantityInputStep}
+                onChange={(nextValue) =>
+                  field.handleChange(normalizeAmountByUnit(nextValue, quantityUnit))
+                }
                 invalid={Boolean(field.state.meta.errors[0])}
               />
             </Form.Control>

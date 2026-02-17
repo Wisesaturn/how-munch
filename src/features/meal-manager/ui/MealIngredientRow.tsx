@@ -101,7 +101,7 @@ function MealIngredientRow({
           disabled={isAmountControlDisabled}
           unit={selectedUnit}
           step={sliderStep}
-          onChangeValue={(value) => onChangeIngredientAmount(String(value))}
+          onValueChange={(value) => onChangeIngredientAmount(String(value))}
         />
       ) : (
         <MealIngredientCountControl

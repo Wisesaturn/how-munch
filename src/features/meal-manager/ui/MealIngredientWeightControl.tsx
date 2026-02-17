@@ -11,7 +11,7 @@ interface MealIngredientWeightControlProps {
   value: number;
   step: number;
   unit: IngredientUnit | undefined;
-  onChangeValue: (value: number) => void;
+  onValueChange: (value: number) => void;
 }
 
 /**
@@ -33,7 +33,7 @@ function MealIngredientWeightControl({
   value,
   step,
   unit,
-  onChangeValue,
+  onValueChange,
 }: MealIngredientWeightControlProps) {
   const normalizedValue = normalizeSliderValue(value, step);
   const displayAmount = formatWeightAuto(normalizedValue, unit ?? 'g');
@@ -46,7 +46,7 @@ function MealIngredientWeightControl({
         step={step}
         value={[normalizedValue]}
         disabled={disabled}
-        onValueChange={(values) => onChangeValue(values[0] ?? min)}
+        onValueChange={(values) => onValueChange(values[0] ?? min)}
       />
       <p className="text-right text-xs text-gray-500">{disabled ? '0g' : displayAmount}</p>
     </div>

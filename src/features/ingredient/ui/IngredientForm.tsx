@@ -9,7 +9,14 @@ import { CATEGORIES } from '@/commons/config';
 import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
-import { convertIngredientAmount, isWeightUnit, type IngredientUnit } from '@/entities/ingredient';
+import {
+  convertIngredientAmount,
+  isWeightUnit,
+  normalizeAmountByUnit,
+  resolveAmountMin,
+  resolveAmountStep,
+  type IngredientUnit,
+} from '@/entities/ingredient';
 
 export interface IngredientFormValues {
   date: string;
@@ -35,30 +42,39 @@ interface IngredientFormProps {
 
 const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
 
-const ingredientFormSchema = z.object({
-  date: z
-    .string()
-    .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '날짜' }))
-    .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '날짜' })),
-  category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-    message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
-  }),
-  name: z
-    .string()
-    .trim()
-    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '품목명' }))
-    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: '20자' })),
-  count: z
-    .number()
-    .min(1, ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: 1 }))
-    .max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-  unit: z.enum(['count', 'g', 'kg']),
-  store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
-  price: z
-    .number()
-    .min(100, ERROR_MSG.RANGE.MIN({ fieldName: '가격', min: '100원' }))
-    .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '가격', max: '1억원' })),
-});
+const ingredientFormSchema = z
+  .object({
+    date: z
+      .string()
+      .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '날짜' }))
+      .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '날짜' })),
+    category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
+      message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
+    }),
+    name: z
+      .string()
+      .trim()
+      .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '품목명' }))
+      .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: '20자' })),
+    count: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
+    unit: z.enum(['count', 'g', 'kg']),
+    store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
+    price: z
+      .number()
+      .min(100, ERROR_MSG.RANGE.MIN({ fieldName: '가격', min: '100원' }))
+      .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '가격', max: '1억원' })),
+  })
+  .superRefine((value, ctx) => {
+    const minCount = resolveAmountMin(value.unit);
+
+    if (value.count < minCount) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['count'],
+        message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minCount }),
+      });
+    }
+  });
 
 function parseDateValue(value: string) {
   if (!value) return undefined;
@@ -98,6 +114,8 @@ export function IngredientForm({
   });
 
   const isEditMode = Boolean(id);
+  const countStep = resolveAmountStep(form.state.values.unit);
+  const countMin = resolveAmountMin(form.state.values.unit);
 
   return (
     <form
@@ -181,9 +199,11 @@ export function IngredientForm({
                 <Form.Control>
                   <Counter
                     value={field.state.value}
-                    min={0}
-                    step={1}
-                    onChange={field.handleChange}
+                    min={countMin}
+                    step={countStep}
+                    onChange={(nextValue) =>
+                      field.handleChange(normalizeAmountByUnit(nextValue, form.state.values.unit))
+                    }
                     invalid={Boolean(field.state.meta.errors[0])}
                   />
                 </Form.Control>
@@ -208,12 +228,12 @@ export function IngredientForm({
 
                     field.handleChange(nextUnit);
                     if (convertedCount !== null) {
-                      form.setFieldValue('count', Number(convertedCount.toFixed(2)));
+                      form.setFieldValue('count', normalizeAmountByUnit(convertedCount, nextUnit));
                       return;
                     }
 
                     if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
-                      form.setFieldValue('count', 1);
+                      form.setFieldValue('count', resolveAmountMin(nextUnit));
                     }
                   }}
                 >

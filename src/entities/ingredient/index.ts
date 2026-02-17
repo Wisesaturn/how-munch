@@ -6,5 +6,8 @@ export {
   formatWeightAuto,
   fromGrams,
   isWeightUnit,
+  normalizeAmountByUnit,
+  resolveAmountMin,
+  resolveAmountStep,
   toGrams,
 } from './model/unit';

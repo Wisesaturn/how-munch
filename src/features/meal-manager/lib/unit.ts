@@ -56,7 +56,7 @@ function resolveWeightSliderStep(unit: IngredientUnit | undefined) {
  */
 function resolveWeightSliderMin(unit: IngredientUnit | undefined, max: number) {
   if (unit === 'g') return max >= 10 ? 10 : 1;
-  if (unit === 'kg') return max >= 0.1 ? 0.1 : 0.01;
+  if (unit === 'kg') return 0.1;
   return 1;
 }
 

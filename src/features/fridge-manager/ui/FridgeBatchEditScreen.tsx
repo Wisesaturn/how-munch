@@ -96,6 +96,7 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
           }}
           quantityMin={usedAmount}
           quantityUnitLabel={quantityUnitLabel}
+          quantityUnit={unit}
           onSubmit={handleSubmit}
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}

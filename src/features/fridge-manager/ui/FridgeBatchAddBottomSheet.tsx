@@ -2,6 +2,8 @@
 
 import { BottomSheet, Toast } from '@/commons/ui';
 
+import { type IngredientUnit } from '@/entities/ingredient';
+
 import { useAddBatchMutation } from '../api/mutations';
 
 import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
@@ -11,6 +13,7 @@ interface FridgeBatchAddBottomSheetProps {
   onClose: () => void;
   fridgeItemId: string;
   itemName: string;
+  unit: IngredientUnit;
 }
 
 /** 기존 아이템에 배치 추가 바텀시트 */
@@ -19,6 +22,7 @@ export function FridgeBatchAddBottomSheet({
   onClose,
   fridgeItemId,
   itemName,
+  unit,
 }: FridgeBatchAddBottomSheetProps) {
   const mutation = useAddBatchMutation();
   const getErrorMessage = (error: unknown) => {
@@ -55,6 +59,7 @@ export function FridgeBatchAddBottomSheet({
           onSubmit={handleSubmit}
           isPending={mutation.isPending}
           submitLabel="추가"
+          quantityUnit={unit}
         />
       </BottomSheet.Content>
     </BottomSheet>

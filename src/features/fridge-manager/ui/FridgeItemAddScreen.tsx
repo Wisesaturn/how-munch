@@ -21,7 +21,14 @@ import {
 } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
-import { convertIngredientAmount, isWeightUnit, type IngredientUnit } from '@/entities/ingredient';
+import {
+  convertIngredientAmount,
+  isWeightUnit,
+  normalizeAmountByUnit,
+  resolveAmountMin,
+  resolveAmountStep,
+  type IngredientUnit,
+} from '@/entities/ingredient';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -43,30 +50,39 @@ interface FridgeItemCreateFormValues {
 
 const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
 
-const fridgeItemCreateFormSchema = z.object({
-  category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-    message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
-  }),
-  name: z
-    .string()
-    .trim()
-    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
-    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
-  quantity: z
-    .number()
-    .min(1, ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: 1 }))
-    .max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-  unit: z.enum(['count', 'g', 'kg']),
-  is_subdivided: z.boolean(),
-  purchased_date: z
-    .string()
-    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '구매일' }))
-    .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '구매일' })),
-  expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-    message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
-  }),
-  memo: z.string().max(300, ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: '300자' })),
-});
+const fridgeItemCreateFormSchema = z
+  .object({
+    category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
+      message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
+    }),
+    name: z
+      .string()
+      .trim()
+      .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
+      .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
+    quantity: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
+    unit: z.enum(['count', 'g', 'kg']),
+    is_subdivided: z.boolean(),
+    purchased_date: z
+      .string()
+      .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '구매일' }))
+      .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '구매일' })),
+    expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+      message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
+    }),
+    memo: z.string().max(300, ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: '300자' })),
+  })
+  .superRefine((value, ctx) => {
+    const minQuantity = resolveAmountMin(value.unit);
+
+    if (value.quantity < minQuantity) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['quantity'],
+        message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
+      });
+    }
+  });
 
 function parseDateValue(value: string) {
   if (!value) return undefined;
@@ -138,6 +154,8 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
       );
     },
   });
+  const quantityStep = resolveAmountStep(form.state.values.unit);
+  const quantityMin = resolveAmountMin(form.state.values.unit);
 
   return (
     <AppScreen
@@ -217,9 +235,11 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                   <Form.Control>
                     <Counter
                       value={field.state.value}
-                      min={0}
-                      step={1}
-                      onChange={field.handleChange}
+                      min={quantityMin}
+                      step={quantityStep}
+                      onChange={(nextValue) =>
+                        field.handleChange(normalizeAmountByUnit(nextValue, form.state.values.unit))
+                      }
                       invalid={Boolean(field.state.meta.errors[0])}
                     />
                   </Form.Control>
@@ -246,12 +266,15 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
 
                       field.handleChange(nextUnit);
                       if (convertedQuantity !== null) {
-                        form.setFieldValue('quantity', Number(convertedQuantity.toFixed(2)));
+                        form.setFieldValue(
+                          'quantity',
+                          normalizeAmountByUnit(convertedQuantity, nextUnit),
+                        );
                         return;
                       }
 
                       if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
-                        form.setFieldValue('quantity', 1);
+                        form.setFieldValue('quantity', resolveAmountMin(nextUnit));
                       }
                     }}
                   >

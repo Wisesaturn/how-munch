@@ -54,6 +54,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
         onClose={() => createOverlayCloseHandler(close, unmount)}
         fridgeItemId={item.id}
         itemName={item.name}
+        unit={item.unit}
       />
     ));
   };
