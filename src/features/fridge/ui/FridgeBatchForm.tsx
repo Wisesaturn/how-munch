@@ -37,6 +37,7 @@ interface FridgeBatchFormProps {
   quantityMin?: number;
   quantityUnitLabel?: string;
   quantityUnit?: IngredientUnit;
+  disableQuantityEdit?: boolean;
 }
 
 function parseDateValue(value: string) {
@@ -103,6 +104,7 @@ export function FridgeBatchForm({
   quantityMin = 0,
   quantityUnitLabel,
   quantityUnit = 'count',
+  disableQuantityEdit = false,
 }: FridgeBatchFormProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const today = new Date();
@@ -149,12 +151,18 @@ export function FridgeBatchForm({
                 value={field.state.value}
                 min={quantityInputMin}
                 step={quantityInputStep}
+                disabled={disableQuantityEdit}
                 onValueChange={(nextValue) =>
                   field.handleChange(normalizeAmountByUnit(nextValue, quantityUnit))
                 }
                 invalid={Boolean(field.state.meta.errors[0])}
               />
             </Form.Control>
+            {disableQuantityEdit ? (
+              <p className="text-xs text-gray-500">
+                장보기에서 등록한 재고는 장보기에서만 수량을 변경할 수 있습니다.
+              </p>
+            ) : null}
             <Form.Error />
           </Form.Field>
         )}

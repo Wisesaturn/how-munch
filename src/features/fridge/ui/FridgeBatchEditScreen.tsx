@@ -5,6 +5,7 @@ import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Button, Separator, Toast } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
+import { type IngredientUnit } from '@/entities/ingredient';
 
 import { useDeleteBatchMutation, useUpdateBatchMutation } from '../api/mutations';
 import { useBatchUsedAmountQuery } from '../api/queries';
@@ -14,11 +15,17 @@ import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
 interface FridgeBatchEditScreenProps {
   onClose: () => void;
   batch: FridgeItemBatch;
-  unit: 'count' | 'g' | 'kg';
+  unit: IngredientUnit;
+  fromStore: boolean;
 }
 
 /** 냉장고 배치 수정 화면 */
-export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditScreenProps) {
+export function FridgeBatchEditScreen({
+  onClose,
+  batch,
+  unit,
+  fromStore,
+}: FridgeBatchEditScreenProps) {
   const mutation = useUpdateBatchMutation();
   const deleteMutation = useDeleteBatchMutation();
   const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
@@ -97,6 +104,7 @@ export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditS
           quantityMin={usedAmount}
           quantityUnitLabel={quantityUnitLabel}
           quantityUnit={unit}
+          disableQuantityEdit={fromStore}
           onSubmit={handleSubmit}
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}

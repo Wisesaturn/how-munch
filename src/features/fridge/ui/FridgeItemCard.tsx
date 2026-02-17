@@ -8,7 +8,7 @@ import { cn } from '@/commons/lib';
 import { Accordion, Button, ProgressBar } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
-import { formatIngredientAmount } from '@/entities/ingredient';
+import { formatIngredientAmount, type IngredientUnit } from '@/entities/ingredient';
 
 import { getDaysUntilExpiry } from '../lib/expiry';
 
@@ -18,7 +18,7 @@ interface FridgeItemCardProps {
   item: FridgeItemWithBatches;
   onEditItem: (item: FridgeItemWithBatches) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, unit: 'count' | 'g' | 'kg') => void;
+  onEditBatch: (batch: FridgeItemBatch, unit: IngredientUnit, fromStore: boolean) => void;
 }
 
 function getRemainingRate(availableCount: number, usedCount: number) {
@@ -132,7 +132,7 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
                       <button
                         type="button"
                         className="flex w-full items-center gap-2 py-2.5 text-left text-xs transition-colors active:bg-gray-50"
-                        onClick={() => onEditBatch(batch, item.unit)}
+                        onClick={() => onEditBatch(batch, item.unit, item.from_grocery)}
                       >
                         <span className="text-gray-500">
                           {format(new Date(batch.purchased_date), 'MM.dd')}

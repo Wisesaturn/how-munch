@@ -5,9 +5,9 @@ import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
-import { type Meal, type MealType } from '@/entities/meal';
-import { type Ingredient } from '@/entities/ingredient';
+import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
+import { type Meal, type MealType } from '@/entities/meal';
 
 import {
   FridgeBatchEditScreen,
@@ -79,12 +79,20 @@ function FridgeBatchEditActivity({
 }: {
   params: {
     batch: FridgeItemBatch;
-    unit: 'count' | 'g' | 'kg';
+    unit: IngredientUnit;
+    fromStore: boolean;
   };
 }) {
   const { pop } = useActions();
 
-  return <FridgeBatchEditScreen onClose={pop} batch={params.batch} unit={params.unit} />;
+  return (
+    <FridgeBatchEditScreen
+      onClose={pop}
+      batch={params.batch}
+      unit={params.unit}
+      fromStore={params.fromStore}
+    />
+  );
 }
 
 function IngredientEditActivity({

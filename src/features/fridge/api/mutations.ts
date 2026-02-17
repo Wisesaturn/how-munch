@@ -134,6 +134,24 @@ export function useUpdateBatchMutation() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: BatchUpdate & { id: string }) => {
       const supabase = createClient();
+      const { data: targetBatch, error: batchSelectError } = await supabase
+        .from('fridge_item_batches')
+        .select('id, fridge_item_id')
+        .eq('id', id)
+        .single();
+      if (batchSelectError) throw batchSelectError;
+
+      const { data: targetItem, error: itemSelectError } = await supabase
+        .from('fridge_items')
+        .select('id, from_grocery')
+        .eq('id', targetBatch.fridge_item_id)
+        .single();
+      if (itemSelectError) throw itemSelectError;
+
+      if (targetItem.from_grocery && updates.quantity !== undefined) {
+        throw new Error('장보기에서 등록한 재고는 장보기에서만 수량을 변경할 수 있습니다.');
+      }
+
       const { data: usedRows, error: usageError } = await supabase
         .from('meal_batch_usages')
         .select('amount')

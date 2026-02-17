@@ -15,6 +15,49 @@ type FridgeItemInsert = Database['public']['Tables']['fridge_items']['Insert'];
 type BatchInsert = Database['public']['Tables']['fridge_item_batches']['Insert'];
 
 /**
+ * @description 총 수량에서 식단 사용량을 제외한 현재 재고 수량을 계산합니다.
+ */
+function resolveRemainingStockQuantity(totalAmount: number, usedAmount: number) {
+  if (!Number.isFinite(totalAmount) || !Number.isFinite(usedAmount)) {
+    throw new Error('수량 계산 중 오류가 발생했습니다.');
+  }
+
+  if (totalAmount < usedAmount) {
+    throw new Error(`식단에서 이미 사용한 수량(${usedAmount})보다 작게 설정할 수 없습니다.`);
+  }
+
+  return totalAmount - usedAmount;
+}
+
+/**
+ * @description 특정 배치의 식단 사용량 합계를 조회합니다.
+ */
+async function getMealUsedAmountByBatchId(batchId: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('meal_batch_usages')
+    .select('amount')
+    .eq('batch_id', batchId);
+  if (error) throw error;
+
+  return (data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+}
+
+/**
+ * @description 특정 재고 아이템의 식단 사용량 합계를 조회합니다.
+ */
+async function getMealUsedAmountByFridgeItemId(fridgeItemId: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('meal_batch_usages')
+    .select('amount')
+    .eq('fridge_item_id', fridgeItemId);
+  if (error) throw error;
+
+  return (data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+}
+
+/**
  * @description 장보기 삭제 관련 DB 에러를 사용자 메시지로 변환합니다.
  */
 function resolveIngredientDeleteError(error: unknown) {
@@ -241,16 +284,20 @@ export function useUpdateIngredientMutation() {
             name: ingredient.name,
             category: ingredient.category,
             unit: ingredient.unit,
+            max_count: ingredient.count,
             from_grocery: true,
           })
           .eq('id', linkedFridgeItemId);
         if (fridgeUpdateError) throw fridgeUpdateError;
 
         if (linkedFridgeBatchId) {
+          const usedAmount = await getMealUsedAmountByBatchId(linkedFridgeBatchId);
+          const remainingAmount = resolveRemainingStockQuantity(ingredient.count, usedAmount);
+
           const { error: batchUpdateError } = await supabase
             .from('fridge_item_batches')
             .update({
-              quantity: ingredient.count,
+              quantity: remainingAmount,
               purchased_date: ingredient.date,
             })
             .eq('id', linkedFridgeBatchId)
@@ -259,11 +306,14 @@ export function useUpdateIngredientMutation() {
           return ingredient;
         }
 
+        const usedAmount = await getMealUsedAmountByFridgeItemId(linkedFridgeItemId);
+        const remainingAmount = resolveRemainingStockQuantity(ingredient.count, usedAmount);
+
         const { data: createdBatch, error: insertBatchError } = await supabase
           .from('fridge_item_batches')
           .insert({
             fridge_item_id: linkedFridgeItemId,
-            quantity: ingredient.count,
+            quantity: remainingAmount,
             purchased_date: ingredient.date,
             expiry_date: null,
             memo: null,

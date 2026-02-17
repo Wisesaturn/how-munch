@@ -10,6 +10,7 @@ import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 import { Button } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
+import { type IngredientUnit } from '@/entities/ingredient';
 
 import {
   ExpiryBanner,
@@ -59,8 +60,12 @@ export function FridgePage({ householdId }: FridgePageProps) {
     ));
   };
 
-  const openFridgeBatchEditSheet = (batch: FridgeItemBatch, unit: 'count' | 'g' | 'kg') => {
-    stackFlowActions.push('FridgeBatchEditActivity', { batch, unit });
+  const openFridgeBatchEditSheet = (
+    batch: FridgeItemBatch,
+    unit: IngredientUnit,
+    fromStore: boolean,
+  ) => {
+    stackFlowActions.push('FridgeBatchEditActivity', { batch, unit, fromStore });
   };
 
   return (

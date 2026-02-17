@@ -16,5 +16,4 @@ export { FridgeItemEditScreen } from './ui/FridgeItemEditScreen';
 export { FridgeItemEditBottomSheet } from './ui/FridgeItemEditBottomSheet';
 export { FridgeBatchAddBottomSheet } from './ui/FridgeBatchAddBottomSheet';
 export { FridgeBatchEditScreen } from './ui/FridgeBatchEditScreen';
-export { FridgeBatchEditBottomSheet } from './ui/FridgeBatchEditBottomSheet';
 export { FridgeSearch } from './ui/FridgeSearch';
