@@ -299,22 +299,19 @@ export function useDeleteIngredientMutation() {
       const linkedFridgeItemId = ingredient.linked_fridge_item_id;
       const linkedFridgeBatchId = ingredient.linked_fridge_batch_id;
 
-      const { error: deleteIngredientError } = await supabase
-        .from('ingredients')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
-      if (deleteIngredientError) throw deleteIngredientError;
-
       if (linkedFridgeBatchId) {
         const { error: deleteBatchError } = await supabase.rpc('soft_delete_fridge_batch', {
           p_batch_id: linkedFridgeBatchId,
         });
         if (deleteBatchError) throw deleteBatchError;
-      }
-
-      if (linkedFridgeItemId) {
+      } else if (linkedFridgeItemId) {
         await cleanupFridgeItemIfNoBatches(linkedFridgeItemId);
       }
+
+      const { error: deleteIngredientError } = await supabase.rpc('soft_delete_ingredient', {
+        p_ingredient_id: id,
+      });
+      if (deleteIngredientError) throw deleteIngredientError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });

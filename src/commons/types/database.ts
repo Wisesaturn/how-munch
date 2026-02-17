@@ -547,6 +547,10 @@ export interface Database {
         Args: { p_batch_id: string };
         Returns: undefined;
       };
+      soft_delete_ingredient: {
+        Args: { p_ingredient_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;
