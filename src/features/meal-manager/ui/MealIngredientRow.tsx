@@ -4,7 +4,15 @@ import { X } from 'lucide-react';
 
 import { Button, Select } from '@/commons/ui';
 
-import { type EditorIngredient, resolveIngredientUnitLabel, resolveSliderBoundaries } from '../lib';
+import { isWeightUnit } from '@/entities/ingredient';
+
+import {
+  type EditorIngredient,
+  resolveIngredientUnitLabel,
+  resolveSliderBoundaries,
+  resolveWeightSliderMin,
+  resolveWeightSliderStep,
+} from '../lib';
 import { useMealEditorContext } from '../model';
 
 import { MealIngredientCountControl } from './MealIngredientCountControl';
@@ -29,8 +37,6 @@ function MealIngredientRow({
   /* Selection Constants                                                         */
   /* -------------------------------------------------------------------------- */
   const emptySelectValue = '__none__';
-  const isWeightUnit = (unit: 'count' | 'g' | undefined) => unit === 'g';
-
   const selectedIngredient = fridgeItems.find((item) => item.id === ingredient.fridge_item_id);
   const inUseStockAmount = selectedIngredient
     ? (inUseStockAmountByItemId[selectedIngredient.id] ?? 0)
@@ -46,12 +52,14 @@ function MealIngredientRow({
   const selectedUnit = selectedIngredient?.unit;
   const unitLabel = resolveIngredientUnitLabel(selectedUnit);
   const sliderBoundary = resolveSliderBoundaries(selectedMaxAvailableAmount);
+  const sliderStep = resolveWeightSliderStep(selectedUnit);
+  const sliderMin = resolveWeightSliderMin(selectedUnit, sliderBoundary.max);
 
   /* -------------------------------------------------------------------------- */
   /* Display / Control Constants                                                 */
   /* -------------------------------------------------------------------------- */
-  const sliderValue = ingredient.amount > 0 ? ingredient.amount : sliderBoundary.min;
-  const selectedAmount = Math.min(sliderValue, sliderBoundary.max);
+  const sliderValue = ingredient.amount > 0 ? ingredient.amount : sliderMin;
+  const selectedAmount = Math.min(Math.max(sliderValue, sliderMin), sliderBoundary.max);
   const isAmountControlDisabled = sliderBoundary.disabled || !selectedIngredient;
   const isCountInputDisabled = !selectedIngredient;
   const ingredientSelectValue = ingredient.fridge_item_id || emptySelectValue;
@@ -87,11 +95,12 @@ function MealIngredientRow({
 
       {isWeightUnit(selectedUnit) ? (
         <MealIngredientWeightControl
-          min={sliderBoundary.min}
+          min={sliderMin}
           max={sliderBoundary.max}
           value={selectedAmount}
           disabled={isAmountControlDisabled}
-          unitLabel={unitLabel}
+          unit={selectedUnit}
+          step={sliderStep}
           onChangeValue={(value) => onChangeIngredientAmount(String(value))}
         />
       ) : (

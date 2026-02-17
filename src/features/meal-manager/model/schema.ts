@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
 
-import { type FridgeStockInfo } from '../lib';
+import { formatIngredientAmountInfo, type FridgeStockInfo } from '../lib';
 
 /**
  * @description 식단 편집 폼의 dishes 배열 검증 스키마를 생성합니다.
@@ -27,7 +27,9 @@ function createMealEditorDishesSchema(
                 .string()
                 .trim()
                 .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '재료' })),
-              amount: z.number().min(1, ERROR_MSG.RANGE.MIN({ fieldName: '재료 수량', min: 1 })),
+              amount: z
+                .number()
+                .min(0.01, ERROR_MSG.RANGE.MIN({ fieldName: '재료 수량', min: 0.01 })),
             }),
           )
           .min(1, '메뉴마다 재료를 1개 이상 추가해 주세요'),
@@ -62,6 +64,14 @@ function createMealEditorDishesSchema(
           usedFridgeItemIds.add(ingredient.fridge_item_id);
           const stockInfo = fridgeStockInfoById[ingredient.fridge_item_id];
           if (!stockInfo) return;
+          if (stockInfo.unit === 'count' && ingredient.amount < 1) {
+            ctx.addIssue({
+              code: 'custom',
+              message: `${dishLabel}의 ${stockInfo.itemName} 수량은 1개 이상이어야 합니다`,
+              path: [dishIndex, 'ingredients', ingredientIndex, 'amount'],
+            });
+            return;
+          }
           const inUseStockAmount = inUseStockAmountByItemId[ingredient.fridge_item_id] ?? 0;
           // 보유 재고 + 사용 중인 재고
           const maxAvailableAmount = stockInfo.availableAmount + inUseStockAmount;
@@ -72,7 +82,7 @@ function createMealEditorDishesSchema(
           if (nextAccumulatedAmount > maxAvailableAmount) {
             ctx.addIssue({
               code: 'custom',
-              message: `${dishLabel}의 ${stockInfo.itemName}은 최대 ${maxAvailableAmount}${stockInfo.unitLabel}까지 입력할 수 있습니다`,
+              message: `${dishLabel}의 ${stockInfo.itemName}은 최대 ${formatIngredientAmountInfo(maxAvailableAmount, stockInfo.unit)}까지 입력할 수 있습니다`,
               path: [dishIndex, 'ingredients', ingredientIndex, 'amount'],
             });
           }

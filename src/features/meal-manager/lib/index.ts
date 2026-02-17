@@ -1,6 +1,13 @@
 export type { EditorDish, EditorIngredient, FridgeStockInfo, MealFridgeItem } from './types';
 
-export { parseIngredientAmount, resolveIngredientUnitLabel, resolveSliderBoundaries } from './unit';
+export {
+  formatIngredientAmountInfo,
+  parseIngredientAmount,
+  resolveIngredientUnitLabel,
+  resolveSliderBoundaries,
+  resolveWeightSliderMin,
+  resolveWeightSliderStep,
+} from './unit';
 export { createFridgeStockInfoById } from './stock';
 export {
   appendDish,

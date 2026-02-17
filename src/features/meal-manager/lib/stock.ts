@@ -13,6 +13,7 @@ function createFridgeStockInfoById(fridgeItems: MealFridgeItem[]) {
     stockInfoById[item.id] = {
       itemName: item.name,
       availableAmount: Number.isFinite(availableAmount) ? Math.max(0, availableAmount) : 0,
+      unit: item.unit,
       unitLabel: resolveIngredientUnitLabel(item.unit),
     };
   });

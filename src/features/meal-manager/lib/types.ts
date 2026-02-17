@@ -1,3 +1,5 @@
+import { type IngredientUnit } from '@/entities/ingredient';
+
 interface EditorIngredient {
   fridge_item_id: string;
   amount: number;
@@ -11,6 +13,7 @@ interface EditorDish {
 interface FridgeStockInfo {
   itemName: string;
   availableAmount: number;
+  unit: IngredientUnit;
   unitLabel: string;
 }
 
@@ -18,7 +21,7 @@ interface MealFridgeItem {
   id: string;
   name: string;
   total_count: number | string;
-  unit: 'count' | 'g';
+  unit: IngredientUnit;
 }
 
 export type { EditorDish, EditorIngredient, FridgeStockInfo, MealFridgeItem };
