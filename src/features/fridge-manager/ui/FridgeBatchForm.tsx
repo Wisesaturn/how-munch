@@ -14,6 +14,7 @@ import {
   normalizeAmountByUnit,
   resolveAmountMin,
   resolveAmountStep,
+  validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
 
@@ -47,33 +48,46 @@ function parseDateValue(value: string) {
 function createFridgeBatchSchema(quantityMin: number, quantityUnit: IngredientUnit) {
   const minQuantity = Math.max(quantityMin, resolveAmountMin(quantityUnit));
 
-  return z.object({
-    quantity: z
-      .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }) })
-      .refine((value) => Number.isFinite(value), {
-        message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }),
-      })
-      .min(minQuantity, {
-        message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
-      })
-      .max(1_000_000, {
-        message: ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' }),
+  return z
+    .object({
+      quantity: z
+        .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }) })
+        .refine((value) => Number.isFinite(value), {
+          message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }),
+        })
+        .min(minQuantity, {
+          message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
+        })
+        .max(1_000_000, {
+          message: ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' }),
+        }),
+      expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+        message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
       }),
-    expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-      message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
-    }),
-    purchased_date: z
-      .string()
-      .min(1, {
-        message: ERROR_MSG.INPUT.REQUIRED({ fieldName: '구매일' }),
-      })
-      .regex(/^\d{4}-\d{2}-\d{2}$/, {
-        message: ERROR_MSG.FORMAT.INVALID({ fieldName: '구매일' }),
+      purchased_date: z
+        .string()
+        .min(1, {
+          message: ERROR_MSG.INPUT.REQUIRED({ fieldName: '구매일' }),
+        })
+        .regex(/^\d{4}-\d{2}-\d{2}$/, {
+          message: ERROR_MSG.FORMAT.INVALID({ fieldName: '구매일' }),
+        }),
+      memo: z.string().max(300, {
+        message: ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: 300 }),
       }),
-    memo: z.string().max(300, {
-      message: ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: 300 }),
-    }),
-  });
+    })
+    .superRefine((value, ctx) => {
+      if (!validateAmountPrecisionByUnit(value.quantity, quantityUnit)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['quantity'],
+          message:
+            quantityUnit === 'kg'
+              ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
+              : '수량은 정수만 입력할 수 있습니다',
+        });
+      }
+    });
 }
 
 /** 냉장고 배치 폼 (quantity, expiry_date, purchased_date, memo) */
