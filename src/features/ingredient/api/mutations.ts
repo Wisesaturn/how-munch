@@ -14,6 +14,21 @@ type FridgeItemInsert = Database['public']['Tables']['fridge_items']['Insert'];
 type BatchInsert = Database['public']['Tables']['fridge_item_batches']['Insert'];
 
 /**
+ * @description 배치가 식단에서 사용 중인지 확인합니다.
+ */
+async function isBatchUsedInMeal(batchId: string) {
+  const supabase = createClient();
+
+  const { count, error } = await supabase
+    .from('meal_batch_usages')
+    .select('*', { count: 'exact', head: true })
+    .eq('batch_id', batchId);
+  if (error) throw error;
+
+  return (count ?? 0) > 0;
+}
+
+/**
  * @description 배치가 모두 비어있을 때만 냉장고 아이템을 정리합니다.
  */
 async function cleanupFridgeItemIfNoBatches(fridgeItemId: string) {
@@ -300,6 +315,11 @@ export function useDeleteIngredientMutation() {
       const linkedFridgeBatchId = ingredient.linked_fridge_batch_id;
 
       if (linkedFridgeBatchId) {
+        const isUsedBatch = await isBatchUsedInMeal(linkedFridgeBatchId);
+        if (isUsedBatch) {
+          throw new Error('현재 등록되어 있는 식단이 있어 삭제할 수 없습니다.');
+        }
+
         const { error: deleteBatchError } = await supabase.rpc('soft_delete_fridge_batch', {
           p_batch_id: linkedFridgeBatchId,
         });
