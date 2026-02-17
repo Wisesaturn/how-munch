@@ -27,6 +27,7 @@ import {
   normalizeAmountByUnit,
   resolveAmountMin,
   resolveAmountStep,
+  validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
 
@@ -82,6 +83,17 @@ const fridgeItemCreateFormSchema = z
         message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
       });
     }
+
+    if (!validateAmountPrecisionByUnit(value.quantity, value.unit)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['quantity'],
+        message:
+          value.unit === 'kg'
+            ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
+            : '수량은 정수만 입력할 수 있습니다',
+      });
+    }
   });
 
 function parseDateValue(value: string) {
@@ -112,8 +124,10 @@ function createDefaultValues(today: Date): FridgeItemCreateFormValues {
 export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const mutation = useAddFridgeItemMutation();
+
   const today = new Date();
   const defaultValues = createDefaultValues(today);
+  const [selectedUnit, setSelectedUnit] = useState<IngredientUnit>(defaultValues.unit);
 
   const form = useForm({
     defaultValues,
@@ -154,8 +168,8 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
       );
     },
   });
-  const quantityStep = resolveAmountStep(form.state.values.unit);
-  const quantityMin = resolveAmountMin(form.state.values.unit);
+  const quantityStep = resolveAmountStep(selectedUnit);
+  const quantityMin = resolveAmountMin(selectedUnit);
 
   return (
     <AppScreen
@@ -227,68 +241,77 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
             )}
           </form.Field>
 
-          <div className="grid grid-cols-[1fr_104px] gap-2">
+          <div className="grid gap-1.5">
+            <div className="grid grid-cols-[1fr_104px] items-start gap-2">
+              <form.Field name="quantity">
+                {(field) => (
+                  <Form.Field field={field}>
+                    <Form.Label required>수량</Form.Label>
+                    <Form.Control>
+                      <Counter
+                        key={`fridge-quantity-${selectedUnit}`}
+                        value={field.state.value}
+                        min={quantityMin}
+                        step={quantityStep}
+                        onValueChange={(nextValue) =>
+                          field.handleChange(normalizeAmountByUnit(nextValue, selectedUnit))
+                        }
+                        invalid={Boolean(field.state.meta.errors[0])}
+                      />
+                    </Form.Control>
+                  </Form.Field>
+                )}
+              </form.Field>
+
+              <form.Field name="unit">
+                {(field) => (
+                  <Form.Field field={field}>
+                    <Form.Label required>단위</Form.Label>
+                    <Select
+                      value={field.state.value}
+                      onValueChange={(value) => {
+                        const nextUnit = value as IngredientUnit;
+                        const currentUnit = field.state.value;
+                        const currentQuantity = form.state.values.quantity;
+                        const convertedQuantity = convertIngredientAmount(
+                          currentQuantity,
+                          currentUnit,
+                          nextUnit,
+                        );
+
+                        field.handleChange(nextUnit);
+                        setSelectedUnit(nextUnit);
+                        if (convertedQuantity !== null) {
+                          form.setFieldValue(
+                            'quantity',
+                            normalizeAmountByUnit(convertedQuantity, nextUnit),
+                          );
+                          return;
+                        }
+
+                        if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
+                          form.setFieldValue('quantity', resolveAmountMin(nextUnit));
+                        }
+                      }}
+                    >
+                      <Form.Control>
+                        <Select.Trigger>
+                          <Select.Value placeholder="단위" />
+                        </Select.Trigger>
+                      </Form.Control>
+                      <Select.Content>
+                        <Select.Item value="count">개</Select.Item>
+                        <Select.Item value="g">g</Select.Item>
+                        <Select.Item value="kg">kg</Select.Item>
+                      </Select.Content>
+                    </Select>
+                  </Form.Field>
+                )}
+              </form.Field>
+            </div>
             <form.Field name="quantity">
               {(field) => (
                 <Form.Field field={field}>
-                  <Form.Label required>수량</Form.Label>
-                  <Form.Control>
-                    <Counter
-                      value={field.state.value}
-                      min={quantityMin}
-                      step={quantityStep}
-                      onChange={(nextValue) =>
-                        field.handleChange(normalizeAmountByUnit(nextValue, form.state.values.unit))
-                      }
-                      invalid={Boolean(field.state.meta.errors[0])}
-                    />
-                  </Form.Control>
-                  <Form.Error />
-                </Form.Field>
-              )}
-            </form.Field>
-
-            <form.Field name="unit">
-              {(field) => (
-                <Form.Field field={field}>
-                  <Form.Label required>단위</Form.Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={(value) => {
-                      const nextUnit = value as IngredientUnit;
-                      const currentUnit = field.state.value;
-                      const currentQuantity = form.state.values.quantity;
-                      const convertedQuantity = convertIngredientAmount(
-                        currentQuantity,
-                        currentUnit,
-                        nextUnit,
-                      );
-
-                      field.handleChange(nextUnit);
-                      if (convertedQuantity !== null) {
-                        form.setFieldValue(
-                          'quantity',
-                          normalizeAmountByUnit(convertedQuantity, nextUnit),
-                        );
-                        return;
-                      }
-
-                      if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
-                        form.setFieldValue('quantity', resolveAmountMin(nextUnit));
-                      }
-                    }}
-                  >
-                    <Form.Control>
-                      <Select.Trigger>
-                        <Select.Value placeholder="단위" />
-                      </Select.Trigger>
-                    </Form.Control>
-                    <Select.Content>
-                      <Select.Item value="count">개</Select.Item>
-                      <Select.Item value="g">g</Select.Item>
-                      <Select.Item value="kg">kg</Select.Item>
-                    </Select.Content>
-                  </Select>
                   <Form.Error />
                 </Form.Field>
               )}

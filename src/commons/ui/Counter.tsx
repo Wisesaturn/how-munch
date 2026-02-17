@@ -10,7 +10,6 @@ import { InputGroup } from './InputGroup';
 interface CounterProps {
   value?: number;
   defaultValue?: number;
-  onChange?: (value: number) => void;
   onValueChange?: (value: number) => void;
   min?: number;
   max?: number;
@@ -28,6 +27,26 @@ function resolveDecimalScale(step: number) {
   if (!Number.isFinite(step) || step <= 0) return 0;
   if (Number.isInteger(step)) return 0;
   return String(step).split('.')[1]?.length ?? 0;
+}
+
+/**
+ * @description 소수점 자릿수 기준으로 숫자 값을 정규화합니다.
+ */
+function normalizeNumberByScale(value: number, decimalScale: number) {
+  if (!Number.isFinite(value)) return value;
+  if (decimalScale <= 0) return Math.round(value);
+  return Number(value.toFixed(decimalScale));
+}
+
+/**
+ * @description 입력 필드에 표시할 숫자 문자열을 생성합니다.
+ */
+function formatInputValue(value: number, decimalScale: number) {
+  const normalized = normalizeNumberByScale(value, decimalScale);
+  if (decimalScale <= 0) return String(normalized);
+  return String(normalized)
+    .replace(/\.0+$/, '')
+    .replace(/(\.\d*?)0+$/, '$1');
 }
 
 /**
@@ -49,7 +68,7 @@ function clampValue(value: number, min?: number, max?: number) {
 
 /** Design-system Counter 입력 규칙을 기준으로 숫자 형식만 남깁니다. */
 function sanitizeNumericText(value: string, allowNegative: boolean, decimalScale: number) {
-  const trimmed = value.replace(/\s/g, '');
+  const trimmed = value.replace(/\s/g, '').replace(/,/g, '.');
   const withSign = allowNegative ? trimmed.replace(/(?!^-)-/g, '') : trimmed.replace(/-/g, '');
   const cleaned = withSign.replace(/[^0-9.-]/g, '');
 
@@ -72,7 +91,6 @@ function sanitizeNumericText(value: string, allowNegative: boolean, decimalScale
 function Counter({
   value,
   defaultValue = 0,
-  onChange,
   onValueChange,
   min = 0,
   max,
@@ -87,30 +105,29 @@ function Counter({
   const [currentValue, setCurrentValue] = useControlledState<number>({
     value,
     defaultValue,
-    onChange: (nextValue) => {
-      onChange?.(nextValue);
-      onValueChange?.(nextValue);
-    },
+    onChange: onValueChange,
   });
 
   const [inputValue, setInputValue] = React.useState(String(currentValue));
 
   React.useEffect(
     function syncInputValueFromCurrentValue() {
-      setInputValue(String(currentValue));
+      setInputValue(formatInputValue(currentValue, decimalScale));
     },
-    [currentValue],
+    [currentValue, decimalScale],
   );
 
   function updateValue(nextValue: number) {
     const clampedValue = clampValue(nextValue, min, max);
-    setCurrentValue(clampedValue);
-    setInputValue(String(clampedValue));
+    const normalizedValue = normalizeNumberByScale(clampedValue, decimalScale);
+    setCurrentValue(normalizedValue);
+    setInputValue(formatInputValue(normalizedValue, decimalScale));
   }
 
   function updateValueWithoutSyncInput(nextValue: number) {
     const clampedValue = clampValue(nextValue, min, max);
-    setCurrentValue(clampedValue);
+    const normalizedValue = normalizeNumberByScale(clampedValue, decimalScale);
+    setCurrentValue(normalizedValue);
   }
 
   function decreaseValue() {

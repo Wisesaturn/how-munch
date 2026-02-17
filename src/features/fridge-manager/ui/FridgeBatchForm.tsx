@@ -135,7 +135,7 @@ export function FridgeBatchForm({
                 value={field.state.value}
                 min={quantityInputMin}
                 step={quantityInputStep}
-                onChange={(nextValue) =>
+                onValueChange={(nextValue) =>
                   field.handleChange(normalizeAmountByUnit(nextValue, quantityUnit))
                 }
                 invalid={Boolean(field.state.meta.errors[0])}

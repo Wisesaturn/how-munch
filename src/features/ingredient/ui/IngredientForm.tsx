@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 import { z } from 'zod';
@@ -15,6 +17,7 @@ import {
   normalizeAmountByUnit,
   resolveAmountMin,
   resolveAmountStep,
+  validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
 
@@ -75,6 +78,17 @@ const ingredientFormSchema = z
         message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minCount }),
       });
     }
+
+    if (!validateAmountPrecisionByUnit(value.count, value.unit)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['count'],
+        message:
+          value.unit === 'kg'
+            ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
+            : '수량은 정수만 입력할 수 있습니다',
+      });
+    }
   });
 
 function parseDateValue(value: string) {
@@ -95,6 +109,8 @@ export function IngredientForm({
   submitLabel,
   disableUnitSelect = false,
 }: IngredientFormProps) {
+  const initialUnit = (defaultValues?.unit ?? 'count') as IngredientUnit;
+  const [selectedUnit, setSelectedUnit] = useState<IngredientUnit>(initialUnit);
   const today = new Date();
   const form = useForm({
     defaultValues: {
@@ -102,7 +118,7 @@ export function IngredientForm({
       category: defaultValues?.category ?? 'other',
       name: defaultValues?.name ?? '',
       count: defaultValues?.count ?? 1,
-      unit: (defaultValues?.unit ?? 'count') as IngredientUnit,
+      unit: initialUnit,
       store: defaultValues?.store ?? '',
       price: defaultValues?.price ?? 100,
     },
@@ -116,8 +132,8 @@ export function IngredientForm({
   });
 
   const isEditMode = Boolean(id);
-  const countStep = resolveAmountStep(form.state.values.unit);
-  const countMin = resolveAmountMin(form.state.values.unit);
+  const countStep = resolveAmountStep(selectedUnit);
+  const countMin = resolveAmountMin(selectedUnit);
 
   return (
     <form
@@ -200,11 +216,12 @@ export function IngredientForm({
                 <Form.Label required>수량</Form.Label>
                 <Form.Control>
                   <Counter
+                    key={`ingredient-count-${selectedUnit}`}
                     value={field.state.value}
                     min={countMin}
                     step={countStep}
-                    onChange={(nextValue) =>
-                      field.handleChange(normalizeAmountByUnit(nextValue, form.state.values.unit))
+                    onValueChange={(nextValue) =>
+                      field.handleChange(normalizeAmountByUnit(nextValue, selectedUnit))
                     }
                     invalid={Boolean(field.state.meta.errors[0])}
                   />
@@ -230,6 +247,7 @@ export function IngredientForm({
                     );
 
                     field.handleChange(nextUnit);
+                    setSelectedUnit(nextUnit);
                     if (convertedCount !== null) {
                       form.setFieldValue('count', normalizeAmountByUnit(convertedCount, nextUnit));
                       return;

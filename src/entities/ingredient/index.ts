@@ -10,4 +10,5 @@ export {
   resolveAmountMin,
   resolveAmountStep,
   toGrams,
+  validateAmountPrecisionByUnit,
 } from './model/unit';

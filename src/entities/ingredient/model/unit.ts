@@ -81,3 +81,12 @@ export function normalizeAmountByUnit(value: number, unit: IngredientUnit) {
   if (unit === 'kg') return Number(value.toFixed(1));
   return Math.round(value);
 }
+
+/**
+ * @description 단위별 수량 소수점 유효성을 검사합니다. kg는 소수점 1자리, 나머지는 정수만 허용합니다.
+ */
+export function validateAmountPrecisionByUnit(value: number, unit: IngredientUnit) {
+  if (!Number.isFinite(value)) return false;
+  if (unit === 'kg') return Number.isInteger(value * 10);
+  return Number.isInteger(value);
+}
