@@ -8,10 +8,6 @@ import {
   type WebPushSubscription,
 } from 'npm:web-push';
 
-interface GenerateRequestBody {
-  targetDate?: string;
-}
-
 interface PendingPushNotification {
   notification_id: string;
   user_id: string;
@@ -34,6 +30,17 @@ function isDeactivateTarget(error: unknown) {
 
 Deno.serve(async (request: Request) => {
   try {
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    if (cronSecret) {
+      const providedSecret = request.headers.get('x-cron-secret');
+      if (!providedSecret || providedSecret !== cronSecret) {
+        return new Response(JSON.stringify({ error: 'Invalid cron secret' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceRoleKey) {
@@ -51,13 +58,10 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const body = (await request.json().catch(() => ({}))) as GenerateRequestBody;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-    const { data, error } = await supabase.rpc('generate_expiry_soon_notifications', {
-      p_target_date: body.targetDate,
-    });
+    const { data, error } = await supabase.rpc('generate_expiry_soon_notifications');
 
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
