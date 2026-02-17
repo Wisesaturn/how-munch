@@ -156,6 +156,12 @@ project-root/
 - **fsd/no-ui-in-business-logic**: 비즈니스 로직 레이어에서 UI import 금지 (error)
 - **fsd/no-global-store-imports**: 전역 store 직접 import 금지, hooks 사용 (error)
 - **fsd/ordered-imports**: off (import/order로 대체)
+- **@x cross-import contract**:
+  - `eslint-plugin-fsd-lint`만으로는 FSD `@x` 의미를 완전하게 강제하지 못하므로, `no-restricted-imports`와 조합해 정책을 강제한다.
+  - `@x` 경로는 `src/entities/**` 내부에서만 사용 가능하다.
+  - Entity 간 교차 의존은 `@/entities/<slice>/@x/<consumer>` 형태만 허용한다.
+  - `@x` 루트 import(`@/entities/*/@x`)는 금지하고, 반드시 consumer 엔트리(`@x/<consumer>`)를 사용한다.
+  - Entity 레이어에서 cross-slice 결합이 필요할 때는 일반 public API(`@/entities/<slice>`) 대신 `@x` 계약을 우선한다.
 
 ### Naming (eslint-plugin-check-file)
 

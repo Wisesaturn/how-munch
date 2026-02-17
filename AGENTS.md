@@ -30,6 +30,12 @@
   - folders kebab-case (e.g., `meal-manager`)
 - Prefer `@/*` imports (mapped to `src/*`) over long relative paths.
 - Expose slice APIs through `index.ts`; avoid cross-slice direct imports in the same layer.
+- Entity cross-import policy (`@x`):
+  - `eslint-plugin-fsd-lint` does not provide first-class semantic validation for FSD `@x` contracts by itself.
+  - For cross-entity dependencies, use `@x/<consumer>` public API only (example: `@/entities/ingredient/@x/fridge-item`).
+  - `@x` imports are allowed only inside `src/entities/**`; non-entities layers must not import `@x`.
+  - In entities, importing other entity slice root public APIs for cross-slice coupling is disallowed; prefer explicit `@x/<consumer>` contracts.
+  - Do not import `@x` root (`@/entities/*/@x`); always import concrete consumer entry (`@/entities/*/@x/<consumer>`).
 - Server Components are default; add `"use client"` only where needed.
 - Use inline type imports (example: `import { type Profile } from '@/entities/profile'`).
 - Common UI files should use section comment blocks (e.g., `Root`, `Header`, `Content`) in the same style as existing shared UI components.
