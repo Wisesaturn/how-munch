@@ -13,5 +13,6 @@ export {
   unsubscribePush,
   urlBase64ToUint8Array,
 } from './notification';
+export { parseSafeNumericInput } from './numericInput';
 export { uuid } from './uuid';
 export { cva, type VariantProps } from 'class-variance-authority';

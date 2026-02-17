@@ -2,9 +2,10 @@ import * as React from 'react';
 
 import { useControlledState } from 'react-simplikit';
 import { Minus, Plus } from 'lucide-react';
+import { clamp } from 'es-toolkit';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cn } from '../lib';
+import { cn, parseSafeNumericInput } from '../lib';
 
 import { InputGroup } from './InputGroup';
 
@@ -49,62 +50,22 @@ function resolveDecimalScale(step: number) {
 }
 
 /**
- * @description 소수점 자릿수 기준으로 숫자 값을 정규화합니다.
- */
-function normalizeNumberByScale(value: number, decimalScale: number) {
-  if (!Number.isFinite(value)) return value;
-  if (decimalScale <= 0) return Math.round(value);
-  return Number(value.toFixed(decimalScale));
-}
-
-/**
- * @description 입력 필드에 표시할 숫자 문자열을 생성합니다.
- */
-function formatInputValue(value: number, decimalScale: number) {
-  const normalized = normalizeNumberByScale(value, decimalScale);
-  if (decimalScale <= 0) return String(normalized);
-  return String(normalized)
-    .replace(/\.0+$/, '')
-    .replace(/(\.\d*?)0+$/, '$1');
-}
-
-/**
  * @description 부호/소수점 자리수 조건에 맞는 입력 패턴 문자열을 반환합니다.
  */
-function resolveInputPattern(allowNegative: boolean, decimalScale: number) {
+function resolveNumericInputPattern(allowNegative: boolean, decimalScale: number) {
   if (decimalScale === 0) return allowNegative ? '-?[0-9]*' : '[0-9]*';
   return allowNegative
     ? `-?[0-9]*[.]?[0-9]{0,${decimalScale}}`
     : `[0-9]*[.]?[0-9]{0,${decimalScale}}`;
 }
 
-function clampValue(value: number, min?: number, max?: number) {
-  if (Number.isNaN(value)) return min ?? 0;
-  if (min !== undefined && value < min) return min;
-  if (max !== undefined && value > max) return max;
-  return value;
-}
-
-/** Design-system Counter 입력 규칙을 기준으로 숫자 형식만 남깁니다. */
-function sanitizeNumericText(value: string, allowNegative: boolean, decimalScale: number) {
-  const trimmed = value.replace(/\s/g, '').replace(/,/g, '.');
-  const withSign = allowNegative ? trimmed.replace(/(?!^-)-/g, '') : trimmed.replace(/-/g, '');
-  const cleaned = withSign.replace(/[^0-9.-]/g, '');
-
-  if (decimalScale === 0) {
-    return cleaned.replace(/\./g, '');
-  }
-
-  const firstDotIndex = cleaned.indexOf('.');
-
-  if (firstDotIndex < 0) return cleaned;
-
-  const integerPart = cleaned.slice(0, firstDotIndex + 1);
-  const decimalPart = cleaned
-    .slice(firstDotIndex + 1)
-    .replace(/\./g, '')
-    .slice(0, decimalScale);
-  return `${integerPart}${decimalPart}`;
+/**
+ * @description 소수점 자릿수 기준으로 숫자 값을 정규화합니다.
+ */
+function normalizeNumberByScale(value: number, decimalScale: number) {
+  if (!Number.isFinite(value)) return value;
+  if (decimalScale <= 0) return Math.round(value);
+  return Number(value.toFixed(decimalScale));
 }
 
 function Counter({
@@ -127,25 +88,28 @@ function Counter({
     defaultValue,
     onChange: onValueChange,
   });
-
-  const [inputValue, setInputValue] = React.useState(String(currentValue));
+  const [inputValue, setInputValue] = React.useState(
+    parseSafeNumericInput(currentValue, { decimalScale, allowNegative }).text,
+  );
 
   React.useEffect(
     function syncInputValueFromCurrentValue() {
-      setInputValue(formatInputValue(currentValue, decimalScale));
+      setInputValue(parseSafeNumericInput(currentValue, { decimalScale, allowNegative }).text);
     },
-    [currentValue, decimalScale],
+    [currentValue, decimalScale, allowNegative],
   );
 
   function updateValue(nextValue: number) {
-    const clampedValue = clampValue(nextValue, min, max);
+    const safeValue = Number.isNaN(nextValue) ? min : nextValue;
+    const clampedValue = max === undefined ? Math.max(min, safeValue) : clamp(safeValue, min, max);
     const normalizedValue = normalizeNumberByScale(clampedValue, decimalScale);
     setCurrentValue(normalizedValue);
-    setInputValue(formatInputValue(normalizedValue, decimalScale));
+    setInputValue(parseSafeNumericInput(normalizedValue, { decimalScale, allowNegative }).text);
   }
 
   function updateValueWithoutSyncInput(nextValue: number) {
-    const clampedValue = clampValue(nextValue, min, max);
+    const safeValue = Number.isNaN(nextValue) ? min : nextValue;
+    const clampedValue = max === undefined ? Math.max(min, safeValue) : clamp(safeValue, min, max);
     const normalizedValue = normalizeNumberByScale(clampedValue, decimalScale);
     setCurrentValue(normalizedValue);
   }
@@ -159,30 +123,23 @@ function Counter({
   }
 
   function changeInputValue(event: React.ChangeEvent<HTMLInputElement>) {
-    const sanitizedValue = sanitizeNumericText(event.target.value, allowNegative, decimalScale);
-    setInputValue(sanitizedValue);
+    const parsedInput = parseSafeNumericInput(event.target.value, {
+      decimalScale,
+      allowNegative,
+    });
+    setInputValue(parsedInput.text);
 
-    if (
-      !sanitizedValue ||
-      sanitizedValue === '-' ||
-      sanitizedValue === '.' ||
-      sanitizedValue === '-.' ||
-      sanitizedValue.endsWith('.')
-    ) {
-      return;
-    }
-
-    const parsedValue = Number(sanitizedValue);
-    if (!Number.isFinite(parsedValue)) return;
-    updateValueWithoutSyncInput(parsedValue);
+    if (parsedInput.value === null) return;
+    updateValueWithoutSyncInput(parsedInput.value);
   }
 
   function applyClampedValueOnBlur() {
-    if (!inputValue || inputValue === '-' || inputValue === '.' || inputValue === '-.') {
+    const parsedInput = parseSafeNumericInput(inputValue, { decimalScale, allowNegative });
+    if (parsedInput.value === null) {
       updateValue(min);
       return;
     }
-    updateValue(Number(inputValue));
+    updateValue(parsedInput.value);
   }
 
   function changeValueByDirection(direction: '+' | '-') {
@@ -218,7 +175,7 @@ function Counter({
       <InputGroup.Input
         value={inputValue}
         inputMode="decimal"
-        pattern={resolveInputPattern(allowNegative, decimalScale)}
+        pattern={resolveNumericInputPattern(allowNegative, decimalScale)}
         onChange={changeInputValue}
         onBlur={applyClampedValueOnBlur}
         onKeyDown={captureArrowKeyForStepControl}

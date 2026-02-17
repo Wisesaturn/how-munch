@@ -99,6 +99,7 @@ function MealIngredientRow({
         <MealIngredientCountControl
           amount={ingredient.amount}
           max={sliderBoundary.max}
+          unit={selectedUnit}
           unitLabel={unitLabel}
           disabled={isCountInputDisabled}
           onChangeAmount={onChangeIngredientAmount}
