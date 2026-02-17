@@ -40,6 +40,8 @@ export interface FridgeItemBatch {
   purchased_date: string;
   /** 메모 */
   memo: string | null;
+  /** 소프트 삭제 시각 */
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }

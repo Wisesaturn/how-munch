@@ -301,15 +301,14 @@ export function useDeleteIngredientMutation() {
 
       const { error: deleteIngredientError } = await supabase
         .from('ingredients')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', id);
       if (deleteIngredientError) throw deleteIngredientError;
 
       if (linkedFridgeBatchId) {
-        const { error: deleteBatchError } = await supabase
-          .from('fridge_item_batches')
-          .delete()
-          .eq('id', linkedFridgeBatchId);
+        const { error: deleteBatchError } = await supabase.rpc('soft_delete_fridge_batch', {
+          p_batch_id: linkedFridgeBatchId,
+        });
         if (deleteBatchError) throw deleteBatchError;
       }
 

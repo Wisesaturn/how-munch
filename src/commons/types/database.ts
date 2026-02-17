@@ -125,6 +125,7 @@ export interface Database {
           unit: 'count' | 'g' | 'kg';
           linked_fridge_item_id: string | null;
           linked_fridge_batch_id: string | null;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -141,6 +142,7 @@ export interface Database {
           unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
           linked_fridge_batch_id?: string | null;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -157,6 +159,7 @@ export interface Database {
           unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
           linked_fridge_batch_id?: string | null;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -223,6 +226,7 @@ export interface Database {
           expiry_date: string | null;
           purchased_date: string;
           memo: string | null;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -233,6 +237,7 @@ export interface Database {
           expiry_date?: string | null;
           purchased_date?: string;
           memo?: string | null;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -243,6 +248,7 @@ export interface Database {
           expiry_date?: string | null;
           purchased_date?: string;
           memo?: string | null;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -535,6 +541,10 @@ export interface Database {
       };
       soft_delete_fridge_item: {
         Args: { p_fridge_item_id: string };
+        Returns: undefined;
+      };
+      soft_delete_fridge_batch: {
+        Args: { p_batch_id: string };
         Returns: undefined;
       };
     };

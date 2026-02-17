@@ -25,6 +25,8 @@ export interface Ingredient {
   linked_fridge_item_id: string | null;
   /** 연결된 냉장고 배치 ID (장보기-재고 입고 1:1 추적용) */
   linked_fridge_batch_id: string | null;
+  /** 소프트 삭제 시각 */
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }

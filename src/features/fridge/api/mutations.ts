@@ -163,7 +163,9 @@ export function useDeleteBatchMutation() {
   return useMutation({
     mutationFn: async (id: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from('fridge_item_batches').delete().eq('id', id);
+      const { error } = await supabase.rpc('soft_delete_fridge_batch', {
+        p_batch_id: id,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

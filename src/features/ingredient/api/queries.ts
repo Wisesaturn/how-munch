@@ -23,6 +23,7 @@ export function useIngredientsQuery(householdId: string | null, year: number, mo
             .from('ingredients')
             .select('*')
             .eq('household_id', householdId)
+            .is('deleted_at', null)
             .gte('date', start)
             .lte('date', end)
             .order('date', { ascending: false });
@@ -46,6 +47,7 @@ export function useStoreNamesQuery(householdId: string | null) {
             .from('ingredients')
             .select('store')
             .eq('household_id', householdId)
+            .is('deleted_at', null)
             .not('store', 'is', null);
 
           if (error) throw error;
