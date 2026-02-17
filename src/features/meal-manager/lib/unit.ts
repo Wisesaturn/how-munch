@@ -1,5 +1,7 @@
 import { formatWeightAuto, isWeightUnit, type IngredientUnit } from '@/entities/ingredient';
 
+import { normalizeAmount } from '../model/amount';
+
 /**
  * @description 재료 단위 값을 사용자 표시용 문자열(개/g/kg)로 변환합니다.
  */
@@ -34,10 +36,11 @@ function formatIngredientAmountInfo(value: number, unit: IngredientUnit | undefi
  */
 function resolveSliderBoundaries(totalCount: number | string | undefined) {
   const parsedCount = Number(totalCount);
-  if (!Number.isFinite(parsedCount)) return { min: 1, max: 1, disabled: true };
+  if (!Number.isFinite(parsedCount)) return { min: 1, max: 0, disabled: true };
 
-  const max = Math.max(0, parsedCount);
-  if (max < 1) return { min: 1, max: 1, disabled: true };
+  // DB 수치 연산 후 부동소수점 오차(예: 0.099999999)가 UI 비활성화 조건을 깨지 않도록 보정합니다.
+  const max = normalizeAmount(Math.max(0, parsedCount));
+  if (max <= 0) return { min: 1, max: 0, disabled: true };
 
   return { min: 1, max, disabled: false };
 }
@@ -54,9 +57,9 @@ function resolveWeightSliderStep(unit: IngredientUnit | undefined) {
 /**
  * @description 단위별 슬라이더 최소값을 반환합니다.
  */
-function resolveWeightSliderMin(unit: IngredientUnit | undefined, max: number) {
-  if (unit === 'g') return max >= 10 ? 10 : 1;
-  if (unit === 'kg') return 0.1;
+function resolveWeightSliderMin(unit: IngredientUnit | undefined) {
+  if (unit === 'g') return 0;
+  if (unit === 'kg') return 0;
   return 1;
 }
 

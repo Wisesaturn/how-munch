@@ -53,15 +53,17 @@ function MealIngredientRow({
   const unitLabel = resolveIngredientUnitLabel(selectedUnit);
   const sliderBoundary = resolveSliderBoundaries(selectedMaxAvailableAmount);
   const sliderStep = resolveWeightSliderStep(selectedUnit);
-  const sliderMin = resolveWeightSliderMin(selectedUnit, sliderBoundary.max);
+  const sliderMin = resolveWeightSliderMin(selectedUnit);
 
   /* -------------------------------------------------------------------------- */
   /* Display / Control Constants                                                 */
   /* -------------------------------------------------------------------------- */
   const sliderValue = ingredient.amount > 0 ? ingredient.amount : sliderMin;
   const selectedAmount = Math.min(Math.max(sliderValue, sliderMin), sliderBoundary.max);
-  const isAmountControlDisabled = sliderBoundary.disabled || !selectedIngredient;
-  const isCountInputDisabled = !selectedIngredient;
+  const isAmountControlDisabled =
+    !selectedIngredient ||
+    (isWeightUnit(selectedUnit) ? sliderBoundary.max < sliderMin : sliderBoundary.max < 1);
+  const isCountInputDisabled = !selectedIngredient || sliderBoundary.max < 1;
   const ingredientSelectValue = ingredient.fridge_item_id || emptySelectValue;
 
   return (

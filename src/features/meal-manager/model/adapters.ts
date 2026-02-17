@@ -2,6 +2,8 @@ import { type Meal } from '@/entities/meal';
 
 import { type EditorDish } from '../lib';
 
+import { addAmount, normalizeAmount } from './amount';
+
 /**
  * @description Meal 엔티티를 식단 에디터의 dishes 폼 상태 구조로 변환합니다.
  */
@@ -16,7 +18,7 @@ function toEditorDishes(meal: Meal | null): EditorDish[] {
       name: dish.name === '[이름 없음]' ? '' : dish.name,
       ingredients: (dish.ingredients ?? []).map((ingredient) => ({
         fridge_item_id: ingredient.fridge_item_id,
-        amount: Number(ingredient.amount),
+        amount: normalizeAmount(Number(ingredient.amount)),
       })),
     }));
 }
@@ -28,8 +30,10 @@ function createInUseStockAmountByItemId(dishes: EditorDish[]) {
   return dishes.reduce<Record<string, number>>((accumulator, dish) => {
     dish.ingredients.forEach((ingredient) => {
       if (!ingredient.fridge_item_id) return;
-      accumulator[ingredient.fridge_item_id] =
-        (accumulator[ingredient.fridge_item_id] ?? 0) + ingredient.amount;
+      accumulator[ingredient.fridge_item_id] = addAmount(
+        accumulator[ingredient.fridge_item_id] ?? 0,
+        ingredient.amount,
+      );
     });
 
     return accumulator;

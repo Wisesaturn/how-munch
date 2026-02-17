@@ -6,6 +6,8 @@ import { type Database } from '@/commons/types';
 
 import { type MealType } from '@/entities/meal';
 
+import { addAmount, isPositiveAmount, normalizeAmount, subtractAmount } from '../model/amount';
+
 import { mealKeys } from './queryKey';
 
 type MealInsert = Database['public']['Tables']['meals']['Insert'];
@@ -37,9 +39,9 @@ interface MealBatchUsageRow {
 }
 
 function toSafePositiveAmount(value: unknown) {
-  const amount = Number(value);
+  const amount = normalizeAmount(Number(value));
   if (!Number.isFinite(amount)) return 0;
-  if (amount <= 0) return 0;
+  if (!isPositiveAmount(amount)) return 0;
   return amount;
 }
 
@@ -54,7 +56,7 @@ function aggregateIngredientAmounts(
     if (amount <= 0) continue;
 
     const prev = usageByFridgeItemId.get(ingredient.fridge_item_id) ?? 0;
-    usageByFridgeItemId.set(ingredient.fridge_item_id, prev + amount);
+    usageByFridgeItemId.set(ingredient.fridge_item_id, addAmount(prev, amount));
   }
 
   return usageByFridgeItemId;
@@ -82,14 +84,14 @@ async function restoreMealBatchUsages(supabase: ReturnType<typeof createClient>,
       .single();
     if (batchSelectError) throw batchSelectError;
 
-    const currentQuantity = Number(batch.quantity);
+    const currentQuantity = normalizeAmount(Number(batch.quantity));
     if (!Number.isFinite(currentQuantity)) {
       throw new Error('재고 수량 형식이 올바르지 않습니다.');
     }
 
     const { error: batchUpdateError } = await supabase
       .from('fridge_item_batches')
-      .update({ quantity: currentQuantity + restoreAmount })
+      .update({ quantity: addAmount(currentQuantity, restoreAmount) })
       .eq('id', usage.batch_id);
     if (batchUpdateError) throw batchUpdateError;
   }
@@ -110,7 +112,7 @@ async function consumeFridgeItemBatchesWithUsageLog(
 
   for (const [fridgeItemId, totalUsageAmount] of usageByFridgeItemId) {
     let remainingAmount = toSafePositiveAmount(totalUsageAmount);
-    if (remainingAmount <= 0) continue;
+    if (!isPositiveAmount(remainingAmount)) continue;
 
     const { data: batches, error: batchesError } = await supabase
       .from('fridge_item_batches')
@@ -123,13 +125,13 @@ async function consumeFridgeItemBatchesWithUsageLog(
     const typedBatches = (batches ?? []) as Array<{ id: string; quantity: number }>;
 
     for (const batch of typedBatches) {
-      if (remainingAmount <= 0) break;
+      if (!isPositiveAmount(remainingAmount)) break;
 
-      const batchQuantity = Number(batch.quantity);
+      const batchQuantity = normalizeAmount(Number(batch.quantity));
       if (!Number.isFinite(batchQuantity) || batchQuantity <= 0) continue;
 
-      const consumedAmount = Math.min(batchQuantity, remainingAmount);
-      const nextBatchQuantity = batchQuantity - consumedAmount;
+      const consumedAmount = normalizeAmount(Math.min(batchQuantity, remainingAmount));
+      const nextBatchQuantity = subtractAmount(batchQuantity, consumedAmount);
 
       const { error: batchUpdateError } = await supabase
         .from('fridge_item_batches')
@@ -144,10 +146,10 @@ async function consumeFridgeItemBatchesWithUsageLog(
         amount: consumedAmount,
       });
 
-      remainingAmount -= consumedAmount;
+      remainingAmount = subtractAmount(remainingAmount, consumedAmount);
     }
 
-    if (remainingAmount > 0) {
+    if (isPositiveAmount(remainingAmount)) {
       throw new Error('냉장고 재고가 부족합니다. 식단 재료 수량을 확인해 주세요.');
     }
   }

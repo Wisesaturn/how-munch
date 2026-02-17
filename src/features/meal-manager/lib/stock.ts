@@ -1,3 +1,5 @@
+import { normalizeAmount } from '../model/amount';
+
 import { type FridgeStockInfo, type MealFridgeItem } from './types';
 import { resolveIngredientUnitLabel } from './unit';
 
@@ -9,10 +11,13 @@ function createFridgeStockInfoById(fridgeItems: MealFridgeItem[]) {
 
   fridgeItems.forEach((item) => {
     const availableAmount = Number(item.total_count);
+    const normalizedAvailableAmount = normalizeAmount(availableAmount);
 
     stockInfoById[item.id] = {
       itemName: item.name,
-      availableAmount: Number.isFinite(availableAmount) ? Math.max(0, availableAmount) : 0,
+      availableAmount: Number.isFinite(availableAmount)
+        ? Math.max(0, normalizedAvailableAmount)
+        : 0,
       unit: item.unit,
       unitLabel: resolveIngredientUnitLabel(item.unit),
     };
