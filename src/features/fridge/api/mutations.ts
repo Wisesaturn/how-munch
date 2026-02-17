@@ -81,8 +81,10 @@ export function useDeleteFridgeItemMutation() {
   return useMutation({
     mutationFn: async (id: string) => {
       const supabase = createClient();
-      const { error } = await supabase.from('fridge_items').delete().eq('id', id);
-      if (error) throw error;
+      const { error: deleteError } = await supabase.rpc('soft_delete_fridge_item', {
+        p_fridge_item_id: id,
+      });
+      if (deleteError) throw deleteError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fridgeKeys.all });

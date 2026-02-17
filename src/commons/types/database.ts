@@ -124,6 +124,7 @@ export interface Database {
           count: number;
           unit: 'count' | 'g' | 'kg';
           linked_fridge_item_id: string | null;
+          linked_fridge_batch_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -139,6 +140,7 @@ export interface Database {
           count?: number;
           unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
+          linked_fridge_batch_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -154,6 +156,7 @@ export interface Database {
           count?: number;
           unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
+          linked_fridge_batch_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -170,6 +173,7 @@ export interface Database {
           is_subdivided: boolean;
           category: string;
           from_grocery: boolean;
+          deleted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -183,6 +187,7 @@ export interface Database {
           is_subdivided?: boolean;
           category?: string;
           from_grocery?: boolean;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -196,6 +201,7 @@ export interface Database {
           is_subdivided?: boolean;
           category?: string;
           from_grocery?: boolean;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -526,6 +532,10 @@ export interface Database {
       mark_notifications_push_sent: {
         Args: { p_ids: string[] };
         Returns: number;
+      };
+      soft_delete_fridge_item: {
+        Args: { p_fridge_item_id: string };
+        Returns: undefined;
       };
     };
     Enums: {

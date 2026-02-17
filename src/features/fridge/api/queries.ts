@@ -18,6 +18,7 @@ export function useFridgeItemsQuery(householdId: string | null) {
             .from('fridge_items')
             .select('*, fridge_item_batches(*), meal_batch_usages(*)')
             .eq('household_id', householdId)
+            .is('deleted_at', null)
             .order('name');
 
           if (error) throw error;

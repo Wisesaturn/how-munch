@@ -101,6 +101,7 @@ export function useFridgeItemsForMealQuery(householdId: string | null) {
             .from('fridge_items')
             .select('id, name, total_count, unit, fridge_item_batches(purchased_date, quantity)')
             .eq('household_id', householdId)
+            .is('deleted_at', null)
             .order('name', { ascending: true });
 
           if (error) throw error;

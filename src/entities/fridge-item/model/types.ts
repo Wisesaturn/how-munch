@@ -22,6 +22,8 @@ export interface FridgeItem {
   category: string;
   /** 장보기 연동 여부 — true일 경우 이름/카테고리 수정 불가 */
   from_grocery: boolean;
+  /** 소프트 삭제 시각 */
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
