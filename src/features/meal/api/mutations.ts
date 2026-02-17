@@ -81,8 +81,9 @@ async function restoreMealBatchUsages(supabase: ReturnType<typeof createClient>,
       .from('fridge_item_batches')
       .select('id, quantity')
       .eq('id', usage.batch_id)
-      .single();
+      .maybeSingle();
     if (batchSelectError) throw batchSelectError;
+    if (!batch) continue;
 
     const currentQuantity = normalizeAmount(Number(batch.quantity));
     if (!Number.isFinite(currentQuantity)) {
