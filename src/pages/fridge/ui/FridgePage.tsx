@@ -17,7 +17,7 @@ import {
   FridgeItemList,
   FridgeSearch,
   useFridgeItemsQuery,
-} from '@/features/fridge-manager';
+} from '@/features/fridge';
 
 interface FridgePageProps {
   householdId: string;

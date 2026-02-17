@@ -13,11 +13,11 @@ import {
   FridgeBatchEditScreen,
   FridgeItemAddScreen,
   FridgeItemEditScreen,
-} from '@/features/fridge-manager';
+} from '@/features/fridge';
 import { IngredientAddScreen, IngredientEditScreen } from '@/features/ingredient';
-import { MealEditorScreen } from '@/features/meal-manager';
-import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification-manager';
-import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile-manager';
+import { MealEditorScreen } from '@/features/meal';
+import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
+import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
 
 function IdleActivity() {
   const activity = useActivity();

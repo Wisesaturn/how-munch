@@ -9,7 +9,7 @@ import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 import { useUserQuery } from '@/commons/api/auth/queries';
 import { Alert, Button } from '@/commons/ui';
 
-import { useUnreadNotificationsCountQuery } from '@/features/notification-manager';
+import { useUnreadNotificationsCountQuery } from '@/features/notification';
 
 import { MainAppBar } from '@/modules/main-app-bar';
 

@@ -8,7 +8,7 @@ import { createClient } from '@/commons/api/supabase/client';
 import {
   showPushPermissionToast,
   syncPushPermissionAndSubscription,
-} from '@/features/notification-manager';
+} from '@/features/notification';
 
 export function NotificationPermissionSync() {
   const { data: user } = useUserQuery();

@@ -17,7 +17,7 @@ import { Badge, Button, Card, EmptyState } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
-import { useMealsByDateQuery } from '@/features/meal-manager';
+import { useMealsByDateQuery } from '@/features/meal';
 
 interface MealPageProps {
   householdId: string;

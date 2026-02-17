@@ -17,7 +17,7 @@ import {
   MemberListSkeleton,
   useHouseholdQuery,
   useMembersQuery,
-} from '@/features/household-manager';
+} from '@/features/household';
 
 interface ProfilePageProps {
   userId: string;

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import { Button, Toast } from '@/commons/ui';
 
-import { useJoinHouseholdMutation } from '@/features/household-manager';
+import { useJoinHouseholdMutation } from '@/features/household';
 
 interface InviteJoinButtonProps {
   code: string;
