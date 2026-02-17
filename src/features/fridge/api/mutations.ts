@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
+import { resolveDomainError } from '@/commons/lib';
 import { type Database } from '@/commons/types';
 
 import { type FridgeItem, type FridgeItemBatch } from '@/entities/fridge-item';
@@ -12,21 +13,13 @@ type FridgeItemUpdate = Database['public']['Tables']['fridge_items']['Update'];
 type BatchInsert = Database['public']['Tables']['fridge_item_batches']['Insert'];
 type BatchUpdate = Database['public']['Tables']['fridge_item_batches']['Update'];
 
-interface DatabaseErrorLike {
-  code?: string;
-  message?: string;
-  details?: string | null;
-}
-
 /**
  * @description 식단 사용 이력으로 인한 삭제 불가 에러를 사용자 메시지로 매핑합니다.
  */
 function resolveFridgeDeleteError(error: unknown) {
-  const dbError = error as DatabaseErrorLike | null;
-  const source = `${dbError?.message ?? ''} ${dbError?.details ?? ''}`;
-
-  if (dbError?.code === '23503' && source.includes('meal_batch_usages_batch_id_fkey')) {
-    return new Error('식단에 등록되어 있는 재료는 삭제할 수 없습니다.');
+  const domainError = resolveDomainError(error);
+  if (domainError) {
+    return new Error(domainError.message);
   }
 
   if (error instanceof Error) return error;

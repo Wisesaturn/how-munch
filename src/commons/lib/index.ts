@@ -1,5 +1,6 @@
 export { cn } from './cn';
 export { createSafeContext } from './context';
+export { DOMAIN_ERROR_CODE, DOMAIN_ERROR_MESSAGE, resolveDomainError } from './domainError';
 export { ERROR_MSG } from './errorMessage';
 export { extractFieldErrorMessage } from './extractFieldErrorMessage';
 export {

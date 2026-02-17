@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
+import { resolveDomainError } from '@/commons/lib';
 import { fridgeKeys } from '@/commons/model/queryKey';
 import { type Database } from '@/commons/types';
 
@@ -14,18 +15,16 @@ type FridgeItemInsert = Database['public']['Tables']['fridge_items']['Insert'];
 type BatchInsert = Database['public']['Tables']['fridge_item_batches']['Insert'];
 
 /**
- * @description 배치가 식단에서 사용 중인지 확인합니다.
+ * @description 장보기 삭제 관련 DB 에러를 사용자 메시지로 변환합니다.
  */
-async function isBatchUsedInMeal(batchId: string) {
-  const supabase = createClient();
+function resolveIngredientDeleteError(error: unknown) {
+  const domainError = resolveDomainError(error);
+  if (domainError) {
+    return new Error(domainError.message);
+  }
 
-  const { count, error } = await supabase
-    .from('meal_batch_usages')
-    .select('*', { count: 'exact', head: true })
-    .eq('batch_id', batchId);
-  if (error) throw error;
-
-  return (count ?? 0) > 0;
+  if (error instanceof Error) return error;
+  return new Error('장보기 삭제 중 오류가 발생했습니다.');
 }
 
 /**
@@ -45,7 +44,7 @@ async function cleanupFridgeItemIfNoBatches(fridgeItemId: string) {
   const { error: softDeleteError } = await supabase.rpc('soft_delete_fridge_item', {
     p_fridge_item_id: fridgeItemId,
   });
-  if (softDeleteError) throw softDeleteError;
+  if (softDeleteError) throw resolveIngredientDeleteError(softDeleteError);
 }
 
 /**
@@ -315,15 +314,10 @@ export function useDeleteIngredientMutation() {
       const linkedFridgeBatchId = ingredient.linked_fridge_batch_id;
 
       if (linkedFridgeBatchId) {
-        const isUsedBatch = await isBatchUsedInMeal(linkedFridgeBatchId);
-        if (isUsedBatch) {
-          throw new Error('현재 등록되어 있는 식단이 있어 삭제할 수 없습니다.');
-        }
-
         const { error: deleteBatchError } = await supabase.rpc('soft_delete_fridge_batch', {
           p_batch_id: linkedFridgeBatchId,
         });
-        if (deleteBatchError) throw deleteBatchError;
+        if (deleteBatchError) throw resolveIngredientDeleteError(deleteBatchError);
       } else if (linkedFridgeItemId) {
         await cleanupFridgeItemIfNoBatches(linkedFridgeItemId);
       }
@@ -331,7 +325,7 @@ export function useDeleteIngredientMutation() {
       const { error: deleteIngredientError } = await supabase.rpc('soft_delete_ingredient', {
         p_ingredient_id: id,
       });
-      if (deleteIngredientError) throw deleteIngredientError;
+      if (deleteIngredientError) throw resolveIngredientDeleteError(deleteIngredientError);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
