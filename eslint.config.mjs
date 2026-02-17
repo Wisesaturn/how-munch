@@ -1,3 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
@@ -31,7 +35,7 @@ const fsdLayers = {
   entities: {
     pattern: 'entities',
     priority: 5,
-    allowedToImport: ['commons'],
+    allowedToImport: ['entities', 'commons'],
   },
   commons: {
     pattern: 'commons',
@@ -41,6 +45,37 @@ const fsdLayers = {
 };
 
 const fsdAlias = { value: '@', withSlash: true };
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const entitiesRootPath = path.join(__dirname, 'src', 'entities');
+const entitySlices = fs.existsSync(entitiesRootPath)
+  ? fs
+      .readdirSync(entitiesRootPath, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+      .map((entry) => entry.name)
+  : [];
+
+const entityXImportRestrictionConfigs = entitySlices.map((sliceName) => ({
+  files: [`src/entities/${sliceName}/**/*`],
+  rules: {
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            regex: '^@/entities/[^/]+(?:/index(?:\\.[^/]+)?)?$',
+            message:
+              'entities 내부에서는 다른 슬라이스의 일반 Public API import를 금지합니다. @x 경로를 사용하세요.',
+          },
+          {
+            group: ['@/entities/*/@x/*', `!@/entities/*/@x/${sliceName}`],
+            message: `${sliceName} 슬라이스는 @x 경로 중 자신의 consumer 파일(@x/${sliceName})만 사용할 수 있습니다.`,
+          },
+        ],
+      },
+    ],
+  },
+}));
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -94,6 +129,23 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // Entities layer — @x 기반 cross-import 허용
+  {
+    files: ['src/entities/**/*'],
+    rules: {
+      'fsd/forbidden-imports': 'off',
+      'fsd/no-cross-slice-dependency': 'off',
+      'fsd/no-public-api-sidestep': [
+        'error',
+        {
+          alias: fsdAlias,
+          layers: ['entities'],
+          ignoreImportPatterns: ['^@/entities/[^/]+/@x/[^/]+$'],
+        },
+      ],
+    },
+  },
+
   // Custom rules
   {
     rules: {
@@ -139,6 +191,23 @@ const eslintConfig = defineConfig([
         },
       ],
       'import/no-duplicates': 'warn',
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@/entities/*/@x',
+                '@/entities/*/@x/index',
+                '@/entities/*/@x/index.*',
+                '@/entities/*/@x/*',
+              ],
+              message:
+                '@x 경로는 entities 간 교차 의존 전용입니다. 엔티티 외 레이어에서는 사용할 수 없습니다.',
+            },
+          ],
+        },
+      ],
     },
   },
 
@@ -158,6 +227,35 @@ const eslintConfig = defineConfig([
       'check-file/folder-naming-convention': ['error', { 'src/**': 'KEBAB_CASE' }],
     },
   },
+
+  // Entities @x public API — naming convention 예외
+  {
+    files: ['src/entities/**/@x/**/*'],
+    rules: {
+      'check-file/filename-naming-convention': 'off',
+      'check-file/folder-naming-convention': 'off',
+    },
+  },
+
+  // Entities layer — @x 루트 import 금지
+  {
+    files: ['src/entities/**/*'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/entities/*/@x', '@/entities/*/@x/index', '@/entities/*/@x/index.*'],
+              message: '@x 루트 import는 금지입니다. @x/<consumer> 파일을 사용하세요.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  ...entityXImportRestrictionConfigs,
 
   // Next.js convention files — 파일명 규칙 예외
   {
