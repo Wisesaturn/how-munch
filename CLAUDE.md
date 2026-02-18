@@ -92,6 +92,8 @@ project-root/
   - 검증/잠금 기반 read-modify-write 갱신은 `_guarded` 접미를 사용한다. 예: `update_fridge_batch_guarded`.
   - RPC 파라미터는 `p_` prefix를 사용한다. 예: `p_household_id`, `p_updates`.
   - 하나의 RPC는 하나의 트랜잭션 경계와 하나의 반환 계약을 갖도록 유지한다.
+  - RPC 커스텀 예외는 반드시 `errcode`와 `hint`를 함께 명시한다. 예: `raise exception ... using errcode = 'X0001', hint = 'SOME_DOMAIN_REASON'`.
+  - RPC 커스텀 예외를 추가/변경하면 같은 변경에서 `src/commons/lib/domainError.ts`에 code/hint 대응도 함께 추가한다.
 - TanStack Form 유효성 검사는 `zod` 스키마를 작성하고 `useForm`의 `validators` 옵션에 연결한다.
   - 기본: `validators: { onSubmit: schema, onChange: schema }`
   - `onSubmit`, `onChange`는 항상 함께 설정하고, `onBlur`는 필요한 경우에만 추가한다.

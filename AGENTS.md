@@ -58,6 +58,8 @@
   - for guarded read-modify-write updates, use `_guarded` suffix (example: `update_fridge_batch_guarded`).
   - RPC args must use `p_` prefix (example: `p_household_id`, `p_updates`).
   - keep one RPC responsible for one transaction boundary and one return contract.
+  - every RPC custom exception must set both `errcode` and `hint` (`raise exception ... using errcode = 'X0001', hint = 'SOME_DOMAIN_REASON'`).
+  - whenever adding/changing RPC custom exceptions, update `src/commons/lib/domainError.ts` with both code and hint entries in the same change.
 - TanStack Form validation rule:
   - use `zod` schema and connect it through `useForm({ validators: { onSubmit: schema, onChange: schema } })` by default.
   - `onSubmit` and `onChange` must both be set for standard form validation flows (add `onBlur` only when needed).

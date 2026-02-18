@@ -10,6 +10,12 @@ const DOMAIN_ERROR_CODE = {
 
   // M000x: 식단(Meal) 도메인
   MEAL_STOCK_INSUFFICIENT: 'M0001',
+
+  // I000x: 재료(Ingredient) 도메인 - 카테고리 관리
+  INGREDIENT_CATEGORY_OTHER_DELETE_NOT_ALLOWED: 'I0001',
+  INGREDIENT_CATEGORY_OTHER_NOT_FOUND: 'I0002',
+  INGREDIENT_CATEGORY_ID_NOT_FOUND: 'I0003',
+  INGREDIENT_CATEGORY_REPLACEMENT_NOT_FOUND: 'I0004',
 } as const;
 
 type DomainErrorCodeKey = keyof typeof DOMAIN_ERROR_CODE;
@@ -38,6 +44,12 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainErrorCode, string> = {
 
   // M000x: 식단(Meal) 도메인
   M0001: '냉장고 재고가 부족합니다. 식단 재료 수량을 확인해 주세요.',
+
+  // I000x: 재료(Ingredient) 도메인 - 카테고리 관리
+  I0001: '기본 카테고리(기타)는 삭제할 수 없습니다.',
+  I0002: '기본 카테고리(기타)를 찾을 수 없습니다.',
+  I0003: '유효하지 않은 카테고리입니다.',
+  I0004: '대체할 기본 카테고리(기타)를 찾을 수 없습니다.',
 };
 
 /**

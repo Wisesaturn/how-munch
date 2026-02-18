@@ -162,6 +162,7 @@ export interface Database {
           price: number;
           store: string | null;
           category: string;
+          category_id: string;
           count: number;
           unit: 'count' | 'g' | 'kg';
           linked_fridge_item_id: string | null;
@@ -179,6 +180,7 @@ export interface Database {
           price?: number;
           store?: string | null;
           category?: string;
+          category_id?: string;
           count?: number;
           unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
@@ -196,6 +198,7 @@ export interface Database {
           price?: number;
           store?: string | null;
           category?: string;
+          category_id?: string;
           count?: number;
           unit?: 'count' | 'g' | 'kg';
           linked_fridge_item_id?: string | null;
@@ -204,7 +207,15 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'ingredients_category_id_fkey';
+            columns: ['category_id'];
+            isOneToOne: false;
+            referencedRelation: 'ingredient_categories';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       fridge_items: {
         Row: {
@@ -216,6 +227,7 @@ export interface Database {
           unit: 'count' | 'g' | 'kg';
           is_subdivided: boolean;
           category: string;
+          category_id: string;
           from_grocery: boolean;
           deleted_at: string | null;
           created_at: string;
@@ -230,6 +242,7 @@ export interface Database {
           unit?: 'count' | 'g' | 'kg';
           is_subdivided?: boolean;
           category?: string;
+          category_id?: string;
           from_grocery?: boolean;
           deleted_at?: string | null;
           created_at?: string;
@@ -244,6 +257,7 @@ export interface Database {
           unit?: 'count' | 'g' | 'kg';
           is_subdivided?: boolean;
           category?: string;
+          category_id?: string;
           from_grocery?: boolean;
           deleted_at?: string | null;
           created_at?: string;
@@ -256,6 +270,13 @@ export interface Database {
             isOneToOne: false;
             referencedRelation: 'fridge_item_batches';
             referencedColumns: ['fridge_item_id'];
+          },
+          {
+            foreignKeyName: 'fridge_items_category_id_fkey';
+            columns: ['category_id'];
+            isOneToOne: false;
+            referencedRelation: 'ingredient_categories';
+            referencedColumns: ['id'];
           },
         ];
       };
@@ -553,6 +574,7 @@ export interface Database {
           price: number;
           store: string | null;
           category: string;
+          category_id: string;
           count: number;
           unit: 'count' | 'g' | 'kg';
           linked_fridge_item_id: string | null;
@@ -588,6 +610,7 @@ export interface Database {
           unit: 'count' | 'g' | 'kg';
           is_subdivided: boolean;
           category: string;
+          category_id: string;
           from_grocery: boolean;
           deleted_at: string | null;
           created_at: string;
@@ -653,6 +676,10 @@ export interface Database {
         Args: { p_ids: string[] };
         Returns: number;
       };
+      resolve_ingredient_category_id: {
+        Args: { p_household_id: string | null; p_category_code: string };
+        Returns: string;
+      };
       soft_delete_fridge_item: {
         Args: { p_fridge_item_id: string };
         Returns: undefined;
@@ -676,6 +703,7 @@ export interface Database {
           price: number;
           store: string | null;
           category: string;
+          category_id: string;
           count: number;
           unit: 'count' | 'g' | 'kg';
           linked_fridge_item_id: string | null;
