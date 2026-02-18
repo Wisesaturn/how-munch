@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { CATEGORIES } from '@/commons/config';
 import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -20,11 +19,14 @@ import {
   validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
-import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
+import {
+  resolveDefaultCategoryId,
+  useIngredientCategoriesQuery,
+} from '@/entities/ingredient-category';
 
 export interface IngredientFormValues {
   date: string;
-  category: string;
+  category_id: string;
   name: string;
   count: number;
   unit: IngredientUnit;
@@ -53,7 +55,7 @@ function createIngredientFormSchema(categoryIds: string[]) {
         .string()
         .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '날짜' }))
         .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '날짜' })),
-      category: z.string().refine((value) => categoryIds.includes(value), {
+      category_id: z.string().refine((value) => categoryIds.includes(value), {
         message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
       }),
       name: z
@@ -112,7 +114,7 @@ export function IngredientForm({
   disableUnitSelect = false,
   householdId = null,
 }: IngredientFormProps) {
-  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const categoryIds = useMemo(
     () => categoryOptions.map((category) => category.id),
     [categoryOptions],
@@ -121,13 +123,17 @@ export function IngredientForm({
     () => createIngredientFormSchema(categoryIds),
     [categoryIds],
   );
+  const defaultCategoryId = useMemo(
+    () => resolveDefaultCategoryId(categoryOptions, defaultValues?.category_id),
+    [categoryOptions, defaultValues?.category_id],
+  );
   const initialUnit = (defaultValues?.unit ?? 'count') as IngredientUnit;
   const [selectedUnit, setSelectedUnit] = useState<IngredientUnit>(initialUnit);
   const today = new Date();
   const form = useForm({
     defaultValues: {
       date: defaultValues?.date ?? format(new Date(), 'yyyy-MM-dd'),
-      category: defaultValues?.category ?? 'other',
+      category_id: defaultCategoryId,
       name: defaultValues?.name ?? '',
       count: defaultValues?.count ?? 1,
       unit: initialUnit,
@@ -178,7 +184,7 @@ export function IngredientForm({
       </form.Field>
 
       {/* 카테고리 */}
-      <form.Field name="category">
+      <form.Field name="category_id">
         {(field) => (
           <Form.Field field={field}>
             <Form.Label required>카테고리</Form.Label>

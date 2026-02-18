@@ -18,8 +18,8 @@ export interface FridgeItem {
   unit: FridgeItemUnit;
   /** 소분 보관 여부 (UI 아이콘 변경) */
   is_subdivided: boolean;
-  /** 카테고리 ID (meat, veggie 등) */
-  category: string;
+  /** 카테고리 UUID */
+  category_id: string;
   /** 장보기 연동 여부 — true일 경우 이름/카테고리 수정 불가 */
   from_grocery: boolean;
   /** 소프트 삭제 시각 */

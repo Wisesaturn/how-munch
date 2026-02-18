@@ -1,0 +1,1 @@
+export { resolveDefaultCategoryId } from './resolveDefaultCategoryId';

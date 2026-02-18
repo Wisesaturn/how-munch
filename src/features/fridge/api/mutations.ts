@@ -39,7 +39,7 @@ export function useAddFridgeItemMutation() {
       const { data, error } = await supabase.rpc('create_fridge_item_with_batch', {
         p_household_id: input.item.household_id,
         p_name: input.item.name,
-        p_category: input.item.category ?? 'other',
+        p_category_id: input.item.category_id,
         p_unit: input.item.unit ?? 'count',
         p_is_subdivided: input.item.is_subdivided ?? false,
         p_from_grocery: input.item.from_grocery ?? false,
@@ -58,7 +58,7 @@ export function useAddFridgeItemMutation() {
   });
 }
 
-/** 냉장고 아이템 메타 수정 (name, category, unit 등) */
+/** 냉장고 아이템 메타 수정 (name, category_id, unit 등) */
 export function useUpdateFridgeItemMutation() {
   const queryClient = useQueryClient();
 

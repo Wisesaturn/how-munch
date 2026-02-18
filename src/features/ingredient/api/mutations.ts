@@ -39,7 +39,7 @@ export function useAddIngredientMutation() {
         p_name: input.name,
         p_price: input.price ?? 0,
         p_store: input.store ?? null,
-        p_category: input.category ?? 'other',
+        p_category_id: input.category_id,
         p_count: count,
         p_unit: input.unit ?? 'count',
         p_date: date,

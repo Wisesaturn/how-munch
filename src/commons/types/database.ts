@@ -161,7 +161,6 @@ export interface Database {
           name: string;
           price: number;
           store: string | null;
-          category: string;
           category_id: string;
           count: number;
           unit: 'count' | 'g' | 'kg';
@@ -179,7 +178,6 @@ export interface Database {
           name: string;
           price?: number;
           store?: string | null;
-          category?: string;
           category_id?: string;
           count?: number;
           unit?: 'count' | 'g' | 'kg';
@@ -197,7 +195,6 @@ export interface Database {
           name?: string;
           price?: number;
           store?: string | null;
-          category?: string;
           category_id?: string;
           count?: number;
           unit?: 'count' | 'g' | 'kg';
@@ -226,7 +223,6 @@ export interface Database {
           max_count: number;
           unit: 'count' | 'g' | 'kg';
           is_subdivided: boolean;
-          category: string;
           category_id: string;
           from_grocery: boolean;
           deleted_at: string | null;
@@ -241,7 +237,6 @@ export interface Database {
           max_count?: number;
           unit?: 'count' | 'g' | 'kg';
           is_subdivided?: boolean;
-          category?: string;
           category_id?: string;
           from_grocery?: boolean;
           deleted_at?: string | null;
@@ -256,7 +251,6 @@ export interface Database {
           max_count?: number;
           unit?: 'count' | 'g' | 'kg';
           is_subdivided?: boolean;
-          category?: string;
           category_id?: string;
           from_grocery?: boolean;
           deleted_at?: string | null;
@@ -560,7 +554,7 @@ export interface Database {
           p_name: string;
           p_price?: number;
           p_store?: string | null;
-          p_category?: string;
+          p_category_id?: string;
           p_count?: number;
           p_unit?: string;
           p_date?: string;
@@ -573,7 +567,6 @@ export interface Database {
           name: string;
           price: number;
           store: string | null;
-          category: string;
           category_id: string;
           count: number;
           unit: 'count' | 'g' | 'kg';
@@ -592,7 +585,7 @@ export interface Database {
         Args: {
           p_household_id: string;
           p_name: string;
-          p_category?: string;
+          p_category_id?: string;
           p_unit?: string;
           p_is_subdivided?: boolean;
           p_from_grocery?: boolean;
@@ -609,7 +602,6 @@ export interface Database {
           max_count: number;
           unit: 'count' | 'g' | 'kg';
           is_subdivided: boolean;
-          category: string;
           category_id: string;
           from_grocery: boolean;
           deleted_at: string | null;
@@ -702,7 +694,6 @@ export interface Database {
           name: string;
           price: number;
           store: string | null;
-          category: string;
           category_id: string;
           count: number;
           unit: 'count' | 'g' | 'kg';

@@ -37,7 +37,7 @@ export function IngredientEditScreen({
       {
         id: ingredient.id,
         date: values.date,
-        category: values.category,
+        category_id: values.category_id,
         name: values.name,
         count: values.count,
         unit: values.unit,
@@ -95,7 +95,7 @@ export function IngredientEditScreen({
           householdId={householdId}
           defaultValues={{
             date: ingredient.date,
-            category: ingredient.category,
+            category_id: ingredient.category_id,
             name: ingredient.name,
             count: ingredient.count,
             unit: ingredient.unit,

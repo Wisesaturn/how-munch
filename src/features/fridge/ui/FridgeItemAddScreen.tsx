@@ -8,7 +8,6 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { CATEGORIES } from '@/commons/config';
 import {
   Button,
   Counter,
@@ -30,7 +29,10 @@ import {
   validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
-import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
+import {
+  resolveDefaultCategoryId,
+  useIngredientCategoriesQuery,
+} from '@/entities/ingredient-category';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -40,7 +42,7 @@ interface FridgeItemAddScreenProps {
 }
 
 interface FridgeItemCreateFormValues {
-  category: string;
+  category_id: string;
   name: string;
   quantity: number;
   unit: IngredientUnit;
@@ -53,7 +55,7 @@ interface FridgeItemCreateFormValues {
 function createFridgeItemCreateFormSchema(categoryIds: string[]) {
   return z
     .object({
-      category: z.string().refine((value) => categoryIds.includes(value), {
+      category_id: z.string().refine((value) => categoryIds.includes(value), {
         message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
       }),
       name: z
@@ -110,7 +112,7 @@ function getErrorMessage(error: unknown) {
 
 function createDefaultValues(today: Date): FridgeItemCreateFormValues {
   return {
-    category: 'other',
+    category_id: '',
     name: '',
     quantity: 1,
     unit: 'count',
@@ -125,7 +127,7 @@ function createDefaultValues(today: Date): FridgeItemCreateFormValues {
 export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const mutation = useAddFridgeItemMutation();
-  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const categoryIds = useMemo(
     () => categoryOptions.map((category) => category.id),
     [categoryOptions],
@@ -137,10 +139,14 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
 
   const today = new Date();
   const defaultValues = createDefaultValues(today);
+  const formDefaultValues = {
+    ...defaultValues,
+    category_id: resolveDefaultCategoryId(categoryOptions),
+  };
   const [selectedUnit, setSelectedUnit] = useState<IngredientUnit>(defaultValues.unit);
 
   const form = useForm({
-    defaultValues,
+    defaultValues: formDefaultValues,
     validators: {
       onSubmit: fridgeItemCreateFormSchema,
       onChange: fridgeItemCreateFormSchema,
@@ -153,7 +159,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
           item: {
             household_id: householdId,
             name: normalizedName,
-            category: value.category,
+            category_id: value.category_id,
             unit: value.unit,
             is_subdivided: value.is_subdivided,
           },
@@ -211,7 +217,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-xs font-semibold text-gray-500">기본 정보</legend>
 
-          <form.Field name="category">
+          <form.Field name="category_id">
             {(field) => (
               <Form.Field field={field}>
                 <Form.Label required>카테고리</Form.Label>

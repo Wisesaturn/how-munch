@@ -37,7 +37,7 @@ export function IngredientAddScreen({
         household_id: householdId,
         user_id: userId,
         date: values.date,
-        category: values.category,
+        category_id: values.category_id,
         name: values.name,
         count: values.count,
         unit: values.unit,

@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
-import { CATEGORIES } from '@/commons/config';
 
 import { type IngredientCategory, type IngredientCategoryOption } from '../model/types';
 
 import { ingredientCategoryKeys } from './queryKey';
+
+const INGREDIENT_CATEGORY_STALE_TIME = 1000 * 60 * 60 * 6;
+const INGREDIENT_CATEGORY_GC_TIME = 1000 * 60 * 60 * 24;
 
 function decodeEmojiUnicode(emojiUnicode: string) {
   const normalized = emojiUnicode.trim().replace(/^U\+/i, '').replace(/\s+/g, '');
@@ -26,7 +28,7 @@ function toCategoryOption(row: IngredientCategory): IngredientCategoryOption {
   const emoji = decodeEmojiUnicode(row.emoji_unicode);
 
   return {
-    id: row.code,
+    id: row.id,
     code: row.code,
     label: row.name,
     emoji: emoji || '📦',
@@ -35,21 +37,12 @@ function toCategoryOption(row: IngredientCategory): IngredientCategoryOption {
   };
 }
 
-function createFallbackCategories(): IngredientCategoryOption[] {
-  return CATEGORIES.map((category, index) => ({
-    id: category.id,
-    code: category.id,
-    label: category.label,
-    emoji: category.emoji,
-    emojiUnicode: '',
-    sortOrder: (index + 1) * 10,
-  }));
-}
-
 /** 카테고리 목록 조회 (전역 + 현재 가구 커스텀 병합) */
 export function useIngredientCategoriesQuery(householdId: string | null) {
   return useQuery({
     queryKey: ingredientCategoryKeys.list(householdId ?? 'global'),
+    staleTime: INGREDIENT_CATEGORY_STALE_TIME,
+    gcTime: INGREDIENT_CATEGORY_GC_TIME,
     queryFn: async () => {
       const supabase = createClient();
       let query = supabase
@@ -64,12 +57,12 @@ export function useIngredientCategoriesQuery(householdId: string | null) {
 
       const { data, error } = await query;
       if (error) {
-        return createFallbackCategories();
+        return [];
       }
 
       const rows = (data ?? []) as IngredientCategory[];
       if (rows.length === 0) {
-        return createFallbackCategories();
+        return [];
       }
 
       const categoryByCode = new Map<string, IngredientCategoryOption>();
@@ -88,7 +81,7 @@ export function useIngredientCategoriesQuery(householdId: string | null) {
         return a.code.localeCompare(b.code);
       });
 
-      return mergedCategories.length > 0 ? mergedCategories : createFallbackCategories();
+      return mergedCategories;
     },
   });
 }

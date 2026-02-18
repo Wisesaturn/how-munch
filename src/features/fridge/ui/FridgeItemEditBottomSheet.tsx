@@ -27,7 +27,7 @@ export function FridgeItemEditBottomSheet({ open, onClose, item }: FridgeItemEdi
       {
         id: item.id,
         name: values.name,
-        category: values.category,
+        category_id: values.category_id,
         unit: values.unit,
         is_subdivided: values.is_subdivided,
       },
@@ -51,7 +51,7 @@ export function FridgeItemEditBottomSheet({ open, onClose, item }: FridgeItemEdi
           householdId={item.household_id}
           defaultValues={{
             name: item.name,
-            category: item.category,
+            category_id: item.category_id,
             unit: item.unit,
             is_subdivided: item.is_subdivided,
           }}

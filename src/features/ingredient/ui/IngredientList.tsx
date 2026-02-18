@@ -61,7 +61,7 @@ export function IngredientList({ householdId, ingredients, onEdit }: IngredientL
                 key={item.id}
                 ingredient={item}
                 onEdit={onEdit}
-                categoryLabel={categoryLabelById.get(item.category) ?? item.category}
+                categoryLabel={categoryLabelById.get(item.category_id) ?? item.category_id}
               />
             ))}
           </div>

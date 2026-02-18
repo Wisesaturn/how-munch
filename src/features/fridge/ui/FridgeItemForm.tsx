@@ -6,16 +6,18 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { CATEGORIES } from '@/commons/config';
 import { Button, Input, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { type IngredientUnit } from '@/entities/ingredient';
-import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
+import {
+  resolveDefaultCategoryId,
+  useIngredientCategoriesQuery,
+} from '@/entities/ingredient-category';
 
 export interface FridgeItemFormValues {
   name: string;
-  category: string;
+  category_id: string;
   unit: IngredientUnit;
   is_subdivided: boolean;
 }
@@ -40,7 +42,7 @@ function createFridgeItemFormSchema(categoryIds: string[]) {
       .trim()
       .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
       .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
-    category: z.string().refine((value) => categoryIds.includes(value), {
+    category_id: z.string().refine((value) => categoryIds.includes(value), {
       message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
     }),
     unit: z.enum(['count', 'g', 'kg']),
@@ -61,7 +63,7 @@ export function FridgeItemForm({
   disableUnitSelect = false,
   householdId = null,
 }: FridgeItemFormProps) {
-  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const categoryIds = useMemo(
     () => categoryOptions.map((category) => category.id),
     [categoryOptions],
@@ -70,10 +72,14 @@ export function FridgeItemForm({
     () => createFridgeItemFormSchema(categoryIds),
     [categoryIds],
   );
+  const defaultCategoryId = useMemo(
+    () => resolveDefaultCategoryId(categoryOptions, defaultValues?.category_id),
+    [categoryOptions, defaultValues?.category_id],
+  );
   const form = useForm({
     defaultValues: {
       name: defaultValues?.name ?? '',
-      category: defaultValues?.category ?? 'other',
+      category_id: defaultCategoryId,
       unit: defaultValues?.unit ?? ('count' as const),
       is_subdivided: defaultValues?.is_subdivided ?? false,
     },
@@ -116,7 +122,7 @@ export function FridgeItemForm({
         )}
       </form.Field>
 
-      <form.Field name="category">
+      <form.Field name="category_id">
         {(field) => (
           <Form.Field field={field}>
             <Form.Label required>카테고리</Form.Label>

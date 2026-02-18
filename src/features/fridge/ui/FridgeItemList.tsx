@@ -1,7 +1,6 @@
 import { groupBy } from 'es-toolkit';
 import { Search } from 'lucide-react';
 
-import { CATEGORIES } from '@/commons/config';
 import { EmptyState } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
@@ -28,7 +27,7 @@ export function FridgeItemList({
   onAddBatch,
   onEditBatch,
 }: FridgeItemListProps) {
-  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const categoryOrder: string[] = categoryOptions.map((category) => category.id);
   const categoryById = new Map(categoryOptions.map((category) => [category.id, category]));
 
@@ -56,7 +55,7 @@ export function FridgeItemList({
     );
   }
 
-  const grouped = groupBy(items, (item) => item.category);
+  const grouped = groupBy(items, (item) => item.category_id);
 
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
     const aIndex = categoryOrder.indexOf(a);

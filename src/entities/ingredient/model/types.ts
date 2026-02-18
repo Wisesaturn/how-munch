@@ -15,8 +15,8 @@ export interface Ingredient {
   price: number;
   /** 구매처 (예: 이마트, 쿠팡) */
   store: string | null;
-  /** 카테고리 ID (meat, veggie 등) */
-  category: string;
+  /** 카테고리 UUID */
+  category_id: string;
   /** 구매 수량 */
   count: number;
   /** 단위 — count: 개, g: 그램, kg: 킬로그램 */
