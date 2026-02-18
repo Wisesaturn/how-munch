@@ -98,7 +98,11 @@ export function StorePage({ householdId, userId }: StorePageProps) {
           <span className="text-sm text-gray-400">불러오는 중...</span>
         </div>
       ) : (
-        <IngredientList ingredients={filtered} onEdit={openIngredientEditSheet} />
+        <IngredientList
+          householdId={householdId}
+          ingredients={filtered}
+          onEdit={openIngredientEditSheet}
+        />
       )}
 
       {/* FAB 추가 버튼 */}

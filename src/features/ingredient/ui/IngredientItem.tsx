@@ -1,26 +1,20 @@
 'use client';
 
-import { CATEGORIES } from '@/commons/config';
-
 import { formatIngredientAmount, type Ingredient } from '@/entities/ingredient';
 
 interface IngredientItemProps {
   ingredient: Ingredient;
   onEdit: (ingredient: Ingredient) => void;
-}
-
-function getCategoryLabel(categoryId: string) {
-  const cat = CATEGORIES.find((c) => c.id === categoryId);
-  return cat ? `${cat.emoji} ${cat.label}` : categoryId;
+  categoryLabel: string;
 }
 
 function formatUnit(count: number, unit: Ingredient['unit']) {
   return formatIngredientAmount(count, unit, true);
 }
 
-export function IngredientItem({ ingredient, onEdit }: IngredientItemProps) {
+export function IngredientItem({ ingredient, onEdit, categoryLabel }: IngredientItemProps) {
   const metaItems = [
-    getCategoryLabel(ingredient.category),
+    categoryLabel,
     formatUnit(ingredient.count, ingredient.unit),
     ingredient.store,
   ].filter(Boolean) as string[];

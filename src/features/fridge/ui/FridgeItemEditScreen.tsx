@@ -84,6 +84,7 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
         <FridgeItemForm
           id={item.id}
           formId={formId}
+          householdId={item.household_id}
           defaultValues={{
             name: item.name,
             category: item.category,

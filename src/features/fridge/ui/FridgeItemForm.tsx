@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
@@ -9,6 +11,7 @@ import { Button, Input, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { type IngredientUnit } from '@/entities/ingredient';
+import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
 export interface FridgeItemFormValues {
   name: string;
@@ -27,22 +30,23 @@ interface FridgeItemFormProps {
   isDeleting?: boolean;
   submitLabel?: string;
   disableUnitSelect?: boolean;
+  householdId?: string | null;
 }
 
-const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
-
-const fridgeItemFormSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
-    .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
-  category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-    message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
-  }),
-  unit: z.enum(['count', 'g', 'kg']),
-  is_subdivided: z.boolean(),
-});
+function createFridgeItemFormSchema(categoryIds: string[]) {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
+      .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
+    category: z.string().refine((value) => categoryIds.includes(value), {
+      message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
+    }),
+    unit: z.enum(['count', 'g', 'kg']),
+    is_subdivided: z.boolean(),
+  });
+}
 
 /** 냉장고 아이템 폼 (name, category, unit, is_subdivided) */
 export function FridgeItemForm({
@@ -55,7 +59,17 @@ export function FridgeItemForm({
   isDeleting,
   submitLabel = '저장',
   disableUnitSelect = false,
+  householdId = null,
 }: FridgeItemFormProps) {
+  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const categoryIds = useMemo(
+    () => categoryOptions.map((category) => category.id),
+    [categoryOptions],
+  );
+  const fridgeItemFormSchema = useMemo(
+    () => createFridgeItemFormSchema(categoryIds),
+    [categoryIds],
+  );
   const form = useForm({
     defaultValues: {
       name: defaultValues?.name ?? '',
@@ -113,7 +127,7 @@ export function FridgeItemForm({
                 </Select.Trigger>
               </Form.Control>
               <Select.Content>
-                {CATEGORIES.map((cat) => (
+                {categoryOptions.map((cat) => (
                   <Select.Item key={cat.id} value={cat.id}>
                     {cat.emoji} {cat.label}
                   </Select.Item>

@@ -6,10 +6,12 @@ import { EmptyState } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type IngredientUnit } from '@/entities/ingredient';
+import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
 import { FridgeItemCard } from './FridgeItemCard';
 
 interface FridgeItemListProps {
+  householdId: string;
   items: FridgeItemWithBatches[];
   isSearching?: boolean;
   onEditItem: (item: FridgeItemWithBatches) => void;
@@ -19,12 +21,17 @@ interface FridgeItemListProps {
 
 /** 카테고리별 그룹핑 냉장고 리스트 */
 export function FridgeItemList({
+  householdId,
   items,
   isSearching,
   onEditItem,
   onAddBatch,
   onEditBatch,
 }: FridgeItemListProps) {
+  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const categoryOrder: string[] = categoryOptions.map((category) => category.id);
+  const categoryById = new Map(categoryOptions.map((category) => [category.id, category]));
+
   if (items.length === 0) {
     if (isSearching) {
       return (
@@ -50,16 +57,19 @@ export function FridgeItemList({
   }
 
   const grouped = groupBy(items, (item) => item.category);
-  const categoryOrder: string[] = CATEGORIES.map((c) => c.id);
 
-  const sortedCategories = Object.keys(grouped).sort(
-    (a, b) => categoryOrder.indexOf(a) - categoryOrder.indexOf(b),
-  );
+  const sortedCategories = Object.keys(grouped).sort((a, b) => {
+    const aIndex = categoryOrder.indexOf(a);
+    const bIndex = categoryOrder.indexOf(b);
+    const safeAIndex = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+    const safeBIndex = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+    return safeAIndex - safeBIndex;
+  });
 
   return (
     <div className="flex flex-col gap-5">
       {sortedCategories.map((categoryId) => {
-        const cat = CATEGORIES.find((c) => c.id === categoryId);
+        const cat = categoryById.get(categoryId);
         const label = cat ? `${cat.emoji} ${cat.label}` : categoryId;
         const categoryItems = grouped[categoryId];
 
@@ -74,6 +84,7 @@ export function FridgeItemList({
                 <FridgeItemCard
                   key={item.id}
                   item={item}
+                  categoryEmoji={cat?.emoji}
                   onEditItem={onEditItem}
                   onAddBatch={onAddBatch}
                   onEditBatch={onEditBatch}

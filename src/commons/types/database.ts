@@ -111,6 +111,47 @@ export interface Database {
         };
         Relationships: [];
       };
+      ingredient_categories: {
+        Row: {
+          id: string;
+          household_id: string | null;
+          code: string;
+          name: string;
+          emoji_unicode: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id?: string | null;
+          code: string;
+          name: string;
+          emoji_unicode: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string | null;
+          code?: string;
+          name?: string;
+          emoji_unicode?: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'ingredient_categories_household_id_fkey';
+            columns: ['household_id'];
+            isOneToOne: false;
+            referencedRelation: 'households';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       ingredients: {
         Row: {
           id: string;

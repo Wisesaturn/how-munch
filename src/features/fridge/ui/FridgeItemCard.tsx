@@ -3,7 +3,6 @@
 import { format } from 'date-fns';
 import { AlertTriangle, Plus } from 'lucide-react';
 
-import { CATEGORIES } from '@/commons/config';
 import { cn } from '@/commons/lib';
 import { Accordion, Button, ProgressBar } from '@/commons/ui';
 
@@ -16,6 +15,7 @@ import { ExpiryBadge } from './ExpiryBadge';
 
 interface FridgeItemCardProps {
   item: FridgeItemWithBatches;
+  categoryEmoji?: string;
   onEditItem: (item: FridgeItemWithBatches) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
   onEditBatch: (batch: FridgeItemBatch, unit: IngredientUnit, fromStore: boolean) => void;
@@ -34,8 +34,13 @@ function getRemainingRate(availableCount: number, usedCount: number) {
 }
 
 /** 냉장고 아이템 카드 — Accordion 기반 접기/펼치기 */
-export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: FridgeItemCardProps) {
-  const categoryInfo = CATEGORIES.find((c) => c.id === item.category);
+export function FridgeItemCard({
+  item,
+  categoryEmoji,
+  onEditItem,
+  onAddBatch,
+  onEditBatch,
+}: FridgeItemCardProps) {
   const usedAmountByBatchId = new Map<string, number>();
   for (const usage of item.meal_batch_usages ?? []) {
     const prev = usedAmountByBatchId.get(usage.batch_id) ?? 0;
@@ -76,9 +81,9 @@ export function FridgeItemCard({ item, onEditItem, onAddBatch, onEditBatch }: Fr
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-1.5">
-                {categoryInfo ? (
+                {categoryEmoji ? (
                   <span className="shrink-0 text-base" aria-hidden>
-                    {categoryInfo.emoji}
+                    {categoryEmoji}
                   </span>
                 ) : null}
                 <span

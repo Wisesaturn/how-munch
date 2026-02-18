@@ -48,6 +48,7 @@ export function FridgeItemEditBottomSheet({ open, onClose, item }: FridgeItemEdi
       <BottomSheet.Header heading="재료 수정" />
       <BottomSheet.Content>
         <FridgeItemForm
+          householdId={item.household_id}
           defaultValues={{
             name: item.name,
             category: item.category,

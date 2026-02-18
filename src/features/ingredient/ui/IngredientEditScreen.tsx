@@ -92,6 +92,7 @@ export function IngredientEditScreen({
         <IngredientForm
           id={ingredient.id}
           formId={formId}
+          householdId={householdId}
           defaultValues={{
             date: ingredient.date,
             category: ingredient.category,

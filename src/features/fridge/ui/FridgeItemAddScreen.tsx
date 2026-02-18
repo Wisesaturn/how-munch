@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { useForm } from '@tanstack/react-form';
@@ -30,6 +30,7 @@ import {
   validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
+import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
 import { useAddFridgeItemMutation } from '../api/mutations';
 
@@ -49,52 +50,52 @@ interface FridgeItemCreateFormValues {
   memo: string;
 }
 
-const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
+function createFridgeItemCreateFormSchema(categoryIds: string[]) {
+  return z
+    .object({
+      category: z.string().refine((value) => categoryIds.includes(value), {
+        message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
+      }),
+      name: z
+        .string()
+        .trim()
+        .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
+        .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
+      quantity: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
+      unit: z.enum(['count', 'g', 'kg']),
+      is_subdivided: z.boolean(),
+      purchased_date: z
+        .string()
+        .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '구매일' }))
+        .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '구매일' })),
+      expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+        message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
+      }),
+      memo: z.string().max(300, ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: '300자' })),
+    })
+    .superRefine((value, ctx) => {
+      const minQuantity = resolveAmountMin(value.unit);
 
-const fridgeItemCreateFormSchema = z
-  .object({
-    category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-      message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
-    }),
-    name: z
-      .string()
-      .trim()
-      .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
-      .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
-    quantity: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-    unit: z.enum(['count', 'g', 'kg']),
-    is_subdivided: z.boolean(),
-    purchased_date: z
-      .string()
-      .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '구매일' }))
-      .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '구매일' })),
-    expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-      message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
-    }),
-    memo: z.string().max(300, ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: '300자' })),
-  })
-  .superRefine((value, ctx) => {
-    const minQuantity = resolveAmountMin(value.unit);
+      if (value.quantity < minQuantity) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['quantity'],
+          message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
+        });
+      }
 
-    if (value.quantity < minQuantity) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['quantity'],
-        message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
-      });
-    }
-
-    if (!validateAmountPrecisionByUnit(value.quantity, value.unit)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['quantity'],
-        message:
-          value.unit === 'kg'
-            ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
-            : '수량은 정수만 입력할 수 있습니다',
-      });
-    }
-  });
+      if (!validateAmountPrecisionByUnit(value.quantity, value.unit)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['quantity'],
+          message:
+            value.unit === 'kg'
+              ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
+              : '수량은 정수만 입력할 수 있습니다',
+        });
+      }
+    });
+}
 
 function parseDateValue(value: string) {
   if (!value) return undefined;
@@ -124,6 +125,15 @@ function createDefaultValues(today: Date): FridgeItemCreateFormValues {
 export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const mutation = useAddFridgeItemMutation();
+  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const categoryIds = useMemo(
+    () => categoryOptions.map((category) => category.id),
+    [categoryOptions],
+  );
+  const fridgeItemCreateFormSchema = useMemo(
+    () => createFridgeItemCreateFormSchema(categoryIds),
+    [categoryIds],
+  );
 
   const today = new Date();
   const defaultValues = createDefaultValues(today);
@@ -212,7 +222,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                     </Select.Trigger>
                   </Form.Control>
                   <Select.Content>
-                    {CATEGORIES.map((category) => (
+                    {categoryOptions.map((category) => (
                       <Select.Item key={category.id} value={category.id}>
                         {category.emoji} {category.label}
                       </Select.Item>

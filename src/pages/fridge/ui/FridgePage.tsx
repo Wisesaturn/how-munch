@@ -83,6 +83,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
         </div>
       ) : (
         <FridgeItemList
+          householdId={householdId}
           items={filtered}
           isSearching={Boolean(search.trim())}
           onEditItem={openFridgeItemEditSheet}

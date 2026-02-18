@@ -77,6 +77,7 @@ export function IngredientAddScreen({
       <div className="p-4">
         <IngredientForm
           formId={formId}
+          householdId={householdId}
           defaultValues={defaultName ? { name: defaultName } : undefined}
           storeNames={storeNames}
           onSubmit={handleSubmit}

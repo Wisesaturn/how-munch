@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
@@ -20,6 +20,7 @@ import {
   validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
+import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
 export interface IngredientFormValues {
   date: string;
@@ -42,54 +43,55 @@ interface IngredientFormProps {
   isDeleting?: boolean;
   submitLabel?: string;
   disableUnitSelect?: boolean;
+  householdId?: string | null;
 }
 
-const CATEGORY_IDS: string[] = CATEGORIES.map((category) => category.id);
+function createIngredientFormSchema(categoryIds: string[]) {
+  return z
+    .object({
+      date: z
+        .string()
+        .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '날짜' }))
+        .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '날짜' })),
+      category: z.string().refine((value) => categoryIds.includes(value), {
+        message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
+      }),
+      name: z
+        .string()
+        .trim()
+        .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '품목명' }))
+        .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: '20자' })),
+      count: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
+      unit: z.enum(['count', 'g', 'kg']),
+      store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
+      price: z
+        .number()
+        .min(100, ERROR_MSG.RANGE.MIN({ fieldName: '가격', min: '100원' }))
+        .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '가격', max: '1억원' })),
+    })
+    .superRefine((value, ctx) => {
+      const minCount = resolveAmountMin(value.unit);
 
-const ingredientFormSchema = z
-  .object({
-    date: z
-      .string()
-      .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '날짜' }))
-      .regex(/^\d{4}-\d{2}-\d{2}$/, ERROR_MSG.FORMAT.INVALID({ fieldName: '날짜' })),
-    category: z.string().refine((value) => CATEGORY_IDS.includes(value), {
-      message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
-    }),
-    name: z
-      .string()
-      .trim()
-      .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '품목명' }))
-      .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: '20자' })),
-    count: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-    unit: z.enum(['count', 'g', 'kg']),
-    store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
-    price: z
-      .number()
-      .min(100, ERROR_MSG.RANGE.MIN({ fieldName: '가격', min: '100원' }))
-      .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '가격', max: '1억원' })),
-  })
-  .superRefine((value, ctx) => {
-    const minCount = resolveAmountMin(value.unit);
+      if (value.count < minCount) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['count'],
+          message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minCount }),
+        });
+      }
 
-    if (value.count < minCount) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['count'],
-        message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minCount }),
-      });
-    }
-
-    if (!validateAmountPrecisionByUnit(value.count, value.unit)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['count'],
-        message:
-          value.unit === 'kg'
-            ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
-            : '수량은 정수만 입력할 수 있습니다',
-      });
-    }
-  });
+      if (!validateAmountPrecisionByUnit(value.count, value.unit)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['count'],
+          message:
+            value.unit === 'kg'
+              ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
+              : '수량은 정수만 입력할 수 있습니다',
+        });
+      }
+    });
+}
 
 function parseDateValue(value: string) {
   if (!value) return undefined;
@@ -108,7 +110,17 @@ export function IngredientForm({
   isDeleting,
   submitLabel,
   disableUnitSelect = false,
+  householdId = null,
 }: IngredientFormProps) {
+  const { data: categoryOptions = CATEGORIES } = useIngredientCategoriesQuery(householdId);
+  const categoryIds = useMemo(
+    () => categoryOptions.map((category) => category.id),
+    [categoryOptions],
+  );
+  const ingredientFormSchema = useMemo(
+    () => createIngredientFormSchema(categoryIds),
+    [categoryIds],
+  );
   const initialUnit = (defaultValues?.unit ?? 'count') as IngredientUnit;
   const [selectedUnit, setSelectedUnit] = useState<IngredientUnit>(initialUnit);
   const today = new Date();
@@ -177,7 +189,7 @@ export function IngredientForm({
                 </Select.Trigger>
               </Form.Control>
               <Select.Content>
-                {CATEGORIES.map((cat) => (
+                {categoryOptions.map((cat) => (
                   <Select.Item key={cat.id} value={cat.id}>
                     {cat.emoji} {cat.label}
                   </Select.Item>
