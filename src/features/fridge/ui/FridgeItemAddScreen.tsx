@@ -230,7 +230,10 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                   <Select.Content>
                     {categoryOptions.map((category) => (
                       <Select.Item key={category.id} value={category.id}>
-                        {category.emoji} {category.label}
+                        <span className="font-tossface mr-1.5" aria-hidden>
+                          {category.emoji}
+                        </span>
+                        <span>{category.label}</span>
                       </Select.Item>
                     ))}
                   </Select.Content>

@@ -82,7 +82,7 @@ export function FridgeItemCard({
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-1.5">
                 {categoryEmoji ? (
-                  <span className="shrink-0 text-base" aria-hidden>
+                  <span className="font-tossface shrink-0 text-base" aria-hidden>
                     {categoryEmoji}
                   </span>
                 ) : null}

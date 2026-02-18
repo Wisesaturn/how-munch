@@ -54,6 +54,10 @@ body {
   font-family: var(--font-sans);
 }
 
+.font-tossface {
+  font-family: Tossface, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+}
+
 :root {
   /* -------------------------------------------------------------------------------------------------
    * Mobile Tap Highlight

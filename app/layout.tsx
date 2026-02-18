@@ -38,6 +38,12 @@ export default function RootLayout({
           crossOrigin="anonymous"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
+        <link
+          rel="stylesheet"
+          as="style"
+          crossOrigin="anonymous"
+          href="https://cdn.jsdelivr.net/gh/toss/tossface/dist/tossface.css"
+        />
       </head>
       <body className="antialiased">
         <div className="relative mx-auto min-h-dvh w-full overflow-hidden bg-white shadow-[0_0_40px_rgba(0,0,0,0.08)] md:max-w-[430px]">

@@ -1,23 +1,31 @@
 'use client';
 
-import { formatIngredientAmount, type Ingredient } from '@/entities/ingredient';
+import {
+  formatIngredientAmount,
+  type IngredientUnit,
+  type Ingredient,
+} from '@/entities/ingredient';
 
 interface IngredientItemProps {
   ingredient: Ingredient;
   onEdit: (ingredient: Ingredient) => void;
   categoryLabel: string;
+  categoryEmoji?: string;
 }
 
-function formatUnit(count: number, unit: Ingredient['unit']) {
+function formatUnit(count: number, unit: IngredientUnit) {
   return formatIngredientAmount(count, unit, true);
 }
 
-export function IngredientItem({ ingredient, onEdit, categoryLabel }: IngredientItemProps) {
-  const metaItems = [
-    categoryLabel,
-    formatUnit(ingredient.count, ingredient.unit),
-    ingredient.store,
-  ].filter(Boolean) as string[];
+export function IngredientItem({
+  ingredient,
+  onEdit,
+  categoryLabel,
+  categoryEmoji,
+}: IngredientItemProps) {
+  const metaItems = [formatUnit(ingredient.count, ingredient.unit), ingredient.store].filter(
+    Boolean,
+  ) as string[];
 
   return (
     <button
@@ -33,6 +41,15 @@ export function IngredientItem({ ingredient, onEdit, categoryLabel }: Ingredient
       </div>
 
       <div className="flex items-center gap-2 text-xs text-gray-500">
+        <span className="truncate">
+          {categoryEmoji ? (
+            <span className="font-tossface mr-1" aria-hidden>
+              {categoryEmoji}
+            </span>
+          ) : null}
+          <span>{categoryLabel}</span>
+          {metaItems.length > 0 ? <span className="ml-2 text-gray-300">|</span> : null}
+        </span>
         {metaItems.map((meta, index) => (
           <span key={`${ingredient.id}-meta-${index}`} className="truncate">
             {meta}

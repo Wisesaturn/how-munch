@@ -5,7 +5,7 @@ import { EmptyState } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type IngredientUnit } from '@/entities/ingredient';
-import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
+import { useIngredientCategory } from '@/entities/ingredient-category';
 
 import { FridgeItemCard } from './FridgeItemCard';
 
@@ -27,9 +27,8 @@ export function FridgeItemList({
   onAddBatch,
   onEditBatch,
 }: FridgeItemListProps) {
-  const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
-  const categoryOrder: string[] = categoryOptions.map((category) => category.id);
-  const categoryById = new Map(categoryOptions.map((category) => [category.id, category]));
+  const { categories, getCategoryById } = useIngredientCategory(householdId);
+  const categoryOrder: string[] = categories.map((category) => category.id);
 
   if (items.length === 0) {
     if (isSearching) {
@@ -68,14 +67,18 @@ export function FridgeItemList({
   return (
     <div className="flex flex-col gap-5">
       {sortedCategories.map((categoryId) => {
-        const cat = categoryById.get(categoryId);
-        const label = cat ? `${cat.emoji} ${cat.label}` : categoryId;
+        const cat = getCategoryById(categoryId);
         const categoryItems = grouped[categoryId];
 
         return (
           <section key={categoryId}>
             <div className="mb-2 flex items-center gap-1.5">
-              <h2 className="text-xs font-semibold text-gray-500">{label}</h2>
+              <h2 className="text-xs font-semibold text-gray-500">
+                <span className="font-tossface mr-1" aria-hidden>
+                  {cat?.emoji}
+                </span>
+                <span>{cat?.label}</span>
+              </h2>
               <span className="text-[10px] text-gray-400">{categoryItems.length}</span>
             </div>
             <div className="flex flex-col gap-2">

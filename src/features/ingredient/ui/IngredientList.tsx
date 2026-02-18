@@ -10,7 +10,7 @@ import { ShoppingCart } from 'lucide-react';
 import { EmptyState } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
-import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
+import { useIngredientCategory } from '@/entities/ingredient-category';
 
 import { IngredientItem } from './IngredientItem';
 
@@ -21,14 +21,7 @@ interface IngredientListProps {
 }
 
 export function IngredientList({ householdId, ingredients, onEdit }: IngredientListProps) {
-  const { data: categories = [] } = useIngredientCategoriesQuery(householdId);
-  const categoryLabelById = useMemo(
-    () =>
-      new Map(
-        categories.map((category) => [category.id, `${category.emoji} ${category.label}`] as const),
-      ),
-    [categories],
-  );
+  const { getCategoryById } = useIngredientCategory(householdId);
   const grouped = useMemo(() => {
     const groups = groupBy(ingredients, (item) => item.date);
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
@@ -57,11 +50,13 @@ export function IngredientList({ householdId, ingredients, onEdit }: IngredientL
           </h3>
           <div className="flex flex-col gap-1.5">
             {items.map((item) => (
+              // category may be missing in edge cases (deleted/legacy rows); show raw id fallback.
               <IngredientItem
                 key={item.id}
                 ingredient={item}
                 onEdit={onEdit}
-                categoryLabel={categoryLabelById.get(item.category_id) ?? item.category_id}
+                categoryLabel={getCategoryById(item.category_id)?.label ?? ''}
+                categoryEmoji={getCategoryById(item.category_id)?.emoji ?? ''}
               />
             ))}
           </div>

@@ -197,7 +197,10 @@ export function IngredientForm({
               <Select.Content>
                 {categoryOptions.map((cat) => (
                   <Select.Item key={cat.id} value={cat.id}>
-                    {cat.emoji} {cat.label}
+                    <span className="font-tossface mr-1.5" aria-hidden>
+                      {cat.emoji}
+                    </span>
+                    <span>{cat.label}</span>
                   </Select.Item>
                 ))}
               </Select.Content>
