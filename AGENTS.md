@@ -48,6 +48,16 @@
 - For compound components, keep `Header`/`Content`/`Footer` as sibling regions; do not nest `Header` or `Footer` inside `Content`.
 - `Content` should only render body content and must not absorb title, summary, or action areas.
 - React Query pattern per feature `api/`: `queryKey.ts`, `queries.ts`, `mutations.ts`; prefer `skipToken` over `enabled`.
+- Transaction boundary rule (Supabase):
+  - if one user action mutates multiple tables, requires read-modify-write consistency, or must be all-or-nothing, implement it as a DB RPC (`security definer`) instead of chaining multiple client queries.
+  - simple single-table CRUD may stay in feature mutations (`from(...).insert/update/delete`).
+  - examples that must prefer RPC: stock consume/restore, meal+usage writes, cross-table link sync, membership slot/count updates.
+- Transactional RPC naming convention:
+  - use `snake_case` with intent-first verb: `create_`, `update_`, `delete_`, `upsert_`, `mark_`, `deactivate_`, `generate_`, `get_`.
+  - for multi-entity transactional workflows, append scope with `with_<domain>` (example: `upsert_meal_with_usage`, `create_fridge_item_with_batch`, `delete_ingredient_with_cleanup`).
+  - for guarded read-modify-write updates, use `_guarded` suffix (example: `update_fridge_batch_guarded`).
+  - RPC args must use `p_` prefix (example: `p_household_id`, `p_updates`).
+  - keep one RPC responsible for one transaction boundary and one return contract.
 - TanStack Form validation rule:
   - use `zod` schema and connect it through `useForm({ validators: { onSubmit: schema, onChange: schema } })` by default.
   - `onSubmit` and `onChange` must both be set for standard form validation flows (add `onBlur` only when needed).

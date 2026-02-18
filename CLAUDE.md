@@ -82,6 +82,16 @@ project-root/
   - `queryKey.ts` — query key factory
   - `queries.ts` — `use{작업}Query` hooks (조회)
   - `mutations.ts` — `use{작업}Mutation` hooks (변경)
+- Supabase 트랜잭션 경계 규칙:
+  - 하나의 사용자 액션이 여러 테이블을 변경하거나 read-modify-write 일관성이 필요하면, 클라이언트에서 다중 쿼리를 체이닝하지 말고 DB RPC로 구현한다.
+  - 단일 테이블 단순 CRUD는 기존 mutation에서 직접 처리해도 된다.
+  - 재고 차감/복구, meal+usage 동시 변경, cross-table link 동기화, count/slot 갱신 같은 정합성 민감 로직은 RPC 우선.
+- 트랜잭션 RPC 네이밍 규칙:
+  - `snake_case` + 의도 동사 접두어: `create_`, `update_`, `delete_`, `upsert_`, `mark_`, `deactivate_`, `generate_`, `get_`.
+  - 다중 엔티티 트랜잭션은 `with_<domain>` 접미로 범위를 명시한다. 예: `upsert_meal_with_usage`, `create_fridge_item_with_batch`, `delete_ingredient_with_cleanup`.
+  - 검증/잠금 기반 read-modify-write 갱신은 `_guarded` 접미를 사용한다. 예: `update_fridge_batch_guarded`.
+  - RPC 파라미터는 `p_` prefix를 사용한다. 예: `p_household_id`, `p_updates`.
+  - 하나의 RPC는 하나의 트랜잭션 경계와 하나의 반환 계약을 갖도록 유지한다.
 - TanStack Form 유효성 검사는 `zod` 스키마를 작성하고 `useForm`의 `validators` 옵션에 연결한다.
   - 기본: `validators: { onSubmit: schema, onChange: schema }`
   - `onSubmit`, `onChange`는 항상 함께 설정하고, `onBlur`는 필요한 경우에만 추가한다.

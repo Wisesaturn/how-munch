@@ -525,6 +525,38 @@ export interface Database {
         Args: { p_name: string };
         Returns: string;
       };
+      create_fridge_item_with_batch: {
+        Args: {
+          p_household_id: string;
+          p_name: string;
+          p_category?: string;
+          p_unit?: string;
+          p_is_subdivided?: boolean;
+          p_from_grocery?: boolean;
+          p_quantity?: number;
+          p_purchased_date?: string;
+          p_expiry_date?: string | null;
+          p_memo?: string | null;
+        };
+        Returns: {
+          id: string;
+          household_id: string;
+          name: string;
+          total_count: number;
+          max_count: number;
+          unit: 'count' | 'g' | 'kg';
+          is_subdivided: boolean;
+          category: string;
+          from_grocery: boolean;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
+      delete_ingredient_with_cleanup: {
+        Args: { p_ingredient_id: string };
+        Returns: undefined;
+      };
       delete_meal_with_usage_restore: {
         Args: { p_meal_id: string };
         Returns: undefined;
@@ -607,6 +639,20 @@ export interface Database {
           unit: 'count' | 'g' | 'kg';
           linked_fridge_item_id: string | null;
           linked_fridge_batch_id: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
+      update_fridge_batch_guarded: {
+        Args: { p_batch_id: string; p_updates?: Json };
+        Returns: {
+          id: string;
+          fridge_item_id: string;
+          quantity: number;
+          expiry_date: string | null;
+          purchased_date: string;
+          memo: string | null;
           deleted_at: string | null;
           created_at: string;
           updated_at: string;

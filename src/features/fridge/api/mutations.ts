@@ -36,29 +36,21 @@ export function useAddFridgeItemMutation() {
       batch: Omit<BatchInsert, 'fridge_item_id'>;
     }) => {
       const supabase = createClient();
+      const { data, error } = await supabase.rpc('create_fridge_item_with_batch', {
+        p_household_id: input.item.household_id,
+        p_name: input.item.name,
+        p_category: input.item.category ?? 'other',
+        p_unit: input.item.unit ?? 'count',
+        p_is_subdivided: input.item.is_subdivided ?? false,
+        p_from_grocery: input.item.from_grocery ?? false,
+        p_quantity: input.batch.quantity,
+        p_purchased_date: input.batch.purchased_date,
+        p_expiry_date: input.batch.expiry_date ?? null,
+        p_memo: input.batch.memo ?? null,
+      });
+      if (error) throw error;
 
-      // 1. 아이템 추가
-      const { data: item, error: itemError } = await supabase
-        .from('fridge_items')
-        .insert({
-          ...input.item,
-          total_count: input.batch.quantity,
-          max_count: input.batch.quantity,
-        })
-        .select()
-        .single();
-      if (itemError) throw itemError;
-
-      // 2. 첫 배치 추가
-      const { error: batchError } = await supabase
-        .from('fridge_item_batches')
-        .insert({ ...input.batch, fridge_item_id: item.id });
-      if (batchError) {
-        await supabase.from('fridge_items').delete().eq('id', item.id);
-        throw batchError;
-      }
-
-      return item as FridgeItem;
+      return data as FridgeItem;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
@@ -134,52 +126,15 @@ export function useUpdateBatchMutation() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: BatchUpdate & { id: string }) => {
       const supabase = createClient();
-      const { data: targetBatch, error: batchSelectError } = await supabase
-        .from('fridge_item_batches')
-        .select('id, fridge_item_id')
-        .eq('id', id)
-        .single();
-      if (batchSelectError) throw batchSelectError;
-
-      const { data: targetItem, error: itemSelectError } = await supabase
-        .from('fridge_items')
-        .select('id, from_grocery')
-        .eq('id', targetBatch.fridge_item_id)
-        .single();
-      if (itemSelectError) throw itemSelectError;
-
-      if (targetItem.from_grocery && updates.quantity !== undefined) {
-        throw new Error('장보기에서 등록한 재고는 장보기에서만 수량을 변경할 수 있습니다.');
-      }
-
-      const { data: usedRows, error: usageError } = await supabase
-        .from('meal_batch_usages')
-        .select('amount')
-        .eq('batch_id', id);
-      if (usageError) throw usageError;
-
-      const usedAmount = (usedRows ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-      const requestedTotalQuantity = updates.quantity;
-
-      if (requestedTotalQuantity !== undefined) {
-        const safeRequestedTotalQuantity = Number(requestedTotalQuantity);
-        if (
-          !Number.isFinite(safeRequestedTotalQuantity) ||
-          safeRequestedTotalQuantity < usedAmount
-        ) {
-          throw new Error(`식단에서 사용 중인 수량(${usedAmount})보다 작게 설정할 수 없습니다.`);
-        }
-
-        updates.quantity = safeRequestedTotalQuantity - usedAmount;
-      }
-
-      const { data, error } = await supabase
-        .from('fridge_item_batches')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const patch = Object.fromEntries(
+        Object.entries(updates).filter(([, value]) => value !== undefined),
+      );
+      const { data, error } = await supabase.rpc('update_fridge_batch_guarded', {
+        p_batch_id: id,
+        p_updates: patch,
+      });
       if (error) throw error;
+
       return data as FridgeItemBatch;
     },
     onSuccess: () => {
