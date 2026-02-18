@@ -46,22 +46,30 @@ function parseDateValue(value: string) {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-function createFridgeBatchSchema(quantityMin: number, quantityUnit: IngredientUnit) {
+function createFridgeBatchSchema(
+  quantityMin: number,
+  quantityUnit: IngredientUnit,
+  disableQuantityEdit: boolean,
+) {
   const minQuantity = Math.max(quantityMin, resolveAmountMin(quantityUnit));
-
-  return z
-    .object({
-      quantity: z
-        .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }) })
-        .refine((value) => Number.isFinite(value), {
-          message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }),
-        })
+  const quantitySchema = z
+    .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }) })
+    .refine((value) => Number.isFinite(value), {
+      message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }),
+    });
+  const validatedQuantitySchema = disableQuantityEdit
+    ? quantitySchema
+    : quantitySchema
         .min(minQuantity, {
           message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
         })
         .max(1_000_000, {
           message: ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' }),
-        }),
+        });
+
+  return z
+    .object({
+      quantity: validatedQuantitySchema,
       expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
         message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
       }),
@@ -78,6 +86,7 @@ function createFridgeBatchSchema(quantityMin: number, quantityUnit: IngredientUn
       }),
     })
     .superRefine((value, ctx) => {
+      if (disableQuantityEdit) return;
       if (!validateAmountPrecisionByUnit(value.quantity, quantityUnit)) {
         ctx.addIssue({
           code: 'custom',
@@ -108,7 +117,7 @@ export function FridgeBatchForm({
 }: FridgeBatchFormProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const today = new Date();
-  const batchSchema = createFridgeBatchSchema(quantityMin, quantityUnit);
+  const batchSchema = createFridgeBatchSchema(quantityMin, quantityUnit, disableQuantityEdit);
   const quantityInputMin = Math.max(quantityMin, resolveAmountMin(quantityUnit));
   const quantityInputStep = resolveAmountStep(quantityUnit);
 

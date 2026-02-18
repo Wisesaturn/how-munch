@@ -42,10 +42,10 @@ export function FridgeBatchEditScreen({
     mutation.mutate(
       {
         id: batch.id,
-        quantity: values.quantity,
         expiry_date: values.expiry_date || null,
         purchased_date: values.purchased_date,
         memo: values.memo || null,
+        quantity: fromStore ? undefined : values.quantity,
       },
       {
         onSuccess: () => {
