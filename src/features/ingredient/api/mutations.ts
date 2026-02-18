@@ -11,51 +11,6 @@ import { ingredientKeys } from './queryKey';
 
 type IngredientInsert = Database['public']['Tables']['ingredients']['Insert'];
 type IngredientUpdate = Database['public']['Tables']['ingredients']['Update'];
-type FridgeItemInsert = Database['public']['Tables']['fridge_items']['Insert'];
-type BatchInsert = Database['public']['Tables']['fridge_item_batches']['Insert'];
-
-/**
- * @description 총 수량에서 식단 사용량을 제외한 현재 재고 수량을 계산합니다.
- */
-function resolveRemainingStockQuantity(totalAmount: number, usedAmount: number) {
-  if (!Number.isFinite(totalAmount) || !Number.isFinite(usedAmount)) {
-    throw new Error('수량 계산 중 오류가 발생했습니다.');
-  }
-
-  if (totalAmount < usedAmount) {
-    throw new Error(`식단에서 이미 사용한 수량(${usedAmount})보다 작게 설정할 수 없습니다.`);
-  }
-
-  return totalAmount - usedAmount;
-}
-
-/**
- * @description 특정 배치의 식단 사용량 합계를 조회합니다.
- */
-async function getMealUsedAmountByBatchId(batchId: string) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from('meal_batch_usages')
-    .select('amount')
-    .eq('batch_id', batchId);
-  if (error) throw error;
-
-  return (data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-}
-
-/**
- * @description 특정 재고 아이템의 식단 사용량 합계를 조회합니다.
- */
-async function getMealUsedAmountByFridgeItemId(fridgeItemId: string) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from('meal_batch_usages')
-    .select('amount')
-    .eq('fridge_item_id', fridgeItemId);
-  if (error) throw error;
-
-  return (data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-}
 
 /**
  * @description 장보기 삭제 관련 DB 에러를 사용자 메시지로 변환합니다.
@@ -90,59 +45,6 @@ async function cleanupFridgeItemIfNoBatches(fridgeItemId: string) {
   if (softDeleteError) throw resolveIngredientDeleteError(softDeleteError);
 }
 
-/**
- * @description 장보기 항목을 기준으로 냉장고 아이템/배치를 만들고 링크를 갱신합니다.
- */
-async function createFridgeLinkFromIngredient(ingredient: Ingredient) {
-  const supabase = createClient();
-
-  const { data: fridgeItem, error: fridgeInsertError } = await supabase
-    .from('fridge_items')
-    .insert({
-      household_id: ingredient.household_id,
-      name: ingredient.name,
-      category: ingredient.category,
-      unit: ingredient.unit,
-      total_count: ingredient.count,
-      max_count: ingredient.count,
-      is_subdivided: false,
-      from_grocery: true,
-    })
-    .select()
-    .single();
-  if (fridgeInsertError) throw fridgeInsertError;
-
-  const { data: batch, error: batchInsertError } = await supabase
-    .from('fridge_item_batches')
-    .insert({
-      fridge_item_id: fridgeItem.id,
-      quantity: ingredient.count,
-      purchased_date: ingredient.date,
-      expiry_date: null,
-      memo: null,
-    })
-    .select()
-    .single();
-  if (batchInsertError) {
-    await supabase.from('fridge_items').delete().eq('id', fridgeItem.id);
-    throw batchInsertError;
-  }
-
-  const { data: relinkedIngredient, error: relinkError } = await supabase
-    .from('ingredients')
-    .update({ linked_fridge_item_id: fridgeItem.id, linked_fridge_batch_id: batch.id })
-    .eq('id', ingredient.id)
-    .select()
-    .single();
-  if (relinkError) {
-    await supabase.from('fridge_item_batches').delete().eq('id', batch.id);
-    await supabase.from('fridge_items').delete().eq('id', fridgeItem.id);
-    throw relinkError;
-  }
-
-  return relinkedIngredient as Ingredient;
-}
-
 /** 장보기 항목 추가 (I-04) */
 export function useAddIngredientMutation() {
   const queryClient = useQueryClient();
@@ -152,73 +54,19 @@ export function useAddIngredientMutation() {
       const supabase = createClient();
       const count = input.count ?? 1;
       const date = input.date ?? new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase.rpc('add_ingredient_with_fridge', {
+        p_household_id: input.household_id,
+        p_name: input.name,
+        p_price: input.price ?? 0,
+        p_store: input.store ?? null,
+        p_category: input.category ?? 'other',
+        p_count: count,
+        p_unit: input.unit ?? 'count',
+        p_date: date,
+      });
+      if (error) throw error;
 
-      const { data: ingredient, error: ingredientError } = await supabase
-        .from('ingredients')
-        .insert({ ...input, count, date })
-        .select()
-        .single();
-      if (ingredientError) throw ingredientError;
-
-      const fridgeItemInput: FridgeItemInsert = {
-        household_id: input.household_id,
-        name: input.name,
-        category: input.category,
-        unit: input.unit,
-        total_count: count,
-        max_count: count,
-        is_subdivided: false,
-        from_grocery: true,
-      };
-
-      const { data: fridgeItem, error: fridgeItemError } = await supabase
-        .from('fridge_items')
-        .insert(fridgeItemInput)
-        .select()
-        .single();
-
-      if (fridgeItemError) {
-        await supabase.from('ingredients').delete().eq('id', ingredient.id);
-        throw fridgeItemError;
-      }
-
-      const batchInput: BatchInsert = {
-        fridge_item_id: fridgeItem.id,
-        quantity: count,
-        purchased_date: date,
-        expiry_date: null,
-        memo: null,
-      };
-
-      const { data: batch, error: batchError } = await supabase
-        .from('fridge_item_batches')
-        .insert({
-          ...batchInput,
-        })
-        .select()
-        .single();
-
-      if (batchError) {
-        await supabase.from('fridge_items').delete().eq('id', fridgeItem.id);
-        await supabase.from('ingredients').delete().eq('id', ingredient.id);
-        throw batchError;
-      }
-
-      const { data: linkedIngredient, error: updateError } = await supabase
-        .from('ingredients')
-        .update({ linked_fridge_item_id: fridgeItem.id, linked_fridge_batch_id: batch.id })
-        .eq('id', ingredient.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        await supabase.from('fridge_item_batches').delete().eq('id', batch.id);
-        await supabase.from('fridge_items').delete().eq('id', fridgeItem.id);
-        await supabase.from('ingredients').delete().eq('id', ingredient.id);
-        throw updateError;
-      }
-
-      return linkedIngredient as Ingredient;
+      return data as Ingredient;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
@@ -234,109 +82,16 @@ export function useUpdateIngredientMutation() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: IngredientUpdate & { id: string }) => {
       const supabase = createClient();
+      const patch = Object.fromEntries(
+        Object.entries(updates).filter(([, value]) => value !== undefined),
+      );
+      const { data, error } = await supabase.rpc('update_ingredient_with_fridge', {
+        p_ingredient_id: id,
+        p_updates: patch,
+      });
+      if (error) throw error;
 
-      const { data: currentIngredient, error: currentError } = await supabase
-        .from('ingredients')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (currentError) throw currentError;
-
-      const { data: updatedIngredient, error: updateError } = await supabase
-        .from('ingredients')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      if (updateError) throw updateError;
-
-      const ingredient = updatedIngredient as Ingredient;
-      const linkedFridgeItemId = ingredient.linked_fridge_item_id;
-      const linkedFridgeBatchId = ingredient.linked_fridge_batch_id;
-
-      if (linkedFridgeItemId) {
-        const { data: activeLinkedItem, error: activeItemError } = await supabase
-          .from('fridge_items')
-          .select('id')
-          .eq('id', linkedFridgeItemId)
-          .is('deleted_at', null)
-          .maybeSingle();
-        if (activeItemError) throw activeItemError;
-
-        if (!activeLinkedItem) {
-          const { error: unlinkError } = await supabase
-            .from('ingredients')
-            .update({ linked_fridge_item_id: null, linked_fridge_batch_id: null })
-            .eq('id', ingredient.id);
-          if (unlinkError) throw unlinkError;
-
-          const unlinkedIngredient = {
-            ...ingredient,
-            linked_fridge_item_id: null,
-            linked_fridge_batch_id: null,
-          } as Ingredient;
-          return createFridgeLinkFromIngredient(unlinkedIngredient);
-        }
-
-        const { error: fridgeUpdateError } = await supabase
-          .from('fridge_items')
-          .update({
-            name: ingredient.name,
-            category: ingredient.category,
-            unit: ingredient.unit,
-            max_count: ingredient.count,
-            from_grocery: true,
-          })
-          .eq('id', linkedFridgeItemId);
-        if (fridgeUpdateError) throw fridgeUpdateError;
-
-        if (linkedFridgeBatchId) {
-          const usedAmount = await getMealUsedAmountByBatchId(linkedFridgeBatchId);
-          const remainingAmount = resolveRemainingStockQuantity(ingredient.count, usedAmount);
-
-          const { error: batchUpdateError } = await supabase
-            .from('fridge_item_batches')
-            .update({
-              quantity: remainingAmount,
-              purchased_date: ingredient.date,
-            })
-            .eq('id', linkedFridgeBatchId)
-            .eq('fridge_item_id', linkedFridgeItemId);
-          if (batchUpdateError) throw batchUpdateError;
-          return ingredient;
-        }
-
-        const usedAmount = await getMealUsedAmountByFridgeItemId(linkedFridgeItemId);
-        const remainingAmount = resolveRemainingStockQuantity(ingredient.count, usedAmount);
-
-        const { data: createdBatch, error: insertBatchError } = await supabase
-          .from('fridge_item_batches')
-          .insert({
-            fridge_item_id: linkedFridgeItemId,
-            quantity: remainingAmount,
-            purchased_date: ingredient.date,
-            expiry_date: null,
-            memo: null,
-          })
-          .select()
-          .single();
-        if (insertBatchError) throw insertBatchError;
-
-        const { data: relinkedIngredient, error: relinkError } = await supabase
-          .from('ingredients')
-          .update({ linked_fridge_batch_id: createdBatch.id })
-          .eq('id', ingredient.id)
-          .select()
-          .single();
-        if (relinkError) throw relinkError;
-
-        return relinkedIngredient as Ingredient;
-      }
-
-      return createFridgeLinkFromIngredient({
-        ...ingredient,
-        id: currentIngredient.id,
-      } as Ingredient);
+      return data as Ingredient;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });

@@ -492,6 +492,43 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      add_ingredient_with_fridge: {
+        Args: {
+          p_household_id: string;
+          p_name: string;
+          p_price?: number;
+          p_store?: string | null;
+          p_category?: string;
+          p_count?: number;
+          p_unit?: string;
+          p_date?: string;
+        };
+        Returns: {
+          id: string;
+          household_id: string;
+          user_id: string;
+          date: string;
+          name: string;
+          price: number;
+          store: string | null;
+          category: string;
+          count: number;
+          unit: 'count' | 'g' | 'kg';
+          linked_fridge_item_id: string | null;
+          linked_fridge_batch_id: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
+      create_household_with_owner: {
+        Args: { p_name: string };
+        Returns: string;
+      };
+      delete_meal_with_usage_restore: {
+        Args: { p_meal_id: string };
+        Returns: undefined;
+      };
       delete_my_account: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
@@ -535,6 +572,10 @@ export interface Database {
         Args: { invite_code: string };
         Returns: string;
       };
+      leave_household: {
+        Args: { p_household_id: string };
+        Returns: undefined;
+      };
       mark_notifications_push_sent: {
         Args: { p_ids: string[] };
         Returns: number;
@@ -550,6 +591,30 @@ export interface Database {
       soft_delete_ingredient: {
         Args: { p_ingredient_id: string };
         Returns: undefined;
+      };
+      update_ingredient_with_fridge: {
+        Args: { p_ingredient_id: string; p_updates?: Json };
+        Returns: {
+          id: string;
+          household_id: string;
+          user_id: string;
+          date: string;
+          name: string;
+          price: number;
+          store: string | null;
+          category: string;
+          count: number;
+          unit: 'count' | 'g' | 'kg';
+          linked_fridge_item_id: string | null;
+          linked_fridge_batch_id: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
+      upsert_meal_with_usage: {
+        Args: { p_household_id: string; p_date: string; p_type: string; p_dishes?: Json };
+        Returns: string;
       };
     };
     Enums: {

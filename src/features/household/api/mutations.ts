@@ -2,15 +2,12 @@ import { addDays } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
-import { uuid } from '@/commons/lib';
 import { type Database } from '@/commons/types';
 
 import { type HouseholdInvite } from '@/entities/household';
 
 import { householdKeys } from './queryKey';
 
-type HouseholdInsert = Database['public']['Tables']['households']['Insert'];
-type HouseholdMembersInsert = Database['public']['Tables']['household_members']['Insert'];
 type HouseholdInviteInsert = Database['public']['Tables']['household_invites']['Insert'];
 
 function createInviteCode(length = 6) {
@@ -23,32 +20,13 @@ export function useCreateHouseholdMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ name, userId }: { name: string; userId: string }) => {
+    mutationFn: async ({ name }: { name: string; userId: string }) => {
       const supabase = createClient();
-      const householdId = uuid();
-
-      const householdInput: HouseholdInsert = { id: householdId, name };
-      const { error: householdError } = await supabase.from('households').insert(householdInput);
-
-      if (householdError) throw householdError;
-
-      const memberInput: HouseholdMembersInsert = {
-        household_id: householdId,
-        user_id: userId,
-        role: 'owner',
-      };
-
-      const { error: memberError } = await supabase.from('household_members').insert(memberInput);
-      if (memberError) throw memberError;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ household_id: householdId, updated_at: new Date().toISOString() })
-        .eq('user_id', userId);
-
-      if (profileError) throw profileError;
-
-      return householdId;
+      const { data, error } = await supabase.rpc('create_household_with_owner', {
+        p_name: name,
+      });
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: householdKeys.all });
@@ -83,21 +61,12 @@ export function useLeaveHouseholdMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ householdId, userId }: { householdId: string; userId: string }) => {
+    mutationFn: async ({ householdId }: { householdId: string; userId: string }) => {
       const supabase = createClient();
-
-      const { error: deleteError } = await supabase
-        .from('household_members')
-        .delete()
-        .eq('household_id', householdId)
-        .eq('user_id', userId);
-      if (deleteError) throw deleteError;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ household_id: null, updated_at: new Date().toISOString() })
-        .eq('user_id', userId);
-      if (profileError) throw profileError;
+      const { error } = await supabase.rpc('leave_household', {
+        p_household_id: householdId,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: householdKeys.all });
