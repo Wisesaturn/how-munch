@@ -157,12 +157,41 @@ export function useUpsertNotificationPreferencesMutation() {
 
       if (error) throw error;
     },
+    onMutate: async (variables) => {
+      const preferenceQueryKey = notificationKeys.preferences(variables.userId);
+      await queryClient.cancelQueries({ queryKey: preferenceQueryKey });
+
+      const previousPreferences =
+        queryClient.getQueryData<NotificationPreferenceRow | null>(preferenceQueryKey) ?? null;
+      const now = new Date().toISOString();
+
+      const optimisticPreferences: NotificationPreferenceRow = {
+        user_id: variables.userId,
+        expiry_soon_enabled: variables.values.expiry_soon_enabled,
+        expiry_remind_days: variables.values.expiry_remind_days,
+        is_permission_asked:
+          variables.values.is_permission_asked ?? previousPreferences?.is_permission_asked ?? false,
+        quiet_hours_start: variables.values.quiet_hours_start ?? null,
+        quiet_hours_end: variables.values.quiet_hours_end ?? null,
+        created_at: previousPreferences?.created_at ?? now,
+        updated_at: now,
+      };
+
+      queryClient.setQueryData(preferenceQueryKey, optimisticPreferences);
+
+      return { previousPreferences };
+    },
     onSuccess: (_data, variables) => {
+      Toast.success('알림 설정이 변경되었습니다');
       queryClient.invalidateQueries({
         queryKey: notificationKeys.preferences(variables.userId),
       });
     },
-    onError: () => {
+    onError: (_error, variables, context) => {
+      queryClient.setQueryData(
+        notificationKeys.preferences(variables.userId),
+        context?.previousPreferences ?? null,
+      );
       Toast.error('알림 설정 저장에 실패했습니다');
     },
   });

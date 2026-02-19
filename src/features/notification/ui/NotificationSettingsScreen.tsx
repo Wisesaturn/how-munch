@@ -1,15 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
-
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { useForm } from '@tanstack/react-form';
 import { ChevronLeft } from 'lucide-react';
-import { z } from 'zod';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, Card, Select, Switch, Toast } from '@/commons/ui';
-import { Form } from '@/commons/ui/Form';
 
 import { useNotificationPreferencesQuery, useUpsertNotificationPreferencesMutation } from '../api';
 import { showPushPermissionToast, syncPushPermissionAndSubscription } from '../lib/pushPermission';
@@ -24,10 +19,8 @@ interface NotificationSettingsScreenProps {
   onClose: () => void;
 }
 
-const notificationSettingsSchema = z.object({
-  expiryEnabled: z.boolean(),
-  expiryOption: z.enum(['today', 'this_week']),
-});
+const DEFAULT_EXPIRY_ENABLED = false;
+const DEFAULT_EXPIRY_REMIND_DAYS = [7, 6, 5, 4, 3, 2, 1] as const;
 
 /** 알림 설정 화면 */
 export function NotificationSettingsScreen({ onClose }: NotificationSettingsScreenProps) {
@@ -35,16 +28,10 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   const { data: preferences } = useNotificationPreferencesQuery(user.id);
   const upsertPreferencesMutation = useUpsertNotificationPreferencesMutation();
 
-  const form = useForm({
-    defaultValues: {
-      expiryEnabled: false,
-      expiryOption: 'this_week' as ExpiryNotificationOption,
-    },
-    validators: {
-      onSubmit: notificationSettingsSchema,
-      onChange: notificationSettingsSchema,
-    },
-  });
+  const expiryEnabled = preferences?.expiry_soon_enabled ?? DEFAULT_EXPIRY_ENABLED;
+  const expiryOption = toExpiryNotificationOption(
+    preferences?.expiry_remind_days ?? [...DEFAULT_EXPIRY_REMIND_DAYS],
+  );
 
   function savePreferences(
     nextEnabled: boolean,
@@ -62,25 +49,6 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
       },
     });
   }
-
-  useEffect(
-    function syncPreferencesToForm() {
-      if (!preferences) return;
-      if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
-        form.reset({
-          expiryEnabled: false,
-          expiryOption: toExpiryNotificationOption(preferences.expiry_remind_days),
-        });
-        return;
-      }
-
-      form.reset({
-        expiryEnabled: preferences.expiry_soon_enabled,
-        expiryOption: toExpiryNotificationOption(preferences.expiry_remind_days),
-      });
-    },
-    [form, preferences],
-  );
 
   return (
     <AppScreen
@@ -105,95 +73,70 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
       <div className="space-y-4 p-4">
         <Card>
           <Card.Content className="space-y-3 py-3">
-            <form.Field name="expiryEnabled">
-              {(field) => (
-                <Form.Field field={field}>
-                  <div className="flex items-center justify-between">
-                    <Form.Label>유통기한 알림</Form.Label>
-                    <Switch
-                      checked={field.state.value}
-                      onCheckedChange={async (checked) => {
-                        const nextEnabled = Boolean(checked);
-                        field.handleChange(nextEnabled);
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">유통기한 알림</p>
+              <Switch
+                checked={expiryEnabled}
+                onCheckedChange={async (checked) => {
+                  const nextEnabled = Boolean(checked);
 
-                        if (!nextEnabled) {
-                          savePreferences(false, form.state.values.expiryOption);
-                          return;
-                        }
+                  if (!nextEnabled) {
+                    savePreferences(false, expiryOption);
+                    return;
+                  }
 
-                        if (!preferences?.is_permission_asked) {
-                          const result = await syncPushPermissionAndSubscription({
-                            userId: user.id,
-                            isPermissionAsked: false,
-                          });
+                  if (!preferences?.is_permission_asked) {
+                    const result = await syncPushPermissionAndSubscription({
+                      userId: user.id,
+                      isPermissionAsked: false,
+                    });
 
-                          showPushPermissionToast(result.promptedPermission);
-                          if (result.status !== 'granted') {
-                            if (result.status === 'unsupported') {
-                              Toast.error('브라우저 알림을 지원하지 않습니다');
-                            } else if (result.status === 'missing_vapid') {
-                              Toast.error('푸시 키가 설정되지 않았습니다');
-                            } else if (result.status === 'subscription_failed') {
-                              Toast.error('푸시 구독에 실패했습니다');
-                            }
-                            field.handleChange(false);
-                            savePreferences(
-                              false,
-                              form.state.values.expiryOption,
-                              result.isPermissionAsked,
-                            );
-                            return;
-                          }
+                    showPushPermissionToast(result.promptedPermission);
+                    if (result.status !== 'granted') {
+                      if (result.status === 'unsupported') {
+                        Toast.error('브라우저 알림을 지원하지 않습니다');
+                      } else if (result.status === 'missing_vapid') {
+                        Toast.error('푸시 키가 설정되지 않았습니다');
+                      } else if (result.status === 'subscription_failed') {
+                        Toast.error('푸시 구독에 실패했습니다');
+                      }
 
-                          savePreferences(
-                            true,
-                            form.state.values.expiryOption,
-                            result.isPermissionAsked,
-                          );
-                          return;
-                        }
+                      savePreferences(false, expiryOption, result.isPermissionAsked);
+                      return;
+                    }
 
-                        savePreferences(true, form.state.values.expiryOption);
-                      }}
-                    />
-                  </div>
-                  <Form.Error />
-                </Form.Field>
-              )}
-            </form.Field>
+                    savePreferences(true, expiryOption, result.isPermissionAsked);
+                    return;
+                  }
 
-            <form.Field name="expiryOption">
-              {(field) => (
-                <Form.Field field={field}>
-                  <div className="flex items-center justify-between">
-                    <Form.Label>알림 기준</Form.Label>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={(value) => {
-                        const nextOption = value as ExpiryNotificationOption;
-                        field.handleChange(nextOption);
-                        savePreferences(form.state.values.expiryEnabled, nextOption);
-                      }}
-                      disabled={!form.state.values.expiryEnabled}
-                    >
-                      <Form.Control>
-                        <Select.Trigger className="h-8 w-28">
-                          <Select.Value placeholder="선택" />
-                        </Select.Trigger>
-                      </Form.Control>
-                      <Select.Content>
-                        {EXPIRY_NOTIFICATION_OPTIONS.map((option) => (
-                          <Select.Item key={option.value} value={option.value}>
-                            {option.label}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select>
-                  </div>
-                  <Form.Error />
-                </Form.Field>
-              )}
-            </form.Field>
+                  savePreferences(true, expiryOption);
+                }}
+                disabled={upsertPreferencesMutation.isPending}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">알림 기준</p>
+              <Select
+                value={expiryOption}
+                onValueChange={(value) => {
+                  const nextOption = value as ExpiryNotificationOption;
+                  savePreferences(expiryEnabled, nextOption);
+                }}
+                disabled={!expiryEnabled || upsertPreferencesMutation.isPending}
+              >
+                <Select.Trigger className="h-8 w-28">
+                  <Select.Value placeholder="선택" />
+                </Select.Trigger>
+                <Select.Content>
+                  {EXPIRY_NOTIFICATION_OPTIONS.map((option) => (
+                    <Select.Item key={option.value} value={option.value}>
+                      {option.label}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
+            </div>
           </Card.Content>
         </Card>
       </div>
