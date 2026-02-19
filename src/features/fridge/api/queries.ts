@@ -24,29 +24,29 @@ function resolveFridgeQueryError(error: unknown) {
 }
 
 /** 냉장고 재고 전체 조회 (배치 포함) */
-export function useFridgeItemsQuery(householdId: string | null, searchInput = '') {
+export function useFridgeItemsQuery({
+  householdId,
+  userId,
+  searchInput = '',
+}: {
+  householdId: string | null;
+  userId: string;
+  searchInput?: string;
+}) {
   const normalizedSearchKeyword = searchInput.trim();
 
   return useQuery({
-    queryKey: fridgeKeys.list(householdId ?? '', normalizedSearchKeyword),
+    queryKey: fridgeKeys.list(householdId ?? '', userId, normalizedSearchKeyword),
     queryFn: householdId
       ? async () => {
           const supabase = createClient();
-
-          const { data: userData } = await supabase.auth.getUser();
-          const userId = userData.user?.id ?? null;
-
-          let hideDepletedFridgeItems = false;
-          if (userId) {
-            const { data: fridgePreferences, error: fridgePreferenceError } = await supabase
-              .from('fridge_preferences')
-              .select('hide_depleted_fridge_items')
-              .eq('user_id', userId)
-              .maybeSingle();
-
-            if (fridgePreferenceError) throw resolveFridgeQueryError(fridgePreferenceError);
-            hideDepletedFridgeItems = fridgePreferences?.hide_depleted_fridge_items ?? false;
-          }
+          const { data: fridgePreferences, error: fridgePreferenceError } = await supabase
+            .from('fridge_preferences')
+            .select('hide_depleted_fridge_items')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (fridgePreferenceError) throw resolveFridgeQueryError(fridgePreferenceError);
+          const hideDepletedFridgeItems = fridgePreferences?.hide_depleted_fridge_items ?? false;
 
           let query = supabase
             .from('fridge_items')

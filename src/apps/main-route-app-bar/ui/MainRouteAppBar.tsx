@@ -6,7 +6,7 @@ import { Settings, SlidersHorizontal } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
-import { useUserQuery } from '@/commons/api/auth/queries';
+import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Alert, Button } from '@/commons/ui';
 
 import { useUnreadNotificationsCountQuery } from '@/features/notification';
@@ -28,8 +28,8 @@ export function MainRouteAppBar() {
   const isProfile = pathname?.startsWith('/profile') ?? false;
   const isFridge = pathname?.startsWith('/fridge') ?? false;
   const isNotificationRoute = pathname?.startsWith('/store') || pathname?.startsWith('/meal');
-  const { data: user } = useUserQuery();
-  const { data: unreadCount = 0 } = useUnreadNotificationsCountQuery(user?.id ?? null);
+  const { data: user } = useUserSuspenseQuery();
+  const { data: unreadCount = 0 } = useUnreadNotificationsCountQuery(user.id);
 
   if (!title) return null;
 

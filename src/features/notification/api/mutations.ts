@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
+import { Toast } from '@/commons/ui';
 
 import { type NotificationItem, type NotificationPreferenceRow } from '@/entities/notification';
 
@@ -160,6 +161,9 @@ export function useUpsertNotificationPreferencesMutation() {
       queryClient.invalidateQueries({
         queryKey: notificationKeys.preferences(variables.userId),
       });
+    },
+    onError: () => {
+      Toast.error('알림 설정 저장에 실패했습니다');
     },
   });
 }

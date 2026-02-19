@@ -6,6 +6,7 @@ import { overlay } from 'overlay-kit';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
+import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
@@ -34,7 +35,12 @@ export function FridgePage({ householdId }: FridgePageProps) {
       },
     }),
   );
-  const { data: items = [], isLoading } = useFridgeItemsQuery(householdId, searchValue);
+  const { data: user } = useUserSuspenseQuery();
+  const { data: items = [], isLoading } = useFridgeItemsQuery({
+    householdId,
+    userId: user.id,
+    searchInput: searchValue,
+  });
 
   const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
     close();

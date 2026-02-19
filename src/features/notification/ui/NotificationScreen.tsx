@@ -4,7 +4,7 @@ import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
-import { useUserQuery } from '@/commons/api/auth/queries';
+import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, EmptyState } from '@/commons/ui';
 
 import {
@@ -19,11 +19,10 @@ function formatNotificationDate(value: string) {
 
 /** 알림 목록 화면 */
 export function NotificationScreen() {
-  const { data: user } = useUserQuery();
-  const userId = user?.id ?? null;
-  const { data: notifications = [], isLoading } = useNotificationsQuery(userId);
-  const markReadMutation = useMarkNotificationReadMutation(userId);
-  const markAllReadMutation = useMarkAllNotificationsReadMutation(userId);
+  const { data: user } = useUserSuspenseQuery();
+  const { data: notifications = [], isLoading } = useNotificationsQuery(user.id);
+  const markReadMutation = useMarkNotificationReadMutation(user.id);
+  const markAllReadMutation = useMarkAllNotificationsReadMutation(user.id);
 
   const unreadCount = notifications.filter((notification) => !notification.read_at).length;
 
@@ -33,7 +32,7 @@ export function NotificationScreen() {
   }
 
   function markAllRead() {
-    if (!userId || unreadCount === 0) return;
+    if (unreadCount === 0) return;
     markAllReadMutation.mutate();
   }
 

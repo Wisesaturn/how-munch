@@ -3,7 +3,7 @@
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { ChevronLeft } from 'lucide-react';
 
-import { useUserQuery } from '@/commons/api/auth/queries';
+import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, Card, Switch } from '@/commons/ui';
 
 import { useFridgePreferencesQuery } from '../api/queries';
@@ -15,18 +15,15 @@ interface FridgeFilterSettingsScreenProps {
 
 /** 냉장고 필터 설정 화면 */
 export function FridgeFilterSettingsScreen({ onClose }: FridgeFilterSettingsScreenProps) {
-  const { data: user } = useUserQuery();
-  const userId = user?.id ?? null;
-  const { data: preferences } = useFridgePreferencesQuery(userId);
+  const { data: user } = useUserSuspenseQuery();
+  const { data: preferences } = useFridgePreferencesQuery(user.id);
   const upsertFridgePreferencesMutation = useUpsertFridgePreferencesMutation();
 
   const hideDepletedItems = preferences?.hide_depleted_fridge_items ?? false;
 
   function toggleHideDepletedItems(checked: boolean) {
-    if (!userId) return;
-
     upsertFridgePreferencesMutation.mutate({
-      userId,
+      userId: user.id,
       values: {
         hide_depleted_fridge_items: Boolean(checked),
       },

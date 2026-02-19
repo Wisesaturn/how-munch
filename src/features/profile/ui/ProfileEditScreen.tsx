@@ -8,7 +8,7 @@ import { ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { useUserQuery } from '@/commons/api/auth/queries';
+import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -30,8 +30,8 @@ const profileEditSchema = z.object({
 });
 
 export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
-  const { data: user } = useUserQuery();
-  const { data: profile, isLoading } = useProfileQuery(user?.id ?? null);
+  const { data: user } = useUserSuspenseQuery();
+  const { data: profile, isLoading } = useProfileQuery(user.id);
   const mutation = useUpdateProfileMutation();
   const form = useForm({
     defaultValues: {

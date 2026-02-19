@@ -7,7 +7,7 @@ import { useForm } from '@tanstack/react-form';
 import { ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 
-import { useUserQuery } from '@/commons/api/auth/queries';
+import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, Card, Select, Switch, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -31,9 +31,8 @@ const notificationSettingsSchema = z.object({
 
 /** 알림 설정 화면 */
 export function NotificationSettingsScreen({ onClose }: NotificationSettingsScreenProps) {
-  const { data: user } = useUserQuery();
-  const userId = user?.id ?? null;
-  const { data: preferences } = useNotificationPreferencesQuery(userId);
+  const { data: user } = useUserSuspenseQuery();
+  const { data: preferences } = useNotificationPreferencesQuery(user.id);
   const upsertPreferencesMutation = useUpsertNotificationPreferencesMutation();
 
   const form = useForm({
@@ -45,7 +44,6 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
       onSubmit: notificationSettingsSchema,
       onChange: notificationSettingsSchema,
     },
-    onSubmit: async () => {},
   });
 
   function savePreferences(
@@ -53,25 +51,16 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
     nextOption: ExpiryNotificationOption,
     isPermissionAsked = preferences?.is_permission_asked ?? false,
   ) {
-    if (!userId) return;
-
-    upsertPreferencesMutation.mutate(
-      {
-        userId,
-        values: {
-          expiry_soon_enabled: nextEnabled,
-          expiry_remind_days: toExpiryRemindDays(nextOption),
-          is_permission_asked: isPermissionAsked,
-          quiet_hours_start: null,
-          quiet_hours_end: null,
-        },
+    upsertPreferencesMutation.mutate({
+      userId: user.id,
+      values: {
+        expiry_soon_enabled: nextEnabled,
+        expiry_remind_days: toExpiryRemindDays(nextOption),
+        is_permission_asked: isPermissionAsked,
+        quiet_hours_start: null,
+        quiet_hours_end: null,
       },
-      {
-        onError: () => {
-          Toast.error('알림 설정 저장에 실패했습니다');
-        },
-      },
-    );
+    });
   }
 
   useEffect(
@@ -133,9 +122,8 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                         }
 
                         if (!preferences?.is_permission_asked) {
-                          if (!userId) return;
                           const result = await syncPushPermissionAndSubscription({
-                            userId,
+                            userId: user.id,
                             isPermissionAsked: false,
                           });
 
