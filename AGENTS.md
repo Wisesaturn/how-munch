@@ -60,6 +60,12 @@
   - keep one RPC responsible for one transaction boundary and one return contract.
   - every RPC custom exception must set both `errcode` and `hint` (`raise exception ... using errcode = 'X0001', hint = 'SOME_DOMAIN_REASON'`).
   - whenever adding/changing RPC custom exceptions, update `src/commons/lib/domainError.ts` with both code and hint entries in the same change.
+- Supabase SQL function source management:
+  - keep function SQL split by unit under `supabase/sql/functions/public/*.sql` (one function per file).
+  - every function file must include top comments for `역할` and `동작` so contributors can quickly understand intent and flow.
+  - when a function changes, update the corresponding function file and create a new migration in `supabase/migrations`.
+  - regenerate split function files and index docs with `node scripts/sync-supabase-function-sources.mjs`.
+  - `supabase/sql/functions/*` are source references for review/maintenance; migrations remain the executable history.
 - TanStack Form validation rule:
   - use `zod` schema and connect it through `useForm({ validators: { onSubmit: schema, onChange: schema } })` by default.
   - `onSubmit` and `onChange` must both be set for standard form validation flows (add `onBlur` only when needed).
