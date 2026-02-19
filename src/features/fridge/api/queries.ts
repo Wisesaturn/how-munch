@@ -24,9 +24,11 @@ function resolveFridgeQueryError(error: unknown) {
 }
 
 /** 냉장고 재고 전체 조회 (배치 포함) */
-export function useFridgeItemsQuery(householdId: string | null) {
+export function useFridgeItemsQuery(householdId: string | null, searchInput = '') {
+  const normalizedSearchKeyword = searchInput.trim();
+
   return useQuery({
-    queryKey: fridgeKeys.list(householdId ?? ''),
+    queryKey: fridgeKeys.list(householdId ?? '', normalizedSearchKeyword),
     queryFn: householdId
       ? async () => {
           const supabase = createClient();
@@ -55,6 +57,10 @@ export function useFridgeItemsQuery(householdId: string | null) {
 
           if (hideDepletedFridgeItems) {
             query = query.gt('total_count', 0);
+          }
+
+          if (normalizedSearchKeyword) {
+            query = query.ilike('name', `%${normalizedSearchKeyword}%`);
           }
 
           const { data, error } = await query;

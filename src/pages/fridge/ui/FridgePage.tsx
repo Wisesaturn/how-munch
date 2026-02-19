@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-
 import { Plus } from 'lucide-react';
+import { parseAsString, useQueryState } from 'nuqs';
 import { overlay } from 'overlay-kit';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
@@ -25,15 +24,17 @@ interface FridgePageProps {
 }
 
 export function FridgePage({ householdId }: FridgePageProps) {
-  const [search, setSearch] = useState('');
-
-  const { data: items = [], isLoading } = useFridgeItemsQuery(householdId);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return items;
-    const q = search.trim().toLowerCase();
-    return items.filter((item) => item.name.toLowerCase().includes(q));
-  }, [items, search]);
+  const [searchValue, setSearchValue] = useQueryState(
+    'name',
+    parseAsString.withDefault('').withOptions({
+      clearOnDefault: true,
+      limitUrlUpdates: {
+        method: 'debounce',
+        timeMs: 300,
+      },
+    }),
+  );
+  const { data: items = [], isLoading } = useFridgeItemsQuery(householdId, searchValue);
 
   const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
     close();
@@ -68,13 +69,17 @@ export function FridgePage({ householdId }: FridgePageProps) {
     stackFlowActions.push('FridgeBatchEditActivity', { batch, unit, fromStore });
   };
 
+  async function changeSearchValue(value: string) {
+    await setSearchValue(value);
+  }
+
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
       {/* 만료 임박 배너 */}
-      {!search.trim() && <ExpiryBanner items={items} />}
+      {!searchValue.trim() && <ExpiryBanner items={items} />}
 
       {/* 검색 */}
-      <FridgeSearch value={search} onChange={setSearch} />
+      <FridgeSearch value={searchValue} onChange={changeSearchValue} />
 
       {/* 리스트 */}
       {isLoading ? (
@@ -84,8 +89,8 @@ export function FridgePage({ householdId }: FridgePageProps) {
       ) : (
         <FridgeItemList
           householdId={householdId}
-          items={filtered}
-          isSearching={Boolean(search.trim())}
+          items={items}
+          isSearching={Boolean(searchValue.trim())}
           onEditItem={openFridgeItemEditSheet}
           onAddBatch={openFridgeBatchAddSheet}
           onEditBatch={openFridgeBatchEditSheet}
