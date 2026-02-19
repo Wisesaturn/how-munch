@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 
 import { Badge, Button, Select } from '@/commons/ui';
 
-import { isWeightUnit } from '@/entities/ingredient';
+import { isWeightUnit, resolveAmountMin } from '@/entities/ingredient';
 
 import {
   type EditorIngredient,
@@ -62,7 +62,8 @@ function MealIngredientRow({
   const isAmountControlDisabled =
     !selectedIngredient ||
     (isWeightUnit(selectedUnit) ? sliderBoundary.max < sliderMin : sliderBoundary.max < 1);
-  const isCountInputDisabled = !selectedIngredient || sliderBoundary.max < 1;
+  const selectedUnitMinAmount = selectedUnit ? resolveAmountMin(selectedUnit) : 1;
+  const isCountInputDisabled = !selectedIngredient || sliderBoundary.max < selectedUnitMinAmount;
   const ingredientSelectValue = ingredient.fridge_item_id;
 
   return (
