@@ -36,13 +36,13 @@ function formatIngredientAmountInfo(value: number, unit: IngredientUnit | undefi
  */
 function resolveSliderBoundaries(totalCount: number | string | undefined) {
   const parsedCount = Number(totalCount);
-  if (!Number.isFinite(parsedCount)) return { min: 1, max: 0, disabled: true };
+  if (!Number.isFinite(parsedCount)) return { min: 0, max: 0, disabled: true };
 
   // DB 수치 연산 후 부동소수점 오차(예: 0.099999999)가 UI 비활성화 조건을 깨지 않도록 보정합니다.
   const max = normalizeAmount(Math.max(0, parsedCount));
-  if (max <= 0) return { min: 1, max: 0, disabled: true };
+  if (max <= 0) return { min: 0, max: 0, disabled: true };
 
-  return { min: 1, max, disabled: false };
+  return { min: 0, max, disabled: false };
 }
 
 /**
@@ -60,7 +60,7 @@ function resolveWeightSliderStep(unit: IngredientUnit | undefined) {
 function resolveWeightSliderMin(unit: IngredientUnit | undefined) {
   if (unit === 'g') return 0;
   if (unit === 'kg') return 0;
-  return 1;
+  return 0;
 }
 
 export {
