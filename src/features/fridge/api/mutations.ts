@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/commons/api/supabase/client';
 import { resolveDomainError } from '@/commons/lib';
 import { type Database } from '@/commons/types';
+import { Toast } from '@/commons/ui';
 
 import { type FridgeItem, type FridgeItemBatch } from '@/entities/fridge-item';
 
@@ -12,6 +13,8 @@ type FridgeItemInsert = Database['public']['Tables']['fridge_items']['Insert'];
 type FridgeItemUpdate = Database['public']['Tables']['fridge_items']['Update'];
 type BatchInsert = Database['public']['Tables']['fridge_item_batches']['Insert'];
 type BatchUpdate = Database['public']['Tables']['fridge_item_batches']['Update'];
+type FridgePreferenceRow = Database['public']['Tables']['fridge_preferences']['Row'];
+type FridgePreferenceInsert = Database['public']['Tables']['fridge_preferences']['Insert'];
 
 /**
  * @description 냉장고 도메인 DB 에러를 사용자 메시지로 매핑합니다.
@@ -157,6 +160,36 @@ export function useDeleteBatchMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
+    },
+  });
+}
+
+interface UpsertFridgePreferencesParams {
+  userId: string;
+  values: Pick<FridgePreferenceRow, 'hide_depleted_fridge_items'>;
+}
+
+/** 냉장고 표시 설정 저장 */
+export function useUpsertFridgePreferencesMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, values }: UpsertFridgePreferencesParams) => {
+      const payload: FridgePreferenceInsert = {
+        user_id: userId,
+        hide_depleted_fridge_items: values.hide_depleted_fridge_items,
+        updated_at: new Date().toISOString(),
+      };
+      const supabase = createClient();
+      const { error } = await supabase.from('fridge_preferences').upsert(payload);
+      if (error) throw resolveFridgeError(error);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: fridgeKeys.preferences(variables.userId) });
+      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
+    },
+    onError: (error) => {
+      Toast.error(error.message);
     },
   });
 }

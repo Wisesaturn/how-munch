@@ -3,4 +3,6 @@ export const mealKeys = {
   listByDate: (householdId: string, date: string) =>
     [...mealKeys.all, 'list-by-date', householdId, date] as const,
   fridgeItems: (householdId: string) => [...mealKeys.all, 'fridge-items', householdId] as const,
+  fridgeItemsBySelected: (householdId: string, selectedItemIdsKey: string) =>
+    [...mealKeys.fridgeItems(householdId), selectedItemIdsKey] as const,
 };

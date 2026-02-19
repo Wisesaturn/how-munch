@@ -67,11 +67,18 @@ export function MealEditorScreen({
   const formattedDate = format(parseISO(date), 'M월 d일', { locale: ko });
   const appBarTitle = `${formattedDate} ${MEAL_LABEL_BY_TYPE[type]} 식단`;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const initialDishes = toEditorDishes(meal);
+  const selectedFridgeItemIds = [
+    ...new Set(
+      initialDishes.flatMap((dish) =>
+        dish.ingredients.map((ingredient) => ingredient.fridge_item_id),
+      ),
+    ),
+  ].filter(Boolean);
 
-  const { data: fridgeItems = [] } = useFridgeItemsForMealQuery(householdId);
+  const { data: fridgeItems = [] } = useFridgeItemsForMealQuery(householdId, selectedFridgeItemIds);
   const upsertMutation = useUpsertMealMutation();
   const deleteMutation = useDeleteMealMutation();
-  const initialDishes = toEditorDishes(meal);
 
   const maxIngredientCount = fridgeItems.length;
   const fridgeStockInfoById = createFridgeStockInfoById(fridgeItems);

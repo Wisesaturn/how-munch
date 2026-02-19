@@ -5,4 +5,5 @@ export const fridgeKeys = {
   all: commonFridgeKeys.all,
   list: (householdId: string) => [...fridgeKeys.all, 'list', householdId] as const,
   batchUsage: (batchId: string) => [...fridgeKeys.all, 'batch-usage', batchId] as const,
+  preferences: (userId: string) => [...fridgeKeys.all, 'preferences', userId] as const,
 };

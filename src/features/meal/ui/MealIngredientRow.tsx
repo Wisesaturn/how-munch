@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react';
 
-import { Button, Select } from '@/commons/ui';
+import { Badge, Button, Select } from '@/commons/ui';
 
 import { isWeightUnit } from '@/entities/ingredient';
 
@@ -36,7 +36,6 @@ function MealIngredientRow({
   /* -------------------------------------------------------------------------- */
   /* Selection Constants                                                         */
   /* -------------------------------------------------------------------------- */
-  const emptySelectValue = '__none__';
   const selectedIngredient = fridgeItems.find((item) => item.id === ingredient.fridge_item_id);
   const inUseStockAmount = selectedIngredient
     ? (inUseStockAmountByItemId[selectedIngredient.id] ?? 0)
@@ -64,7 +63,7 @@ function MealIngredientRow({
     !selectedIngredient ||
     (isWeightUnit(selectedUnit) ? sliderBoundary.max < sliderMin : sliderBoundary.max < 1);
   const isCountInputDisabled = !selectedIngredient || sliderBoundary.max < 1;
-  const ingredientSelectValue = ingredient.fridge_item_id || emptySelectValue;
+  const ingredientSelectValue = ingredient.fridge_item_id;
 
   return (
     <div className="space-y-2.5">
@@ -74,12 +73,25 @@ function MealIngredientRow({
             <Select.Value placeholder="재료 선택" />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value={emptySelectValue}>재료 선택</Select.Item>
-            {fridgeItems.map((item) => (
-              <Select.Item key={item.id} value={item.id}>
-                {item.name}
-              </Select.Item>
-            ))}
+            {fridgeItems.map((item) => {
+              const isDepleted = Number(item.total_count) <= 0;
+
+              return (
+                <Select.Item key={item.id} value={item.id} disabled={isDepleted}>
+                  <span className="flex items-center gap-1.5">
+                    <span>{item.name}</span>
+                    {isDepleted ? (
+                      <Badge
+                        variant="outline"
+                        className="border-red-200 bg-red-50 px-1.5 py-0 text-[10px] text-red-600"
+                      >
+                        소진
+                      </Badge>
+                    ) : null}
+                  </span>
+                </Select.Item>
+              );
+            })}
           </Select.Content>
         </Select>
 

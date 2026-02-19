@@ -1,4 +1,8 @@
-export { useBatchUsedAmountQuery, useFridgeItemsQuery } from './api/queries';
+export {
+  useBatchUsedAmountQuery,
+  useFridgeItemsQuery,
+  useFridgePreferencesQuery,
+} from './api/queries';
 export {
   useAddFridgeItemMutation,
   useUpdateFridgeItemMutation,
@@ -6,6 +10,7 @@ export {
   useAddBatchMutation,
   useUpdateBatchMutation,
   useDeleteBatchMutation,
+  useUpsertFridgePreferencesMutation,
 } from './api/mutations';
 export { ExpiryBadge } from './ui/ExpiryBadge';
 export { ExpiryBanner } from './ui/ExpiryBanner';
@@ -16,4 +21,5 @@ export { FridgeItemEditScreen } from './ui/FridgeItemEditScreen';
 export { FridgeItemEditBottomSheet } from './ui/FridgeItemEditBottomSheet';
 export { FridgeBatchAddBottomSheet } from './ui/FridgeBatchAddBottomSheet';
 export { FridgeBatchEditScreen } from './ui/FridgeBatchEditScreen';
+export { FridgeFilterSettingsScreen } from './ui/FridgeFilterSettingsScreen';
 export { FridgeSearch } from './ui/FridgeSearch';

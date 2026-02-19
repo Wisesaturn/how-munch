@@ -543,6 +543,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      fridge_preferences: {
+        Row: {
+          user_id: string;
+          hide_depleted_fridge_items: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          hide_depleted_fridge_items?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          hide_depleted_fridge_items?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

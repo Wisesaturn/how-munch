@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 
-import { Settings } from 'lucide-react';
+import { Settings, SlidersHorizontal } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
@@ -26,10 +26,8 @@ export function MainRouteAppBar() {
   const pathname = usePathname();
   const title = getMainTitle(pathname);
   const isProfile = pathname?.startsWith('/profile') ?? false;
-  const isNotificationRoute =
-    pathname?.startsWith('/store') ||
-    pathname?.startsWith('/fridge') ||
-    pathname?.startsWith('/meal');
+  const isFridge = pathname?.startsWith('/fridge') ?? false;
+  const isNotificationRoute = pathname?.startsWith('/store') || pathname?.startsWith('/meal');
   const { data: user } = useUserQuery();
   const { data: unreadCount = 0 } = useUnreadNotificationsCountQuery(user?.id ?? null);
 
@@ -68,6 +66,35 @@ export function MainRouteAppBar() {
           >
             <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
           </Button>
+        }
+      />
+    );
+  }
+
+  if (isFridge) {
+    return (
+      <MainAppBar
+        title={title}
+        className="mx-0"
+        right={
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => stackFlowActions.push('NotificationActivity', {})}
+              aria-label="알림 열기"
+            >
+              <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => stackFlowActions.push('FridgeFilterSettingsActivity', {})}
+              aria-label="냉장고 필터 설정 열기"
+            >
+              <SlidersHorizontal className="size-5" />
+            </Button>
+          </div>
         }
       />
     );

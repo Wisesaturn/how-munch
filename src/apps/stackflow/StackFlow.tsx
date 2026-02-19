@@ -11,6 +11,7 @@ import { type Meal, type MealType } from '@/entities/meal';
 
 import {
   FridgeBatchEditScreen,
+  FridgeFilterSettingsScreen,
   FridgeItemAddScreen,
   FridgeItemEditScreen,
 } from '@/features/fridge';
@@ -95,6 +96,12 @@ function FridgeBatchEditActivity({
   );
 }
 
+function FridgeFilterSettingsActivity() {
+  const { pop } = useActions();
+
+  return <FridgeFilterSettingsScreen onClose={pop} />;
+}
+
 function IngredientEditActivity({
   params,
 }: {
@@ -170,6 +177,7 @@ const appStackFlow = stackflow({
     FridgeItemAddActivity,
     FridgeItemEditActivity,
     FridgeBatchEditActivity,
+    FridgeFilterSettingsActivity,
     MealEditorActivity,
     NotificationActivity,
     NotificationSettingsActivity,
@@ -187,6 +195,7 @@ const appStackFlow = stackflow({
         FridgeItemAddActivity: '/fridge/item/add',
         FridgeItemEditActivity: '/fridge/item/edit',
         FridgeBatchEditActivity: '/fridge/batch/edit',
+        FridgeFilterSettingsActivity: '/fridge/filter/settings',
         MealEditorActivity: '/meal/editor',
         NotificationActivity: '/notifications',
         NotificationSettingsActivity: '/notifications/settings',
