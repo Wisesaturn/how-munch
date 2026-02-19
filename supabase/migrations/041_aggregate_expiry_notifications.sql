@@ -1,9 +1,7 @@
--- Function: public.generate_expiry_soon_notifications
--- Source: supabase/migrations/023_support_kg_unit.sql
--- 역할: 유통기한 임박 재고를 스캔하여 알림 레코드를 생성합니다.
--- 동작:
--- 1. 대상 날짜 기준 임박/만료 후보를 수집합니다.
--- 2. 유저+가구 기준으로 재료를 요약(최대 3개)하여 하루 1건 알림을 생성합니다.
+-- ============================================================
+-- Aggregate expiry notifications per user+household (daily)
+-- ============================================================
+
 create or replace function public.generate_expiry_soon_notifications(p_target_date date default current_date)
 returns integer
 language plpgsql
@@ -181,3 +179,9 @@ begin
   return v_inserted_count;
 end;
 $$;
+
+revoke all on function public.generate_expiry_soon_notifications(date) from public;
+revoke all on function public.generate_expiry_soon_notifications(date) from authenticated;
+grant execute on function public.generate_expiry_soon_notifications(date) to service_role;
+
+select pg_notify('pgrst', 'reload schema');
