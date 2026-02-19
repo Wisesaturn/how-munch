@@ -1,4 +1,4 @@
-import { MainRouteAppBar } from '@/apps/main-route-app-bar';
+import { MainRouteAppBar } from '@/apps/app-bar';
 
 import { ScrollArea } from '@/commons/ui';
 
