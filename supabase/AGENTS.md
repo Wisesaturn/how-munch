@@ -4,23 +4,18 @@
 
 ## SQL 함수 관리 원칙
 
-`public` 스키마 함수는 함수 단위 파일로 분리해 참조합니다.
+`public` 스키마 함수는 함수 단위 파일로 분리하고 도메인별로 카테고라이징해 참조합니다.
 
-- 함수 소스 경로: `supabase/sql/functions/public/*.sql`
-- 인덱스 문서: `supabase/sql/functions/README.md`
+- 함수 소스 경로: `supabase/sql/functions/public/<category>/*.sql`
+- 인덱스 문서: `supabase/sql/functions/AGENTS.md`
 - 함수 파일은 각 파일 상단에 아래 주석을 포함합니다.
   - `역할`: 함수의 책임
   - `동작`: 핵심 실행 흐름
 
 ## 업데이트 순서
 
-1. 함수 파일(`supabase/sql/functions/public/<function>.sql`)에서 변경 사항을 먼저 검토/정리합니다.
+1. 함수 파일(`supabase/sql/functions/public/<category>/<function>.sql`)에서 변경 사항을 먼저 검토/정리합니다.
 2. 실행 이력은 새로운 migration 파일(`supabase/migrations/*.sql`)로 반영합니다.
-3. 변경 후 아래 명령으로 분리 함수 파일과 인덱스 문서를 재생성합니다.
-
-```bash
-node scripts/sync-supabase-function-sources.mjs
-```
 
 ## 주의사항
 

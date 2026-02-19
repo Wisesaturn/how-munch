@@ -24,11 +24,17 @@ begin
     and f.deleted_at is null;
 
   if v_fridge_item_id is null then
-    raise exception 'fridge batch not found';
+    raise exception using
+      errcode = 'F0005',
+      message = '재고 배치를 찾을 수 없습니다.',
+      hint = 'FRIDGE_BATCH_NOT_FOUND';
   end if;
 
   if not public.is_household_member(v_household_id) then
-    raise exception 'permission denied';
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
   select exists (

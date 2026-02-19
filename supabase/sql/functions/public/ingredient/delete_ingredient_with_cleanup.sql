@@ -22,11 +22,17 @@ begin
   for update;
 
   if not found then
-    raise exception 'ingredient not found';
+    raise exception using
+      errcode = 'I0005',
+      message = '재료를 찾을 수 없습니다.',
+      hint = 'INGREDIENT_NOT_FOUND';
   end if;
 
   if not public.is_household_member(v_ingredient.household_id) then
-    raise exception 'permission denied';
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
   if v_ingredient.linked_fridge_batch_id is not null then

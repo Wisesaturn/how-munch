@@ -13,16 +13,16 @@ type IngredientInsert = Database['public']['Tables']['ingredients']['Insert'];
 type IngredientUpdate = Database['public']['Tables']['ingredients']['Update'];
 
 /**
- * @description 장보기 삭제 관련 DB 에러를 사용자 메시지로 변환합니다.
+ * @description 장보기 도메인 DB 에러를 사용자 메시지로 변환합니다.
  */
-function resolveIngredientDeleteError(error: unknown) {
+function resolveIngredientError(error: unknown) {
   const domainError = resolveDomainError(error);
   if (domainError) {
     return new Error(domainError.message);
   }
 
   if (error instanceof Error) return error;
-  return new Error('장보기 삭제 중 오류가 발생했습니다.');
+  return new Error('장보기 처리 중 오류가 발생했습니다.');
 }
 
 /** 장보기 항목 추가 (I-04) */
@@ -44,7 +44,7 @@ export function useAddIngredientMutation() {
         p_unit: input.unit ?? 'count',
         p_date: date,
       });
-      if (error) throw error;
+      if (error) throw resolveIngredientError(error);
 
       return data as Ingredient;
     },
@@ -69,7 +69,7 @@ export function useUpdateIngredientMutation() {
         p_ingredient_id: id,
         p_updates: patch,
       });
-      if (error) throw error;
+      if (error) throw resolveIngredientError(error);
 
       return data as Ingredient;
     },
@@ -93,7 +93,7 @@ export function useDeleteIngredientMutation() {
           p_ingredient_id: id,
         },
       );
-      if (deleteIngredientError) throw resolveIngredientDeleteError(deleteIngredientError);
+      if (deleteIngredientError) throw resolveIngredientError(deleteIngredientError);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });

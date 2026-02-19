@@ -29,8 +29,10 @@ begin
   limit 1;
 
   if v_category_id is null then
-    raise exception 'category id not found'
-      using errcode = 'I0003', hint = 'INGREDIENT_CATEGORY_ID_NOT_FOUND';
+    raise exception using
+      errcode = 'I0003',
+      message = '유효하지 않은 카테고리입니다.',
+      hint = 'INGREDIENT_CATEGORY_ID_NOT_FOUND';
   end if;
 
   return v_category_id;

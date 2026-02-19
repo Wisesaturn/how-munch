@@ -48,7 +48,10 @@ begin
   end if;
 
   if v_category_id is null then
-    raise exception 'other category not found' using errcode = 'I0002', hint = 'INGREDIENT_CATEGORY_OTHER_NOT_FOUND';
+    raise exception using
+      errcode = 'I0002',
+      message = '기본 카테고리(기타)를 찾을 수 없습니다.',
+      hint = 'INGREDIENT_CATEGORY_OTHER_NOT_FOUND';
   end if;
 
   return v_category_id;

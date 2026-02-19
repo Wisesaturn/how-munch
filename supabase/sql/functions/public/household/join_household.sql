@@ -16,7 +16,10 @@ declare
   v_household_id uuid;
 begin
   if v_user_id is null then
-    raise exception 'Unauthorized';
+    raise exception using
+      errcode = 'A0001',
+      message = '로그인이 필요합니다.',
+      hint = 'AUTH_UNAUTHORIZED';
   end if;
 
   -- 유효한 초대코드를 잠그고 조회하여 동시성 경쟁 방지
@@ -29,7 +32,10 @@ begin
    for update;
 
   if not found then
-    raise exception 'Invalid or expired invite code';
+    raise exception using
+      errcode = 'H0001',
+      message = '유효하지 않거나 만료된 초대 코드입니다.',
+      hint = 'HOUSEHOLD_INVITE_INVALID_OR_EXPIRED';
   end if;
 
   v_household_id := v_invite.household_id;
@@ -40,7 +46,10 @@ begin
      where household_id = v_household_id
        and user_id = v_user_id
   ) then
-    raise exception 'Already a member of this household';
+    raise exception using
+      errcode = 'H0002',
+      message = '이미 해당 가구의 구성원입니다.',
+      hint = 'HOUSEHOLD_ALREADY_MEMBER';
   end if;
 
   -- 슬롯 확보 (max_uses 보장)
@@ -50,7 +59,10 @@ begin
      and use_count < max_uses;
 
   if not found then
-    raise exception 'Invite has reached the maximum number of uses';
+    raise exception using
+      errcode = 'H0003',
+      message = '초대 코드 사용 횟수가 모두 소진되었습니다.',
+      hint = 'HOUSEHOLD_INVITE_MAX_USES_REACHED';
   end if;
 
   insert into public.household_members (household_id, user_id, role)

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
+import { resolveDomainError } from '@/commons/lib';
 import { fridgeKeys } from '@/commons/model/queryKey';
 
 import { type MealType } from '@/entities/meal';
@@ -29,6 +30,19 @@ function toSafePositiveAmount(value: unknown) {
   return amount;
 }
 
+/**
+ * @description 식단 도메인 DB 에러를 사용자 메시지로 변환합니다.
+ */
+function resolveMealError(error: unknown) {
+  const domainError = resolveDomainError(error);
+  if (domainError) {
+    return new Error(domainError.message);
+  }
+
+  if (error instanceof Error) return error;
+  return new Error('식단 처리 중 오류가 발생했습니다.');
+}
+
 /** 식단 저장(해당 meal type 전체 교체) */
 export function useUpsertMealMutation() {
   const queryClient = useQueryClient();
@@ -54,7 +68,7 @@ export function useUpsertMealMutation() {
         p_type: type,
         p_dishes: normalizedDishes,
       });
-      if (error) throw error;
+      if (error) throw resolveMealError(error);
 
       return data;
     },
@@ -87,7 +101,7 @@ export function useDeleteMealMutation() {
       const { error } = await supabase.rpc('delete_meal_with_usage_restore', {
         p_meal_id: id,
       });
-      if (error) throw error;
+      if (error) throw resolveMealError(error);
 
       return { householdId, date };
     },

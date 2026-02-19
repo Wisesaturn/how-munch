@@ -30,11 +30,17 @@ begin
   for update of b, f;
 
   if not found then
-    raise exception 'fridge batch not found';
+    raise exception using
+      errcode = 'F0005',
+      message = '재고 배치를 찾을 수 없습니다.',
+      hint = 'FRIDGE_BATCH_NOT_FOUND';
   end if;
 
   if not public.is_household_member(v_household_id) then
-    raise exception 'permission denied';
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
   if p_updates ? 'quantity' then
@@ -47,7 +53,10 @@ begin
 
     v_requested_total_quantity := (p_updates->>'quantity')::numeric;
     if v_requested_total_quantity is null then
-      raise exception 'invalid quantity';
+      raise exception using
+        errcode = 'F0006',
+        message = '유효하지 않은 수량입니다.',
+        hint = 'FRIDGE_INVALID_QUANTITY';
     end if;
 
     select coalesce(sum(mbu.amount), 0)
@@ -58,7 +67,7 @@ begin
     if v_requested_total_quantity < v_used_amount then
       raise exception using
         errcode = 'F0003',
-        message = format('식단에서 사용 중인 수량(%s)보다 작게 설정할 수 없습니다.', v_used_amount),
+        message = '식단에서 사용 중인 수량보다 작게 설정할 수 없습니다.',
         hint = 'FRIDGE_QUANTITY_BELOW_MEAL_USAGE';
     end if;
   end if;

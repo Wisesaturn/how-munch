@@ -14,7 +14,10 @@ declare
   v_user_id uuid := auth.uid();
 begin
   if v_user_id is null then
-    raise exception 'Unauthorized';
+    raise exception using
+      errcode = 'A0001',
+      message = '로그인이 필요합니다.',
+      hint = 'AUTH_UNAUTHORIZED';
   end if;
 
   delete from auth.users where id = v_user_id;

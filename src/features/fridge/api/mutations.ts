@@ -23,7 +23,7 @@ function resolveFridgeError(error: unknown) {
   }
 
   if (error instanceof Error) return error;
-  return new Error('재고 삭제 중 오류가 발생했습니다.');
+  return new Error('재고 처리 중 오류가 발생했습니다.');
 }
 
 /** 냉장고 아이템 + 첫 배치 동시 추가 */
@@ -48,7 +48,7 @@ export function useAddFridgeItemMutation() {
         p_expiry_date: input.batch.expiry_date ?? null,
         p_memo: input.batch.memo ?? null,
       });
-      if (error) throw error;
+      if (error) throw resolveFridgeError(error);
 
       return data as FridgeItem;
     },
@@ -71,7 +71,7 @@ export function useUpdateFridgeItemMutation() {
         .eq('id', id)
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw resolveFridgeError(error);
       return data as FridgeItem;
     },
     onSuccess: () => {
@@ -110,7 +110,7 @@ export function useAddBatchMutation() {
         .insert(input)
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw resolveFridgeError(error);
       return data as FridgeItemBatch;
     },
     onSuccess: () => {

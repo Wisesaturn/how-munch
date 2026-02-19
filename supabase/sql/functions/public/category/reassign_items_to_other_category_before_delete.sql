@@ -14,8 +14,10 @@ declare
   v_replacement_category_id uuid;
 begin
   if old.code = 'other' then
-    raise exception 'other category cannot be deleted'
-      using errcode = 'I0001', hint = 'INGREDIENT_CATEGORY_OTHER_DELETE_NOT_ALLOWED';
+    raise exception using
+      errcode = 'I0001',
+      message = '기본 카테고리(기타)는 삭제할 수 없습니다.',
+      hint = 'INGREDIENT_CATEGORY_OTHER_DELETE_NOT_ALLOWED';
   end if;
 
   if old.household_id is not null then
@@ -37,8 +39,10 @@ begin
   end if;
 
   if v_replacement_category_id is null then
-    raise exception 'replacement other category not found'
-      using errcode = 'I0004', hint = 'INGREDIENT_CATEGORY_REPLACEMENT_NOT_FOUND';
+    raise exception using
+      errcode = 'I0004',
+      message = '대체할 기본 카테고리(기타)를 찾을 수 없습니다.',
+      hint = 'INGREDIENT_CATEGORY_REPLACEMENT_NOT_FOUND';
   end if;
 
   update public.ingredients

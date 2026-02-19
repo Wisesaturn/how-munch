@@ -26,11 +26,17 @@ declare
   v_category_id uuid;
 begin
   if auth.uid() is null then
-    raise exception 'Unauthorized';
+    raise exception using
+      errcode = 'A0001',
+      message = '로그인이 필요합니다.',
+      hint = 'AUTH_UNAUTHORIZED';
   end if;
 
   if not public.is_household_member(p_household_id) then
-    raise exception 'permission denied';
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
   v_category_id := public.normalize_ingredient_category_id(p_household_id, p_category_id);

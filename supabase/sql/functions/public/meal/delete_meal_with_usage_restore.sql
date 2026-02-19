@@ -21,11 +21,17 @@ begin
   for update;
 
   if v_household_id is null then
-    raise exception 'meal not found';
+    raise exception using
+      errcode = 'M0002',
+      message = '식단을 찾을 수 없습니다.',
+      hint = 'MEAL_NOT_FOUND';
   end if;
 
   if not public.is_household_member(v_household_id) then
-    raise exception 'permission denied';
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
   for v_usage in
