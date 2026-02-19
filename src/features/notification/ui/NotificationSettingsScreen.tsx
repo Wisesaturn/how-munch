@@ -38,7 +38,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
 
   const form = useForm({
     defaultValues: {
-      expiryEnabled: true,
+      expiryEnabled: false,
       expiryOption: 'this_week' as ExpiryNotificationOption,
     },
     validators: {
