@@ -48,6 +48,10 @@
 - For compound components, keep `Header`/`Content`/`Footer` as sibling regions; do not nest `Header` or `Footer` inside `Content`.
 - `Content` should only render body content and must not absorb title, summary, or action areas.
 - React Query pattern per feature `api/`: `queryKey.ts`, `queries.ts`, `mutations.ts`; prefer `skipToken` over `enabled`.
+- Supabase client error handling rule:
+  - when handling Supabase responses in `queries`/`mutations`, do not throw raw errors directly (`throw error` 금지).
+  - always wrap with a domain-specific resolver first (example: `throw resolveFridgeError(error)`).
+  - if a resolver does not exist for the slice, add one and use it consistently.
 - Transaction boundary rule (Supabase):
   - if one user action mutates multiple tables, requires read-modify-write consistency, or must be all-or-nothing, implement it as a DB RPC (`security definer`) instead of chaining multiple client queries.
   - simple single-table CRUD may stay in feature mutations (`from(...).insert/update/delete`).

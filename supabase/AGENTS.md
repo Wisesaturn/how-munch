@@ -22,3 +22,5 @@
 - `supabase/sql/functions/*`는 유지보수/리뷰용 참조 소스입니다.
 - 실제 DB 반영 순서와 재현성은 `supabase/migrations/*`를 기준으로 합니다.
 - RPC 예외 코드를 추가/변경하면 `src/commons/lib/domainError.ts`를 같은 변경에 함께 업데이트해야 합니다.
+- 프런트엔드에서 Supabase 에러를 처리할 때는 raw 에러를 직접 throw 하지 않고,
+  각 도메인 resolve 함수(예: `resolveFridgeError`)로 감싸서 throw 해야 합니다.
