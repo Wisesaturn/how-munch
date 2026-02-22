@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Button, Separator, Toast } from '@/commons/ui';
+import { CTAConfirmButton, Toast } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
@@ -57,8 +57,6 @@ export function IngredientEditScreen({
   }
 
   function deleteIngredient() {
-    if (!window.confirm(`'${ingredient.name}' 항목을 삭제할까요?`)) return;
-
     deleteMutation.mutate(ingredient.id, {
       onSuccess: () => {
         Toast.success('장보기 항목이 삭제되었습니다');
@@ -71,24 +69,8 @@ export function IngredientEditScreen({
   }
 
   return (
-    <AppScreen
-      className="pointer-events-auto"
-      appBar={{
-        title: '상품 수정',
-        renderRight: () => (
-          <Button
-            type="submit"
-            form={formId}
-            variant="ghost"
-            size="sm"
-            disabled={Boolean(updateMutation.isPending || deleteMutation.isPending)}
-          >
-            저장
-          </Button>
-        ),
-      }}
-    >
-      <div className="p-4">
+    <AppScreen className="pointer-events-auto" appBar={{ title: '상품 수정' }}>
+      <div className="px-4 pt-4 pb-28">
         <IngredientForm
           id={ingredient.id}
           formId={formId}
@@ -108,19 +90,27 @@ export function IngredientEditScreen({
           isDeleting={deleteMutation.isPending}
           disableUnitSelect
         />
-
-        <Separator className="my-4" />
-
-        <Button
+      </div>
+      <CTAConfirmButton>
+        <CTAConfirmButton.Left
           type="button"
-          variant="ghost"
-          className="w-full text-red-500 hover:text-red-600"
+          color="danger"
+          variant="subtle"
           disabled={Boolean(updateMutation.isPending || deleteMutation.isPending)}
           onClick={deleteIngredient}
         >
           삭제
-        </Button>
-      </div>
+        </CTAConfirmButton.Left>
+        <CTAConfirmButton.Right
+          type="submit"
+          form={formId}
+          color="confirm"
+          variant="filled"
+          disabled={Boolean(updateMutation.isPending || deleteMutation.isPending)}
+        >
+          저장
+        </CTAConfirmButton.Right>
+      </CTAConfirmButton>
     </AppScreen>
   );
 }

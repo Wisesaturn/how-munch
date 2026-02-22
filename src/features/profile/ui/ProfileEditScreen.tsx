@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
-import { Button, Input, Toast } from '@/commons/ui';
+import { Button, CTAButton, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { useProfileQuery } from '@/entities/profile';
@@ -33,6 +33,7 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
   const { data: user } = useUserSuspenseQuery();
   const { data: profile, isLoading } = useProfileQuery(user.id);
   const mutation = useUpdateProfileMutation();
+  const formId = 'profile-edit-form';
   const form = useForm({
     defaultValues: {
       nickname: profile?.nickname ?? '',
@@ -101,12 +102,13 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
       }}
     >
       <form
+        id={formId}
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-3 p-4"
+        className="flex flex-col gap-3 px-4 pt-4 pb-28"
       >
         <form.Field name="nickname">
           {(field) => (
@@ -131,11 +133,16 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
         </label>
 
         <p className="text-xs text-gray-500">{updatedAtText}</p>
-
-        <Button type="submit" disabled={mutation.isPending} className="mt-2 w-full">
-          {mutation.isPending ? '수정 중...' : '수정'}
-        </Button>
       </form>
+      <CTAButton
+        type="submit"
+        form={formId}
+        color="confirm"
+        variant="filled"
+        disabled={mutation.isPending}
+      >
+        {mutation.isPending ? '수정 중...' : '수정'}
+      </CTAButton>
     </AppScreen>
   );
 }

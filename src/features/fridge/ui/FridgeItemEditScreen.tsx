@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Button, Separator, Toast } from '@/commons/ui';
+import { CTAConfirmButton, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -49,8 +49,6 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
   }
 
   function deleteItem() {
-    if (!window.confirm(`'${item.name}' 전체를 삭제하시겠습니까?`)) return;
-
     deleteMutation.mutate(item.id, {
       onSuccess: () => {
         Toast.success('재료가 삭제되었습니다');
@@ -63,24 +61,8 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
   }
 
   return (
-    <AppScreen
-      className="pointer-events-auto"
-      appBar={{
-        title: '재료 수정',
-        renderRight: () => (
-          <Button
-            type="submit"
-            form={formId}
-            variant="ghost"
-            size="sm"
-            disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
-          >
-            저장
-          </Button>
-        ),
-      }}
-    >
-      <div className="p-4">
+    <AppScreen className="pointer-events-auto" appBar={{ title: '재료 수정' }}>
+      <div className="px-4 pt-4 pb-28">
         <FridgeItemForm
           id={item.id}
           formId={formId}
@@ -96,19 +78,27 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
           isDeleting={deleteMutation.isPending}
           disableUnitSelect={disableUnitSelect}
         />
-
-        <Separator className="my-4" />
-
-        <Button
+      </div>
+      <CTAConfirmButton>
+        <CTAConfirmButton.Left
           type="button"
-          variant="ghost"
-          className="w-full text-red-500 hover:text-red-600"
+          color="danger"
+          variant="subtle"
           disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
           onClick={deleteItem}
         >
           삭제
-        </Button>
-      </div>
+        </CTAConfirmButton.Left>
+        <CTAConfirmButton.Right
+          type="submit"
+          form={formId}
+          color="confirm"
+          variant="filled"
+          disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
+        >
+          저장
+        </CTAConfirmButton.Right>
+      </CTAConfirmButton>
     </AppScreen>
   );
 }

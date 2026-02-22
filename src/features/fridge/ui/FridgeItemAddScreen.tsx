@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
 import {
-  Button,
+  CTAButton,
   Counter,
   DatePicker,
   Input,
@@ -127,6 +127,7 @@ function createDefaultValues(today: Date): FridgeItemCreateFormValues {
 export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const mutation = useAddFridgeItemMutation();
+  const formId = 'fridge-item-add-form';
   const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const categoryIds = useMemo(
     () => categoryOptions.map((category) => category.id),
@@ -188,30 +189,15 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
   const quantityMin = resolveAmountMin(selectedUnit);
 
   return (
-    <AppScreen
-      className="pointer-events-auto"
-      appBar={{
-        title: '재료 추가',
-        renderRight: () => (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => form.handleSubmit()}
-            disabled={mutation.isPending}
-            aria-label="재료 추가"
-          >
-            {mutation.isPending ? '추가 중...' : '추가'}
-          </Button>
-        ),
-      }}
-    >
+    <AppScreen className="pointer-events-auto" appBar={{ title: '재료 추가' }}>
       <form
+        id={formId}
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-5 p-4"
+        className="flex flex-col gap-5 px-4 pt-4 pb-28"
       >
         {/* 기본 정보 */}
         <fieldset className="flex flex-col gap-3">
@@ -430,6 +416,15 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
           )}
         </form.Field>
       </form>
+      <CTAButton
+        type="submit"
+        form={formId}
+        color="confirm"
+        variant="filled"
+        disabled={mutation.isPending}
+      >
+        {mutation.isPending ? '추가 중...' : '추가'}
+      </CTAButton>
     </AppScreen>
   );
 }

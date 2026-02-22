@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Button, Separator, Toast } from '@/commons/ui';
+import { CTAConfirmButton, Toast } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 import { type IngredientUnit } from '@/entities/ingredient';
@@ -74,24 +74,8 @@ export function FridgeBatchEditScreen({
   }
 
   return (
-    <AppScreen
-      className="pointer-events-auto"
-      appBar={{
-        title: '재고 수정',
-        renderRight: () => (
-          <Button
-            type="submit"
-            form={formId}
-            variant="ghost"
-            size="sm"
-            disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
-          >
-            저장
-          </Button>
-        ),
-      }}
-    >
-      <div className="p-4">
+    <AppScreen className="pointer-events-auto" appBar={{ title: '재고 수정' }}>
+      <div className="px-4 pt-4 pb-28">
         <FridgeBatchForm
           id={batch.id}
           formId={formId}
@@ -109,19 +93,27 @@ export function FridgeBatchEditScreen({
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}
         />
-
-        <Separator className="my-4" />
-
-        <Button
+      </div>
+      <CTAConfirmButton>
+        <CTAConfirmButton.Left
           type="button"
-          variant="ghost"
-          className="w-full text-red-500 hover:text-red-600"
+          color="danger"
+          variant="subtle"
           disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
           onClick={deleteBatch}
         >
           삭제
-        </Button>
-      </div>
+        </CTAConfirmButton.Left>
+        <CTAConfirmButton.Right
+          type="submit"
+          form={formId}
+          color="confirm"
+          variant="filled"
+          disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
+        >
+          저장
+        </CTAConfirmButton.Right>
+      </CTAConfirmButton>
     </AppScreen>
   );
 }

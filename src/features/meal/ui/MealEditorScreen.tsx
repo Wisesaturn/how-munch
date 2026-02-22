@@ -1,16 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { useForm } from '@tanstack/react-form';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { z } from 'zod';
 
 import { extractFieldErrorMessage } from '@/commons/lib';
-import { Button, Separator, Toast } from '@/commons/ui';
+import { Button, CTAButton, CTAConfirmButton, Toast } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
@@ -50,7 +48,6 @@ const ALERT_MSG = {
   deleteSuccess: '식단이 삭제되었습니다',
   deleteFailed: '식단 삭제에 실패했습니다',
   invalidFallback: '입력값을 확인해 주세요',
-  deleteConfirm: '이 식단을 삭제하시겠습니까?',
 };
 
 export function MealEditorScreen({
@@ -66,7 +63,6 @@ export function MealEditorScreen({
   const isEditMode = meal !== null;
   const formattedDate = format(parseISO(date), 'M월 d일', { locale: ko });
   const appBarTitle = `${formattedDate} ${MEAL_LABEL_BY_TYPE[type]} 식단`;
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const initialDishes = toEditorDishes(meal);
   const selectedFridgeItemIds = [
     ...new Set(
@@ -153,25 +149,8 @@ export function MealEditorScreen({
   const isMutating = upsertMutation.isPending || deleteMutation.isPending;
 
   return (
-    <AppScreen
-      className="pointer-events-auto"
-      appBar={{
-        title: appBarTitle,
-        renderRight: () => (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={saveMeal}
-            disabled={isMutating}
-            aria-label="식단 저장"
-          >
-            저장
-          </Button>
-        ),
-      }}
-    >
-      <div className="space-y-3 p-4">
+    <AppScreen className="pointer-events-auto" appBar={{ title: appBarTitle }}>
+      <div className="space-y-3 px-4 pt-4 pb-28">
         <form.Field name="dishes">
           {(field) => (
             <MealEditorProvider
@@ -195,49 +174,39 @@ export function MealEditorScreen({
             </MealEditorProvider>
           )}
         </form.Field>
-
-        {isEditMode ? (
-          <>
-            <Separator className="my-2" />
-            {showDeleteConfirm ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-                <p className="mb-3 text-center text-sm text-red-700">{ALERT_MSG.deleteConfirm}</p>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setShowDeleteConfirm(false)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    취소
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={removeMeal}
-                    disabled={deleteMutation.isPending}
-                  >
-                    삭제
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-red-500 hover:text-red-600"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isMutating}
-              >
-                <Trash2 className="size-4" />
-                식단 삭제
-              </Button>
-            )}
-          </>
-        ) : null}
       </div>
+      {isEditMode ? (
+        <CTAConfirmButton>
+          <CTAConfirmButton.Left
+            type="button"
+            color="danger"
+            variant="subtle"
+            onClick={removeMeal}
+            disabled={isMutating}
+          >
+            삭제
+          </CTAConfirmButton.Left>
+          <CTAConfirmButton.Right
+            type="button"
+            color="confirm"
+            variant="filled"
+            onClick={saveMeal}
+            disabled={isMutating}
+          >
+            저장
+          </CTAConfirmButton.Right>
+        </CTAConfirmButton>
+      ) : (
+        <CTAButton
+          type="button"
+          color="confirm"
+          variant="filled"
+          onClick={saveMeal}
+          disabled={isMutating}
+        >
+          저장
+        </CTAButton>
+      )}
     </AppScreen>
   );
 }

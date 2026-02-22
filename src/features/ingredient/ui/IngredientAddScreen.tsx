@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Button, Toast } from '@/commons/ui';
+import { CTAButton, Toast } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
@@ -57,24 +57,8 @@ export function IngredientAddScreen({
   };
 
   return (
-    <AppScreen
-      className="pointer-events-auto"
-      appBar={{
-        title: '장보기 추가',
-        renderRight: () => (
-          <Button
-            type="submit"
-            form={formId}
-            variant="ghost"
-            size="sm"
-            disabled={addMutation.isPending}
-          >
-            저장
-          </Button>
-        ),
-      }}
-    >
-      <div className="p-4">
+    <AppScreen className="pointer-events-auto" appBar={{ title: '장보기 추가' }}>
+      <div className="px-4 pt-4 pb-28">
         <IngredientForm
           formId={formId}
           householdId={householdId}
@@ -84,6 +68,16 @@ export function IngredientAddScreen({
           isSubmitting={addMutation.isPending}
         />
       </div>
+      <CTAButton
+        type="submit"
+        form={formId}
+        color="confirm"
+        variant="filled"
+        hideOnScroll
+        disabled={addMutation.isPending}
+      >
+        저장
+      </CTAButton>
     </AppScreen>
   );
 }
