@@ -1,9 +1,9 @@
 -- Function: public.add_ingredient_with_fridge
 -- Source: supabase/migrations/038_drop_legacy_category_columns_and_use_category_id.sql
--- 역할: 장보기 항목 생성과 냉장고 아이템/첫 배치를 한 트랜잭션으로 생성합니다.
+-- 역할: 장보기 항목 생성과 냉장고 아이템/배치 연결을 한 트랜잭션으로 처리합니다.
 -- 동작:
 -- 1. ingredient를 생성하고 category_id를 정규화합니다.
--- 2. 연결 fridge_item + batch를 만들고 링크 컬럼을 업데이트합니다.
+-- 2. 동일 품목 fridge_item을 재사용하거나 없으면 생성한 뒤 batch를 추가합니다.
 create function public.add_ingredient_with_fridge(
   p_household_id uuid,
   p_name text,
@@ -66,27 +66,41 @@ begin
   )
   returning * into v_ingredient;
 
-  insert into public.fridge_items (
-    household_id,
-    name,
-    category_id,
-    unit,
-    total_count,
-    max_count,
-    is_subdivided,
-    from_grocery
-  )
-  values (
-    v_ingredient.household_id,
-    v_ingredient.name,
-    v_ingredient.category_id,
-    v_ingredient.unit,
-    v_ingredient.count,
-    v_ingredient.count,
-    false,
-    true
-  )
-  returning id into v_fridge_item_id;
+  select f.id
+    into v_fridge_item_id
+  from public.fridge_items f
+  where f.household_id = v_ingredient.household_id
+    and f.deleted_at is null
+    and lower(btrim(f.name)) = lower(btrim(v_ingredient.name))
+    and f.unit = v_ingredient.unit
+    and f.category_id = v_ingredient.category_id
+  order by f.created_at asc
+  limit 1
+  for update;
+
+  if v_fridge_item_id is null then
+    insert into public.fridge_items (
+      household_id,
+      name,
+      category_id,
+      unit,
+      total_count,
+      max_count,
+      is_subdivided,
+      from_grocery
+    )
+    values (
+      v_ingredient.household_id,
+      v_ingredient.name,
+      v_ingredient.category_id,
+      v_ingredient.unit,
+      v_ingredient.count,
+      v_ingredient.count,
+      false,
+      true
+    )
+    returning id into v_fridge_item_id;
+  end if;
 
   insert into public.fridge_item_batches (
     fridge_item_id,
