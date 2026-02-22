@@ -105,9 +105,9 @@ const otpSlotVariants = cva(
   {
     variants: {
       size: {
-        sm: 'size-10 text-xl',
-        md: 'size-11 text-2xl',
-        lg: 'size-12 text-3xl',
+        sm: 'size-11 text-xl',
+        md: 'size-12 text-2xl',
+        lg: 'size-[3.25rem] text-3xl',
       },
       isActive: {
         true: 'bg-white ring-emerald-500',
@@ -148,9 +148,9 @@ const otpCaretVariants = cva(
   {
     variants: {
       size: {
-        sm: 'h-5 w-[2px]',
-        md: 'h-6 w-[2px]',
-        lg: 'h-7 w-[2px]',
+        sm: 'h-6 w-[2px]',
+        md: 'h-7 w-[2px]',
+        lg: 'h-8 w-[2px]',
       },
       invalid: {
         true: 'bg-red-500',

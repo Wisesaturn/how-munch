@@ -42,7 +42,7 @@ function Calendar({
         month: cn(defaultClassNames.month, 'w-full space-y-2'),
         month_caption: cn(
           defaultClassNames.month_caption,
-          'relative h-9 items-center justify-center flex',
+          'relative flex h-10 items-center justify-center',
           hideMonthCaption && 'hidden',
         ),
         caption_label: cn(
@@ -56,22 +56,22 @@ function Calendar({
         ),
         button_previous: cn(
           defaultClassNames.button_previous,
-          'size-8 rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40',
+          'size-9 rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40',
         ),
         button_next: cn(
           defaultClassNames.button_next,
-          'size-8 rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40',
+          'size-9 rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40',
         ),
         weekdays: cn(defaultClassNames.weekdays, hideMonthCaption ? 'mt-0 flex' : 'mt-2 flex'),
         weekday: cn(
           defaultClassNames.weekday,
-          'm-0.5 size-10 text-center text-xs font-medium text-gray-500 first:text-red-500 last:text-blue-500',
+          'm-0.5 size-11 text-center text-xs font-medium text-gray-500 first:text-red-500 last:text-blue-500',
         ),
         week: cn(defaultClassNames.week, 'flex'),
-        day: cn(defaultClassNames.day, 'm-0.5 size-10 p-0'),
+        day: cn(defaultClassNames.day, 'm-0.5 size-11 p-0'),
         day_button: cn(
           defaultClassNames.day_button,
-          'size-10 rounded-lg border-0 text-sm font-medium text-inherit transition-colors',
+          'size-11 rounded-lg border-0 text-sm font-medium text-inherit transition-colors',
           'hover:bg-gray-100',
           'aria-selected:bg-gray-900 aria-selected:text-white aria-selected:hover:bg-gray-900',
           '[&[data-selected=true]]:bg-gray-900 [&[data-selected=true]]:text-white [&[data-selected=true]]:hover:bg-gray-900',

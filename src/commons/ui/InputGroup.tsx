@@ -13,10 +13,10 @@ import { Input, type InputProps } from './Input';
 const inputGroupAddonVariants = cva('text-muted-foreground flex items-center', {
   variants: {
     align: {
-      'inline-start': 'order-first border-r px-1',
-      'inline-end': 'order-last border-l px-1',
-      'block-start': 'order-first w-full border-b px-2 py-1',
-      'block-end': 'order-last w-full border-t px-2 py-1',
+      'inline-start': 'order-first border-r px-2',
+      'inline-end': 'order-last border-l px-2',
+      'block-start': 'order-first w-full border-b px-3 py-1.5',
+      'block-end': 'order-last w-full border-t px-3 py-1.5',
     },
   },
   defaultVariants: {
@@ -51,7 +51,7 @@ function InputGroupInput({ className, ...props }: InputProps) {
     <Input
       data-slot="input-group-control"
       data-wrapped-within-input-group
-      className={cn('h-9 min-w-0 flex-1', className)}
+      className={cn('h-10 min-w-0 flex-1', className)}
       {...props}
     />
   );

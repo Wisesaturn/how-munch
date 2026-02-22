@@ -29,7 +29,7 @@ const SelectTrigger = React.forwardRef<
       aria-invalid={isInvalid}
       data-invalid={isInvalid}
       className={cn(
-        'text-foreground focus-visible:border-ring focus-visible:ring-ring/50 data-[state=open]:border-ring data-[state=open]:ring-ring/50 flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]',
+        'text-foreground focus-visible:border-ring focus-visible:ring-ring/50 data-[state=open]:border-ring data-[state=open]:ring-ring/50 flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]',
         'disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400',
         'data-[invalid=true]:border-red-500 data-[invalid=true]:focus-visible:border-red-600 data-[invalid=true]:focus-visible:ring-red-200',
         '[&>span]:truncate',
@@ -64,7 +64,7 @@ const SelectContent = React.forwardRef<
       // container/collisionBoundary를 외부 경계로 주입받아 같은 좌표계에서 위치를 계산합니다.
       collisionBoundary={collisionBoundary}
       className={cn(
-        'bg-popover text-popover-foreground z-(--z-select) max-h-80 w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border shadow-md',
+        'bg-popover text-popover-foreground z-(--z-select) max-h-96 w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border shadow-md',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -76,14 +76,14 @@ const SelectContent = React.forwardRef<
       )}
       {...props}
     >
-      <SelectPrimitive.ScrollUpButton className="flex cursor-default items-center justify-center py-1">
-        <ChevronUp className="size-4" />
+      <SelectPrimitive.ScrollUpButton className="flex cursor-default items-center justify-center py-1.5">
+        <ChevronUp className="size-5" />
       </SelectPrimitive.ScrollUpButton>
-      <SelectPrimitive.Viewport className={cn('p-1', position === 'popper' && 'w-full')}>
+      <SelectPrimitive.Viewport className={cn('p-1.5', position === 'popper' && 'w-full')}>
         {children}
       </SelectPrimitive.Viewport>
-      <SelectPrimitive.ScrollDownButton className="flex cursor-default items-center justify-center py-1">
-        <ChevronDown className="size-4" />
+      <SelectPrimitive.ScrollDownButton className="flex cursor-default items-center justify-center py-1.5">
+        <ChevronDown className="size-5" />
       </SelectPrimitive.ScrollDownButton>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
@@ -117,7 +117,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:bg-gray-50 data-[disabled]:text-gray-400',
+      'focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-sm py-2 pr-8 pl-3 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:bg-gray-50 data-[disabled]:text-gray-400',
       className,
     )}
     {...props}

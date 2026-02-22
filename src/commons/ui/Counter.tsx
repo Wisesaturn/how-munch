@@ -15,8 +15,8 @@ import { InputGroup } from './InputGroup';
 const counterInputVariants = cva('text-center', {
   variants: {
     size: {
-      sm: 'h-8',
-      md: 'h-9',
+      sm: 'h-9',
+      md: 'h-10',
     },
   },
   defaultVariants: {
@@ -192,7 +192,7 @@ function Counter({
           disabled={minDisabled}
           aria-label="수량 감소"
         >
-          <Minus className="size-3" />
+          <Minus className="size-4" />
         </InputGroup.Button>
       </InputGroup.Addon>
       <InputGroup.Addon align="inline-end">
@@ -204,7 +204,7 @@ function Counter({
           disabled={maxDisabled}
           aria-label="수량 증가"
         >
-          <Plus className="size-3" />
+          <Plus className="size-4" />
         </InputGroup.Button>
       </InputGroup.Addon>
     </InputGroup>

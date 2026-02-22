@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../lib';
 
 const textareaVariants = cva(
-  'text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:placeholder:text-gray-400',
+  'text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-[96px] w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:placeholder:text-gray-400',
   {
     variants: {
       resize: {
@@ -16,13 +16,13 @@ const textareaVariants = cva(
       },
       topOffset: {
         none: '',
-        sm: 'mt-8',
-        md: 'mt-10',
+        sm: 'mt-9',
+        md: 'mt-11',
       },
       bottomOffset: {
         none: '',
-        sm: 'mb-8',
-        md: 'mb-10',
+        sm: 'mb-9',
+        md: 'mb-11',
       },
     },
     defaultVariants: {

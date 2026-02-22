@@ -49,7 +49,7 @@ function TextareaGroup({
     <div
       data-slot="textarea-group"
       className={cn(
-        'has-[:focus-visible]:border-ring has-[:focus-visible]:ring-ring/50 relative min-h-[80px] w-full rounded-md border border-gray-300 bg-white transition-[color,box-shadow] has-[:focus-visible]:ring-[3px]',
+        'has-[:focus-visible]:border-ring has-[:focus-visible]:ring-ring/50 relative min-h-[96px] w-full rounded-md border border-gray-300 bg-white transition-[color,box-shadow] has-[:focus-visible]:ring-[3px]',
         'has-[:disabled]:cursor-not-allowed has-[:disabled]:border-gray-200 has-[:disabled]:bg-gray-50 has-[:disabled]:text-gray-400',
         'has-[[data-slot=textarea][data-invalid=true]]:border-red-500 has-[[data-slot=textarea][data-invalid=true]]:has-[:focus-visible]:border-red-600 has-[[data-slot=textarea][data-invalid=true]]:has-[:focus-visible]:ring-red-200',
         className,
