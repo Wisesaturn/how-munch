@@ -6,7 +6,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../lib';
 
 const buttonVariants = cva(
-  "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 rounded-md border text-sm font-medium whitespace-nowrap transition-all outline-none hover:cursor-pointer focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 transform-gpu items-center justify-center gap-2 rounded-md border text-sm font-medium whitespace-nowrap transition duration-150 ease-out outline-none hover:cursor-pointer focus-visible:ring-[3px] active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 motion-reduce:transform-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -42,7 +42,8 @@ const buttonVariants = cva(
       {
         variant: 'default',
         color: 'primary',
-        className: 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-500',
+        className:
+          'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700',
       },
       {
         variant: 'outline',
