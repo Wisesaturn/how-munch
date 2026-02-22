@@ -48,15 +48,23 @@ export function useFridgeItemsQuery({
           if (fridgePreferenceError) throw resolveFridgeQueryError(fridgePreferenceError);
           const hideDepletedFridgeItems = fridgePreferences?.hide_depleted_fridge_items ?? false;
 
-          let query = supabase
-            .from('fridge_items')
-            .select('*, fridge_item_batches(*), meal_batch_usages(*)')
-            .eq('household_id', householdId)
-            .is('deleted_at', null)
-            .order('name');
-
+          let query;
           if (hideDepletedFridgeItems) {
-            query = query.gt('total_count', 0);
+            query = supabase
+              .from('fridge_items')
+              .select('*, fridge_item_batches!inner(*), meal_batch_usages(*)')
+              .eq('household_id', householdId)
+              .is('deleted_at', null)
+              .gt('total_count', 0)
+              .gt('fridge_item_batches.quantity', 0)
+              .order('name');
+          } else {
+            query = supabase
+              .from('fridge_items')
+              .select('*, fridge_item_batches(*), meal_batch_usages(*)')
+              .eq('household_id', householdId)
+              .is('deleted_at', null)
+              .order('name');
           }
 
           if (normalizedSearchKeyword) {
