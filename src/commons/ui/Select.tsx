@@ -162,6 +162,10 @@ const SelectGroup = SelectPrimitive.Group;
 /* -------------------------------------------------------------------------------------------------
  * Compound Export
  * -----------------------------------------------------------------------------------------------*/
+/**
+ * @deprecated 웹 친화적인 컴포넌트로 신규 사용을 지양합니다.
+ * 모바일 친화적인 컴포넌트(SegmentControl, BottomSheet 등)로 구현하는 것을 권장합니다.
+ */
 const Select = Object.assign(SelectRoot, {
   Root: SelectRoot,
   Group: SelectGroup,
