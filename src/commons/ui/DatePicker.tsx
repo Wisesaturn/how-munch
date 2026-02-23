@@ -182,10 +182,7 @@ function DatePicker({
 
       <BottomSheet open={open} onClose={closeDatePicker}>
         <BottomSheet.Header heading="날짜 선택" />
-        <BottomSheet.Content
-          id={sheetContentId}
-          contentClassName="flex flex-col items-center space-y-4"
-        >
+        <BottomSheet.Content id={sheetContentId} className="flex flex-col items-center space-y-4">
           <div className="w-full max-w-[320px] space-y-3">
             <div className="flex items-center gap-2">
               <Button

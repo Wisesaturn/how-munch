@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentProps, type ReactNode } from 'react';
+import { type PropsWithChildren, type ComponentProps, type ReactNode } from 'react';
 
 import { cn } from '../lib';
 
@@ -47,15 +47,15 @@ BottomSheetHeader.displayName = 'BottomSheet.Header';
 /* -------------------------------------------------------------------------------------------------
  * Content
  * -----------------------------------------------------------------------------------------------*/
-interface BottomSheetContentProps extends ComponentProps<'div'> {
-  contentClassName?: string;
+interface BottomSheetContentProps extends PropsWithChildren<ComponentProps<'div'>> {
+  className?: string;
 }
 
-function BottomSheetContent({ className, contentClassName, ...props }: BottomSheetContentProps) {
+function BottomSheetContent({ className, ...props }: BottomSheetContentProps) {
   return (
     <div
       data-slot="bottom-sheet-content"
-      className={cn('overflow-y-auto p-4', className, contentClassName)}
+      className={cn('overflow-y-auto p-4', className)}
       {...props}
     />
   );
