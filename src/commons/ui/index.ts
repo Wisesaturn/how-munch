@@ -22,7 +22,13 @@ export { PriceInput, type PriceInputProps } from './PriceInput';
 export { ProgressBar } from './ProgressBar';
 export { ScrollArea } from './ScrollArea';
 export { Separator, separatorVariants } from './Separator';
+export { SegmentControl } from './SegmentControl';
 export { Select } from './Select';
+export {
+  SingleSelectBottomSheet,
+  type SingleSelectBottomSheetItem,
+  type SingleSelectBottomSheetProps,
+} from './SingleSelectBottomSheet';
 export { Slider } from './Slider';
 export { Switch } from './Switch';
 export { TextareaGroup, TextareaGroupElement, type TextareaGroupProps } from './TextareaGroup';
