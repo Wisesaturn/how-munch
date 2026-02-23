@@ -20,6 +20,7 @@ import {
   type IngredientUnit,
 } from '@/entities/ingredient';
 import {
+  CategoryFormField,
   resolveDefaultCategoryId,
   useIngredientCategoriesQuery,
 } from '@/entities/ingredient-category';
@@ -185,29 +186,7 @@ export function IngredientForm({
 
       {/* 카테고리 */}
       <form.Field name="category_id">
-        {(field) => (
-          <Form.Field field={field}>
-            <Form.Label required>카테고리</Form.Label>
-            <Select value={field.state.value} onValueChange={field.handleChange}>
-              <Form.Control>
-                <Select.Trigger>
-                  <Select.Value placeholder="카테고리를 선택하세요" />
-                </Select.Trigger>
-              </Form.Control>
-              <Select.Content>
-                {categoryOptions.map((cat) => (
-                  <Select.Item key={cat.id} value={cat.id}>
-                    <span className="font-tossface mr-1.5" aria-hidden>
-                      {cat.emoji}
-                    </span>
-                    <span>{cat.label}</span>
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select>
-            <Form.Error />
-          </Form.Field>
-        )}
+        {(field) => <CategoryFormField field={field} options={categoryOptions} />}
       </form.Field>
 
       {/* 품목명 */}

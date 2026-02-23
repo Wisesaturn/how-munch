@@ -30,6 +30,7 @@ import {
   type IngredientUnit,
 } from '@/entities/ingredient';
 import {
+  CategoryFormField,
   resolveDefaultCategoryId,
   useIngredientCategoriesQuery,
 } from '@/entities/ingredient-category';
@@ -204,29 +205,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
           <legend className="mb-1 text-xs font-semibold text-gray-500">기본 정보</legend>
 
           <form.Field name="category_id">
-            {(field) => (
-              <Form.Field field={field}>
-                <Form.Label required>카테고리</Form.Label>
-                <Select value={field.state.value} onValueChange={field.handleChange}>
-                  <Form.Control>
-                    <Select.Trigger>
-                      <Select.Value placeholder="카테고리를 선택하세요" />
-                    </Select.Trigger>
-                  </Form.Control>
-                  <Select.Content>
-                    {categoryOptions.map((category) => (
-                      <Select.Item key={category.id} value={category.id}>
-                        <span className="font-tossface mr-1.5" aria-hidden>
-                          {category.emoji}
-                        </span>
-                        <span>{category.label}</span>
-                      </Select.Item>
-                    ))}
-                  </Select.Content>
-                </Select>
-                <Form.Error />
-              </Form.Field>
-            )}
+            {(field) => <CategoryFormField field={field} options={categoryOptions} />}
           </form.Field>
 
           <form.Field name="name">
