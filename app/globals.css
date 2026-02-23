@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@stackflow/plugin-basic-ui/index.css';
+@import '@ncdai/react-wheel-picker/style.css';
 
 @custom-variant dark (&:is(.dark *));
 

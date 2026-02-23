@@ -28,3 +28,10 @@ export { Switch } from './Switch';
 export { TextareaGroup, TextareaGroupElement, type TextareaGroupProps } from './TextareaGroup';
 export { Textarea, type TextareaProps } from './Textarea';
 export { Toast } from './toast';
+export {
+  WheelPicker,
+  type WheelPickerItemProps,
+  type WheelPickerOption,
+  type WheelPickerRootProps,
+  type WheelPickerValue,
+} from './WheelPicker';
