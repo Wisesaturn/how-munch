@@ -12,7 +12,7 @@ import { InputGroup } from './InputGroup';
 /* -------------------------------------------------------------------------------------------------
  * Variants
  * -----------------------------------------------------------------------------------------------*/
-const counterInputVariants = cva('text-center', {
+const counterRootVariants = cva('', {
   variants: {
     size: {
       sm: 'h-9',
@@ -27,7 +27,7 @@ const counterInputVariants = cva('text-center', {
 /* -------------------------------------------------------------------------------------------------
  * Props
  * -----------------------------------------------------------------------------------------------*/
-interface CounterProps extends VariantProps<typeof counterInputVariants> {
+interface CounterProps extends VariantProps<typeof counterRootVariants> {
   value?: number;
   defaultValue?: number;
   onValueChange?: (value: number) => void;
@@ -71,8 +71,8 @@ function normalizeNumberByScale(value: number, decimalScale: number) {
 function Counter({
   value,
   defaultValue = 0,
-  onValueChange,
   size = 'md',
+  onValueChange,
   min = 0,
   max,
   step = 1,
@@ -171,7 +171,11 @@ function Counter({
   const maxDisabled = disabled || (max !== undefined && currentValue >= max);
 
   return (
-    <InputGroup data-slot="counter" className={className} aria-disabled={disabled}>
+    <InputGroup
+      data-slot="counter"
+      className={cn(counterRootVariants({ size }), className)}
+      aria-disabled={disabled}
+    >
       <InputGroup.Input
         value={inputValue}
         inputMode="decimal"
@@ -181,7 +185,7 @@ function Counter({
         onKeyDown={captureArrowKeyForStepControl}
         disabled={disabled}
         invalid={invalid}
-        className={cn(counterInputVariants({ size }), inputClassName)}
+        className={cn('h-full', inputClassName)}
       />
       <InputGroup.Addon align="inline-start">
         <InputGroup.Button
