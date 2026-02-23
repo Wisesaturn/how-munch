@@ -185,7 +185,7 @@ function Counter({
         onKeyDown={captureArrowKeyForStepControl}
         disabled={disabled}
         invalid={invalid}
-        className={cn('h-full', inputClassName)}
+        className={cn('h-full text-center', inputClassName)}
       />
       <InputGroup.Addon align="inline-start">
         <InputGroup.Button
