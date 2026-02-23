@@ -91,7 +91,7 @@ function SingleSelectBottomSheet({
   }
 
   return (
-    <BottomSheet open={isOpen} onClose={closeSheet}>
+    <BottomSheet open={isOpen} onClose={closeSheet} handleOnly>
       <BottomSheet.Header heading={heading} />
       <BottomSheet.Content className={cn('space-y-4', className)}>
         {wheelOptions.length > 0 ? (

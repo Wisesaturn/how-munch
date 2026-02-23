@@ -12,12 +12,18 @@ import { Drawer } from './Drawer';
 interface BottomSheetRootProps {
   open: boolean;
   onClose: () => void;
+  handleOnly?: boolean;
   children: ReactNode;
 }
 
-function BottomSheetRoot({ open, onClose, children }: BottomSheetRootProps) {
+function BottomSheetRoot({ open, onClose, handleOnly = true, children }: BottomSheetRootProps) {
   return (
-    <Drawer direction="bottom" open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <Drawer
+      direction="bottom"
+      open={open}
+      handleOnly={handleOnly}
+      onOpenChange={(nextOpen) => !nextOpen && onClose()}
+    >
       <Drawer.Content data-slot="bottom-sheet-content-root">{children}</Drawer.Content>
     </Drawer>
   );

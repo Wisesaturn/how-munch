@@ -57,6 +57,21 @@ const DrawerOverlay = React.forwardRef<
 DrawerOverlay.displayName = 'Drawer.Overlay';
 
 /* -------------------------------------------------------------------------------------------------
+ * Handle
+ * -----------------------------------------------------------------------------------------------*/
+const DrawerHandle = React.forwardRef<
+  React.ComponentRef<typeof DrawerPrimitive.Handle>,
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Handle>
+>(({ className, ...props }, ref) => (
+  <DrawerPrimitive.Handle
+    ref={ref}
+    className={cn('mx-auto mt-3 h-1.5 w-12 rounded-full bg-gray-200', className)}
+    {...props}
+  />
+));
+DrawerHandle.displayName = 'Drawer.Handle';
+
+/* -------------------------------------------------------------------------------------------------
  * Content
  * -----------------------------------------------------------------------------------------------*/
 const DrawerContent = React.forwardRef<
@@ -73,7 +88,7 @@ const DrawerContent = React.forwardRef<
       )}
       {...props}
     >
-      <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-gray-200" />
+      <DrawerHandle />
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
@@ -116,6 +131,7 @@ const Drawer = Object.assign(DrawerRoot, {
   Trigger: DrawerTrigger,
   Close: DrawerClose,
   Overlay: DrawerOverlay,
+  Handle: DrawerHandle,
   Content: DrawerContent,
   Header: DrawerHeader,
   Title: DrawerTitle,
