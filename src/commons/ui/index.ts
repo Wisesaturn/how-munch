@@ -22,7 +22,6 @@ export { PriceInput, type PriceInputProps } from './PriceInput';
 export { ProgressBar } from './ProgressBar';
 export { ScrollArea } from './ScrollArea';
 export { Separator, separatorVariants } from './Separator';
-export { SegmentControl } from './SegmentControl';
 export { Select } from './Select';
 export {
   SingleSelectBottomSheet,
