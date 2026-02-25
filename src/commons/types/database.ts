@@ -650,6 +650,10 @@ export interface Database {
         Args: { p_endpoint: string };
         Returns: boolean;
       };
+      get_fridge_items_with_active_batches: {
+        Args: { p_household_id: string; p_search_keyword?: string | null };
+        Returns: Json[];
+      };
       get_pending_push_notifications: {
         Args: { p_limit?: number };
         Returns: {

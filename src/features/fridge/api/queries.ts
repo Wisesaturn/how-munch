@@ -40,41 +40,13 @@ export function useFridgeItemsQuery({
     queryFn: householdId
       ? async () => {
           const supabase = createClient();
-          const { data: fridgePreferences, error: fridgePreferenceError } = await supabase
-            .from('fridge_preferences')
-            .select('hide_depleted_fridge_items')
-            .eq('user_id', userId)
-            .maybeSingle();
-          if (fridgePreferenceError) throw resolveFridgeQueryError(fridgePreferenceError);
-          const hideDepletedFridgeItems = fridgePreferences?.hide_depleted_fridge_items ?? false;
-
-          let query;
-          if (hideDepletedFridgeItems) {
-            query = supabase
-              .from('fridge_items')
-              .select('*, fridge_item_batches!inner(*), meal_batch_usages(*)')
-              .eq('household_id', householdId)
-              .is('deleted_at', null)
-              .gt('total_count', 0)
-              .gt('fridge_item_batches.quantity', 0)
-              .order('name');
-          } else {
-            query = supabase
-              .from('fridge_items')
-              .select('*, fridge_item_batches(*), meal_batch_usages(*)')
-              .eq('household_id', householdId)
-              .is('deleted_at', null)
-              .order('name');
-          }
-
-          if (normalizedSearchKeyword) {
-            query = query.ilike('name', `%${normalizedSearchKeyword}%`);
-          }
-
-          const { data, error } = await query;
+          const { data, error } = await supabase.rpc('get_fridge_items_with_active_batches', {
+            p_household_id: householdId,
+            p_search_keyword: normalizedSearchKeyword || null,
+          });
 
           if (error) throw resolveFridgeQueryError(error);
-          return data as unknown as FridgeItemWithBatches[];
+          return (data as unknown as FridgeItemWithBatches[]) ?? [];
         }
       : skipToken,
   });
