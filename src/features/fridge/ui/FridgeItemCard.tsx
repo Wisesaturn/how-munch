@@ -52,15 +52,16 @@ export function FridgeItemCard({
     return Number.isFinite(safeAmount) ? sum + safeAmount : sum;
   }, 0);
 
-  const remainingRate = getRemainingRate(item.total_count, totalUsedCount);
+  const isOutOfStock = Number(item.total_count) <= 0;
+  const remainingRate = isOutOfStock ? null : getRemainingRate(item.total_count, totalUsedCount);
   const sortedBatches = [...item.fridge_item_batches].sort(
     (a, b) => new Date(a.purchased_date).getTime() - new Date(b.purchased_date).getTime(),
   );
   const hasExpiredBatch = item.fridge_item_batches.some((batch) => {
+    if (Number(batch.quantity) <= 0) return false;
     if (!batch.expiry_date) return false;
     return getDaysUntilExpiry(batch.expiry_date) < 0;
   });
-  const isOutOfStock = Number(item.total_count) <= 0;
 
   return (
     <Accordion
@@ -115,10 +116,14 @@ export function FridgeItemCard({
                 {formatIngredientAmount(Number(item.total_count), item.unit, true)}
               </span>
             </div>
-            <div className="mt-2 flex items-center gap-2">
-              <ProgressBar value={remainingRate} className="h-1.5 flex-1" />
-              <span className="shrink-0 text-[11px] text-emerald-600">잔여율 {remainingRate}%</span>
-            </div>
+            {remainingRate === null ? null : (
+              <div className="mt-2 flex items-center gap-2">
+                <ProgressBar value={remainingRate} className="h-1.5 flex-1" />
+                <span className="shrink-0 text-[11px] text-emerald-600">
+                  잔여율 {remainingRate}%
+                </span>
+              </div>
+            )}
           </button>
           <Accordion.Trigger className="mt-0.5 shrink-0 py-0" aria-label="재고 상세 펼치기" />
         </div>
