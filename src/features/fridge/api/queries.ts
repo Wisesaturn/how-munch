@@ -4,9 +4,7 @@ import { createClient } from '@/commons/api/supabase/client';
 import { resolveDomainError } from '@/commons/lib';
 import { type Database } from '@/commons/types';
 
-import { type FridgeItemWithBatches } from '@/entities/fridge-item';
-
-import { fridgeKeys } from './queryKey';
+import { fridgeItemKeys, type FridgeItemWithBatches } from '@/entities/fridge-item';
 
 type FridgePreferenceRow = Database['public']['Tables']['fridge_preferences']['Row'];
 
@@ -36,7 +34,7 @@ export function useFridgeItemsQuery({
   const normalizedSearchKeyword = searchInput.trim();
 
   return useQuery({
-    queryKey: fridgeKeys.list(householdId ?? '', userId, normalizedSearchKeyword),
+    queryKey: fridgeItemKeys.list(householdId ?? '', userId, normalizedSearchKeyword),
     queryFn: householdId
       ? async () => {
           const supabase = createClient();
@@ -55,7 +53,7 @@ export function useFridgeItemsQuery({
 /** 배치별 식단 사용량 합계 조회 */
 export function useBatchUsedAmountQuery(batchId: string | null) {
   return useQuery({
-    queryKey: fridgeKeys.batchUsage(batchId ?? ''),
+    queryKey: fridgeItemKeys.batchUsage(batchId ?? ''),
     queryFn: batchId
       ? async () => {
           const supabase = createClient();
@@ -74,7 +72,7 @@ export function useBatchUsedAmountQuery(batchId: string | null) {
 /** 내 냉장고 표시 설정 조회 */
 export function useFridgePreferencesQuery(userId: string | null) {
   return useQuery({
-    queryKey: fridgeKeys.preferences(userId ?? ''),
+    queryKey: fridgeItemKeys.preferences(userId ?? ''),
     queryFn: userId
       ? async () => {
           const supabase = createClient();

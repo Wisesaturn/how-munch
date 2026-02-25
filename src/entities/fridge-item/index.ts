@@ -4,3 +4,4 @@ export type {
   FridgeItemUnit,
   FridgeItemWithBatches,
 } from './model/types';
+export { fridgeItemKeys } from './api/queryKey';

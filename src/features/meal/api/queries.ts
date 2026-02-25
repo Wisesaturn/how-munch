@@ -4,9 +4,7 @@ import { createClient } from '@/commons/api/supabase/client';
 import { resolveDomainError } from '@/commons/lib';
 import { type Database } from '@/commons/types';
 
-import { type Meal } from '@/entities/meal';
-
-import { mealKeys } from './queryKey';
+import { mealKeys, type Meal } from '@/entities/meal';
 
 type FridgeItem = Database['public']['Tables']['fridge_items']['Row'];
 type FridgeItemBatch = Database['public']['Tables']['fridge_item_batches']['Row'];

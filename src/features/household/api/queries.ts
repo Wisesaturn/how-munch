@@ -3,12 +3,11 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import { createClient } from '@/commons/api/supabase/client';
 
 import {
+  householdKeys,
   type Household,
   type HouseholdMember,
   type HouseholdMemberWithProfile,
 } from '@/entities/household';
-
-import { householdKeys } from './queryKey';
 
 /** 가구 정보 조회 */
 export function useHouseholdQuery(householdId: string | null) {

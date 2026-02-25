@@ -5,3 +5,4 @@ export type {
   HouseholdMemberRole,
   HouseholdMemberWithProfile,
 } from './model/types';
+export { householdKeys } from './api/queryKey';

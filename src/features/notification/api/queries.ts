@@ -3,12 +3,11 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import { createClient } from '@/commons/api/supabase/client';
 
 import {
+  notificationKeys,
   type NotificationItem,
   type NotificationPreferenceRow,
   type NotificationPushSubscriptionRow,
 } from '@/entities/notification';
-
-import { notificationKeys } from './queryKey';
 
 /** 내 알림 목록 조회 */
 export function useNotificationsQuery(userId: string | null) {

@@ -4,9 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/commons/api/supabase/client';
 import { type Database } from '@/commons/types';
 
-import { type HouseholdInvite } from '@/entities/household';
-
-import { householdKeys } from './queryKey';
+import { householdKeys, type HouseholdInvite } from '@/entities/household';
 
 type HouseholdInviteInsert = Database['public']['Tables']['household_invites']['Insert'];
 

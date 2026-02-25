@@ -2,11 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
 import { resolveDomainError } from '@/commons/lib';
-import { fridgeKeys } from '@/commons/model/queryKey';
 
-import { type MealType } from '@/entities/meal';
-
-import { mealKeys } from './queryKey';
+import { fridgeItemKeys } from '@/entities/fridge-item';
+import { mealKeys, type MealType } from '@/entities/meal';
 
 export interface MealEditorDishInput {
   name: string;
@@ -79,7 +77,7 @@ export function useUpsertMealMutation() {
       queryClient.invalidateQueries({
         queryKey: mealKeys.fridgeItems(variables.householdId),
       });
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
     },
   });
 }
@@ -111,7 +109,7 @@ export function useDeleteMealMutation() {
       queryClient.invalidateQueries({ queryKey: mealKeys.all });
       queryClient.invalidateQueries({ queryKey: mealKeys.listByDate(householdId, date) });
       queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItems(householdId) });
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
     },
   });
 }

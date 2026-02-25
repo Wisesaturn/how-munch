@@ -6,3 +6,4 @@ export type {
   NotificationStatus,
   NotificationType,
 } from './model/types';
+export { notificationKeys } from './api/queryKey';

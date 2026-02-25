@@ -3,9 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/commons/api/supabase/client';
 import { Toast } from '@/commons/ui';
 
-import { type NotificationItem, type NotificationPreferenceRow } from '@/entities/notification';
-
-import { notificationKeys } from './queryKey';
+import {
+  notificationKeys,
+  type NotificationItem,
+  type NotificationPreferenceRow,
+} from '@/entities/notification';
 
 /** 알림 단건 읽음 처리 */
 export function useMarkNotificationReadMutation(userId: string | null) {

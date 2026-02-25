@@ -2,13 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
 import { resolveDomainError } from '@/commons/lib';
-import { mealKeys as commonMealKeys } from '@/commons/model/queryKey';
 import { type Database } from '@/commons/types';
 import { Toast } from '@/commons/ui';
 
-import { type FridgeItem, type FridgeItemBatch } from '@/entities/fridge-item';
-
-import { fridgeKeys } from './queryKey';
+import { fridgeItemKeys, type FridgeItem, type FridgeItemBatch } from '@/entities/fridge-item';
+import { mealKeys } from '@/entities/meal';
 
 type FridgeItemInsert = Database['public']['Tables']['fridge_items']['Insert'];
 type FridgeItemUpdate = Database['public']['Tables']['fridge_items']['Update'];
@@ -57,8 +55,8 @@ export function useAddFridgeItemMutation() {
       return data as FridgeItem;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
-      queryClient.invalidateQueries({ queryKey: commonMealKeys.fridgeItems });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }
@@ -80,8 +78,8 @@ export function useUpdateFridgeItemMutation() {
       return data as FridgeItem;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
-      queryClient.invalidateQueries({ queryKey: commonMealKeys.fridgeItems });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }
@@ -99,8 +97,8 @@ export function useDeleteFridgeItemMutation() {
       if (deleteError) throw resolveFridgeError(deleteError);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
-      queryClient.invalidateQueries({ queryKey: commonMealKeys.fridgeItems });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }
@@ -121,8 +119,8 @@ export function useAddBatchMutation() {
       return data as FridgeItemBatch;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
-      queryClient.invalidateQueries({ queryKey: commonMealKeys.fridgeItems });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }
@@ -146,8 +144,8 @@ export function useUpdateBatchMutation() {
       return data as FridgeItemBatch;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
-      queryClient.invalidateQueries({ queryKey: commonMealKeys.fridgeItems });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }
@@ -165,8 +163,8 @@ export function useDeleteBatchMutation() {
       if (error) throw resolveFridgeError(error);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
-      queryClient.invalidateQueries({ queryKey: commonMealKeys.fridgeItems });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }
@@ -192,9 +190,9 @@ export function useUpsertFridgePreferencesMutation() {
       if (error) throw resolveFridgeError(error);
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.preferences(variables.userId) });
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
-      queryClient.invalidateQueries({ queryKey: commonMealKeys.fridgeItems });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.preferences(variables.userId) });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
     onError: (error) => {
       Toast.error(error.message);

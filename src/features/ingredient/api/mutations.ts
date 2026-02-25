@@ -2,12 +2,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createClient } from '@/commons/api/supabase/client';
 import { resolveDomainError } from '@/commons/lib';
-import { fridgeKeys } from '@/commons/model/queryKey';
 import { type Database } from '@/commons/types';
 
-import { type Ingredient } from '@/entities/ingredient';
-
-import { ingredientKeys } from './queryKey';
+import { fridgeItemKeys } from '@/entities/fridge-item';
+import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
 
 type IngredientInsert = Database['public']['Tables']['ingredients']['Insert'];
 type IngredientUpdate = Database['public']['Tables']['ingredients']['Update'];
@@ -50,7 +48,7 @@ export function useAddIngredientMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
     },
   });
 }
@@ -75,7 +73,7 @@ export function useUpdateIngredientMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
     },
   });
 }
@@ -97,7 +95,7 @@ export function useDeleteIngredientMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
-      queryClient.invalidateQueries({ queryKey: fridgeKeys.all });
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
     },
   });
 }

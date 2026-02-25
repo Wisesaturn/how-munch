@@ -4,9 +4,7 @@ import { uniq } from 'es-toolkit';
 
 import { createClient } from '@/commons/api/supabase/client';
 
-import { type Ingredient } from '@/entities/ingredient';
-
-import { ingredientKeys } from './queryKey';
+import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
 
 /** 월별 장보기 내역 조회 (I-01) */
 export function useIngredientsQuery(householdId: string | null, year: number, month: number) {
