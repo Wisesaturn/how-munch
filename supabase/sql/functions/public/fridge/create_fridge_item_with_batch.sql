@@ -7,6 +7,7 @@
 create function public.create_fridge_item_with_batch(
   p_household_id uuid,
   p_name text,
+  p_brand text default null,
   p_category_id uuid default null,
   p_unit text default 'count',
   p_is_subdivided boolean default false,
@@ -44,6 +45,7 @@ begin
   insert into public.fridge_items (
     household_id,
     name,
+    brand,
     category_id,
     unit,
     total_count,
@@ -54,6 +56,7 @@ begin
   values (
     p_household_id,
     p_name,
+    p_brand,
     v_category_id,
     coalesce(p_unit, 'count'),
     coalesce(p_quantity, 1),

@@ -1,9 +1,143 @@
--- Function: public.update_ingredient_with_fridge
--- Source: supabase/migrations/038_drop_legacy_category_columns_and_use_category_id.sql
--- 역할: 장보기 항목 수정 시 연결 냉장고 재고를 정합성 있게 동기화합니다.
--- 동작:
--- 1. ingredient 업데이트 후 동일 품목 fridge_item을 재조회/생성합니다.
--- 2. 연결 배치를 목표 fridge_item으로 이동하고 수량/사용량 정합성을 유지합니다.
+-- Fix: p_brand 파라미터 누락으로 인해 브랜드가 DB에 저장되지 않는 문제 수정
+-- 영향 함수:
+--   1. add_ingredient_with_fridge    — p_brand 파라미터 추가 및 ingredients INSERT 반영
+--   2. update_ingredient_with_fridge — UPDATE 문에 brand CASE 추가
+--   3. create_fridge_item_with_batch — p_brand 파라미터 추가 및 fridge_items INSERT 반영
+
+-- 1. add_ingredient_with_fridge: p_brand 파라미터 추가 및 INSERT 반영
+drop function if exists public.add_ingredient_with_fridge(uuid, text, integer, text, uuid, numeric, text, date);
+
+create function public.add_ingredient_with_fridge(
+  p_household_id uuid,
+  p_name text,
+  p_price integer default 0,
+  p_store text default null,
+  p_brand text default null,
+  p_category_id uuid default null,
+  p_count numeric default 1,
+  p_unit text default 'count',
+  p_date date default current_date
+)
+returns public.ingredients
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_ingredient public.ingredients%rowtype;
+  v_fridge_item_id uuid;
+  v_batch_id uuid;
+  v_category_id uuid;
+begin
+  if v_user_id is null then
+    raise exception using
+      errcode = 'A0001',
+      message = '로그인이 필요합니다.',
+      hint = 'AUTH_UNAUTHORIZED';
+  end if;
+
+  if not public.is_household_member(p_household_id) then
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
+  end if;
+
+  v_category_id := public.normalize_ingredient_category_id(p_household_id, p_category_id);
+
+  insert into public.ingredients (
+    household_id,
+    user_id,
+    date,
+    name,
+    price,
+    store,
+    brand,
+    category_id,
+    count,
+    unit
+  )
+  values (
+    p_household_id,
+    v_user_id,
+    coalesce(p_date, current_date),
+    p_name,
+    coalesce(p_price, 0),
+    p_store,
+    p_brand,
+    v_category_id,
+    coalesce(p_count, 1),
+    coalesce(p_unit, 'count')
+  )
+  returning * into v_ingredient;
+
+  select f.id
+    into v_fridge_item_id
+  from public.fridge_items f
+  where f.household_id = v_ingredient.household_id
+    and f.deleted_at is null
+    and lower(btrim(f.name)) = lower(btrim(v_ingredient.name))
+    and f.unit = v_ingredient.unit
+    and f.category_id = v_ingredient.category_id
+  order by f.created_at asc
+  limit 1
+  for update;
+
+  if v_fridge_item_id is null then
+    insert into public.fridge_items (
+      household_id,
+      name,
+      brand,
+      category_id,
+      unit,
+      total_count,
+      max_count,
+      is_subdivided,
+      from_grocery
+    )
+    values (
+      v_ingredient.household_id,
+      v_ingredient.name,
+      v_ingredient.brand,
+      v_ingredient.category_id,
+      v_ingredient.unit,
+      v_ingredient.count,
+      v_ingredient.count,
+      false,
+      true
+    )
+    returning id into v_fridge_item_id;
+  end if;
+
+  insert into public.fridge_item_batches (
+    fridge_item_id,
+    quantity,
+    purchased_date,
+    expiry_date,
+    memo
+  )
+  values (
+    v_fridge_item_id,
+    v_ingredient.count,
+    v_ingredient.date,
+    null,
+    null
+  )
+  returning id into v_batch_id;
+
+  update public.ingredients
+  set linked_fridge_item_id = v_fridge_item_id,
+      linked_fridge_batch_id = v_batch_id,
+      updated_at = now()
+  where id = v_ingredient.id
+  returning * into v_ingredient;
+
+  return v_ingredient;
+end;
+$$;
+
+-- 2. update_ingredient_with_fridge: UPDATE 문에 brand CASE 추가
 create or replace function public.update_ingredient_with_fridge(
   p_ingredient_id uuid,
   p_updates jsonb default '{}'::jsonb
@@ -232,5 +366,89 @@ begin
   end if;
 
   return v_ingredient;
+end;
+$$;
+
+-- 3. create_fridge_item_with_batch: p_brand 파라미터 추가 및 fridge_items INSERT 반영
+drop function if exists public.create_fridge_item_with_batch(uuid, text, uuid, text, boolean, boolean, numeric, date, date, text);
+
+create function public.create_fridge_item_with_batch(
+  p_household_id uuid,
+  p_name text,
+  p_brand text default null,
+  p_category_id uuid default null,
+  p_unit text default 'count',
+  p_is_subdivided boolean default false,
+  p_from_grocery boolean default false,
+  p_quantity numeric default 1,
+  p_purchased_date date default current_date,
+  p_expiry_date date default null,
+  p_memo text default null
+)
+returns public.fridge_items
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_item public.fridge_items%rowtype;
+  v_category_id uuid;
+begin
+  if auth.uid() is null then
+    raise exception using
+      errcode = 'A0001',
+      message = '로그인이 필요합니다.',
+      hint = 'AUTH_UNAUTHORIZED';
+  end if;
+
+  if not public.is_household_member(p_household_id) then
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
+  end if;
+
+  v_category_id := public.normalize_ingredient_category_id(p_household_id, p_category_id);
+
+  insert into public.fridge_items (
+    household_id,
+    name,
+    brand,
+    category_id,
+    unit,
+    total_count,
+    max_count,
+    is_subdivided,
+    from_grocery
+  )
+  values (
+    p_household_id,
+    p_name,
+    p_brand,
+    v_category_id,
+    coalesce(p_unit, 'count'),
+    coalesce(p_quantity, 1),
+    coalesce(p_quantity, 1),
+    coalesce(p_is_subdivided, false),
+    coalesce(p_from_grocery, false)
+  )
+  returning * into v_item;
+
+  insert into public.fridge_item_batches (
+    fridge_item_id,
+    quantity,
+    purchased_date,
+    expiry_date,
+    memo
+  )
+  values (
+    v_item.id,
+    coalesce(p_quantity, 1),
+    coalesce(p_purchased_date, current_date),
+    p_expiry_date,
+    p_memo
+  );
+
+  return v_item;
 end;
 $$;

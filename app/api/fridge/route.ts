@@ -41,6 +41,7 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
   const { data, error } = await supabase.rpc('create_fridge_item_with_batch', {
     p_household_id: item.household_id,
     p_name: item.name,
+    p_brand: item.brand ?? null,
     p_category_id: item.category_id,
     p_unit: item.unit ?? 'count',
     p_is_subdivided: item.is_subdivided ?? false,
