@@ -762,6 +762,15 @@ export interface Database {
         Args: { p_user_id: string; p_endpoint: string; p_p256dh: string; p_auth: string };
         Returns: void;
       };
+      move_dish_to_meal: {
+        Args: {
+          p_dish_id: string;
+          p_target_meal_type: string;
+          p_household_id: string;
+          p_date: string;
+        };
+        Returns: void;
+      };
     };
     Enums: {
       [_ in never]: never;

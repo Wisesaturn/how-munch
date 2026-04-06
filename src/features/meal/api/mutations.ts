@@ -38,6 +38,27 @@ export function useUpsertMealMutation() {
   });
 }
 
+interface MoveDishInput {
+  dishId: string;
+  targetMealType: MealType;
+  householdId: string;
+  date: string;
+}
+
+/** 메뉴를 다른 끼니로 이동 */
+export function useMoveDishMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: MoveDishInput) => apiClient.patch('/api/meals/dishes', input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: mealKeys.listByDate(variables.householdId, variables.date),
+      });
+    },
+  });
+}
+
 /** 식단 삭제 */
 export function useDeleteMealMutation() {
   const queryClient = useQueryClient();

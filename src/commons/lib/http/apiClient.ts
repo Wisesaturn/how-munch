@@ -47,6 +47,10 @@ export const apiClient = {
   put<T>(url: string, body: unknown): Promise<T> {
     return request<T>(url, { method: 'PUT', body });
   },
+  /** @description PATCH 요청 */
+  patch<T>(url: string, body: unknown): Promise<T> {
+    return request<T>(url, { method: 'PATCH', body });
+  },
   /** @description DELETE 요청 */
   delete<T = void>(url: string, body?: unknown): Promise<T> {
     return request<T>(url, { method: 'DELETE', ...(body !== undefined && { body }) });
