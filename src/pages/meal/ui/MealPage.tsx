@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useOptimistic, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   DragDropContext,
@@ -16,6 +16,7 @@ import {
   ChevronRight as ChevronRightSmall,
   UtensilsCrossed,
 } from 'lucide-react';
+import { useConditionalEffect } from 'react-simplikit';
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
 import { cn } from '@/commons/lib';
@@ -58,15 +59,26 @@ export function MealPage({ householdId }: MealPageProps) {
     return new Map(meals.map((meal) => [meal.type, meal]));
   }, [meals]);
 
-  const initialDishesMap = useMemo(() => buildSortedDishesMap(meals), [meals]);
+  const serverDishesMap = useMemo(() => buildSortedDishesMap(meals), [meals]);
 
-  const [optimisticDishesMap, applyOptimisticReorder] = useOptimistic(
-    initialDishesMap,
-    (current: MealDishesMap, { mealType, dishes }: { mealType: MealType; dishes: Dish[] }) => {
-      const next = new Map(current);
-      next.set(mealType, dishes);
-      return next;
+  const [localDishesMap, setLocalDishesMap] = useState<MealDishesMap>(() =>
+    buildSortedDishesMap(meals),
+  );
+
+  const dishesMap = useMemo(() => {
+    const merged = new Map(serverDishesMap);
+    for (const [type, dishes] of localDishesMap) {
+      merged.set(type, dishes);
+    }
+    return merged;
+  }, [serverDishesMap, localDishesMap]);
+
+  useConditionalEffect(
+    function resetLocalDishesOnDateChange() {
+      setLocalDishesMap(new Map());
     },
+    [dateKey],
+    (prev, next) => prev[0] !== next[0],
   );
 
   const reorderMutation = useReorderDishesMutation();
@@ -84,13 +96,17 @@ export function MealPage({ householdId }: MealPageProps) {
     }
 
     const mealType = droppableId as MealType;
-    const currentDishes = optimisticDishesMap.get(mealType) ?? [];
+    const currentDishes = dishesMap.get(mealType) ?? [];
     const reordered = [...currentDishes];
     const [moved] = reordered.splice(source.index, 1);
     reordered.splice(destination.index, 0, moved);
 
     const updatedDishes = reordered.map((dish, index) => ({ ...dish, sort_order: index }));
-    applyOptimisticReorder({ mealType, dishes: updatedDishes });
+    setLocalDishesMap((prev) => {
+      const next = new Map(prev);
+      next.set(mealType, updatedDishes);
+      return next;
+    });
 
     const updates = updatedDishes.map((dish) => ({
       dish_id: dish.id,
@@ -101,6 +117,7 @@ export function MealPage({ householdId }: MealPageProps) {
       { householdId, date: dateKey, updates },
       {
         onError: () => {
+          setLocalDishesMap(new Map(serverDishesMap));
           Toast.error('순서 변경에 실패했습니다');
         },
       },
@@ -140,7 +157,7 @@ export function MealPage({ householdId }: MealPageProps) {
         <DragDropContext onDragEnd={onDragEnd}>
           <section className="space-y-3">
             {MEAL_TYPE_ORDER.map((type) => {
-              const dishes = optimisticDishesMap.get(type) ?? [];
+              const dishes = dishesMap.get(type) ?? [];
 
               return (
                 <Card
