@@ -148,8 +148,12 @@ const DialogClose = React.forwardRef<
     )}
     {...props}
   >
-    {children ?? <X className="size-4" aria-hidden="true" />}
-    <span className="sr-only">닫기</span>
+    {children ?? (
+      <>
+        <X className="size-4" aria-hidden="true" />
+        <span className="sr-only">닫기</span>
+      </>
+    )}
   </DialogPrimitive.Close>
 ));
 DialogClose.displayName = 'Dialog.Close';
