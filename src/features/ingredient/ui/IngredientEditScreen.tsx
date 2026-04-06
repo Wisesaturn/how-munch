@@ -1,8 +1,9 @@
 'use client';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { overlay } from 'overlay-kit';
 
-import { CTAConfirmButton, Toast } from '@/commons/ui';
+import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
@@ -69,6 +70,30 @@ export function IngredientEditScreen({
     });
   }
 
+  function openDeleteConfirm() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 200);
+      }
+
+      function confirmDelete() {
+        closeSheet();
+        deleteIngredient();
+      }
+
+      return (
+        <DeleteConfirmBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onConfirm={confirmDelete}
+          title="상품을 삭제하시겠습니까?"
+          description="삭제된 상품은 복구할 수 없습니다."
+        />
+      );
+    });
+  }
+
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '상품 수정' }}>
       <div className="px-4 pt-4 pb-28">
@@ -99,7 +124,7 @@ export function IngredientEditScreen({
           color="danger"
           variant="subtle"
           disabled={Boolean(updateMutation.isPending || deleteMutation.isPending)}
-          onClick={deleteIngredient}
+          onClick={openDeleteConfirm}
         >
           삭제
         </CTAConfirmButton.Left>

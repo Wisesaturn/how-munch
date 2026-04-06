@@ -1,8 +1,9 @@
 'use client';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { overlay } from 'overlay-kit';
 
-import { CTAConfirmButton, Toast } from '@/commons/ui';
+import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -61,6 +62,30 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
     });
   }
 
+  function openDeleteConfirm() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 200);
+      }
+
+      function confirmDelete() {
+        closeSheet();
+        deleteItem();
+      }
+
+      return (
+        <DeleteConfirmBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onConfirm={confirmDelete}
+          title="재료를 삭제하시겠습니까?"
+          description="삭제된 재료는 복구할 수 없습니다."
+        />
+      );
+    });
+  }
+
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '재료 수정' }}>
       <div className="px-4 pt-4 pb-28">
@@ -87,7 +112,7 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
           color="danger"
           variant="subtle"
           disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
-          onClick={deleteItem}
+          onClick={openDeleteConfirm}
         >
           삭제
         </CTAConfirmButton.Left>

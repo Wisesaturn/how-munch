@@ -6,10 +6,11 @@ import { useForm } from '@tanstack/react-form';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Plus } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 import { z } from 'zod';
 
 import { extractFieldErrorMessage } from '@/commons/lib';
-import { Button, CTAButton, CTAConfirmButton, Toast } from '@/commons/ui';
+import { Button, CTAButton, CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
@@ -147,6 +148,30 @@ export function MealEditorScreen({
     );
   }
 
+  function openDeleteConfirm() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 200);
+      }
+
+      function confirmDelete() {
+        closeSheet();
+        removeMeal();
+      }
+
+      return (
+        <DeleteConfirmBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onConfirm={confirmDelete}
+          title="식단을 삭제하시겠습니까?"
+          description="삭제된 식단은 복구할 수 없습니다."
+        />
+      );
+    });
+  }
+
   const isMutating = upsertMutation.isPending || deleteMutation.isPending;
 
   return (
@@ -206,7 +231,7 @@ export function MealEditorScreen({
             type="button"
             color="danger"
             variant="subtle"
-            onClick={removeMeal}
+            onClick={openDeleteConfirm}
             disabled={isMutating}
           >
             삭제

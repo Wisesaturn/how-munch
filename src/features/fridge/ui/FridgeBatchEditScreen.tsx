@@ -1,8 +1,9 @@
 'use client';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { overlay } from 'overlay-kit';
 
-import { CTAConfirmButton, Toast } from '@/commons/ui';
+import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 import { type IngredientUnit } from '@/entities/ingredient';
@@ -60,8 +61,6 @@ export function FridgeBatchEditScreen({
   }
 
   function deleteBatch() {
-    if (!window.confirm('이 재고를 삭제하시겠습니까?')) return;
-
     deleteMutation.mutate(batch.id, {
       onSuccess: () => {
         Toast.success('재고가 삭제되었습니다');
@@ -70,6 +69,30 @@ export function FridgeBatchEditScreen({
       onError: (error) => {
         Toast.error(getErrorMessage(error));
       },
+    });
+  }
+
+  function openDeleteConfirm() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 200);
+      }
+
+      function confirmDelete() {
+        closeSheet();
+        deleteBatch();
+      }
+
+      return (
+        <DeleteConfirmBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onConfirm={confirmDelete}
+          title="재고를 삭제하시겠습니까?"
+          description="삭제된 재고는 복구할 수 없습니다."
+        />
+      );
     });
   }
 
@@ -100,7 +123,7 @@ export function FridgeBatchEditScreen({
           color="danger"
           variant="subtle"
           disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
-          onClick={deleteBatch}
+          onClick={openDeleteConfirm}
         >
           삭제
         </CTAConfirmButton.Left>
