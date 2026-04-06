@@ -1,11 +1,13 @@
 // shared UI components barrel export
 export { Accordion } from './Accordion';
 export { Alert } from './Alert';
+export { AlertDialog, type AlertDialogProps } from './AlertDialog';
 export { Badge, badgeVariants } from './Badge';
 export { BottomSheet } from './BottomSheet';
 export { Button, buttonVariants } from './Button';
 export { Calendar } from './Calendar';
 export { Card } from './Card';
+export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
 export { CTAButton, CTAConfirmButton } from './CTAButton';
 export { Command } from './Command';
 export { ComboBox, type ComboBoxProps } from './ComboBox';
