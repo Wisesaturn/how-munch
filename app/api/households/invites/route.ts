@@ -2,8 +2,9 @@ import { type NextRequest } from 'next/server';
 
 import { addDays } from 'date-fns';
 
-import { apiResponse } from '@/commons/lib/apiResponse';
-import { withAuth } from '@/commons/lib/routeGuard';
+import { withAuth } from '@/apps/route';
+
+import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 function createInviteCode(length = 6) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

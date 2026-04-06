@@ -1,7 +1,8 @@
 import { type NextRequest } from 'next/server';
 
-import { apiResponse } from '@/commons/lib/apiResponse';
-import { withAuth } from '@/commons/lib/routeGuard';
+import { withAuth } from '@/apps/route';
+
+import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 function decodeEmojiUnicode(emojiUnicode: string) {
   const normalized = emojiUnicode.trim().replace(/^U\+/i, '').replace(/\s+/g, '');

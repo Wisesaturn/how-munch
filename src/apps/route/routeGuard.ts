@@ -1,9 +1,7 @@
 import { type NextRequest } from 'next/server';
 
-// eslint-disable-next-line fsd/forbidden-imports
 import { createClient } from '@/commons/api/supabase/server';
-
-import { apiResponse } from './apiResponse';
+import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 export type AuthContext = {
   userId: string;

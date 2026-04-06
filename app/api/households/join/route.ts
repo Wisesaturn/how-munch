@@ -1,8 +1,9 @@
 import { type NextRequest } from 'next/server';
 
+import { withAuth } from '@/apps/route';
+
 import { resolveDomainError } from '@/commons/lib';
-import { apiResponse } from '@/commons/lib/apiResponse';
-import { withAuth } from '@/commons/lib/routeGuard';
+import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 /** POST /api/households/join — 초대 코드로 가구 가입 */
 export const POST = withAuth(async (req: NextRequest, { supabase }) => {

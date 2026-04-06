@@ -2,9 +2,10 @@ import { type NextRequest } from 'next/server';
 
 import { format, endOfMonth, startOfMonth } from 'date-fns';
 
+import { withAuth } from '@/apps/route';
+
 import { resolveDomainError } from '@/commons/lib';
-import { apiResponse } from '@/commons/lib/apiResponse';
-import { withAuth } from '@/commons/lib/routeGuard';
+import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { type Json } from '@/commons/types';
 
 /** GET /api/ingredients?householdId=&year=&month= — 월별 장보기 내역 조회 */

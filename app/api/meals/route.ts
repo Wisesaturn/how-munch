@@ -1,8 +1,9 @@
 import { type NextRequest } from 'next/server';
 
+import { withAuth } from '@/apps/route';
+
 import { resolveDomainError } from '@/commons/lib';
-import { apiResponse } from '@/commons/lib/apiResponse';
-import { withAuth } from '@/commons/lib/routeGuard';
+import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import { type MealType } from '@/entities/meal';
 

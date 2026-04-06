@@ -1,7 +1,8 @@
 import { type NextRequest } from 'next/server';
 
-import { apiResponse } from '@/commons/lib/apiResponse';
-import { withAuth } from '@/commons/lib/routeGuard';
+import { withAuth } from '@/apps/route';
+
+import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 /** GET /api/households/members?householdId= — 가구 멤버 목록 조회 */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
