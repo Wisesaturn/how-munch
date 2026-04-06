@@ -49,16 +49,30 @@ gh issue view {이슈번호} --json title,body,labels,assignees
 - FSD 의존성 규칙 준수 여부 사전 확인
 - 구현 계획을 수립하고 **반드시 사용자 승인을 받은 후** 구현을 시작한다
 
-### 4. 브랜치 생성
+### 4. Worktree 생성
+
+이슈별 작업을 격리하기 위해 메인 워크트리가 아닌 별도 git worktree에서 작업한다.
 
 ```bash
-git checkout -b {type}/#{이슈번호}
-# 예: feat/#42, fix/#7
+# 브랜치명 결정 (예: feat/#42, fix/#7)
+BRANCH="{type}/#{이슈번호}"
+
+# 슬래시를 하이픈으로 치환해 폴더명으로 안전하게 변환 (예: feat-#42)
+WORKTREE_DIR="${BRANCH//\//-}"
+WORKTREE_PATH=".claude/worktrees/${WORKTREE_DIR}"
+
+# worktree 생성 + 브랜치 체크아웃
+git worktree add "$WORKTREE_PATH" -b "$BRANCH"
+
+# 이후 모든 작업은 이 worktree 디렉토리 기준으로 수행
+cd "$WORKTREE_PATH"
 ```
+
+> 이미 브랜치가 존재하는 경우: `git worktree add "$WORKTREE_PATH" "$BRANCH"`
 
 ### 5. 구현
 
-아래 규칙을 모두 준수하며 구현한다.
+아래 규칙을 모두 준수하며 **worktree 디렉토리 내에서** 구현한다.
 
 - `CLAUDE.md` 컨벤션 전체 준수 (네이밍, import 순서, JSDoc 등)
 - `fsd-instructure.md` FSD 레이어 단방향 의존성 유지
@@ -70,7 +84,7 @@ git checkout -b {type}/#{이슈번호}
 
 ### 6. 커밋
 
-`commit-convention` 스킬 규칙을 따른다.
+`commit-convention` 스킬 규칙을 따른다. worktree 디렉토리 내에서 커밋한다.
 
 - 커밋 형식: `type/#{이슈번호}: 한 줄 요약`
 - 영향 범위가 크면 논리 단위로 커밋 분리
@@ -84,7 +98,12 @@ git checkout -b {type}/#{이슈번호}
 
 ### 8. PR 생성
 
-`pr-convention` 스킬의 절차를 그대로 따른다.
+원격 브랜치로 push한 뒤 `pr-convention` 스킬의 절차를 그대로 따른다.
+
+```bash
+# worktree 디렉토리 내에서 실행
+git push -u origin "$BRANCH"
+```
 
 - pr-convention Step 6~7(code-review 실행 + `gh api`로 라인 지정 코드 리뷰 코멘트 게시)도 포함해 실행
 
@@ -93,5 +112,6 @@ git checkout -b {type}/#{이슈번호}
 PR 생성 완료 후 아래 내용을 보고한다.
 
 - PR URL
+- Worktree 경로 (`.claude/worktrees/{branch-dir}`)
 - 작업 요약 (구현 내용, 커밋 수, 변경 파일 수)
 - 자체 리뷰 결과 요약 (발견된 이슈 및 수정 여부)
