@@ -771,6 +771,13 @@ export interface Database {
         };
         Returns: void;
       };
+      reorder_dishes: {
+        Args: {
+          p_household_id: string;
+          p_updates: Json;
+        };
+        Returns: void;
+      };
     };
     Enums: {
       [_ in never]: never;
