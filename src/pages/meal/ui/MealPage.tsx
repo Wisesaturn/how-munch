@@ -18,11 +18,12 @@ import {
 } from 'lucide-react';
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
+import { cn } from '@/commons/lib';
 import { Badge, Button, Card, EmptyState, Toast } from '@/commons/ui';
 
 import { type Dish, type Meal, type MealType } from '@/entities/meal';
 
-import { MealDishMoveButton, useReorderDishesMutation, useMealsByDateQuery } from '@/features/meal';
+import { MealDishMoveButton, useMealsByDateQuery, useReorderDishesMutation } from '@/features/meal';
 
 interface MealPageProps {
   householdId: string;
@@ -139,7 +140,6 @@ export function MealPage({ householdId }: MealPageProps) {
         <DragDropContext onDragEnd={onDragEnd}>
           <section className="space-y-3">
             {MEAL_TYPE_ORDER.map((type) => {
-              const meal = mealMap.get(type);
               const dishes = optimisticDishesMap.get(type) ?? [];
 
               return (
@@ -153,7 +153,7 @@ export function MealPage({ householdId }: MealPageProps) {
                     <ChevronRight className="size-4 text-gray-400" />
                   </Card.Header>
                   <Card.Content>
-                    {!meal || meal.dishes.length === 0 ? (
+                    {dishes.length === 0 ? (
                       <EmptyState.Root>
                         <EmptyState.Content className="py-6">
                           <EmptyState.Indicator>
@@ -177,7 +177,10 @@ export function MealPage({ householdId }: MealPageProps) {
                                   <li
                                     ref={draggableProvided.innerRef}
                                     {...draggableProvided.draggableProps}
-                                    className={`rounded-md bg-gray-50 px-3 py-2 text-sm transition-shadow ${snapshot.isDragging ? 'shadow-md' : ''}`}
+                                    className={cn(
+                                      'rounded-md bg-gray-50 px-3 py-2 text-sm transition-shadow',
+                                      snapshot.isDragging && 'shadow-md',
+                                    )}
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <div className="flex items-center justify-between">
