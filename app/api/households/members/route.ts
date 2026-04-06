@@ -14,17 +14,27 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data: members, error: membersError } = await supabase
     .from('household_members')
-    .select('*, profiles(user_id, nickname, email)')
+    .select('*')
     .eq('household_id', householdId)
     .order('created_at', { ascending: true });
 
   if (membersError) return apiResponse.INTERNAL_ERROR();
 
+  const userIds = (members ?? []).map((m) => m.user_id);
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('user_id, nickname, email')
+    .in('user_id', userIds);
+
+  if (profilesError) return apiResponse.INTERNAL_ERROR();
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+
   const result = (members ?? []).map((member) => {
-    const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
+    const profile = profileMap.get(member.user_id);
     return {
       ...member,
-      profiles: undefined,
       nickname: profile?.nickname ?? '알 수 없음',
       email: profile?.email ?? '-',
     };
