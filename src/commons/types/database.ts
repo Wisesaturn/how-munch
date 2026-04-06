@@ -758,6 +758,10 @@ export interface Database {
         Args: { p_household_id: string; p_date: string; p_type: string; p_dishes?: Json };
         Returns: string;
       };
+      upsert_push_subscription_by_user: {
+        Args: { p_user_id: string; p_endpoint: string; p_p256dh: string; p_auth: string };
+        Returns: void;
+      };
     };
     Enums: {
       [_ in never]: never;

@@ -1,10 +1,13 @@
--- Function: public.generate_expiry_soon_notifications
--- Source: supabase/migrations/050_fix_expiry_notification_filter_and_message.sql
--- 역할: 유통기한 임박 재고를 스캔하여 알림 레코드를 생성합니다.
--- 동작:
--- 1. 대상 날짜 기준 임박/만료 후보를 수집합니다(테스트 이메일 지정 시 해당 유저로 제한).
--- 2. 재고 수량(total_count > 0)인 재료만 알림 대상으로 포함합니다.
--- 3. 유저+가구 기준으로 재료를 요약(최대 3개)하여 하루 1건 알림을 생성합니다.
+-- ============================================================
+-- Fix expiry notification filter and message template
+-- ============================================================
+-- 변경 사항:
+-- 1. 재고 수량(total_count) 0개 재료는 설정 무관하게 항상 알림 제외
+-- 2. 푸시 알림 메시지 이모지를 이슈 기획에 맞게 수정 (🦴 → 🔨)
+
+drop function if exists public.generate_expiry_soon_notifications(date);
+drop function if exists public.generate_expiry_soon_notifications(date, text);
+
 create or replace function public.generate_expiry_soon_notifications(
   p_target_date date default current_date,
   p_test_email text default null
@@ -209,3 +212,9 @@ begin
   return v_inserted_count;
 end;
 $$;
+
+revoke all on function public.generate_expiry_soon_notifications(date, text) from public;
+revoke all on function public.generate_expiry_soon_notifications(date, text) from authenticated;
+grant execute on function public.generate_expiry_soon_notifications(date, text) to service_role;
+
+select pg_notify('pgrst', 'reload schema');

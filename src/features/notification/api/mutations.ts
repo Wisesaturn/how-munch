@@ -206,24 +206,19 @@ interface UpsertPushSubscriptionParams {
   auth: string;
 }
 
-/** Push 구독 저장/갱신 */
+/** Push 구독 저장/갱신 — 토큰 변경 시 기존 구독을 비활성화하고 최신 구독으로 교체 */
 export function useUpsertPushSubscriptionMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ userId, endpoint, p256dh, auth }: UpsertPushSubscriptionParams) => {
       const supabase = createClient();
-      const { error } = await supabase.from('notification_push_subscriptions').upsert(
-        {
-          user_id: userId,
-          endpoint,
-          p256dh,
-          auth,
-          is_active: true,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'endpoint' },
-      );
+      const { error } = await supabase.rpc('upsert_push_subscription_by_user', {
+        p_user_id: userId,
+        p_endpoint: endpoint,
+        p_p256dh: p256dh,
+        p_auth: auth,
+      });
 
       if (error) throw error;
     },
