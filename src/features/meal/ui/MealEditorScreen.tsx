@@ -33,7 +33,11 @@ interface MealEditorScreenProps {
   type: MealType;
   meal: Meal | null;
   /** 재료 검색 Screen 진입 핸들러 — 선택값은 fridge_item_id로 변환되어 반영된다 */
-  onOpenFridgeItemSearch?: (suggestions: string[], onSelectName: (name: string) => void) => void;
+  onOpenFridgeItemSearch?: (
+    suggestions: string[],
+    depletedNames: string[],
+    onSelectName: (name: string) => void,
+  ) => void;
 }
 
 const MEAL_LABEL_BY_TYPE: Record<MealType, string> = {
@@ -180,7 +184,10 @@ export function MealEditorScreen({
   function openFridgeItemSearch(currentItemId: string, onSelectId: (id: string) => void) {
     if (!onOpenFridgeItemSearch) return;
     const suggestions = fridgeItems.map((item) => item.name);
-    onOpenFridgeItemSearch(suggestions, (selectedName) => {
+    const depletedNames = fridgeItems
+      .filter((item) => Number(item.total_count) <= 0)
+      .map((item) => item.name);
+    onOpenFridgeItemSearch(suggestions, depletedNames, (selectedName) => {
       const item = fridgeItems.find((i) => i.name === selectedName);
       if (item) onSelectId(item.id);
     });

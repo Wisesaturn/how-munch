@@ -203,11 +203,16 @@ function MealEditorActivity({
 }) {
   const { pop, push } = useActions();
 
-  function openFridgeItemSearch(suggestions: string[], onSelectName: (name: string) => void) {
+  function openFridgeItemSearch(
+    suggestions: string[],
+    depletedNames: string[],
+    onSelectName: (name: string) => void,
+  ) {
     setPendingProductNameCallback(onSelectName);
     push('ProductNameSearchActivity', {
       fieldLabel: '재료',
       suggestions,
+      depletedNames,
     });
   }
 
@@ -251,6 +256,7 @@ function ProductNameSearchActivity({
   params: {
     fieldLabel?: string;
     suggestions?: string[];
+    depletedNames?: string[];
   };
 }) {
   const { pop } = useActions();
@@ -271,6 +277,7 @@ function ProductNameSearchActivity({
       onSelectName={handleSelectName}
       fieldLabel={params.fieldLabel}
       suggestions={params.suggestions}
+      depletedNames={params.depletedNames}
     />
   );
 }

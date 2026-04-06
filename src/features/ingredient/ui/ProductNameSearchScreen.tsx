@@ -6,6 +6,7 @@ import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Search, X } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
+import { Badge } from '@/commons/ui';
 
 interface ProductNameSearchScreenProps {
   /** 화면 닫기 핸들러 (Activity에서 주입) */
@@ -16,6 +17,8 @@ interface ProductNameSearchScreenProps {
   fieldLabel?: string;
   /** 기존 이름 제안 목록 */
   suggestions?: string[];
+  /** 소진 상태인 항목 이름 목록 — 해당 항목에 소진 뱃지를 표시한다 */
+  depletedNames?: string[];
 }
 
 /** 상품명 검색 전용 Screen — onClose/onSelectName을 Activity에서 주입받아 동작한다 */
@@ -24,9 +27,11 @@ export function ProductNameSearchScreen({
   onSelectName,
   fieldLabel = '상품명',
   suggestions = [],
+  depletedNames = [],
 }: ProductNameSearchScreenProps) {
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const depletedSet = new Set(depletedNames);
 
   useEffect(function focusOnMount() {
     const timer = window.setTimeout(() => {
@@ -120,17 +125,28 @@ export function ProductNameSearchScreen({
         {/* 제안 목록 */}
         {uniqueSuggestions.length > 0 && (
           <ul className="divide-y divide-gray-100">
-            {uniqueSuggestions.map((name) => (
-              <li key={name}>
-                <button
-                  type="button"
-                  onClick={() => onSelectName(name)}
-                  className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 active:bg-gray-100"
-                >
-                  {name}
-                </button>
-              </li>
-            ))}
+            {uniqueSuggestions.map((name) => {
+              const isDepleted = depletedSet.has(name);
+              return (
+                <li key={name}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectName(name)}
+                    className="flex w-full items-center gap-1.5 px-4 py-3 text-left text-sm hover:bg-gray-50 active:bg-gray-100"
+                  >
+                    <span>{name}</span>
+                    {isDepleted && (
+                      <Badge
+                        variant="outline"
+                        className="border-red-200 bg-red-50 px-1.5 py-0 text-[10px] text-red-600"
+                      >
+                        소진
+                      </Badge>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
         {uniqueSuggestions.length === 0 && trimmedQuery && (
