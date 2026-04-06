@@ -45,6 +45,7 @@ function IngredientAddActivity({
     householdId: string;
     userId: string;
     defaultName?: string;
+    suggestions?: string[];
   };
 }) {
   const { pop, push } = useActions();
@@ -55,6 +56,7 @@ function IngredientAddActivity({
     push('ProductNameSearchActivity', {
       callbackId,
       fieldLabel: '품목명',
+      suggestions: params.suggestions ?? [],
     });
   }
 
@@ -74,6 +76,7 @@ function FridgeItemAddActivity({
 }: {
   params: {
     householdId: string;
+    suggestions?: string[];
   };
 }) {
   const { pop, push } = useActions();
@@ -84,6 +87,7 @@ function FridgeItemAddActivity({
     push('ProductNameSearchActivity', {
       callbackId,
       fieldLabel: '재료명',
+      suggestions: params.suggestions ?? [],
     });
   }
 
@@ -101,6 +105,7 @@ function FridgeItemEditActivity({
 }: {
   params: {
     item: FridgeItemWithBatches;
+    suggestions?: string[];
   };
 }) {
   const { pop, push } = useActions();
@@ -111,6 +116,7 @@ function FridgeItemEditActivity({
     push('ProductNameSearchActivity', {
       callbackId,
       fieldLabel: '재료명',
+      suggestions: params.suggestions ?? [],
     });
   }
 
@@ -168,6 +174,7 @@ function IngredientEditActivity({
   params: {
     householdId: string;
     ingredient: Ingredient;
+    suggestions?: string[];
   };
 }) {
   const { pop, push } = useActions();
@@ -178,6 +185,7 @@ function IngredientEditActivity({
     push('ProductNameSearchActivity', {
       callbackId,
       fieldLabel: '품목명',
+      suggestions: params.suggestions ?? [],
     });
   }
 
@@ -201,7 +209,17 @@ function MealEditorActivity({
     meal: Meal | null;
   };
 }) {
-  const { pop } = useActions();
+  const { pop, push } = useActions();
+
+  function openFridgeItemSearch(suggestions: string[], onSelectName: (name: string) => void) {
+    const callbackId = uuid();
+    registerProductNameSelectCallback(callbackId, onSelectName);
+    push('ProductNameSearchActivity', {
+      callbackId,
+      fieldLabel: '재료',
+      suggestions,
+    });
+  }
 
   return (
     <MealEditorScreen
@@ -210,6 +228,7 @@ function MealEditorActivity({
       date={params.date}
       type={params.type}
       meal={params.meal}
+      onOpenFridgeItemSearch={openFridgeItemSearch}
     />
   );
 }

@@ -61,7 +61,10 @@ export function FridgePage({ householdId }: FridgePageProps) {
   };
 
   const openFridgeItemAddSheet = () => {
-    stackFlowActions.push('FridgeItemAddActivity', { householdId });
+    stackFlowActions.push('FridgeItemAddActivity', {
+      householdId,
+      suggestions: items.map((i) => i.name),
+    });
   };
 
   const openFridgeExpiryList = () => {
@@ -69,7 +72,10 @@ export function FridgePage({ householdId }: FridgePageProps) {
   };
 
   const openFridgeItemEditSheet = (item: FridgeItemWithBatches) => {
-    stackFlowActions.push('FridgeItemEditActivity', { item });
+    stackFlowActions.push('FridgeItemEditActivity', {
+      item,
+      suggestions: items.map((i) => i.name),
+    });
   };
 
   const openFridgeBatchAddSheet = (item: FridgeItemWithBatches) => {

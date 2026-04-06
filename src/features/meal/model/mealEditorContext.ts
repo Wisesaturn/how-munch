@@ -9,6 +9,7 @@ interface MealEditorContextValue {
   fridgeItems: MealFridgeItem[];
   inUseStockAmountByItemId: Record<string, number>;
   changeDishes: (nextDishes: EditorDish[]) => void;
+  openFridgeItemSearch?: (currentItemId: string, onSelectId: (id: string) => void) => void;
 }
 
 const [MealEditorProvider, useMealEditorContext] =

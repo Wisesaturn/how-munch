@@ -45,11 +45,20 @@ export function StorePage({ householdId, userId }: StorePageProps) {
   const handleNextMonth = () => setCurrentDate((d) => addMonths(d, 1));
 
   const openIngredientAddSheet = (defaultName?: string) => {
-    stackFlowActions.push('IngredientAddActivity', { householdId, userId, defaultName });
+    stackFlowActions.push('IngredientAddActivity', {
+      householdId,
+      userId,
+      defaultName,
+      suggestions: ingredients.map((i) => i.name),
+    });
   };
 
   const openIngredientEditSheet = (ingredient: Ingredient) => {
-    stackFlowActions.push('IngredientEditActivity', { householdId, ingredient });
+    stackFlowActions.push('IngredientEditActivity', {
+      householdId,
+      ingredient,
+      suggestions: ingredients.map((i) => i.name),
+    });
   };
 
   const handleAddFromSearch = () => {

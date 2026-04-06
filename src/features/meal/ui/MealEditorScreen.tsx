@@ -32,6 +32,8 @@ interface MealEditorScreenProps {
   date: string;
   type: MealType;
   meal: Meal | null;
+  /** 재료 검색 Screen 진입 핸들러 — 선택값은 fridge_item_id로 변환되어 반영된다 */
+  onOpenFridgeItemSearch?: (suggestions: string[], onSelectName: (name: string) => void) => void;
 }
 
 const MEAL_LABEL_BY_TYPE: Record<MealType, string> = {
@@ -58,6 +60,7 @@ export function MealEditorScreen({
   date,
   type,
   meal,
+  onOpenFridgeItemSearch,
 }: MealEditorScreenProps) {
   /* -------------------------------------------------------------------------- */
   /* Header Constants                                                            */
@@ -174,6 +177,15 @@ export function MealEditorScreen({
 
   const isMutating = upsertMutation.isPending || deleteMutation.isPending;
 
+  function openFridgeItemSearch(currentItemId: string, onSelectId: (id: string) => void) {
+    if (!onOpenFridgeItemSearch) return;
+    const suggestions = fridgeItems.map((item) => item.name);
+    onOpenFridgeItemSearch(suggestions, (selectedName) => {
+      const item = fridgeItems.find((i) => i.name === selectedName);
+      if (item) onSelectId(item.id);
+    });
+  }
+
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: appBarTitle }}>
       <div className="space-y-3 px-4 pt-4 pb-28">
@@ -195,6 +207,7 @@ export function MealEditorScreen({
                   fridgeItems={fridgeItems}
                   inUseStockAmountByItemId={inUseStockAmountByItemId}
                   changeDishes={field.handleChange}
+                  openFridgeItemSearch={onOpenFridgeItemSearch ? openFridgeItemSearch : undefined}
                 >
                   <Droppable droppableId="meal-dishes">
                     {(provided) => (
