@@ -81,6 +81,7 @@ cd "$WORKTREE_PATH"
 - react-query 3파일 패턴 (`queryKey.ts`, `queries.ts`, `mutations.ts`)
 - 트랜잭션 경계 규칙: 다중 테이블 변경은 RPC로 구현
 - TanStack Form + zod 유효성 검사 패턴 적용
+- **commons/ui 우선 원칙**: UI 구현 전 `src/commons/ui/`에 대응 가능한 컴포넌트가 있는지 먼저 확인한다. 기존 컴포넌트로 요구사항을 충족할 수 있으면 새로 구현하지 않고 기존 컴포넌트를 사용한다. 기존 컴포넌트가 없거나 요구사항을 충족하지 못할 때만 신규 구현한다.
 
 ### 6. 커밋
 
