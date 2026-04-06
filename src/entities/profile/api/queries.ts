@@ -1,6 +1,6 @@
 import { skipToken, useQuery } from '@tanstack/react-query';
 
-import { createClient } from '@/commons/api/supabase/client';
+import { apiClient } from '@/commons/lib';
 
 import { type Profile } from '../model/types';
 
@@ -10,18 +10,6 @@ import { profileKeys } from './queryKey';
 export function useProfileQuery(userId: string | null) {
   return useQuery({
     queryKey: profileKeys.detail(userId ?? ''),
-    queryFn: userId
-      ? async () => {
-          const supabase = createClient();
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', userId)
-            .single();
-
-          if (error) throw error;
-          return data as Profile;
-        }
-      : skipToken,
+    queryFn: userId ? () => apiClient.get<Profile>('/api/profile') : skipToken,
   });
 }

@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { createClient } from '@/commons/api/supabase/client';
-import { resolveDomainError } from '@/commons/lib';
+import { apiClient } from '@/commons/lib';
 
 import { fridgeItemKeys } from '@/entities/fridge-item';
 import { mealKeys, type MealType } from '@/entities/meal';
@@ -21,55 +20,12 @@ interface UpsertMealInput {
   dishes: MealEditorDishInput[];
 }
 
-function toSafePositiveAmount(value: unknown) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return 0;
-  if (amount <= 0) return 0;
-  return amount;
-}
-
-/**
- * @description 식단 도메인 DB 에러를 사용자 메시지로 변환합니다.
- */
-function resolveMealError(error: unknown) {
-  const domainError = resolveDomainError(error);
-  if (domainError) {
-    return new Error(domainError.message);
-  }
-
-  if (error instanceof Error) return error;
-  return new Error('식단 처리 중 오류가 발생했습니다.');
-}
-
 /** 식단 저장(해당 meal type 전체 교체) */
 export function useUpsertMealMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ householdId, date, type, dishes }: UpsertMealInput) => {
-      const supabase = createClient();
-
-      const normalizedDishes = dishes.map((dish, index) => ({
-        name: dish.name.trim() || '[이름 없음]',
-        sort_order: index,
-        ingredients: dish.ingredients
-          .map((ingredient) => ({
-            fridge_item_id: ingredient.fridge_item_id,
-            amount: toSafePositiveAmount(ingredient.amount),
-          }))
-          .filter((ingredient) => !!ingredient.fridge_item_id && ingredient.amount > 0),
-      }));
-
-      const { data, error } = await supabase.rpc('upsert_meal_with_usage', {
-        p_household_id: householdId,
-        p_date: date,
-        p_type: type,
-        p_dishes: normalizedDishes,
-      });
-      if (error) throw resolveMealError(error);
-
-      return data;
-    },
+    mutationFn: (input: UpsertMealInput) => apiClient.post('/api/meals', input),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: mealKeys.listByDate(variables.householdId, variables.date),
@@ -96,13 +52,7 @@ export function useDeleteMealMutation() {
       householdId: string;
       date: string;
     }) => {
-      const supabase = createClient();
-
-      const { error } = await supabase.rpc('delete_meal_with_usage_restore', {
-        p_meal_id: id,
-      });
-      if (error) throw resolveMealError(error);
-
+      await apiClient.delete(`/api/meals?id=${id}`);
       return { householdId, date };
     },
     onSuccess: ({ householdId, date }) => {
