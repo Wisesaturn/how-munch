@@ -38,7 +38,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data: meals, error: mealsError } = await supabase
     .from('meals')
-    .select('*, dishes(*, dish_ingredients(*))')
+    .select('*, dishes(*, ingredients:dish_ingredients(*))')
     .eq('household_id', householdId)
     .eq('date', date)
     .order('type', { ascending: true });
