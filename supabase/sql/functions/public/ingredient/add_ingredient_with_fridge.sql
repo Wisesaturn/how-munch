@@ -9,6 +9,7 @@ create function public.add_ingredient_with_fridge(
   p_name text,
   p_price integer default 0,
   p_store text default null,
+  p_brand text default null,
   p_category_id uuid default null,
   p_count numeric default 1,
   p_unit text default 'count',
@@ -49,6 +50,7 @@ begin
     name,
     price,
     store,
+    brand,
     category_id,
     count,
     unit
@@ -60,6 +62,7 @@ begin
     p_name,
     coalesce(p_price, 0),
     p_store,
+    p_brand,
     v_category_id,
     coalesce(p_count, 1),
     coalesce(p_unit, 'count')
