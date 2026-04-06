@@ -38,19 +38,22 @@ export function useUpsertMealMutation() {
   });
 }
 
-interface MoveDishInput {
-  dishId: string;
-  targetMealType: MealType;
+interface ReorderDishesInput {
   householdId: string;
   date: string;
+  updates: Array<{
+    dish_id: string;
+    sort_order: number;
+  }>;
 }
 
-/** 메뉴를 다른 끼니로 이동 */
-export function useMoveDishMutation() {
+/** 끼니 내 dish 순서(sort_order) 배치 업데이트 */
+export function useReorderDishesMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: MoveDishInput) => apiClient.patch('/api/meals/dishes', input),
+    mutationFn: ({ householdId, updates }: ReorderDishesInput) =>
+      apiClient.patch('/api/meals/dishes', { householdId, updates }),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: mealKeys.listByDate(variables.householdId, variables.date),
