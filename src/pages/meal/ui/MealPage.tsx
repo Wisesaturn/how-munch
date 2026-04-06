@@ -88,13 +88,13 @@ export function MealPage({ householdId }: MealPageProps) {
   };
 
   function onDragEnd(result: DropResult) {
-    const { source, destination, droppableId } = result;
+    const { source, destination } = result;
     if (!destination) return;
     if (source.index === destination.index && source.droppableId === destination.droppableId) {
       return;
     }
 
-    const mealType = droppableId as MealType;
+    const mealType = source.droppableId as MealType;
     const currentDishes = dishesMap.get(mealType) ?? [];
     const reordered = [...currentDishes];
     const [moved] = reordered.splice(source.index, 1);
