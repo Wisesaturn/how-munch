@@ -104,6 +104,19 @@ function replaceIngredientAmount(
   });
 }
 
+/**
+ * @description 드래그&드롭 결과를 반영해 dishes 배열의 순서를 변경합니다.
+ * source 인덱스에서 destination 인덱스로 요소를 이동합니다.
+ */
+function reorderDishes(dishes: EditorDish[], sourceIndex: number, destinationIndex: number) {
+  const result = [...dishes];
+  const [removed] = result.splice(sourceIndex, 1);
+  if (removed) {
+    result.splice(destinationIndex, 0, removed);
+  }
+  return result;
+}
+
 export {
   appendDish,
   appendIngredient,
@@ -112,4 +125,5 @@ export {
   renameDish,
   replaceIngredientAmount,
   replaceIngredientItem,
+  reorderDishes,
 };
