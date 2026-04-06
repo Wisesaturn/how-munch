@@ -32,6 +32,7 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
       {
         id: item.id,
         name: values.name,
+        brand: values.brand || null,
         category_id: values.category_id,
         unit: values.unit,
         is_subdivided: values.is_subdivided,
@@ -69,6 +70,7 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
           householdId={item.household_id}
           defaultValues={{
             name: item.name,
+            brand: item.brand ?? '',
             category_id: item.category_id,
             unit: item.unit,
             is_subdivided: item.is_subdivided,

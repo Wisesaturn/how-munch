@@ -10,6 +10,8 @@ export interface FridgeItem {
   household_id: string;
   /** 재료명 */
   name: string;
+  /** 브랜드명 (예: 풀무원, 오뚜기) — nullable, 선택 입력 */
+  brand: string | null;
   /** 현재 보유 총량 (트리거로 자동 계산) */
   total_count: number;
   /** 최대 보유 총량 (소진율 계산 기준) */

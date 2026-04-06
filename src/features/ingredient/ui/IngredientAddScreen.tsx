@@ -39,6 +39,7 @@ export function IngredientAddScreen({
         date: values.date,
         category_id: values.category_id,
         name: values.name,
+        brand: values.brand || null,
         count: values.count,
         unit: values.unit,
         store: values.store || null,
