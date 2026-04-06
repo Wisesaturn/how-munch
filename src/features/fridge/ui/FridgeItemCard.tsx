@@ -81,20 +81,32 @@ export function FridgeItemCard({
             className={cn('min-w-0 flex-1 text-left', isOutOfStock && 'cursor-not-allowed')}
           >
             <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-1.5">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
                 {categoryEmoji ? (
                   <span className="font-tossface shrink-0 text-base" aria-hidden>
                     {categoryEmoji}
                   </span>
                 ) : null}
-                <span
-                  className={cn(
-                    'truncate text-base font-normal',
-                    isOutOfStock ? 'text-gray-400' : 'text-gray-900',
-                  )}
-                >
-                  {item.name}
-                </span>
+                <div className="flex min-w-0 flex-col">
+                  {item.brand ? (
+                    <span
+                      className={cn(
+                        'truncate text-xs',
+                        isOutOfStock ? 'text-gray-300' : 'text-gray-400',
+                      )}
+                    >
+                      {item.brand}
+                    </span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      'truncate text-base font-normal',
+                      isOutOfStock ? 'text-gray-400' : 'text-gray-900',
+                    )}
+                  >
+                    {item.name}
+                  </span>
+                </div>
                 {hasExpiredBatch ? (
                   <AlertTriangle
                     className="size-4 shrink-0 text-red-500"

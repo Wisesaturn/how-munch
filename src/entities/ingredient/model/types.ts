@@ -11,6 +11,8 @@ export interface Ingredient {
   date: string;
   /** 품목명 (예: 삼겹살) */
   name: string;
+  /** 브랜드명 (예: 풀무원, 오뚜기) — nullable, 선택 입력 */
+  brand: string | null;
   /** 구매 가격 (원) */
   price: number;
   /** 구매처 (예: 이마트, 쿠팡) */

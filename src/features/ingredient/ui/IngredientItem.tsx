@@ -34,7 +34,12 @@ export function IngredientItem({
       onClick={() => onEdit(ingredient)}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-base font-normal text-gray-900">{ingredient.name}</span>
+        <div className="flex min-w-0 flex-col">
+          {ingredient.brand ? (
+            <span className="truncate text-xs text-gray-400">{ingredient.brand}</span>
+          ) : null}
+          <span className="truncate text-base font-normal text-gray-900">{ingredient.name}</span>
+        </div>
         <span className="ml-auto shrink-0 text-base font-semibold text-gray-900">
           {ingredient.price.toLocaleString()}원
         </span>
