@@ -1,8 +1,6 @@
 import { skipToken, useQuery } from '@tanstack/react-query';
-import { endOfMonth, format, startOfMonth } from 'date-fns';
-import { uniq } from 'es-toolkit';
 
-import { createClient } from '@/commons/api/supabase/client';
+import { apiClient } from '@/commons/lib';
 
 import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
 
@@ -11,24 +9,12 @@ export function useIngredientsQuery(householdId: string | null, year: number, mo
   return useQuery({
     queryKey: ingredientKeys.list(householdId ?? '', year, month),
     queryFn: householdId
-      ? async () => {
-          const supabase = createClient();
-          const target = new Date(year, month - 1);
-          const start = format(startOfMonth(target), 'yyyy-MM-dd');
-          const end = format(endOfMonth(target), 'yyyy-MM-dd');
-
-          const { data, error } = await supabase
-            .from('ingredients')
-            .select('*')
-            .eq('household_id', householdId)
-            .is('deleted_at', null)
-            .gte('date', start)
-            .lte('date', end)
-            .order('date', { ascending: false });
-
-          if (error) throw error;
-          return data as Ingredient[];
-        }
+      ? () =>
+          apiClient.get<Ingredient[]>('/api/ingredients', {
+            householdId,
+            year: String(year),
+            month: String(month),
+          })
       : skipToken,
   });
 }
@@ -38,19 +24,7 @@ export function useStoreNamesQuery(householdId: string | null) {
   return useQuery({
     queryKey: ingredientKeys.stores(householdId ?? ''),
     queryFn: householdId
-      ? async () => {
-          const supabase = createClient();
-
-          const { data, error } = await supabase
-            .from('ingredients')
-            .select('store')
-            .eq('household_id', householdId)
-            .is('deleted_at', null)
-            .not('store', 'is', null);
-
-          if (error) throw error;
-          return uniq((data ?? []).map((d) => d.store).filter(Boolean) as string[]);
-        }
+      ? () => apiClient.get<string[]>('/api/ingredients/stores', { householdId })
       : skipToken,
   });
 }
