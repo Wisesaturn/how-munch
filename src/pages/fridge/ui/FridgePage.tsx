@@ -97,7 +97,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 overflow-x-clip px-4 pb-5">
+    <div className="flex flex-col gap-4 overflow-x-hidden px-4 pb-5">
       {/* 만료 임박 배너 */}
       {!searchValue.trim() && <ExpiryBanner items={items} />}
 
