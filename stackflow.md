@@ -240,6 +240,80 @@ Screen 컴포넌트 내부에서 `useActions`를 직접 호출하지 않는다.
 
 ---
 
+## 콜백 전달 패턴 (Activity → 검색 화면 → Activity)
+
+Activity params는 URL history에 직렬화되므로 **함수를 param으로 넘길 수 없다**.
+선택 결과를 이전 Activity로 돌려줘야 하는 화면(검색, 선택 등)은 모듈 레벨 단일 변수로 콜백을 보관한다.
+
+### 구조
+
+```
+호출 Activity                           ProductNameSearchActivity
+─────────────────────────────────────────────────────────────────
+1. setPendingCallback(onSelect)
+2. push('ProductNameSearchActivity',
+        { fieldLabel, suggestions })  →  params 수신
+                                         onSelectName = resolvePending + pop()
+                                         onClose      = clearPending  + pop()
+                                         ↓
+                                         <ProductNameSearchScreen
+                                           onSelectName={...}
+                                           onClose={...}
+                                         />
+```
+
+### 구현 예시
+
+```tsx
+// 호출 Activity (StackFlow.tsx)
+function FooActivity({ params }) {
+  const { pop, push } = useActions();
+
+  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+    setPendingProductNameCallback(onSelect);   // 콜백 등록
+    push('ProductNameSearchActivity', {
+      fieldLabel: '품목명',
+      suggestions: params.suggestions ?? [],
+    });
+  }
+
+  return <FooScreen onClose={pop} onOpenProductNameSearch={openProductNameSearch} />;
+}
+
+// ProductNameSearchActivity (StackFlow.tsx)
+function ProductNameSearchActivity({ params }) {
+  const { pop } = useActions();
+
+  function handleSelectName(name: string) {
+    resolvePendingProductNameCallback(name);  // 콜백 실행 + 초기화
+    pop();
+  }
+
+  function handleClose() {
+    clearPendingProductNameCallback();        // 콜백 초기화 (취소)
+    pop();
+  }
+
+  return (
+    <ProductNameSearchScreen
+      onClose={handleClose}
+      onSelectName={handleSelectName}
+      fieldLabel={params.fieldLabel}
+      suggestions={params.suggestions}
+    />
+  );
+}
+```
+
+### 규칙
+
+- 콜백 저장소는 `src/features/ingredient/model/productNameSearchStore.ts` 사용
+- 검색 Activity는 동시에 하나만 열리므로 단일 변수로 충분하다 (Map/UUID 불필요)
+- `ProductNameSearchScreen`은 `useActions`를 직접 호출하지 않는다
+- 선택(`onSelectName`)과 취소(`onClose`) 모두 콜백 초기화 후 `pop()`을 호출한다
+
+---
+
 ## 새 Activity 추가 체크리스트
 
 1. - [ ] `src/features/{domain}/ui/{Feature}Screen.tsx` 생성
