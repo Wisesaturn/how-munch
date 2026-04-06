@@ -39,6 +39,13 @@ export function ProductNameSearchScreen({
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(
+    function cleanupCallbackOnUnmount() {
+      return () => unregisterProductNameSelectCallback(callbackId);
+    },
+    [callbackId],
+  );
+
   const trimmedQuery = query.trim();
 
   const filteredSuggestions = trimmedQuery
