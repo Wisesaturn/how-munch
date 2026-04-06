@@ -78,7 +78,7 @@ function MealIngredientRow({
             type="button"
             onClick={() => openFridgeItemSearch(ingredientSelectValue, onChangeIngredientItem)}
             className={cn(
-              'border-input bg-background flex h-10 min-w-0 flex-1 items-center justify-between rounded-md border px-3 py-2 text-sm',
+              'border-input flex h-10 min-w-0 flex-1 items-center justify-between rounded-md border bg-white px-3 py-2 text-sm',
               'hover:bg-accent transition-colors',
               !selectedIngredient && 'text-muted-foreground',
             )}
