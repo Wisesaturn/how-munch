@@ -64,6 +64,10 @@ export function FridgePage({ householdId }: FridgePageProps) {
     stackFlowActions.push('FridgeItemAddActivity', { householdId });
   };
 
+  const openFridgeExpiryList = () => {
+    stackFlowActions.push('FridgeExpiryListActivity', { items });
+  };
+
   const openFridgeItemEditSheet = (item: FridgeItemWithBatches) => {
     stackFlowActions.push('FridgeItemEditActivity', { item });
   };
@@ -99,7 +103,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
   return (
     <div className="flex max-w-[430px] flex-col gap-4 overflow-x-hidden px-4 pb-5">
       {/* 만료 임박 배너 */}
-      {!searchValue.trim() && <ExpiryBanner items={items} />}
+      {!searchValue.trim() && <ExpiryBanner items={items} onPress={openFridgeExpiryList} />}
 
       {/* 검색 */}
       <FridgeSearch value={searchValue} onChange={changeSearchValue} />
