@@ -45,6 +45,7 @@ interface FridgeItemAddScreenProps {
 interface FridgeItemCreateFormValues {
   category_id: string;
   name: string;
+  brand: string;
   quantity: number;
   unit: IngredientUnit;
   is_subdivided: boolean;
@@ -64,6 +65,7 @@ function createFridgeItemCreateFormSchema(categoryIds: string[]) {
         .trim()
         .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
         .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
+      brand: z.string().max(30, ERROR_MSG.RANGE.MAX({ fieldName: '브랜드', max: '30자' })),
       quantity: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
       unit: z.enum(['count', 'g', 'kg']),
       is_subdivided: z.boolean(),
@@ -115,6 +117,7 @@ function createDefaultValues(today: Date): FridgeItemCreateFormValues {
   return {
     category_id: '',
     name: '',
+    brand: '',
     quantity: 1,
     unit: 'count',
     is_subdivided: false,
@@ -161,6 +164,7 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
           item: {
             household_id: householdId,
             name: normalizedName,
+            brand: value.brand.trim() || null,
             category_id: value.category_id,
             unit: value.unit,
             is_subdivided: value.is_subdivided,
@@ -217,6 +221,24 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
                     type="text"
                     placeholder="예: 감자"
                     value={field.state.value}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                  />
+                </Form.Control>
+                <Form.Error />
+              </Form.Field>
+            )}
+          </form.Field>
+
+          <form.Field name="brand">
+            {(field) => (
+              <Form.Field field={field}>
+                <Form.Label>브랜드</Form.Label>
+                <Form.Control>
+                  <Input
+                    type="text"
+                    placeholder="예: 풀무원"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                   />
                 </Form.Control>

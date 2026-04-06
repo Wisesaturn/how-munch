@@ -72,15 +72,66 @@ REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 gh api repos/$REPO/pulls/{PR번호}/reviews \
   --method POST \
   --field commit_id="$HEAD_SHA" \
-  --field body="## 🤖 Code Review by Claude\n\n{전체 요약}" \
+  --field body="## Code Review\n\n{전체 요약}" \
   --field event="COMMENT" \
   --field "comments[][path]"="{파일1}" \
   --field "comments[][line]"={라인1} \
-  --field "comments[][body]"="{코멘트1}" \
+  --field "comments[][body]"="{코멘트1 — 아래 형식 준수}" \
   --field "comments[][path]"="{파일2}" \
   --field "comments[][line]"={라인2} \
-  --field "comments[][body]"="{코멘트2}"
+  --field "comments[][body]"="{코멘트2 — 아래 형식 준수}"
 ```
 
 > `line`은 diff 내 변경된 라인(+로 표시된 라인)만 지정 가능하다.
 > 변경되지 않은 라인은 제외하고, 전체 요약은 Review body에 포함한다.
+
+### 우선순위 시스템 (P1~P5)
+
+각 line comment body는 **반드시** 맨 위에 GitHub Alert 블록으로 우선순위를 표시한다.
+
+| 우선순위 | Alert 타입 | 의미 |
+|---------|-----------|------|
+| **P1** | `[!CAUTION]` | 블로킹 — 데이터 손실·보안·크래시·머지 불가 |
+| **P2** | `[!WARNING]` | 중요 — 주요 버그·아키텍처 결함 (머지 전 수정 권장) |
+| **P3** | `[!IMPORTANT]` | 보통 — 코드 품질·에러 처리·테스트 부족 |
+| **P4** | `[!NOTE]` | 낮음 — 스타일·최적화·문서 개선 |
+| **P5** | `[!TIP]` | 사소 — 닛픽·선택적 제안 |
+
+**line comment body 형식:**
+
+```
+> [!CAUTION]
+> **P1** | 블로킹
+
+{코멘트 내용}
+```
+
+```
+> [!WARNING]
+> **P2** | 중요
+
+{코멘트 내용}
+```
+
+```
+> [!IMPORTANT]
+> **P3** | 보통
+
+{코멘트 내용}
+```
+
+```
+> [!NOTE]
+> **P4** | 낮음
+
+{코멘트 내용}
+```
+
+```
+> [!TIP]
+> **P5** | 사소
+
+{코멘트 내용}
+```
+
+> ⚠️ PR 본문, 리뷰 body, line comment 등 모든 출력에 "🤖 Generated with Claude Code" 또는 Claude 귀속 푸터를 절대 추가하지 않는다.

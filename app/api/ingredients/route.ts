@@ -45,6 +45,7 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
     p_name: body.name,
     p_price: body.price ?? 0,
     p_store: body.store ?? null,
+    p_brand: body.brand ?? null,
     p_category_id: body.category_id,
     p_count: body.count ?? 1,
     p_unit: body.unit ?? 'count',

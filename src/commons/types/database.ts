@@ -159,6 +159,7 @@ export interface Database {
           user_id: string;
           date: string;
           name: string;
+          brand: string | null;
           price: number;
           store: string | null;
           category_id: string;
@@ -176,6 +177,7 @@ export interface Database {
           user_id: string;
           date: string;
           name: string;
+          brand?: string | null;
           price?: number;
           store?: string | null;
           category_id?: string;
@@ -193,6 +195,7 @@ export interface Database {
           user_id?: string;
           date?: string;
           name?: string;
+          brand?: string | null;
           price?: number;
           store?: string | null;
           category_id?: string;
@@ -219,6 +222,7 @@ export interface Database {
           id: string;
           household_id: string;
           name: string;
+          brand: string | null;
           total_count: number;
           max_count: number;
           unit: 'count' | 'g' | 'kg';
@@ -233,6 +237,7 @@ export interface Database {
           id?: string;
           household_id: string;
           name: string;
+          brand?: string | null;
           total_count?: number;
           max_count?: number;
           unit?: 'count' | 'g' | 'kg';
@@ -247,6 +252,7 @@ export interface Database {
           id?: string;
           household_id?: string;
           name?: string;
+          brand?: string | null;
           total_count?: number;
           max_count?: number;
           unit?: 'count' | 'g' | 'kg';
@@ -573,6 +579,7 @@ export interface Database {
         Args: {
           p_household_id: string;
           p_name: string;
+          p_brand?: string | null;
           p_price?: number;
           p_store?: string | null;
           p_category_id?: string;
@@ -586,6 +593,7 @@ export interface Database {
           user_id: string;
           date: string;
           name: string;
+          brand: string | null;
           price: number;
           store: string | null;
           category_id: string;
@@ -606,6 +614,7 @@ export interface Database {
         Args: {
           p_household_id: string;
           p_name: string;
+          p_brand?: string | null;
           p_category_id?: string;
           p_unit?: string;
           p_is_subdivided?: boolean;
@@ -619,6 +628,7 @@ export interface Database {
           id: string;
           household_id: string;
           name: string;
+          brand: string | null;
           total_count: number;
           max_count: number;
           unit: 'count' | 'g' | 'kg';
@@ -717,6 +727,7 @@ export interface Database {
           user_id: string;
           date: string;
           name: string;
+          brand: string | null;
           price: number;
           store: string | null;
           category_id: string;
@@ -746,6 +757,10 @@ export interface Database {
       upsert_meal_with_usage: {
         Args: { p_household_id: string; p_date: string; p_type: string; p_dishes?: Json };
         Returns: string;
+      };
+      upsert_push_subscription_by_user: {
+        Args: { p_user_id: string; p_endpoint: string; p_p256dh: string; p_auth: string };
+        Returns: void;
       };
     };
     Enums: {

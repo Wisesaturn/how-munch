@@ -87,14 +87,26 @@ export function FridgeItemCard({
                     {categoryEmoji}
                   </span>
                 ) : null}
-                <span
-                  className={cn(
-                    'truncate text-base font-normal',
-                    isOutOfStock ? 'text-gray-400' : 'text-gray-900',
-                  )}
-                >
-                  {item.name}
-                </span>
+                <div className="flex min-w-0 flex-col">
+                  {item.brand ? (
+                    <span
+                      className={cn(
+                        'truncate text-xs',
+                        isOutOfStock ? 'text-gray-300' : 'text-gray-400',
+                      )}
+                    >
+                      {item.brand}
+                    </span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      'truncate text-base font-normal',
+                      isOutOfStock ? 'text-gray-400' : 'text-gray-900',
+                    )}
+                  >
+                    {item.name}
+                  </span>
+                </div>
                 {hasExpiredBatch ? (
                   <AlertTriangle
                     className="size-4 shrink-0 text-red-500"

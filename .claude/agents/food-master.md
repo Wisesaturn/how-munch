@@ -109,9 +109,22 @@ git push -u origin "$BRANCH"
 
 ### 9. 사용자 알림
 
+> ⚠️ PR 본문, 커밋 메시지, 코드 리뷰, 코멘트 등 모든 출력에 "🤖 Generated with Claude Code" 또는 Claude 귀속 푸터를 절대 추가하지 않는다.
+
 PR 생성 완료 후 아래 내용을 보고한다.
 
 - PR URL
-- Worktree 경로 (`.claude/worktrees/{branch-dir}`)
 - 작업 요약 (구현 내용, 커밋 수, 변경 파일 수)
 - 자체 리뷰 결과 요약 (발견된 이슈 및 수정 여부)
+
+### 10. Worktree 정리
+
+사용자 알림 완료 후 worktree를 제거한다. **브랜치는 유지하고 worktree만 삭제한다.**
+
+```bash
+# 프로젝트 루트 기준으로 실행 (worktree 디렉토리 내에서 실행하면 안 됨)
+git worktree remove "$WORKTREE_PATH"
+```
+
+- `git worktree remove`는 기본적으로 변경 사항이 없는 경우만 삭제한다 (커밋 완료 후 실행이므로 정상 동작)
+- 삭제 후 `git worktree list`로 제거 확인
