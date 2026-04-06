@@ -2,12 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  type DropResult,
-} from '@hello-pangea/dnd';
+import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd';
 import { addDays, format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -17,6 +12,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { useConditionalEffect } from 'react-simplikit';
+
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
 import { cn } from '@/commons/lib';
@@ -44,7 +40,10 @@ type MealDishesMap = Map<MealType, Dish[]>;
 function buildSortedDishesMap(meals: Meal[]): MealDishesMap {
   const map = new Map<MealType, Dish[]>();
   for (const meal of meals) {
-    map.set(meal.type, [...meal.dishes].sort((a, b) => a.sort_order - b.sort_order));
+    map.set(
+      meal.type,
+      [...meal.dishes].sort((a, b) => a.sort_order - b.sort_order),
+    );
   }
   return map;
 }
@@ -78,7 +77,7 @@ export function MealPage({ householdId }: MealPageProps) {
       setLocalDishesMap(new Map());
     },
     [dateKey],
-    (prev, next) => prev[0] !== next[0],
+    (prev, next) => prev?.[0] !== next?.[0],
   );
 
   const reorderMutation = useReorderDishesMutation();
