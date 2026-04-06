@@ -88,6 +88,7 @@ begin
     insert into public.fridge_items (
       household_id,
       name,
+      brand,
       category_id,
       unit,
       total_count,
@@ -98,6 +99,7 @@ begin
     values (
       v_ingredient.household_id,
       v_ingredient.name,
+      v_ingredient.brand,
       v_ingredient.category_id,
       v_ingredient.unit,
       v_ingredient.count,
@@ -232,6 +234,7 @@ begin
     insert into public.fridge_items (
       household_id,
       name,
+      brand,
       category_id,
       unit,
       total_count,
@@ -242,6 +245,7 @@ begin
     values (
       v_ingredient.household_id,
       v_ingredient.name,
+      v_ingredient.brand,
       v_ingredient.category_id,
       v_ingredient.unit,
       v_ingredient.count,
