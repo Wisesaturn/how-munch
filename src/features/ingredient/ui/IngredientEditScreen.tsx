@@ -15,12 +15,14 @@ interface IngredientEditScreenProps {
   onClose: () => void;
   ingredient: Ingredient;
   householdId: string;
+  onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
 }
 
 export function IngredientEditScreen({
   onClose,
   ingredient,
   householdId,
+  onOpenProductNameSearch,
 }: IngredientEditScreenProps) {
   const updateMutation = useUpdateIngredientMutation();
   const deleteMutation = useDeleteIngredientMutation();
@@ -91,6 +93,7 @@ export function IngredientEditScreen({
           isSubmitting={updateMutation.isPending}
           isDeleting={deleteMutation.isPending}
           disableUnitSelect
+          onOpenProductNameSearch={onOpenProductNameSearch}
         />
       </div>
       <CTAConfirmButton>

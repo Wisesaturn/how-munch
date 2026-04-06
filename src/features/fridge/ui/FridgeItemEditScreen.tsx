@@ -13,10 +13,15 @@ import { type FridgeItemFormValues, FridgeItemForm } from './FridgeItemForm';
 interface FridgeItemEditScreenProps {
   onClose: () => void;
   item: FridgeItemWithBatches;
+  onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
 }
 
 /** 냉장고 아이템 메타 수정 화면 */
-export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProps) {
+export function FridgeItemEditScreen({
+  onClose,
+  item,
+  onOpenProductNameSearch,
+}: FridgeItemEditScreenProps) {
   const mutation = useUpdateFridgeItemMutation();
   const deleteMutation = useDeleteFridgeItemMutation();
   const formId = `fridge-item-edit-form-${item.id}`;
@@ -79,6 +84,7 @@ export function FridgeItemEditScreen({ onClose, item }: FridgeItemEditScreenProp
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}
           disableUnitSelect={disableUnitSelect}
+          onOpenProductNameSearch={onOpenProductNameSearch}
         />
       </div>
       <CTAConfirmButton>
