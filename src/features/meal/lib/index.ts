@@ -17,4 +17,5 @@ export {
   renameDish,
   replaceIngredientAmount,
   replaceIngredientItem,
+  reorderDishes,
 } from './dishes';
