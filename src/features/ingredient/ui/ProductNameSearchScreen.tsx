@@ -5,8 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Search, X } from 'lucide-react';
 
-import { cn } from '@/commons/lib';
-import { Badge } from '@/commons/ui';
+import { Badge, InputGroup } from '@/commons/ui';
 
 interface ProductNameSearchScreenProps {
   /** 화면 닫기 핸들러 (Activity에서 주입) */
@@ -23,7 +22,7 @@ interface ProductNameSearchScreenProps {
 
 /** 상품명 검색 전용 Screen — onClose/onSelectName을 Activity에서 주입받아 동작한다 */
 export function ProductNameSearchScreen({
-  onClose,
+  onClose: _onClose,
   onSelectName,
   fieldLabel = '상품명',
   suggestions = [],
@@ -63,21 +62,17 @@ export function ProductNameSearchScreen({
       className="pointer-events-auto"
       appBar={{
         title: `${fieldLabel} 검색`,
-        renderRight: () => (
-          <button type="button" onClick={onClose} className="text-sm font-medium text-gray-500">
-            취소
-          </button>
-        ),
       }}
     >
       <div className="flex flex-col gap-0">
         {/* 검색 입력 */}
         <div className="sticky top-0 z-10 bg-white px-4 pt-3 pb-2">
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <input
+          <InputGroup>
+            <InputGroup.Addon align="inline-start">
+              <Search className="size-4" />
+            </InputGroup.Addon>
+            <InputGroup.Input
               ref={inputRef}
-              type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -87,32 +82,26 @@ export function ProductNameSearchScreen({
                 }
               }}
               placeholder={`${fieldLabel}을 입력하세요`}
-              className={cn(
-                'border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring w-full rounded-md border py-2 pr-9 pl-9 text-sm',
-                'focus-visible:ring-1 focus-visible:outline-none',
-              )}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck="false"
             />
             {query && (
-              <button
-                type="button"
-                onClick={clearQuery}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-0.5 transition-colors"
-              >
-                <X className="size-4" />
-              </button>
+              <InputGroup.Addon align="inline-end" className="border-l-0 px-1">
+                <InputGroup.Button type="button" onClick={clearQuery}>
+                  <X className="size-4" />
+                </InputGroup.Button>
+              </InputGroup.Addon>
             )}
-          </div>
+          </InputGroup>
 
           {/* 직접 입력값으로 선택 */}
-          {trimmedQuery && (
+          {trimmedQuery && uniqueSuggestions.length === 0 && (
             <button
               type="button"
               onClick={submitQuery}
-              className="mt-2 w-full rounded-md border border-dashed border-gray-300 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+              className="mt-2 w-full rounded-md border border-dashed border-gray-300 bg-white py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
             >
               <span className="px-3">
                 <span className="text-gray-400">직접 입력: </span>
