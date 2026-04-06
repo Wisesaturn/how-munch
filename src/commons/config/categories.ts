@@ -2,6 +2,9 @@ export const CATEGORIES = [
   { id: 'meat', label: '육류', emoji: '🥩' },
   { id: 'fish', label: '수산물', emoji: '🐟' },
   { id: 'veggie', label: '채소', emoji: '🥬' },
+  { id: 'mushroom', label: '버섯', emoji: '🍄' },
+  { id: 'egg', label: '계란', emoji: '🥚' },
+  { id: 'tofu_legume', label: '두부/콩류', emoji: '🫘' },
   { id: 'fruit', label: '과일', emoji: '🍎' },
   { id: 'dairy', label: '유제품', emoji: '🥛' },
   { id: 'grain', label: '곡류', emoji: '🌾' },
@@ -10,9 +13,13 @@ export const CATEGORIES = [
   { id: 'frozen', label: '냉동식품', emoji: '🧊' },
   { id: 'canned', label: '통조림/캔', emoji: '🥫' },
   { id: 'seasoning', label: '양념', emoji: '🧂' },
+  { id: 'sauce', label: '소스/드레싱', emoji: '🫙' },
+  { id: 'oil', label: '기름/식초', emoji: '🫗' },
   { id: 'processed', label: '가공식품', emoji: '🧀' },
+  { id: 'kimchi', label: '김치/반찬', emoji: '🥘' },
   { id: 'snack', label: '간식', emoji: '🍪' },
   { id: 'drink', label: '음료', emoji: '🥤' },
+  { id: 'health', label: '건강식품', emoji: '💊' },
   { id: 'other', label: '기타', emoji: '📦' },
 ] as const;
 

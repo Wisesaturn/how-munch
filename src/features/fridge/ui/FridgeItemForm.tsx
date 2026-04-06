@@ -18,6 +18,7 @@ import {
 
 export interface FridgeItemFormValues {
   name: string;
+  brand: string;
   category_id: string;
   unit: IngredientUnit;
   is_subdivided: boolean;
@@ -43,6 +44,7 @@ function createFridgeItemFormSchema(categoryIds: string[]) {
       .trim()
       .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '재료명' }))
       .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
+    brand: z.string().max(30, ERROR_MSG.RANGE.MAX({ fieldName: '브랜드', max: '30자' })),
     category_id: z.string().refine((value) => categoryIds.includes(value), {
       message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
     }),
@@ -51,7 +53,7 @@ function createFridgeItemFormSchema(categoryIds: string[]) {
   });
 }
 
-/** 냉장고 아이템 폼 (name, category, unit, is_subdivided) */
+/** 냉장고 아이템 폼 (name, brand, category, unit, is_subdivided) */
 export function FridgeItemForm({
   id,
   formId,
@@ -80,6 +82,7 @@ export function FridgeItemForm({
   const form = useForm({
     defaultValues: {
       name: defaultValues?.name ?? '',
+      brand: defaultValues?.brand ?? '',
       category_id: defaultCategoryId,
       unit: defaultValues?.unit ?? ('count' as const),
       is_subdivided: defaultValues?.is_subdivided ?? false,
@@ -113,6 +116,24 @@ export function FridgeItemForm({
               <Input
                 type="text"
                 placeholder="예: 감자"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            </Form.Control>
+            <Form.Error />
+          </Form.Field>
+        )}
+      </form.Field>
+
+      <form.Field name="brand">
+        {(field) => (
+          <Form.Field field={field}>
+            <Form.Label>브랜드</Form.Label>
+            <Form.Control>
+              <Input
+                type="text"
+                placeholder="예: 풀무원"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}

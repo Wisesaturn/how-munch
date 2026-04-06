@@ -134,4 +134,4 @@ gh api repos/$REPO/pulls/{PR번호}/reviews \
 {코멘트 내용}
 ```
 
-> ⚠️ 리뷰 body 및 line comment에 "🤖 Generated with Claude Code" 또는 Claude 귀속 푸터를 절대 추가하지 않는다.
+> ⚠️ PR 본문, 리뷰 body, line comment 등 모든 출력에 "🤖 Generated with Claude Code" 또는 Claude 귀속 푸터를 절대 추가하지 않는다.

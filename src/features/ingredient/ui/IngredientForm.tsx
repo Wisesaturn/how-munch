@@ -29,6 +29,7 @@ export interface IngredientFormValues {
   date: string;
   category_id: string;
   name: string;
+  brand: string;
   count: number;
   unit: IngredientUnit;
   store: string;
@@ -64,6 +65,7 @@ function createIngredientFormSchema(categoryIds: string[]) {
         .trim()
         .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '품목명' }))
         .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: '20자' })),
+      brand: z.string().max(30, ERROR_MSG.RANGE.MAX({ fieldName: '브랜드', max: '30자' })),
       count: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
       unit: z.enum(['count', 'g', 'kg']),
       store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
@@ -136,6 +138,7 @@ export function IngredientForm({
       date: defaultValues?.date ?? format(new Date(), 'yyyy-MM-dd'),
       category_id: defaultCategoryId,
       name: defaultValues?.name ?? '',
+      brand: defaultValues?.brand ?? '',
       count: defaultValues?.count ?? 1,
       unit: initialUnit,
       store: defaultValues?.store ?? '',
@@ -197,6 +200,24 @@ export function IngredientForm({
             <Form.Control>
               <Input
                 placeholder="예: 삼겹살"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            </Form.Control>
+            <Form.Error />
+          </Form.Field>
+        )}
+      </form.Field>
+
+      {/* 브랜드 */}
+      <form.Field name="brand">
+        {(field) => (
+          <Form.Field field={field}>
+            <Form.Label>브랜드</Form.Label>
+            <Form.Control>
+              <Input
+                placeholder="예: 풀무원"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}

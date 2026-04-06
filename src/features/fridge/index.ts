@@ -23,3 +23,4 @@ export { FridgeBatchAddBottomSheet } from './ui/FridgeBatchAddBottomSheet';
 export { FridgeBatchEditScreen } from './ui/FridgeBatchEditScreen';
 export { FridgeFilterSettingsScreen } from './ui/FridgeFilterSettingsScreen';
 export { FridgeSearch } from './ui/FridgeSearch';
+export { FridgeCategoryFilter, ALL_CATEGORY_ID } from './ui/FridgeCategoryFilter';

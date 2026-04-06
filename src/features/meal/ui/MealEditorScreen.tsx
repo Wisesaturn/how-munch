@@ -1,5 +1,6 @@
 'use client';
 
+import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { useForm } from '@tanstack/react-form';
 import { format, parseISO } from 'date-fns';
@@ -14,7 +15,7 @@ import { type Meal, type MealType } from '@/entities/meal';
 
 import { useDeleteMealMutation, useUpsertMealMutation } from '../api/mutations';
 import { useFridgeItemsForMealQuery } from '../api/queries';
-import { appendDish, createFridgeStockInfoById } from '../lib';
+import { appendDish, createFridgeStockInfoById, reorderDishes } from '../lib';
 import {
   createInUseStockAmountByItemId,
   createMealEditorDishesSchema,
@@ -152,27 +153,51 @@ export function MealEditorScreen({
     <AppScreen className="pointer-events-auto" appBar={{ title: appBarTitle }}>
       <div className="space-y-3 px-4 pt-4 pb-28">
         <form.Field name="dishes">
-          {(field) => (
-            <MealEditorProvider
-              dishes={field.state.value}
-              fridgeItems={fridgeItems}
-              inUseStockAmountByItemId={inUseStockAmountByItemId}
-              changeDishes={field.handleChange}
-            >
-              {field.state.value.map((_, dishIndex) => (
-                <MealDishCard key={`${type}-dish-${dishIndex}`} dishIndex={dishIndex} />
-              ))}
+          {(field) => {
+            function onDragEnd(result: DropResult) {
+              if (!result.destination) return;
+              if (result.destination.index === result.source.index) return;
 
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => field.handleChange(appendDish(field.state.value))}
-              >
-                <Plus className="size-4" /> 메뉴 추가
-              </Button>
-            </MealEditorProvider>
-          )}
+              field.handleChange(
+                reorderDishes(field.state.value, result.source.index, result.destination.index),
+              );
+            }
+
+            return (
+              <DragDropContext onDragEnd={onDragEnd}>
+                <MealEditorProvider
+                  dishes={field.state.value}
+                  fridgeItems={fridgeItems}
+                  inUseStockAmountByItemId={inUseStockAmountByItemId}
+                  changeDishes={field.handleChange}
+                >
+                  <Droppable droppableId="meal-dishes">
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="space-y-3"
+                      >
+                        {field.state.value.map((_, dishIndex) => (
+                          <MealDishCard key={`${type}-dish-${dishIndex}`} dishIndex={dishIndex} />
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => field.handleChange(appendDish(field.state.value))}
+                  >
+                    <Plus className="size-4" /> 메뉴 추가
+                  </Button>
+                </MealEditorProvider>
+              </DragDropContext>
+            );
+          }}
         </form.Field>
       </div>
       {isEditMode ? (

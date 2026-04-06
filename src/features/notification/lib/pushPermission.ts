@@ -103,17 +103,13 @@ export async function syncPushPermissionAndSubscription({
     };
   }
 
-  await supabase.from('notification_push_subscriptions').upsert(
-    {
-      user_id: userId,
-      endpoint: subscription.endpoint,
-      p256dh,
-      auth,
-      is_active: true,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'endpoint' },
-  );
+  // 토큰(endpoint) 변경 시에도 최신 구독으로 안전하게 교체되도록 RPC 사용
+  await supabase.rpc('upsert_push_subscription_by_user', {
+    p_user_id: userId,
+    p_endpoint: subscription.endpoint,
+    p_p256dh: p256dh,
+    p_auth: auth,
+  });
 
   return {
     status: 'granted',

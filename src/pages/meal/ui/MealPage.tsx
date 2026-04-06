@@ -10,14 +10,13 @@ import {
   ChevronRight as ChevronRightSmall,
   UtensilsCrossed,
 } from 'lucide-react';
-
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
 import { Badge, Button, Card, EmptyState } from '@/commons/ui';
 
 import { type Meal, type MealType } from '@/entities/meal';
 
-import { useMealsByDateQuery } from '@/features/meal';
+import { MealDishMoveButton, useMealsByDateQuery } from '@/features/meal';
 
 interface MealPageProps {
   householdId: string;
@@ -110,9 +109,17 @@ export function MealPage({ householdId }: MealPageProps) {
                           <li key={dish.id} className="rounded-md bg-gray-50 px-3 py-2 text-sm">
                             <div className="flex items-center justify-between">
                               <p className="font-medium">{dish.name}</p>
-                              {dish.ingredients.length > 0 && (
-                                <Badge variant="secondary">재료 {dish.ingredients.length}</Badge>
-                              )}
+                              <div className="flex items-center gap-1.5">
+                                {dish.ingredients.length > 0 && (
+                                  <Badge variant="secondary">재료 {dish.ingredients.length}</Badge>
+                                )}
+                                <MealDishMoveButton
+                                  dishId={dish.id}
+                                  currentMealType={type}
+                                  householdId={householdId}
+                                  date={dateKey}
+                                />
+                              </div>
                             </div>
                           </li>
                         ))}

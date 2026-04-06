@@ -23,6 +23,7 @@ const DOMAIN_ERROR_CODE = {
   // MEL: 식단(Meal) 도메인
   MEAL_STOCK_INSUFFICIENT: 'MEL_001',
   MEAL_NOT_FOUND: 'MEL_002',
+  MEAL_DISH_NOT_FOUND: 'MEL_003',
 
   // ING: 재료(Ingredient) 도메인
   INGREDIENT_CATEGORY_OTHER_DELETE_NOT_ALLOWED: 'ING_001',
@@ -73,6 +74,7 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   // MEL
   MEL_001: '냉장고 재고가 부족합니다. 식단 재료 수량을 확인해 주세요.',
   MEL_002: '식단을 찾을 수 없습니다.',
+  MEL_003: '메뉴를 찾을 수 없습니다.',
 
   // ING
   ING_001: '기본 카테고리(기타)는 삭제할 수 없습니다.',
@@ -101,6 +103,7 @@ const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
   H0003: 'HOUSEHOLD_INVITE_MAX_USES_REACHED',
   M0001: 'MEAL_STOCK_INSUFFICIENT',
   M0002: 'MEAL_NOT_FOUND',
+  M0003: 'MEAL_DISH_NOT_FOUND',
   I0001: 'INGREDIENT_CATEGORY_OTHER_DELETE_NOT_ALLOWED',
   I0002: 'INGREDIENT_CATEGORY_OTHER_NOT_FOUND',
   I0003: 'INGREDIENT_CATEGORY_ID_NOT_FOUND',

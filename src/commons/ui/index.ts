@@ -8,6 +8,7 @@ export { Button, buttonVariants } from './Button';
 export { Calendar } from './Calendar';
 export { Card } from './Card';
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
+export { Chip, ChipRow, chipVariants } from './Chip';
 export { CTAButton, CTAConfirmButton } from './CTAButton';
 export { Command } from './Command';
 export { ComboBox, type ComboBoxProps } from './ComboBox';
