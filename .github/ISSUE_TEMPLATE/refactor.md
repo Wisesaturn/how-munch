@@ -2,7 +2,7 @@
 name: ♻️ 리팩토링
 about: 외부 동작은 동일하게 유지하면서 내부 구조·코드 품질을 개선합니다
 title: ''
-labels: ''
+labels: 'refactor'
 assignees: ''
 ---
 

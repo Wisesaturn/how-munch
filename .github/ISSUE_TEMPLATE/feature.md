@@ -2,7 +2,7 @@
 name: ✨ 기능 구현
 about: 새로운 기능이나 개선사항을 구현합니다
 title: ''
-labels: ''
+labels: 'feature'
 assignees: ''
 ---
 

@@ -2,7 +2,7 @@
 name: 🔨 상태 개선
 about: 사용자가 체감하는 동작·결과를 변경합니다 (UI 변경, 로직 수정, UX 개선 등)
 title: ''
-labels: ''
+labels: 'fix'
 assignees: ''
 ---
 

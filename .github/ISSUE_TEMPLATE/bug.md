@@ -2,7 +2,7 @@
 name: 🐞 버그 리포트
 about: 의도치 않은 오동작을 보고합니다
 title: ''
-labels: ''
+labels: 'bug'
 assignees: ''
 ---
 

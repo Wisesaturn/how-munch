@@ -2,7 +2,7 @@
 name: 🔧 환경설정/유지보수
 about: 빌드 설정, 패키지 관리, 문서 작성 등 유지보수 작업입니다
 title: ''
-labels: ''
+labels: 'chore'
 assignees: ''
 ---
 

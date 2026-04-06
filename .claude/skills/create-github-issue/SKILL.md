@@ -49,9 +49,20 @@ GitHub 이슈를 유형별 템플릿에 맞게 생성한다.
 
 ### 4단계: 이슈 생성
 
+유형별 레이블과 assignee를 함께 지정한다.
+
+| 유형      | `--label` 값 |
+| --------- | ------------ |
+| 기능 구현 | `feature`    |
+| 상태 개선 | `fix`        |
+| 버그      | `bug`        |
+| 리팩토링  | `refactor`   |
+| 유지보수  | `chore`      |
+
 ```bash
 gh issue create \
   --title "{이슈 제목}" \
+  --label "{유형 레이블}" \
   --body "$(cat <<'EOF'
 {본문}
 EOF
