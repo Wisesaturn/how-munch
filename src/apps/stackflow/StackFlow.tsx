@@ -11,6 +11,7 @@ import { type Meal, type MealType } from '@/entities/meal';
 
 import {
   FridgeBatchEditScreen,
+  FridgeExpiryListScreen,
   FridgeFilterSettingsScreen,
   FridgeItemAddScreen,
   FridgeItemEditScreen,
@@ -102,6 +103,18 @@ function FridgeFilterSettingsActivity() {
   return <FridgeFilterSettingsScreen onClose={pop} />;
 }
 
+function FridgeExpiryListActivity({
+  params,
+}: {
+  params: {
+    items: FridgeItemWithBatches[];
+  };
+}) {
+  const { pop } = useActions();
+
+  return <FridgeExpiryListScreen onClose={pop} items={params.items} />;
+}
+
 function IngredientEditActivity({
   params,
 }: {
@@ -178,6 +191,7 @@ const appStackFlow = stackflow({
     FridgeItemEditActivity,
     FridgeBatchEditActivity,
     FridgeFilterSettingsActivity,
+    FridgeExpiryListActivity,
     MealEditorActivity,
     NotificationActivity,
     NotificationSettingsActivity,
@@ -196,6 +210,7 @@ const appStackFlow = stackflow({
         FridgeItemEditActivity: '/fridge/item/edit',
         FridgeBatchEditActivity: '/fridge/batch/edit',
         FridgeFilterSettingsActivity: '/fridge/filter/settings',
+        FridgeExpiryListActivity: '/fridge/expiry',
         MealEditorActivity: '/meal/editor',
         NotificationActivity: '/notifications',
         NotificationSettingsActivity: '/notifications/settings',

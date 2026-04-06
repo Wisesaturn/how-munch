@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ChevronRight } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
 
@@ -9,6 +9,7 @@ import { getDaysUntilExpiry } from '../lib/expiry';
 interface ExpiryBannerProps {
   items: FridgeItemWithBatches[];
   className?: string;
+  onPress?: () => void;
 }
 
 interface ExpiryEntry {
@@ -16,8 +17,8 @@ interface ExpiryEntry {
   daysLeft: number;
 }
 
-/** 만료 임박/만료됨 요약 배너 — 아이템명 표시 */
-export function ExpiryBanner({ items, className }: ExpiryBannerProps) {
+/** 만료 임박/만료됨 요약 배너 — 아이템명 표시, onPress 전달 시 클릭 가능 */
+export function ExpiryBanner({ items, className, onPress }: ExpiryBannerProps) {
   const expiredEntries: ExpiryEntry[] = [];
   const soonEntries: ExpiryEntry[] = [];
 
@@ -36,25 +37,27 @@ export function ExpiryBanner({ items, className }: ExpiryBannerProps) {
   const uniqueExpiredNames = [...new Set(expiredEntries.map((e) => e.itemName))];
   const uniqueSoonNames = [...new Set(soonEntries.map((e) => e.itemName))];
 
-  return (
-    <div
-      className={cn(
-        'flex flex-col gap-1.5 rounded-lg px-3 py-2.5',
-        hasExpired ? 'bg-red-50' : 'bg-amber-50',
-        className,
-      )}
-    >
+  const content = (
+    <>
       <div className="flex items-center gap-2">
         <AlertTriangle
           className={cn('size-4 shrink-0', hasExpired ? 'text-red-600' : 'text-amber-600')}
         />
         <span
-          className={cn('text-sm font-semibold', hasExpired ? 'text-red-700' : 'text-amber-700')}
+          className={cn(
+            'flex-1 text-sm font-semibold',
+            hasExpired ? 'text-red-700' : 'text-amber-700',
+          )}
         >
           {hasExpired && <>만료 {expiredEntries.length}건</>}
           {hasExpired && soonEntries.length > 0 && ' · '}
           {soonEntries.length > 0 && <>임박 {soonEntries.length}건</>}
         </span>
+        {onPress ? (
+          <ChevronRight
+            className={cn('size-4 shrink-0', hasExpired ? 'text-red-400' : 'text-amber-400')}
+          />
+        ) : null}
       </div>
       <div className="flex flex-wrap gap-1">
         {uniqueExpiredNames.map((name) => (
@@ -74,6 +77,34 @@ export function ExpiryBanner({ items, className }: ExpiryBannerProps) {
           </span>
         ))}
       </div>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <button
+        type="button"
+        onClick={onPress}
+        className={cn(
+          'flex w-full flex-col gap-1.5 rounded-lg px-3 py-2.5 text-left active:opacity-80',
+          hasExpired ? 'bg-red-50' : 'bg-amber-50',
+          className,
+        )}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-1.5 rounded-lg px-3 py-2.5',
+        hasExpired ? 'bg-red-50' : 'bg-amber-50',
+        className,
+      )}
+    >
+      {content}
     </div>
   );
 }
