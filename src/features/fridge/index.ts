@@ -2,6 +2,7 @@ export {
   useBatchUsedAmountQuery,
   useFridgeItemsQuery,
   useFridgePreferencesQuery,
+  useFridgeBrandNamesQuery,
 } from './api/queries';
 export {
   useAddFridgeItemMutation,

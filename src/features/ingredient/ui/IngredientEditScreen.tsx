@@ -17,6 +17,7 @@ interface IngredientEditScreenProps {
   ingredient: Ingredient;
   householdId: string;
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
+  onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
 }
 
 export function IngredientEditScreen({
@@ -24,6 +25,7 @@ export function IngredientEditScreen({
   ingredient,
   householdId,
   onOpenProductNameSearch,
+  onOpenBrandSearch,
 }: IngredientEditScreenProps) {
   const updateMutation = useUpdateIngredientMutation();
   const deleteMutation = useDeleteIngredientMutation();
@@ -119,6 +121,7 @@ export function IngredientEditScreen({
           isDeleting={deleteMutation.isPending}
           disableUnitSelect
           onOpenProductNameSearch={onOpenProductNameSearch}
+          onOpenBrandSearch={onOpenBrandSearch}
         />
       </div>
       <CTAConfirmButton>

@@ -52,3 +52,13 @@ export function useFridgePreferencesQuery(userId: string | null) {
       : skipToken,
   });
 }
+
+/** 냉장고 브랜드 목록 조회 — 자동완성용 */
+export function useFridgeBrandNamesQuery(householdId: string | null) {
+  return useQuery({
+    queryKey: fridgeItemKeys.brands(householdId ?? ''),
+    queryFn: householdId
+      ? () => apiClient.get<string[]>('/api/fridge/brands', { householdId })
+      : skipToken,
+  });
+}

@@ -42,6 +42,7 @@ interface FridgeItemAddScreenProps {
   onClose: () => void;
   householdId: string;
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
+  onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
 }
 
 interface FridgeItemCreateFormValues {
@@ -134,6 +135,7 @@ export function FridgeItemAddScreen({
   onClose,
   householdId,
   onOpenProductNameSearch,
+  onOpenBrandSearch,
 }: FridgeItemAddScreenProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const mutation = useAddFridgeItemMutation();
@@ -260,13 +262,31 @@ export function FridgeItemAddScreen({
               <Form.Field field={field}>
                 <Form.Label>브랜드</Form.Label>
                 <Form.Control>
-                  <Input
-                    type="text"
-                    placeholder="예: 풀무원"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                  />
+                  {onOpenBrandSearch ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onOpenBrandSearch(field.state.value, (brand) => field.handleChange(brand))
+                      }
+                      className={cn(
+                        'border-input bg-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
+                        'hover:bg-accent transition-colors',
+                        field.state.meta.errors.length > 0 && 'border-destructive',
+                        !field.state.value && 'text-muted-foreground',
+                      )}
+                    >
+                      <span>{field.state.value || '브랜드를 검색하세요'}</span>
+                      <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+                    </button>
+                  ) : (
+                    <Input
+                      type="text"
+                      placeholder="예: 풀무원"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                    />
+                  )}
                 </Form.Control>
                 <Form.Error />
               </Form.Field>

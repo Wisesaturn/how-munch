@@ -15,6 +15,7 @@ interface FridgeItemEditScreenProps {
   onClose: () => void;
   item: FridgeItemWithBatches;
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
+  onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
 }
 
 /** 냉장고 아이템 메타 수정 화면 */
@@ -22,6 +23,7 @@ export function FridgeItemEditScreen({
   onClose,
   item,
   onOpenProductNameSearch,
+  onOpenBrandSearch,
 }: FridgeItemEditScreenProps) {
   const mutation = useUpdateFridgeItemMutation();
   const deleteMutation = useDeleteFridgeItemMutation();
@@ -110,6 +112,7 @@ export function FridgeItemEditScreen({
           isDeleting={deleteMutation.isPending}
           disableUnitSelect={disableUnitSelect}
           onOpenProductNameSearch={onOpenProductNameSearch}
+          onOpenBrandSearch={onOpenBrandSearch}
         />
       </div>
       <CTAConfirmButton>

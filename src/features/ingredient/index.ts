@@ -1,4 +1,8 @@
-export { useIngredientsQuery, useStoreNamesQuery } from './api/queries';
+export {
+  useIngredientsQuery,
+  useStoreNamesQuery,
+  useIngredientBrandNamesQuery,
+} from './api/queries';
 export {
   useAddIngredientMutation,
   useUpdateIngredientMutation,

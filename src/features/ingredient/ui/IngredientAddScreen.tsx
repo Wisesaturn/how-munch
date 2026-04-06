@@ -16,6 +16,7 @@ interface IngredientAddScreenProps {
   /** 검색에서 바로 추가 시 품목명 pre-fill */
   defaultName?: string;
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
+  onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
 }
 
 export function IngredientAddScreen({
@@ -24,6 +25,7 @@ export function IngredientAddScreen({
   userId,
   defaultName,
   onOpenProductNameSearch,
+  onOpenBrandSearch,
 }: IngredientAddScreenProps) {
   const addMutation = useAddIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
@@ -70,6 +72,7 @@ export function IngredientAddScreen({
           onSubmit={handleSubmit}
           isSubmitting={addMutation.isPending}
           onOpenProductNameSearch={onOpenProductNameSearch}
+          onOpenBrandSearch={onOpenBrandSearch}
         />
       </div>
       <CTAButton

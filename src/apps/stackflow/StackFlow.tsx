@@ -15,6 +15,7 @@ import {
   FridgeFilterSettingsScreen,
   FridgeItemAddScreen,
   FridgeItemEditScreen,
+  useFridgeBrandNamesQuery,
 } from '@/features/fridge';
 import {
   clearPendingProductNameCallback,
@@ -23,6 +24,7 @@ import {
   ProductNameSearchScreen,
   resolvePendingProductNameCallback,
   setPendingProductNameCallback,
+  useIngredientBrandNamesQuery,
 } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
@@ -49,12 +51,21 @@ function IngredientAddActivity({
   };
 }) {
   const { pop, push } = useActions();
+  const { data: brandNames } = useIngredientBrandNamesQuery(params.householdId);
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '품목명',
       suggestions: params.suggestions ?? [],
+    });
+  }
+
+  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+    setPendingProductNameCallback(onSelect);
+    push('ProductNameSearchActivity', {
+      fieldLabel: '브랜드',
+      suggestions: brandNames ?? [],
     });
   }
 
@@ -65,6 +76,7 @@ function IngredientAddActivity({
       userId={params.userId}
       defaultName={params.defaultName}
       onOpenProductNameSearch={openProductNameSearch}
+      onOpenBrandSearch={openBrandSearch}
     />
   );
 }
@@ -78,6 +90,7 @@ function FridgeItemAddActivity({
   };
 }) {
   const { pop, push } = useActions();
+  const { data: brandNames } = useFridgeBrandNamesQuery(params.householdId);
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
@@ -87,11 +100,20 @@ function FridgeItemAddActivity({
     });
   }
 
+  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+    setPendingProductNameCallback(onSelect);
+    push('ProductNameSearchActivity', {
+      fieldLabel: '브랜드',
+      suggestions: brandNames ?? [],
+    });
+  }
+
   return (
     <FridgeItemAddScreen
       onClose={pop}
       householdId={params.householdId}
       onOpenProductNameSearch={openProductNameSearch}
+      onOpenBrandSearch={openBrandSearch}
     />
   );
 }
@@ -105,6 +127,7 @@ function FridgeItemEditActivity({
   };
 }) {
   const { pop, push } = useActions();
+  const { data: brandNames } = useFridgeBrandNamesQuery(params.item.household_id);
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
@@ -114,11 +137,20 @@ function FridgeItemEditActivity({
     });
   }
 
+  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+    setPendingProductNameCallback(onSelect);
+    push('ProductNameSearchActivity', {
+      fieldLabel: '브랜드',
+      suggestions: brandNames ?? [],
+    });
+  }
+
   return (
     <FridgeItemEditScreen
       onClose={pop}
       item={params.item}
       onOpenProductNameSearch={openProductNameSearch}
+      onOpenBrandSearch={openBrandSearch}
     />
   );
 }
@@ -172,6 +204,7 @@ function IngredientEditActivity({
   };
 }) {
   const { pop, push } = useActions();
+  const { data: brandNames } = useIngredientBrandNamesQuery(params.householdId);
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
@@ -181,12 +214,21 @@ function IngredientEditActivity({
     });
   }
 
+  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+    setPendingProductNameCallback(onSelect);
+    push('ProductNameSearchActivity', {
+      fieldLabel: '브랜드',
+      suggestions: brandNames ?? [],
+    });
+  }
+
   return (
     <IngredientEditScreen
       onClose={pop}
       householdId={params.householdId}
       ingredient={params.ingredient}
       onOpenProductNameSearch={openProductNameSearch}
+      onOpenBrandSearch={openBrandSearch}
     />
   );
 }
