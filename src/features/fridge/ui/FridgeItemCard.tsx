@@ -80,7 +80,7 @@ export function FridgeItemCard({
             onClick={() => onEditItem(item)}
             className={cn('min-w-0 flex-1 text-left', isOutOfStock && 'cursor-not-allowed')}
           >
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-center gap-1.5">
                 {categoryEmoji ? (
                   <span className="font-tossface shrink-0 text-base" aria-hidden>
