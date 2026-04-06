@@ -1,6 +1,6 @@
 import qs from 'qs';
 
-import { type ApiResponse } from './apiResponse';
+import { type ApiResponse } from './apiTypes';
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
   /** qs로 직렬화되는 query params. 중첩 객체/배열(repeat)/null 지원 */

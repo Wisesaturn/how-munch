@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server';
 
-/** Route Handler 표준 응답 형태 */
-export type ApiResponse<T = undefined> = {
-  status: number;
-  code: string;
-  message: string;
-  data?: T;
-  error?: unknown;
-};
+import { type ApiResponse } from './apiTypes';
 
 function json<T>(body: ApiResponse<T>): Response {
   return NextResponse.json(body, { status: body.status });
