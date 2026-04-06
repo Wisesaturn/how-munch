@@ -3,9 +3,10 @@
 import { useMemo } from 'react';
 
 import { useForm } from '@tanstack/react-form';
+import { ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 
-import { ERROR_MSG } from '@/commons/lib';
+import { cn, ERROR_MSG } from '@/commons/lib';
 import { Button, Input, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -35,6 +36,8 @@ interface FridgeItemFormProps {
   submitLabel?: string;
   disableUnitSelect?: boolean;
   householdId?: string | null;
+  /** 재료명 검색 Screen 진입 핸들러 — 선택값은 form name 필드에 반영된다 */
+  onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
 }
 
 function createFridgeItemFormSchema(categoryIds: string[]) {
@@ -65,6 +68,7 @@ export function FridgeItemForm({
   submitLabel = '저장',
   disableUnitSelect = false,
   householdId = null,
+  onOpenProductNameSearch,
 }: FridgeItemFormProps) {
   const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const categoryIds = useMemo(
@@ -113,13 +117,31 @@ export function FridgeItemForm({
           <Form.Field field={field}>
             <Form.Label required>재료명</Form.Label>
             <Form.Control>
-              <Input
-                type="text"
-                placeholder="예: 감자"
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
+              {onOpenProductNameSearch ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onOpenProductNameSearch(field.state.value, (name) => field.handleChange(name))
+                  }
+                  className={cn(
+                    'border-input bg-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
+                    'hover:bg-accent transition-colors',
+                    field.state.meta.errors.length > 0 && 'border-destructive',
+                    !field.state.value && 'text-muted-foreground',
+                  )}
+                >
+                  <span>{field.state.value || '재료명을 검색하세요'}</span>
+                  <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+                </button>
+              ) : (
+                <Input
+                  type="text"
+                  placeholder="예: 감자"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+              )}
             </Form.Control>
             <Form.Error />
           </Form.Field>
@@ -187,7 +209,7 @@ export function FridgeItemForm({
         )}
       </form.Field>
 
-      {shouldRenderInlineEditActions ? (
+      {shouldRenderInlineEditActions && (
         <div className="mt-2 flex gap-2">
           <Button type="submit" disabled={Boolean(isPending || isDeleting)} className="flex-1">
             {isPending ? '수정 중...' : '수정'}
@@ -205,11 +227,12 @@ export function FridgeItemForm({
             {isDeleting ? '삭제 중...' : '삭제'}
           </Button>
         </div>
-      ) : shouldRenderInlineCreateSubmit ? (
+      )}
+      {shouldRenderInlineCreateSubmit && (
         <Button type="submit" disabled={isPending} className="mt-2">
           {isPending ? '저장 중...' : submitLabel}
         </Button>
-      ) : null}
+      )}
     </form>
   );
 }

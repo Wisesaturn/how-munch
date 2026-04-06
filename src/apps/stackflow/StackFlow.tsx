@@ -5,6 +5,8 @@ import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
+import { uuid } from '@/commons/lib';
+
 import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type Meal, type MealType } from '@/entities/meal';
@@ -15,7 +17,12 @@ import {
   FridgeItemAddScreen,
   FridgeItemEditScreen,
 } from '@/features/fridge';
-import { IngredientAddScreen, IngredientEditScreen } from '@/features/ingredient';
+import {
+  IngredientAddScreen,
+  IngredientEditScreen,
+  ProductNameSearchScreen,
+  registerProductNameSelectCallback,
+} from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
@@ -39,7 +46,16 @@ function IngredientAddActivity({
     defaultName?: string;
   };
 }) {
-  const { pop } = useActions();
+  const { pop, push } = useActions();
+
+  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+    const callbackId = uuid();
+    registerProductNameSelectCallback(callbackId, onSelect);
+    push('ProductNameSearchActivity', {
+      callbackId,
+      fieldLabel: '품목명',
+    });
+  }
 
   return (
     <IngredientAddScreen
@@ -47,6 +63,7 @@ function IngredientAddActivity({
       householdId={params.householdId}
       userId={params.userId}
       defaultName={params.defaultName}
+      onOpenProductNameSearch={openProductNameSearch}
     />
   );
 }
@@ -58,9 +75,24 @@ function FridgeItemAddActivity({
     householdId: string;
   };
 }) {
-  const { pop } = useActions();
+  const { pop, push } = useActions();
 
-  return <FridgeItemAddScreen onClose={pop} householdId={params.householdId} />;
+  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+    const callbackId = uuid();
+    registerProductNameSelectCallback(callbackId, onSelect);
+    push('ProductNameSearchActivity', {
+      callbackId,
+      fieldLabel: '재료명',
+    });
+  }
+
+  return (
+    <FridgeItemAddScreen
+      onClose={pop}
+      householdId={params.householdId}
+      onOpenProductNameSearch={openProductNameSearch}
+    />
+  );
 }
 
 function FridgeItemEditActivity({
@@ -70,9 +102,24 @@ function FridgeItemEditActivity({
     item: FridgeItemWithBatches;
   };
 }) {
-  const { pop } = useActions();
+  const { pop, push } = useActions();
 
-  return <FridgeItemEditScreen onClose={pop} item={params.item} />;
+  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+    const callbackId = uuid();
+    registerProductNameSelectCallback(callbackId, onSelect);
+    push('ProductNameSearchActivity', {
+      callbackId,
+      fieldLabel: '재료명',
+    });
+  }
+
+  return (
+    <FridgeItemEditScreen
+      onClose={pop}
+      item={params.item}
+      onOpenProductNameSearch={openProductNameSearch}
+    />
+  );
 }
 
 function FridgeBatchEditActivity({
@@ -110,13 +157,23 @@ function IngredientEditActivity({
     ingredient: Ingredient;
   };
 }) {
-  const { pop } = useActions();
+  const { pop, push } = useActions();
+
+  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+    const callbackId = uuid();
+    registerProductNameSelectCallback(callbackId, onSelect);
+    push('ProductNameSearchActivity', {
+      callbackId,
+      fieldLabel: '품목명',
+    });
+  }
 
   return (
     <IngredientEditScreen
       onClose={pop}
       householdId={params.householdId}
       ingredient={params.ingredient}
+      onOpenProductNameSearch={openProductNameSearch}
     />
   );
 }
@@ -166,6 +223,24 @@ function NotificationSettingsActivity() {
   return <NotificationSettingsScreen onClose={pop} />;
 }
 
+function ProductNameSearchActivity({
+  params,
+}: {
+  params: {
+    callbackId: string;
+    fieldLabel?: string;
+    suggestions?: string[];
+  };
+}) {
+  return (
+    <ProductNameSearchScreen
+      callbackId={params.callbackId}
+      fieldLabel={params.fieldLabel}
+      suggestions={params.suggestions}
+    />
+  );
+}
+
 const appStackFlow = stackflow({
   transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
@@ -183,6 +258,7 @@ const appStackFlow = stackflow({
     NotificationSettingsActivity,
     ProfileSettingsActivity,
     ProfileEditActivity,
+    ProductNameSearchActivity,
   },
   plugins: [
     basicRendererPlugin(),
@@ -201,6 +277,7 @@ const appStackFlow = stackflow({
         NotificationSettingsActivity: '/notifications/settings',
         ProfileSettingsActivity: '/profile/settings',
         ProfileEditActivity: '/profile/edit',
+        ProductNameSearchActivity: '/search/product-name',
       },
       fallbackActivity: () => 'IdleActivity',
       useHash: true,

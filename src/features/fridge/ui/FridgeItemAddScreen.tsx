@@ -5,9 +5,10 @@ import { useMemo, useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
+import { ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 
-import { ERROR_MSG } from '@/commons/lib';
+import { cn, ERROR_MSG } from '@/commons/lib';
 import {
   CTAButton,
   Counter,
@@ -40,6 +41,7 @@ import { useAddFridgeItemMutation } from '../api/mutations';
 interface FridgeItemAddScreenProps {
   onClose: () => void;
   householdId: string;
+  onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
 }
 
 interface FridgeItemCreateFormValues {
@@ -128,7 +130,11 @@ function createDefaultValues(today: Date): FridgeItemCreateFormValues {
 }
 
 /** 냉장고 아이템 + 첫 배치 동시 추가 화면 */
-export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScreenProps) {
+export function FridgeItemAddScreen({
+  onClose,
+  householdId,
+  onOpenProductNameSearch,
+}: FridgeItemAddScreenProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const mutation = useAddFridgeItemMutation();
   const formId = 'fridge-item-add-form';
@@ -217,12 +223,32 @@ export function FridgeItemAddScreen({ onClose, householdId }: FridgeItemAddScree
               <Form.Field field={field}>
                 <Form.Label required>재료명</Form.Label>
                 <Form.Control>
-                  <Input
-                    type="text"
-                    placeholder="예: 감자"
-                    value={field.state.value}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                  />
+                  {onOpenProductNameSearch ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onOpenProductNameSearch(field.state.value, (name) =>
+                          field.handleChange(name),
+                        )
+                      }
+                      className={cn(
+                        'border-input bg-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
+                        'hover:bg-accent transition-colors',
+                        field.state.meta.errors.length > 0 && 'border-destructive',
+                        !field.state.value && 'text-muted-foreground',
+                      )}
+                    >
+                      <span>{field.state.value || '재료명을 검색하세요'}</span>
+                      <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+                    </button>
+                  ) : (
+                    <Input
+                      type="text"
+                      placeholder="예: 감자"
+                      value={field.state.value}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                    />
+                  )}
                 </Form.Control>
                 <Form.Error />
               </Form.Field>

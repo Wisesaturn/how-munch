@@ -4,9 +4,10 @@ import { useMemo, useState } from 'react';
 
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
+import { ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 
-import { ERROR_MSG } from '@/commons/lib';
+import { cn, ERROR_MSG } from '@/commons/lib';
 import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
@@ -48,6 +49,8 @@ interface IngredientFormProps {
   submitLabel?: string;
   disableUnitSelect?: boolean;
   householdId?: string | null;
+  /** 품목명 검색 Screen 진입 핸들러 — 선택값은 form name 필드에 반영된다 */
+  onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
 }
 
 function createIngredientFormSchema(categoryIds: string[]) {
@@ -116,6 +119,7 @@ export function IngredientForm({
   submitLabel,
   disableUnitSelect = false,
   householdId = null,
+  onOpenProductNameSearch,
 }: IngredientFormProps) {
   const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const categoryIds = useMemo(
@@ -198,12 +202,30 @@ export function IngredientForm({
           <Form.Field field={field}>
             <Form.Label required>품목명</Form.Label>
             <Form.Control>
-              <Input
-                placeholder="예: 삼겹살"
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
+              {onOpenProductNameSearch ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onOpenProductNameSearch(field.state.value, (name) => field.handleChange(name))
+                  }
+                  className={cn(
+                    'border-input bg-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
+                    'hover:bg-accent transition-colors',
+                    field.state.meta.errors.length > 0 && 'border-destructive',
+                    !field.state.value && 'text-muted-foreground',
+                  )}
+                >
+                  <span>{field.state.value || '품목명을 검색하세요'}</span>
+                  <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+                </button>
+              ) : (
+                <Input
+                  placeholder="예: 삼겹살"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+              )}
             </Form.Control>
             <Form.Error />
           </Form.Field>
