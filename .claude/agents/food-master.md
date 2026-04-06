@@ -109,6 +109,8 @@ git push -u origin "$BRANCH"
 
 ### 9. 사용자 알림
 
+> ⚠️ PR 본문, 커밋 메시지, 코드 리뷰, 코멘트 등 모든 출력에 "🤖 Generated with Claude Code" 또는 Claude 귀속 푸터를 절대 추가하지 않는다.
+
 PR 생성 완료 후 아래 내용을 보고한다.
 
 - PR URL
