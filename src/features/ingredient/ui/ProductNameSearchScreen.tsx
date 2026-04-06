@@ -3,32 +3,28 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { useActions } from '@stackflow/react';
 import { Search, X } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
 
-import {
-  resolveProductNameSelectCallback,
-  unregisterProductNameSelectCallback,
-} from '../model/productNameSearchStore';
-
 interface ProductNameSearchScreenProps {
-  /** 콜백 레지스트리 키 */
-  callbackId: string;
+  /** 화면 닫기 핸들러 (Activity에서 주입) */
+  onClose: () => void;
+  /** 항목 선택 핸들러 (Activity에서 주입) */
+  onSelectName: (name: string) => void;
   /** 검색 힌트 텍스트 (예: "재료명", "품목명") */
   fieldLabel?: string;
   /** 기존 이름 제안 목록 */
   suggestions?: string[];
 }
 
-/** 상품명 검색 전용 Screen — stackflow Activity로 사용하며 선택 시 pop 후 콜백으로 값을 전달한다 */
+/** 상품명 검색 전용 Screen — onClose/onSelectName을 Activity에서 주입받아 동작한다 */
 export function ProductNameSearchScreen({
-  callbackId,
+  onClose,
+  onSelectName,
   fieldLabel = '상품명',
   suggestions = [],
 }: ProductNameSearchScreenProps) {
-  const { pop } = useActions();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,13 +35,6 @@ export function ProductNameSearchScreen({
     return () => window.clearTimeout(timer);
   }, []);
 
-  useEffect(
-    function cleanupCallbackOnUnmount() {
-      return () => unregisterProductNameSelectCallback(callbackId);
-    },
-    [callbackId],
-  );
-
   const trimmedQuery = query.trim();
 
   const filteredSuggestions = trimmedQuery
@@ -54,19 +43,9 @@ export function ProductNameSearchScreen({
 
   const uniqueSuggestions = [...new Set(filteredSuggestions)];
 
-  function selectName(name: string) {
-    resolveProductNameSelectCallback(callbackId, name);
-    pop();
-  }
-
-  function cancelSearch() {
-    unregisterProductNameSelectCallback(callbackId);
-    pop();
-  }
-
   function submitQuery() {
     if (!trimmedQuery) return;
-    selectName(trimmedQuery);
+    onSelectName(trimmedQuery);
   }
 
   function clearQuery() {
@@ -80,11 +59,7 @@ export function ProductNameSearchScreen({
       appBar={{
         title: `${fieldLabel} 검색`,
         renderRight: () => (
-          <button
-            type="button"
-            onClick={cancelSearch}
-            className="text-sm font-medium text-gray-500"
-          >
+          <button type="button" onClick={onClose} className="text-sm font-medium text-gray-500">
             취소
           </button>
         ),
@@ -149,7 +124,7 @@ export function ProductNameSearchScreen({
               <li key={name}>
                 <button
                   type="button"
-                  onClick={() => selectName(name)}
+                  onClick={() => onSelectName(name)}
                   className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 active:bg-gray-100"
                 >
                   {name}

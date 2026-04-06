@@ -5,8 +5,6 @@ import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
-import { uuid } from '@/commons/lib';
-
 import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type Meal, type MealType } from '@/entities/meal';
@@ -19,10 +17,12 @@ import {
   FridgeItemEditScreen,
 } from '@/features/fridge';
 import {
+  clearPendingProductNameCallback,
   IngredientAddScreen,
   IngredientEditScreen,
   ProductNameSearchScreen,
-  registerProductNameSelectCallback,
+  resolvePendingProductNameCallback,
+  setPendingProductNameCallback,
 } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
@@ -51,10 +51,8 @@ function IngredientAddActivity({
   const { pop, push } = useActions();
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
-    const callbackId = uuid();
-    registerProductNameSelectCallback(callbackId, onSelect);
+    setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
-      callbackId,
       fieldLabel: '품목명',
       suggestions: params.suggestions ?? [],
     });
@@ -82,10 +80,8 @@ function FridgeItemAddActivity({
   const { pop, push } = useActions();
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
-    const callbackId = uuid();
-    registerProductNameSelectCallback(callbackId, onSelect);
+    setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
-      callbackId,
       fieldLabel: '재료명',
       suggestions: params.suggestions ?? [],
     });
@@ -111,10 +107,8 @@ function FridgeItemEditActivity({
   const { pop, push } = useActions();
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
-    const callbackId = uuid();
-    registerProductNameSelectCallback(callbackId, onSelect);
+    setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
-      callbackId,
       fieldLabel: '재료명',
       suggestions: params.suggestions ?? [],
     });
@@ -180,10 +174,8 @@ function IngredientEditActivity({
   const { pop, push } = useActions();
 
   function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
-    const callbackId = uuid();
-    registerProductNameSelectCallback(callbackId, onSelect);
+    setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
-      callbackId,
       fieldLabel: '품목명',
       suggestions: params.suggestions ?? [],
     });
@@ -212,10 +204,8 @@ function MealEditorActivity({
   const { pop, push } = useActions();
 
   function openFridgeItemSearch(suggestions: string[], onSelectName: (name: string) => void) {
-    const callbackId = uuid();
-    registerProductNameSelectCallback(callbackId, onSelectName);
+    setPendingProductNameCallback(onSelectName);
     push('ProductNameSearchActivity', {
-      callbackId,
       fieldLabel: '재료',
       suggestions,
     });
@@ -259,14 +249,26 @@ function ProductNameSearchActivity({
   params,
 }: {
   params: {
-    callbackId: string;
     fieldLabel?: string;
     suggestions?: string[];
   };
 }) {
+  const { pop } = useActions();
+
+  function handleSelectName(name: string) {
+    resolvePendingProductNameCallback(name);
+    pop();
+  }
+
+  function handleClose() {
+    clearPendingProductNameCallback();
+    pop();
+  }
+
   return (
     <ProductNameSearchScreen
-      callbackId={params.callbackId}
+      onClose={handleClose}
+      onSelectName={handleSelectName}
       fieldLabel={params.fieldLabel}
       suggestions={params.suggestions}
     />

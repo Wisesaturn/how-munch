@@ -11,6 +11,7 @@ export { IngredientSearch } from './ui/IngredientSearch';
 export { ProductNameSearchScreen } from './ui/ProductNameSearchScreen';
 export { WeeklyStats } from './ui/WeeklyStats';
 export {
-  registerProductNameSelectCallback,
-  unregisterProductNameSelectCallback,
+  setPendingProductNameCallback,
+  resolvePendingProductNameCallback,
+  clearPendingProductNameCallback,
 } from './model/productNameSearchStore';
