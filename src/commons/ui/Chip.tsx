@@ -22,15 +22,21 @@ const chipVariants = cva(
 );
 
 interface ChipProps
-  extends Omit<React.ComponentProps<'button'>, 'onChange'>,
-    VariantProps<typeof chipVariants> {
+  extends Omit<React.ComponentProps<'button'>, 'onChange'>, VariantProps<typeof chipVariants> {
   /** 선택 상태 */
   selected?: boolean;
   /** 선택 상태 변경 핸들러 */
   onSelectedChange?: (selected: boolean) => void;
 }
 
-function Chip({ className, selected = false, onSelectedChange, onClick, disabled, ...props }: ChipProps) {
+function Chip({
+  className,
+  selected = false,
+  onSelectedChange,
+  onClick,
+  disabled,
+  ...props
+}: ChipProps) {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onSelectedChange?.(!selected);
     onClick?.(e);
@@ -59,7 +65,7 @@ function ChipRow({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="chip-row"
       className={cn(
-        'flex min-w-0 gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        'flex w-full min-w-0 gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         className,
       )}
       {...props}
