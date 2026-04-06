@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { Plus } from 'lucide-react';
 import { parseAsString, useQueryState } from 'nuqs';
 import { overlay } from 'overlay-kit';
@@ -11,10 +13,13 @@ import { Button } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type IngredientUnit } from '@/entities/ingredient';
+import { useIngredientCategory } from '@/entities/ingredient-category';
 
 import {
+  ALL_CATEGORY_ID,
   ExpiryBanner,
   FridgeBatchAddBottomSheet,
+  FridgeCategoryFilter,
   FridgeItemList,
   FridgeSearch,
   useFridgeItemsQuery,
@@ -35,12 +40,20 @@ export function FridgePage({ householdId }: FridgePageProps) {
       },
     }),
   );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(ALL_CATEGORY_ID);
+
   const { data: user } = useUserSuspenseQuery();
   const { data: items = [], isLoading } = useFridgeItemsQuery({
     householdId,
     userId: user.id,
     searchInput: searchValue,
   });
+  const { categories } = useIngredientCategory(householdId);
+
+  const filteredItems =
+    selectedCategoryId === ALL_CATEGORY_ID
+      ? items
+      : items.filter((item) => item.category_id === selectedCategoryId);
 
   const createOverlayCloseHandler = (close: () => void, unmount: () => void) => {
     close();
@@ -79,6 +92,10 @@ export function FridgePage({ householdId }: FridgePageProps) {
     await setSearchValue(value);
   }
 
+  function changeCategoryFilter(categoryId: string) {
+    setSelectedCategoryId(categoryId);
+  }
+
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
       {/* 만료 임박 배너 */}
@@ -86,6 +103,15 @@ export function FridgePage({ householdId }: FridgePageProps) {
 
       {/* 검색 */}
       <FridgeSearch value={searchValue} onChange={changeSearchValue} />
+
+      {/* 카테고리 Chip 필터 */}
+      {categories.length > 0 && (
+        <FridgeCategoryFilter
+          categories={categories}
+          selectedCategoryId={selectedCategoryId}
+          onCategoryChange={changeCategoryFilter}
+        />
+      )}
 
       {/* 리스트 */}
       {isLoading ? (
@@ -95,7 +121,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
       ) : (
         <FridgeItemList
           householdId={householdId}
-          items={items}
+          items={filteredItems}
           isSearching={Boolean(searchValue.trim())}
           onEditItem={openFridgeItemEditSheet}
           onAddBatch={openFridgeBatchAddSheet}
