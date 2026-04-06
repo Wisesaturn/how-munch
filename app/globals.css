@@ -109,6 +109,9 @@ body {
   --z-cta: 900;
   /* Popover/Select/DatePicker 등 플로팅 UI */
   --z-popover: 1000;
+  /* Dialog (모달 다이얼로그) */
+  --z-dialog-overlay: 1500;
+  --z-dialog-content: 1501;
   /* Drawer/BottomSheet (항상 최상단) */
   --z-drawer-overlay: 2000;
   --z-drawer-content: 2001;

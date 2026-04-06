@@ -11,6 +11,7 @@ export { Command } from './Command';
 export { ComboBox, type ComboBoxProps } from './ComboBox';
 export { Counter, type CounterProps } from './Counter';
 export { DatePicker } from './DatePicker';
+export { Dialog } from './Dialog';
 export { Drawer } from './Drawer';
 export { EmptyState } from './EmptyState';
 export { Input, type InputProps } from './Input';
