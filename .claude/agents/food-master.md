@@ -12,6 +12,7 @@ skills:
   - pr-convention
   - vercel-react-best-practices
   - code-review:code-review
+  - unknown
 color: orange
 ---
 
@@ -47,7 +48,31 @@ gh issue view {이슈번호} --json title,body,labels,assignees
 
 - 관련 파일, 기존 패턴, 재사용 가능한 유틸/훅 탐색
 - FSD 의존성 규칙 준수 여부 사전 확인
-- 구현 계획을 수립하고 **반드시 사용자 승인을 받은 후** 구현을 시작한다
+- 초안 플랜 작성
+
+#### 3-1. /unknown 자기 질문 루프
+
+초안 플랜 완성 후 **`unknown` 스킬의 4분면 프레임워크**를 적용해 블라인드 스팟을 발굴한다.
+사용자에게 묻지 않고 에이전트 스스로 질문을 생성하고 코드베이스 탐색으로 자답한다.
+
+| 분면 | 접근 |
+|------|------|
+| **Known Knowns** | 이슈에서 명시된 것 — 확인만 함 |
+| **Known Unknowns** | "모른다는 것을 아는 것" — Grep/Read로 즉시 탐색해 자답 |
+| **Unknown Knowns** | 암묵적으로 가정하고 있는 것을 명시화 → 검증 |
+| **Unknown Unknowns** | 유사 구현 grep, 관련 파일 추적으로 발굴 |
+
+**자문자답 예시 질문:**
+- "이 엔티티가 다른 feature에서도 참조되는가?"
+- "현재 관련 RPC가 존재하는가, 새로 만들어야 하는가?"
+- "이 변경이 기존 타입 계약 또는 queryKey를 깨는가?"
+- "commons/ui에 재사용 가능한 컴포넌트가 이미 있는가?"
+
+새로운 unknown이 발견되면 최대 2회까지 추가 탐색을 수행하고, 발견된 사실로 플랜을 보정한다.
+
+#### 3-2. 사용자 승인
+
+보정된 플랜을 제시하고 **반드시 사용자 승인을 받은 후** 구현을 시작한다.
 
 ### 4. Worktree 생성
 
