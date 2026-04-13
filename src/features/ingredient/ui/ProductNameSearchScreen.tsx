@@ -97,7 +97,7 @@ export function ProductNameSearchScreen({
           </InputGroup>
 
           {/* 직접 입력값으로 선택 */}
-          {trimmedQuery && uniqueSuggestions.length === 0 && (
+          {trimmedQuery && (
             <button
               type="button"
               onClick={submitQuery}
