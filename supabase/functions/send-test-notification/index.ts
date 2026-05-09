@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { sendNotification, setVapidDetails } from 'npm:web-push';
 
 // 역할: 특정 유저에게 테스트 push 알림을 즉시 발송한다.
-// 동작: Authorization 헤더로 서비스 롤 검증 → 활성 구독 조회 → web-push 발송
+// 동작: 유저 JWT 검증 → 서비스 롤로 활성 구독 조회 → web-push 발송
 
 Deno.serve(async (request: Request) => {
   const authHeader = request.headers.get('Authorization');
@@ -13,23 +13,43 @@ Deno.serve(async (request: Request) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const vapidSubject = Deno.env.get('VAPID_SUBJECT');
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
-  if (!supabaseUrl || !serviceRoleKey || !vapidSubject || !vapidPublicKey || !vapidPrivateKey) {
+  if (
+    !supabaseUrl ||
+    !anonKey ||
+    !serviceRoleKey ||
+    !vapidSubject ||
+    !vapidPublicKey ||
+    !vapidPrivateKey
+  ) {
     return new Response(JSON.stringify({ error: 'Missing env variables' }), { status: 500 });
   }
 
-  const { userId } = await request.json();
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'userId is required' }), { status: 400 });
+  // 유저 JWT 검증
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const {
+    data: { user },
+    error: authError,
+  } = await userClient.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const { userId } = await request.json();
+  if (!userId || userId !== user.id) {
+    return new Response(JSON.stringify({ error: 'userId mismatch' }), { status: 403 });
+  }
 
-  const { data: subscription, error } = await supabase
+  // 서비스 롤로 구독 조회 (RLS 우회)
+  const serviceClient = createClient(supabaseUrl, serviceRoleKey);
+  const { data: subscription, error } = await serviceClient
     .from('notification_push_subscriptions')
     .select('endpoint, p256dh, auth')
     .eq('user_id', userId)

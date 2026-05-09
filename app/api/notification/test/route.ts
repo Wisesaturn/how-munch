@@ -3,17 +3,20 @@ import { withAuth } from '@/apps/route';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 /** POST /api/notification/test — 현재 유저에게 테스트 push 알림 발송 */
-export const POST = withAuth(async (_req, { userId }) => {
+export const POST = withAuth(async (_req, { userId, supabase }) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl) return apiResponse.INTERNAL_ERROR();
 
-  if (!supabaseUrl || !serviceRoleKey) return apiResponse.INTERNAL_ERROR();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return apiResponse.UNAUTHORIZED();
 
   const res = await fetch(`${supabaseUrl}/functions/v1/send-test-notification`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${serviceRoleKey}`,
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({ userId }),
   });
