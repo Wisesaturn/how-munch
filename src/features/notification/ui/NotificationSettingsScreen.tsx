@@ -72,6 +72,28 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
     >
       <div className="space-y-4 p-4">
         <Card>
+          <Card.Content className="py-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">테스트 알림 발송</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const res = await fetch('/api/notification/test', { method: 'POST' });
+                  if (res.status === 204) {
+                    Toast.success('테스트 알림을 발송했습니다');
+                  } else {
+                    Toast.error('발송 실패 — 구독 정보를 확인하세요');
+                  }
+                }}
+              >
+                보내기
+              </Button>
+            </div>
+          </Card.Content>
+        </Card>
+        <Card>
           <Card.Content className="space-y-3 py-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-600">유통기한 알림</p>
