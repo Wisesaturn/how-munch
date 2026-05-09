@@ -1,7 +1,7 @@
 import { skipToken, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/commons/lib';
-import { type Database } from '@/commons/types';
+import { type Database } from '@/commons/model/types';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 import { mealKeys, type Meal } from '@/entities/meal';

@@ -6,7 +6,7 @@ import { withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
-import { type Json } from '@/commons/types';
+import { type Json } from '@/commons/model/types';
 
 /** GET /api/ingredients?householdId=&year=&month= — 월별 장보기 내역 조회 */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {

@@ -4,7 +4,7 @@ import { withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
-import { type Json } from '@/commons/types';
+import { type Json } from '@/commons/model/types';
 
 /** POST /api/fridge/batches — 기존 아이템에 배치 추가 */
 export const POST = withAuth(async (req: NextRequest, { supabase }) => {

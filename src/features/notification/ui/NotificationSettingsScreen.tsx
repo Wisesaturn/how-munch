@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { ChevronLeft, RefreshCw } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
+import { useLoading } from '@/commons/model';
 import { Button, Card, ConfirmDialog, Select, Switch, Toast } from '@/commons/ui';
 import { cn } from '@/commons/lib';
 
@@ -35,7 +34,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   const { data: user } = useUserSuspenseQuery();
   const { data: preferences } = useNotificationPreferencesQuery(user.id);
   const upsertPreferencesMutation = useUpsertNotificationPreferencesMutation();
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncing, startSyncing] = useLoading();
 
   const expiryEnabled = preferences?.expiry_soon_enabled ?? DEFAULT_EXPIRY_ENABLED;
   const expiryOption = toExpiryNotificationOption(
@@ -102,18 +101,15 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                       title="알람 구독 새로고침"
                       description="알람 구독 정보를 갱신하시겠습니까?"
                       confirmLabel="갱신"
-                      onConfirm={async () => {
+                      onConfirm={() => {
                         close();
                         window.setTimeout(unmount, 200);
-                        setIsSyncing(true);
-                        try {
-                          await refreshPushSubscription({
+                        startSyncing(
+                          refreshPushSubscription({
                             userId: user.id,
                             isPermissionAsked: preferences?.is_permission_asked ?? false,
-                          });
-                        } finally {
-                          setIsSyncing(false);
-                        }
+                          }),
+                        );
                       }}
                     />
                   ));

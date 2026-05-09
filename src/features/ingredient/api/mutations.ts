@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/commons/lib';
-import { type Database } from '@/commons/types';
+import { type Database } from '@/commons/model/types';
 
 import { fridgeItemKeys } from '@/entities/fridge-item';
 import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
