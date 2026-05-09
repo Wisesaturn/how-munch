@@ -133,3 +133,22 @@ export function showPushPermissionToast(permission: NotificationPermission | nul
     Toast.info('알림 설정 권한을 해제하였습니다');
   }
 }
+
+/**
+ * @description 푸시 구독을 갱신하고 결과에 따른 토스트를 표시합니다.
+ * syncPushPermissionAndSubscription + showPushPermissionToast + Toast 피드백을 묶은 단일 액션입니다.
+ */
+export async function refreshPushSubscription(params: SyncPushPermissionParams): Promise<void> {
+  const result = await syncPushPermissionAndSubscription(params);
+  showPushPermissionToast(result.promptedPermission);
+
+  if (result.status === 'granted') {
+    Toast.success('알림 구독을 갱신했습니다');
+  } else if (result.status === 'unsupported') {
+    Toast.error('브라우저 알림을 지원하지 않습니다');
+  } else if (result.status === 'denied') {
+    Toast.error('알림 권한이 거부되어 있습니다');
+  } else {
+    Toast.error('구독 갱신에 실패했습니다');
+  }
+}

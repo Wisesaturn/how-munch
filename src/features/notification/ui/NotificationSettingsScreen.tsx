@@ -1,14 +1,21 @@
 'use client';
 
+import { useState } from 'react';
+
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, RefreshCw } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, Card, ConfirmDialog, Select, Switch, Toast } from '@/commons/ui';
+import { cn } from '@/commons/lib';
 
 import { useNotificationPreferencesQuery, useUpsertNotificationPreferencesMutation } from '../api';
-import { showPushPermissionToast, syncPushPermissionAndSubscription } from '../lib/pushPermission';
+import {
+  refreshPushSubscription,
+  showPushPermissionToast,
+  syncPushPermissionAndSubscription,
+} from '../lib/pushPermission';
 import {
   EXPIRY_NOTIFICATION_OPTIONS,
   toExpiryNotificationOption,
@@ -28,6 +35,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   const { data: user } = useUserSuspenseQuery();
   const { data: preferences } = useNotificationPreferencesQuery(user.id);
   const upsertPreferencesMutation = useUpsertNotificationPreferencesMutation();
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const expiryEnabled = preferences?.expiry_soon_enabled ?? DEFAULT_EXPIRY_ENABLED;
   const expiryOption = toExpiryNotificationOption(
@@ -73,7 +81,48 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
     >
       <div className="space-y-4 p-4">
         <Card>
-          <Card.Content className="py-3">
+          <Card.Content className="space-y-3 py-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">알람 구독 새로고침</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                disabled={isSyncing}
+                onClick={() => {
+                  overlay.open(({ isOpen, close, unmount }) => (
+                    <ConfirmDialog
+                      open={isOpen}
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          close();
+                          window.setTimeout(unmount, 200);
+                        }
+                      }}
+                      title="알람 구독 새로고침"
+                      description="알람 구독 정보를 갱신하시겠습니까?"
+                      confirmLabel="갱신"
+                      onConfirm={async () => {
+                        close();
+                        window.setTimeout(unmount, 200);
+                        setIsSyncing(true);
+                        try {
+                          await refreshPushSubscription({
+                            userId: user.id,
+                            isPermissionAsked: preferences?.is_permission_asked ?? false,
+                          });
+                        } finally {
+                          setIsSyncing(false);
+                        }
+                      }}
+                    />
+                  ));
+                }}
+                aria-label="알람 구독 새로고침"
+              >
+                <RefreshCw className={cn('size-4', isSyncing && 'animate-spin')} />
+              </Button>
+            </div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-600">테스트 알림 발송</p>
               <Button
@@ -98,21 +147,16 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                             window.setTimeout(unmount, 200);
                           }
                         }}
-                        title="알림 구독이 만료되었습니다"
-                        description="구독 정보를 새로고침하면 알림을 다시 받을 수 있습니다."
+                        title="알림 구독이 해제되었어요"
+                        description="구독 정보를 새로고침하시겠습니까?"
                         confirmLabel="새로고침"
                         onConfirm={async () => {
                           close();
                           window.setTimeout(unmount, 200);
-                          const result = await syncPushPermissionAndSubscription({
+                          await refreshPushSubscription({
                             userId: user.id,
                             isPermissionAsked: preferences?.is_permission_asked ?? false,
                           });
-                          if (result.status === 'granted') {
-                            Toast.success('알림 구독을 갱신했습니다');
-                          } else {
-                            Toast.error('구독 갱신 실패 — 알림 권한을 확인하세요');
-                          }
                         }}
                       />
                     ));
