@@ -25,6 +25,8 @@ async function request<T>(url: string, options?: RequestOptions & { body?: unkno
     ...(body !== undefined && { body: JSON.stringify(body) }),
   });
 
+  if (res.status === 204) return undefined as T;
+
   const json: ApiResponse<T> = await res.json();
   if (!res.ok) throw new Error(json.message);
   return json.data as T;
