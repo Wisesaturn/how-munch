@@ -56,12 +56,11 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed top-1/2 left-1/2 z-[var(--z-dialog-content)] w-full max-w-md -translate-x-1/2 -translate-y-1/2',
+        'fixed top-1/2 left-1/2 z-[var(--z-dialog-content)] w-full max-w-xs -translate-x-1/2 -translate-y-1/2',
         'flex max-h-[85vh] flex-col rounded-2xl bg-white shadow-lg outline-none',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-        'data-[state=closed]:slide-out-to-top-1/2 data-[state=open]:slide-in-from-top-1/2',
         className,
       )}
       {...props}
@@ -84,11 +83,11 @@ function DialogHeader({ heading, description, className, children, ...props }: D
   return (
     <div
       data-slot="dialog-header"
-      className={cn('flex shrink-0 flex-col gap-1 border-b px-4 py-4', className)}
+      className={cn('flex shrink-0 flex-col gap-1 px-4 py-4', className)}
       {...props}
     >
       {heading ? (
-        <DialogPrimitive.Title className="text-base font-semibold text-gray-900">
+        <DialogPrimitive.Title className="text-lg font-semibold text-gray-900">
           {heading}
         </DialogPrimitive.Title>
       ) : null}
@@ -124,7 +123,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('flex shrink-0 flex-row gap-2 border-t px-4 py-4', className)}
+      className={cn('flex shrink-0 flex-row gap-2 px-4 py-4', className)}
       {...props}
     />
   );
