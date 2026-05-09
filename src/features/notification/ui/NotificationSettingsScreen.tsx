@@ -2,9 +2,10 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { ChevronLeft } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
-import { Button, Card, Select, Switch, Toast } from '@/commons/ui';
+import { Button, Card, ConfirmDialog, Select, Switch, Toast } from '@/commons/ui';
 
 import { useNotificationPreferencesQuery, useUpsertNotificationPreferencesMutation } from '../api';
 import { showPushPermissionToast, syncPushPermissionAndSubscription } from '../lib/pushPermission';
@@ -83,11 +84,42 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                   const res = await fetch('/api/notification/test', { method: 'POST' });
                   if (res.status === 204) {
                     Toast.success('테스트 알림을 발송했습니다');
-                  } else if (res.status === 410) {
-                    Toast.error('구독이 만료되었습니다. 페이지를 새로고침해주세요');
-                  } else {
-                    Toast.error('발송 실패 — 구독 정보를 확인하세요');
+                    return;
                   }
+
+                  const needsResubscribe = res.status === 410 || res.status === 404;
+                  if (needsResubscribe) {
+                    overlay.open(({ isOpen, close, unmount }) => (
+                      <ConfirmDialog
+                        open={isOpen}
+                        onOpenChange={(open) => {
+                          if (!open) {
+                            close();
+                            window.setTimeout(unmount, 200);
+                          }
+                        }}
+                        title="알림 구독이 만료되었습니다"
+                        description="구독 정보를 새로고침하면 알림을 다시 받을 수 있습니다."
+                        confirmLabel="새로고침"
+                        onConfirm={async () => {
+                          close();
+                          window.setTimeout(unmount, 200);
+                          const result = await syncPushPermissionAndSubscription({
+                            userId: user.id,
+                            isPermissionAsked: preferences?.is_permission_asked ?? false,
+                          });
+                          if (result.status === 'granted') {
+                            Toast.success('알림 구독을 갱신했습니다');
+                          } else {
+                            Toast.error('구독 갱신 실패 — 알림 권한을 확인하세요');
+                          }
+                        }}
+                      />
+                    ));
+                    return;
+                  }
+
+                  Toast.error('발송 실패 — 잠시 후 다시 시도해주세요');
                 }}
               >
                 보내기
