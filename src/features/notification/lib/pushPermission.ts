@@ -51,7 +51,9 @@ export async function syncPushPermissionAndSubscription({
   let nextPermissionAsked = isPermissionAsked;
   let promptedPermission: NotificationPermission | null = null;
 
-  if (!isPermissionAsked && permission === 'default') {
+  // DB에 이미 asked로 기록되어 있어도 현재 브라우저에서 아직 물어보지 않은 경우
+  // (새 브라우저/디바이스) 권한을 요청해야 구독을 등록할 수 있다.
+  if (permission === 'default') {
     promptedPermission = await requestNotificationPermission();
     permission = promptedPermission;
     if (promptedPermission !== 'default') {

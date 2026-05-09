@@ -1,10 +1,15 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
-import { sendNotification, setVapidDetails } from 'npm:web-push';
+import { sendNotification, setVapidDetails, type WebPushError } from 'npm:web-push';
 
 // 역할: 특정 유저에게 테스트 push 알림을 즉시 발송한다.
-// 동작: 유저 JWT 검증 → 서비스 롤로 활성 구독 조회 → web-push 발송
+// 동작: 유저 JWT 검증 → 서비스 롤로 활성 구독 조회 → web-push 발송 (만료 시 비활성화)
+
+function isExpiredSubscription(error: unknown) {
+  const statusCode = (error as WebPushError)?.statusCode;
+  return statusCode === 404 || statusCode === 410;
+}
 
 Deno.serve(async (request: Request) => {
   const authHeader = request.headers.get('Authorization');
@@ -30,7 +35,6 @@ Deno.serve(async (request: Request) => {
     return new Response(JSON.stringify({ error: 'Missing env variables' }), { status: 500 });
   }
 
-  // 유저 JWT 검증
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
@@ -47,7 +51,6 @@ Deno.serve(async (request: Request) => {
     return new Response(JSON.stringify({ error: 'userId mismatch' }), { status: 403 });
   }
 
-  // 서비스 롤로 구독 조회 (RLS 우회)
   const serviceClient = createClient(supabaseUrl, serviceRoleKey);
   const { data: subscription, error } = await serviceClient
     .from('notification_push_subscriptions')
@@ -65,13 +68,23 @@ Deno.serve(async (request: Request) => {
 
   setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-  await sendNotification(
-    {
-      endpoint: subscription.endpoint,
-      keys: { p256dh: subscription.p256dh, auth: subscription.auth },
-    },
-    JSON.stringify({ title: '테스트 알림 🔔', body: '푸시 알림이 정상적으로 동작합니다!' }),
-  );
+  try {
+    await sendNotification(
+      {
+        endpoint: subscription.endpoint,
+        keys: { p256dh: subscription.p256dh, auth: subscription.auth },
+      },
+      JSON.stringify({ title: '테스트 알림 🔔', body: '푸시 알림이 정상적으로 동작합니다!' }),
+    );
+  } catch (sendError) {
+    if (isExpiredSubscription(sendError)) {
+      await serviceClient.rpc('deactivate_push_subscription_by_endpoint', {
+        p_endpoint: subscription.endpoint,
+      });
+      return new Response(JSON.stringify({ error: 'Subscription expired' }), { status: 410 });
+    }
+    return new Response(JSON.stringify({ error: 'Failed to send notification' }), { status: 500 });
+  }
 
   return new Response(null, { status: 204 });
 });

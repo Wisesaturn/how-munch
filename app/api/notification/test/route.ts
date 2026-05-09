@@ -22,6 +22,11 @@ export const POST = withAuth(async (_req, { userId, supabase }) => {
   });
 
   if (res.status === 404) return apiResponse.NOT_FOUND('NTF_001', '활성화된 push 구독이 없습니다.');
+  if (res.status === 410)
+    return new Response(
+      JSON.stringify({ status: 410, code: 'NTF_002', message: '구독이 만료되었습니다.' }),
+      { status: 410 },
+    );
   if (!res.ok) return apiResponse.INTERNAL_ERROR('테스트 알림 발송에 실패했습니다.');
 
   return apiResponse.NO_CONTENT();

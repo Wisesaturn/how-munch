@@ -83,6 +83,8 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                   const res = await fetch('/api/notification/test', { method: 'POST' });
                   if (res.status === 204) {
                     Toast.success('테스트 알림을 발송했습니다');
+                  } else if (res.status === 410) {
+                    Toast.error('구독이 만료되었습니다. 페이지를 새로고침해주세요');
                   } else {
                     Toast.error('발송 실패 — 구독 정보를 확인하세요');
                   }
