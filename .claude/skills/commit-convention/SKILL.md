@@ -28,7 +28,11 @@ git status
 
 **3. 메시지 작성 후 커밋**
 
+커밋 전 센티널 파일 생성 → 커밋 → 센티널 파일 삭제 순서로 실행한다.
+훅이 이 파일 존재 여부로 `/commit-convention` 경유 여부를 검증한다.
+
 ```bash
+touch .claude/.cc-active
 git commit -m "$(cat <<'EOF'
 type/#{이슈번호}: 한 줄 요약
 
@@ -36,6 +40,7 @@ type/#{이슈번호}: 한 줄 요약
 - 작업 내용 B
 EOF
 )"
+rm -f .claude/.cc-active
 ```
 
 > Co-Authored-By 추가하지 않는다.

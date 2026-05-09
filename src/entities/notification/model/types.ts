@@ -1,4 +1,4 @@
-import { type Database, type Json } from '@/commons/types/database';
+import { type Database, type Json } from '@/commons/model/types/database';
 
 import { type IngredientUnit } from '@/entities/ingredient/@x/notification';
 

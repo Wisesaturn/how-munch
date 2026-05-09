@@ -112,9 +112,25 @@ commons/ui/
 
 환경변수 접근, 앱 전역 상수.
 
-### `commons/types/`
+### `commons/model/`
 
-여러 레이어에서 공유되는 TypeScript 타입.
+앱 전역 상태/행동 로직과 공유 TypeScript 타입.
+
+```
+commons/model/
+├── react/
+│   ├── useIsMounted.ts   # 마운트 여부 추적
+│   ├── useLoading.ts     # Promise 로딩 상태 관리
+│   └── index.ts
+├── types/
+│   ├── database.ts       # Supabase 자동생성 Database 타입
+│   └── index.ts
+└── index.ts
+```
+
+- `types/database.ts`는 Supabase CLI로 자동생성되는 파일
+- import: `import { type Database } from '@/commons/model/types'`
+- import: `import { useLoading } from '@/commons/model'`
 
 ---
 
