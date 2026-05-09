@@ -2,35 +2,36 @@
 
 import { ChevronRight, X } from 'lucide-react';
 
-import { Badge, Button, Select } from '@/commons/ui';
+import { Badge, Button, SegmentControl, Select } from '@/commons/ui';
 import { cn } from '@/commons/lib';
 
-import { isWeightUnit, resolveAmountMin } from '@/entities/ingredient';
+import { isWeightUnit } from '@/entities/ingredient';
 
 import {
   type EditorIngredient,
-  resolveIngredientUnitLabel,
+  type IngredientUsageStatus,
   resolveSliderBoundaries,
   resolveWeightSliderMin,
   resolveWeightSliderStep,
 } from '../lib';
 import { useMealEditorContext } from '../model';
 
-import { MealIngredientCountControl } from './MealIngredientCountControl';
 import { MealIngredientWeightControl } from './MealIngredientWeightControl';
 
 interface MealIngredientRowProps {
   ingredient: EditorIngredient;
-  onChangeIngredientItem: (value: string) => void;
-  onChangeIngredientAmount: (value: string) => void;
-  onRemoveIngredient: () => void;
+  onIngredientItemChange: (value: string) => void;
+  onIngredientAmountChange: (value: string) => void;
+  onUsageStatusChange: (status: IngredientUsageStatus) => void;
+  onIngredientRemove: () => void;
 }
 
 function MealIngredientRow({
   ingredient,
-  onChangeIngredientItem,
-  onChangeIngredientAmount,
-  onRemoveIngredient,
+  onIngredientItemChange,
+  onIngredientAmountChange,
+  onUsageStatusChange,
+  onIngredientRemove,
 }: MealIngredientRowProps) {
   const { fridgeItems, inUseStockAmountByItemId, openFridgeItemSearch } =
     useMealEditorContext('MealIngredientRow');
@@ -51,7 +52,6 @@ function MealIngredientRow({
   /* Unit / Range Constants                                                      */
   /* -------------------------------------------------------------------------- */
   const selectedUnit = selectedIngredient?.unit;
-  const unitLabel = resolveIngredientUnitLabel(selectedUnit);
   const sliderBoundary = resolveSliderBoundaries(selectedMaxAvailableAmount);
   const sliderStep = resolveWeightSliderStep(selectedUnit);
   const sliderMin = resolveWeightSliderMin(selectedUnit);
@@ -61,11 +61,7 @@ function MealIngredientRow({
   /* -------------------------------------------------------------------------- */
   const sliderValue = ingredient.amount > 0 ? ingredient.amount : sliderMin;
   const selectedAmount = Math.min(Math.max(sliderValue, sliderMin), sliderBoundary.max);
-  const isAmountControlDisabled =
-    !selectedIngredient ||
-    (isWeightUnit(selectedUnit) ? sliderBoundary.max < sliderMin : sliderBoundary.max < 1);
-  const selectedUnitMinAmount = selectedUnit ? resolveAmountMin(selectedUnit) : 1;
-  const isCountInputDisabled = !selectedIngredient || sliderBoundary.max < selectedUnitMinAmount;
+  const isAmountControlDisabled = !selectedIngredient || sliderBoundary.max < 1;
   const ingredientSelectValue = ingredient.fridge_item_id;
 
   const isDepleted = selectedIngredient ? Number(selectedIngredient.total_count) <= 0 : false;
@@ -76,7 +72,7 @@ function MealIngredientRow({
         {openFridgeItemSearch ? (
           <button
             type="button"
-            onClick={() => openFridgeItemSearch(ingredientSelectValue, onChangeIngredientItem)}
+            onClick={() => openFridgeItemSearch(ingredientSelectValue, onIngredientItemChange)}
             className={cn(
               'border-input flex h-10 min-w-0 flex-1 items-center justify-between rounded-md border bg-white px-3 py-2 text-sm',
               'hover:bg-accent transition-colors',
@@ -97,7 +93,7 @@ function MealIngredientRow({
             <ChevronRight className="text-muted-foreground ml-1 size-4 shrink-0" />
           </button>
         ) : (
-          <Select value={ingredientSelectValue} onValueChange={onChangeIngredientItem}>
+          <Select value={ingredientSelectValue} onValueChange={onIngredientItemChange}>
             <Select.Trigger className="min-w-0 flex-1">
               <Select.Value placeholder="재료 선택" />
             </Select.Trigger>
@@ -130,7 +126,7 @@ function MealIngredientRow({
           variant="outline"
           size="icon"
           className="shrink-0 text-gray-500 hover:text-red-500"
-          onClick={onRemoveIngredient}
+          onClick={onIngredientRemove}
           aria-label="재료 삭제"
         >
           <X className="size-4" />
@@ -138,14 +134,15 @@ function MealIngredientRow({
       </div>
 
       {isWeightUnit(selectedUnit) ? (
-        <MealIngredientCountControl
-          amount={ingredient.amount}
-          max={sliderBoundary.max}
-          unit={selectedUnit}
-          unitLabel={unitLabel}
-          disabled={isCountInputDisabled}
-          onChangeAmount={onChangeIngredientAmount}
-        />
+        <SegmentControl
+          value={ingredient.usage_status ?? 'used'}
+          onValueChange={(value) => onUsageStatusChange(value as IngredientUsageStatus)}
+          size="md"
+          disabled={!selectedIngredient}
+        >
+          <SegmentControl.Item value="used">사용</SegmentControl.Item>
+          <SegmentControl.Item value="depleted">소진</SegmentControl.Item>
+        </SegmentControl>
       ) : (
         <MealIngredientWeightControl
           min={sliderMin}
@@ -154,7 +151,7 @@ function MealIngredientRow({
           disabled={isAmountControlDisabled}
           unit={selectedUnit}
           step={sliderStep}
-          onValueChange={(value) => onChangeIngredientAmount(String(value))}
+          onValueChange={(value) => onIngredientAmountChange(String(value))}
         />
       )}
     </div>

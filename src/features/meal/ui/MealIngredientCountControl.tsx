@@ -15,7 +15,7 @@ interface MealIngredientCountControlProps {
   max: number;
   unit: IngredientUnit | undefined;
   unitLabel: string;
-  onChangeAmount: (value: string) => void;
+  onAmountChange: (value: string) => void;
 }
 
 /**
@@ -32,7 +32,7 @@ function MealIngredientCountControl({
   max,
   unit,
   unitLabel,
-  onChangeAmount,
+  onAmountChange,
 }: MealIngredientCountControlProps) {
   const decimalScale = resolveDecimalScaleByUnit(unit);
   const [inputValue, setInputValue] = useState(
@@ -62,7 +62,7 @@ function MealIngredientCountControl({
             });
             setInputValue(parsedInput.text);
             if (parsedInput.value === null) return;
-            onChangeAmount(String(parsedInput.value));
+            onAmountChange(String(parsedInput.value));
           }}
           type="text"
           inputMode={inputMode}

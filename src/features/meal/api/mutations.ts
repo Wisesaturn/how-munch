@@ -9,7 +9,10 @@ export interface MealEditorDishInput {
   name: string;
   ingredients: Array<{
     fridge_item_id: string;
-    amount: number;
+    /** 개 단위: 수량. g/kg 단위: undefined */
+    amount?: number;
+    /** g/kg 단위: 'used' | 'depleted'. 개 단위: undefined */
+    usage_status?: 'used' | 'depleted';
   }>;
 }
 

@@ -7,16 +7,23 @@ import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import { type MealType } from '@/entities/meal';
 
+type IngredientUsageStatus = 'used' | 'depleted';
+
+interface UpsertMealIngredient {
+  fridge_item_id: string;
+  /** 개 단위: 수량 필수. g/kg 단위: null */
+  amount?: number | null;
+  /** g/kg 단위: 'used' | 'depleted'. 개 단위: 없음 */
+  usage_status?: IngredientUsageStatus;
+}
+
 interface UpsertMealBody {
   householdId: string;
   date: string;
   type: MealType;
   dishes: Array<{
     name: string;
-    ingredients: Array<{
-      fridge_item_id: string;
-      amount: number;
-    }>;
+    ingredients: Array<UpsertMealIngredient>;
   }>;
 }
 
@@ -25,6 +32,20 @@ function toSafePositiveAmount(value: unknown) {
   if (!Number.isFinite(amount)) return 0;
   if (amount <= 0) return 0;
   return amount;
+}
+
+function normalizeIngredient(ingredient: UpsertMealIngredient) {
+  if (!ingredient.fridge_item_id) return null;
+
+  // g/kg 품목: usage_status 기반
+  if (ingredient.usage_status === 'used' || ingredient.usage_status === 'depleted') {
+    return { fridge_item_id: ingredient.fridge_item_id, usage_status: ingredient.usage_status };
+  }
+
+  // 개 품목: amount 기반
+  const amount = toSafePositiveAmount(ingredient.amount);
+  if (amount <= 0) return null;
+  return { fridge_item_id: ingredient.fridge_item_id, amount };
 }
 
 /** GET /api/meals?householdId=&date= — 특정 날짜 식단 조회 */
@@ -60,12 +81,7 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
   const normalizedDishes = dishes.map((dish, index) => ({
     name: dish.name.trim() || '[이름 없음]',
     sort_order: index,
-    ingredients: dish.ingredients
-      .map((ingredient) => ({
-        fridge_item_id: ingredient.fridge_item_id,
-        amount: toSafePositiveAmount(ingredient.amount),
-      }))
-      .filter((ingredient) => !!ingredient.fridge_item_id && ingredient.amount > 0),
+    ingredients: dish.ingredients.map(normalizeIngredient).filter(Boolean),
   }));
 
   const { data, error } = await supabase.rpc('upsert_meal_with_usage', {

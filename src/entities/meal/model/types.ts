@@ -8,8 +8,10 @@ export interface DishIngredient {
   dish_id: string;
   /** 사용된 냉장고 재료 ID */
   fridge_item_id: string;
-  /** 사용량 (단위는 FridgeItem의 unit을 따름) */
-  amount: number;
+  /** 사용량 — 개 단위: 숫자, g/kg 단위: null */
+  amount: number | null;
+  /** 사용 상태 — g/kg 단위: 'used' | 'depleted', 개 단위: 'used' */
+  usage_status: 'used' | 'depleted' | null;
   created_at: string;
 }
 

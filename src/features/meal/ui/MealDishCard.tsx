@@ -10,9 +10,11 @@ import {
   appendIngredient,
   excludeDish,
   excludeIngredient,
+  type IngredientUsageStatus,
   renameDish,
   replaceIngredientAmount,
   replaceIngredientItem,
+  replaceIngredientUsageStatus,
 } from '../lib';
 import { useMealEditorContext } from '../model';
 
@@ -75,13 +77,18 @@ function MealDishCard({ dishIndex }: MealDishCardProps) {
               <MealIngredientRow
                 key={`${dishIndex}-${ingredientIndex}`}
                 ingredient={ingredient}
-                onChangeIngredientItem={(value) =>
+                onIngredientItemChange={(value) =>
                   changeDishes(replaceIngredientItem(dishes, dishIndex, ingredientIndex, value))
                 }
-                onChangeIngredientAmount={(value) =>
+                onIngredientAmountChange={(value) =>
                   changeDishes(replaceIngredientAmount(dishes, dishIndex, ingredientIndex, value))
                 }
-                onRemoveIngredient={() =>
+                onUsageStatusChange={(status: IngredientUsageStatus) =>
+                  changeDishes(
+                    replaceIngredientUsageStatus(dishes, dishIndex, ingredientIndex, status),
+                  )
+                }
+                onIngredientRemove={() =>
                   changeDishes(excludeIngredient(dishes, dishIndex, ingredientIndex))
                 }
               />

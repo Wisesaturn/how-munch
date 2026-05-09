@@ -1,4 +1,10 @@
-export type { EditorDish, EditorIngredient, FridgeStockInfo, MealFridgeItem } from './types';
+export type {
+  EditorDish,
+  EditorIngredient,
+  FridgeStockInfo,
+  IngredientUsageStatus,
+  MealFridgeItem,
+} from './types';
 
 export {
   formatIngredientAmountInfo,
@@ -17,5 +23,6 @@ export {
   renameDish,
   replaceIngredientAmount,
   replaceIngredientItem,
+  replaceIngredientUsageStatus,
   reorderDishes,
 } from './dishes';

@@ -18,7 +18,8 @@ function toEditorDishes(meal: Meal | null): EditorDish[] {
       name: dish.name === '[이름 없음]' ? '' : dish.name,
       ingredients: (dish.ingredients ?? []).map((ingredient) => ({
         fridge_item_id: ingredient.fridge_item_id,
-        amount: normalizeAmount(Number(ingredient.amount)),
+        amount: normalizeAmount(Number(ingredient.amount ?? 0)),
+        usage_status: ingredient.usage_status ?? undefined,
       })),
     }));
 }

@@ -1,11 +1,10 @@
--- Function: public.upsert_meal_with_usage
--- Source: supabase/migrations/057_update_upsert_meal_with_usage_for_status.sql
--- 역할: 식단 저장 시 dish/ingredient와 배치 사용량 차감을 원자적으로 처리합니다.
+-- Migration: 057_update_upsert_meal_with_usage_for_status
+-- 역할: g/kg 품목의 usage_status 기반 재고 처리를 지원하도록 RPC를 업데이트합니다.
 -- 동작:
--- 1. 기존 meal usage를 롤백한 뒤 새 dishes/ingredients를 재저장합니다.
--- 2. usage_status='used' (g/kg): dish_ingredients에만 기록, 배치 변화 없음.
--- 3. usage_status='depleted' (g/kg): 해당 품목 전체 배치를 0으로 소진, meal_batch_usages 기록.
--- 4. usage_status 없이 amount>0 (개): FIFO 배치 차감 후 부족 시 도메인 예외 발생.
+-- 1. usage_status='used': dish_ingredients 기록만, 배치 변화 없음
+-- 2. usage_status='depleted': 전체 배치 quantity→0, meal_batch_usages 기록
+-- 3. usage_status 없이 amount>0 (개 단위): 기존 FIFO 차감 로직 유지
+
 create or replace function public.upsert_meal_with_usage(
   p_household_id uuid,
   p_date date,

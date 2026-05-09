@@ -1,4 +1,4 @@
-import { type EditorDish } from './types';
+import { type EditorDish, type IngredientUsageStatus } from './types';
 import { parseIngredientAmount } from './unit';
 
 /**
@@ -30,7 +30,10 @@ function appendIngredient(dishes: EditorDish[], dishIndex: number) {
     index === dishIndex
       ? {
           ...dish,
-          ingredients: [...dish.ingredients, { fridge_item_id: '', amount: 0 }],
+          ingredients: [
+            ...dish.ingredients,
+            { fridge_item_id: '', amount: 0, usage_status: undefined },
+          ],
         }
       : dish,
   );
@@ -74,6 +77,7 @@ function replaceIngredientItem(
               ...ingredient,
               fridge_item_id: fridgeItemId,
               amount: 0,
+              usage_status: undefined,
             }
           : ingredient,
       ),
@@ -117,6 +121,27 @@ function reorderDishes(dishes: EditorDish[], sourceIndex: number, destinationInd
   return result;
 }
 
+/**
+ * @description 지정한 메뉴/재료의 usage_status를 교체합니다. (g/kg 단위 전용)
+ */
+function replaceIngredientUsageStatus(
+  dishes: EditorDish[],
+  dishIndex: number,
+  ingredientIndex: number,
+  status: IngredientUsageStatus,
+) {
+  return dishes.map((dish, index) => {
+    if (index !== dishIndex) return dish;
+
+    return {
+      ...dish,
+      ingredients: dish.ingredients.map((ingredient, currentIndex) =>
+        currentIndex === ingredientIndex ? { ...ingredient, usage_status: status } : ingredient,
+      ),
+    };
+  });
+}
+
 export {
   appendDish,
   appendIngredient,
@@ -125,5 +150,6 @@ export {
   renameDish,
   replaceIngredientAmount,
   replaceIngredientItem,
+  replaceIngredientUsageStatus,
   reorderDishes,
 };

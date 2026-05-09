@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
 
-import { resolveAmountMin, validateAmountPrecisionByUnit } from '@/entities/ingredient';
+import {
+  isWeightUnit,
+  resolveAmountMin,
+  validateAmountPrecisionByUnit,
+} from '@/entities/ingredient';
 
 import { formatIngredientAmountInfo, type FridgeStockInfo } from '../lib';
 
@@ -66,6 +70,10 @@ function createMealEditorDishesSchema(
           usedFridgeItemIds.add(ingredient.fridge_item_id);
           const stockInfo = fridgeStockInfoById[ingredient.fridge_item_id];
           if (!stockInfo) return;
+
+          // g/kg 단위는 usage_status로 처리 — amount 검증 건너뜀
+          if (isWeightUnit(stockInfo.unit)) return;
+
           const minAmount = resolveAmountMin(stockInfo.unit);
           if (ingredient.amount < minAmount) {
             ctx.addIssue({
@@ -79,10 +87,7 @@ function createMealEditorDishesSchema(
           if (!validateAmountPrecisionByUnit(ingredient.amount, stockInfo.unit)) {
             ctx.addIssue({
               code: 'custom',
-              message:
-                stockInfo.unit === 'kg'
-                  ? `${dishLabel}의 ${stockInfo.itemName} 수량은 소수점 첫째 자리까지 입력할 수 있습니다`
-                  : `${dishLabel}의 ${stockInfo.itemName} 수량은 정수만 입력할 수 있습니다`,
+              message: `${dishLabel}의 ${stockInfo.itemName} 수량은 정수만 입력할 수 있습니다`,
               path: [dishIndex, 'ingredients', ingredientIndex, 'amount'],
             });
             return;
