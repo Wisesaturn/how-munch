@@ -29,6 +29,7 @@ export { Popover } from './Popover';
 export { PriceInput, type PriceInputProps } from './PriceInput';
 export { ProgressBar } from './ProgressBar';
 export { ScrollArea } from './ScrollArea';
+export { SegmentControl } from './SegmentControl';
 export { Separator, separatorVariants } from './Separator';
 export { Select } from './Select';
 export {
