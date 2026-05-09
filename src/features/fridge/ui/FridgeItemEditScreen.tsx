@@ -3,7 +3,7 @@
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { overlay } from 'overlay-kit';
 
-import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
+import { Button, CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -14,6 +14,7 @@ import { type FridgeItemFormValues, FridgeItemForm } from './FridgeItemForm';
 interface FridgeItemEditScreenProps {
   onClose: () => void;
   item: FridgeItemWithBatches;
+  onOpenSubdivide?: () => void;
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
   onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
 }
@@ -22,6 +23,7 @@ interface FridgeItemEditScreenProps {
 export function FridgeItemEditScreen({
   onClose,
   item,
+  onOpenSubdivide,
   onOpenProductNameSearch,
   onOpenBrandSearch,
 }: FridgeItemEditScreenProps) {
@@ -94,7 +96,18 @@ export function FridgeItemEditScreen({
   }
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '재료 수정' }}>
+    <AppScreen
+      className="pointer-events-auto"
+      appBar={{
+        title: '재료 수정',
+        renderRight: () =>
+          onOpenSubdivide ? (
+            <Button type="button" variant="ghost" size="sm" onClick={onOpenSubdivide}>
+              소분
+            </Button>
+          ) : null,
+      }}
+    >
       <div className="px-4 pt-4 pb-28">
         <FridgeItemForm
           id={item.id}

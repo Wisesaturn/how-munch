@@ -31,6 +31,9 @@ const DOMAIN_ERROR_CODE = {
   INGREDIENT_CATEGORY_ID_NOT_FOUND: 'ING_003',
   INGREDIENT_CATEGORY_REPLACEMENT_NOT_FOUND: 'ING_004',
   INGREDIENT_NOT_FOUND: 'ING_005',
+
+  // SBD: 소분(Subdivision) 도메인
+  SUBDIVISION_INSUFFICIENT_STOCK: 'SBD_001',
 } as const;
 
 type DomainErrorCodeKey = keyof typeof DOMAIN_ERROR_CODE;
@@ -82,6 +85,9 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   ING_003: '유효하지 않은 카테고리입니다.',
   ING_004: '대체할 기본 카테고리(기타)를 찾을 수 없습니다.',
   ING_005: '재료를 찾을 수 없습니다.',
+
+  // SBD
+  SBD_001: '소분할 재고가 부족합니다.',
 };
 
 /**
@@ -109,6 +115,7 @@ const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
   I0003: 'INGREDIENT_CATEGORY_ID_NOT_FOUND',
   I0004: 'INGREDIENT_CATEGORY_REPLACEMENT_NOT_FOUND',
   I0005: 'INGREDIENT_NOT_FOUND',
+  S0001: 'SUBDIVISION_INSUFFICIENT_STOCK',
 };
 
 /**

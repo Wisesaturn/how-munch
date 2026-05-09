@@ -15,6 +15,7 @@ import {
   FridgeFilterSettingsScreen,
   FridgeItemAddScreen,
   FridgeItemEditScreen,
+  FridgeItemSubdivideScreen,
   useFridgeBrandNamesQuery,
 } from '@/features/fridge';
 import {
@@ -145,12 +146,48 @@ function FridgeItemEditActivity({
     });
   }
 
+  function openSubdivide() {
+    push('FridgeItemSubdivideActivity', {
+      fridgeItemId: params.item.id,
+      itemName: params.item.name,
+      totalCount: params.item.total_count,
+      unit: params.item.unit,
+      batches: params.item.fridge_item_batches.filter((b) => !b.deleted_at),
+    });
+  }
+
   return (
     <FridgeItemEditScreen
       onClose={pop}
       item={params.item}
+      onOpenSubdivide={openSubdivide}
       onOpenProductNameSearch={openProductNameSearch}
       onOpenBrandSearch={openBrandSearch}
+    />
+  );
+}
+
+function FridgeItemSubdivideActivity({
+  params,
+}: {
+  params: {
+    fridgeItemId: string;
+    itemName: string;
+    totalCount: number;
+    unit: IngredientUnit;
+    batches: FridgeItemBatch[];
+  };
+}) {
+  const { pop } = useActions();
+
+  return (
+    <FridgeItemSubdivideScreen
+      onSuccess={() => pop(2)}
+      fridgeItemId={params.fridgeItemId}
+      itemName={params.itemName}
+      totalCount={params.totalCount}
+      unit={params.unit}
+      batches={params.batches}
     />
   );
 }
@@ -334,6 +371,7 @@ const appStackFlow = stackflow({
     IngredientEditActivity,
     FridgeItemAddActivity,
     FridgeItemEditActivity,
+    FridgeItemSubdivideActivity,
     FridgeBatchEditActivity,
     FridgeFilterSettingsActivity,
     FridgeExpiryListActivity,
@@ -354,6 +392,7 @@ const appStackFlow = stackflow({
         IngredientEditActivity: '/ingredient/edit',
         FridgeItemAddActivity: '/fridge/item/add',
         FridgeItemEditActivity: '/fridge/item/edit',
+        FridgeItemSubdivideActivity: '/fridge/item/subdivide',
         FridgeBatchEditActivity: '/fridge/batch/edit',
         FridgeFilterSettingsActivity: '/fridge/filter/settings',
         FridgeExpiryListActivity: '/fridge/expiry',

@@ -88,6 +88,28 @@ export function useDeleteBatchMutation() {
   });
 }
 
+interface SubdivideFridgeItemInput {
+  source_item_id: string;
+  consume_amount: number;
+  new_item_name: string;
+  new_item_quantity: number;
+  new_expiry_date?: string | null;
+}
+
+/** 냉장고 아이템 소분 — FIFO 차감 후 새 독립 fridge_item 생성 */
+export function useSubdivideFridgeItemMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: SubdivideFridgeItemInput) =>
+      apiClient.post<FridgeItem>('/api/fridge/subdivide', input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
+    },
+  });
+}
+
 interface UpsertFridgePreferencesInput {
   userId: string;
   values: { hide_depleted_fridge_items: boolean };

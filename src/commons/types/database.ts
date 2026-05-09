@@ -778,6 +778,30 @@ export interface Database {
         };
         Returns: void;
       };
+      subdivide_fridge_item: {
+        Args: {
+          p_source_item_id: string;
+          p_consume_amount: number;
+          p_new_item_name: string;
+          p_new_item_quantity: number;
+          p_new_expiry_date?: string | null;
+        };
+        Returns: {
+          id: string;
+          household_id: string;
+          name: string;
+          brand: string | null;
+          total_count: number;
+          max_count: number;
+          unit: 'count' | 'g' | 'kg';
+          is_subdivided: boolean;
+          category_id: string;
+          from_grocery: boolean;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
     };
     Enums: {
       [_ in never]: never;
