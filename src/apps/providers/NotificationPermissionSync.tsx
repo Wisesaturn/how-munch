@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { useAsyncEffect } from 'react-simplikit';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
@@ -28,6 +30,21 @@ export function NotificationPermissionSync() {
       });
 
       showPushPermissionToast(result.promptedPermission);
+    },
+    [user.id],
+  );
+
+  useEffect(
+    function syncOnSwSubscriptionChange() {
+      if (!('serviceWorker' in navigator)) return;
+
+      async function handleSwMessage(event: MessageEvent) {
+        if (event.data?.type !== 'PUSH_SUBSCRIPTION_CHANGED') return;
+        await syncPushPermissionAndSubscription({ userId: user.id, isPermissionAsked: true });
+      }
+
+      navigator.serviceWorker.addEventListener('message', handleSwMessage);
+      return () => navigator.serviceWorker.removeEventListener('message', handleSwMessage);
     },
     [user.id],
   );

@@ -1,3 +1,15 @@
+// 브라우저가 push subscription을 자동 갱신할 때 발생하는 이벤트.
+// 핸들러가 없으면 새 endpoint가 DB에 반영되지 않아 알림 전달이 실패한다.
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      clientList.forEach((client) => {
+        client.postMessage({ type: 'PUSH_SUBSCRIPTION_CHANGED' });
+      });
+    }),
+  );
+});
+
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
