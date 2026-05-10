@@ -13,6 +13,8 @@ import { type StagedItem } from '../lib/parseAiResponse';
 import { setPendingPromptEditCallback } from '../model/promptIngredientEditStore';
 import { type SaveState, usePromptIngredientStore } from '../model/promptIngredientStore';
 
+import { IngredientItem } from './IngredientItem';
+
 interface PromptIngredientStagingScreenProps {
   onClose: () => void;
   onComplete: () => void;
@@ -68,8 +70,9 @@ export function PromptIngredientStagingScreen({
   const selectedItems = items.filter((i) => checkedIds.includes(i.id));
   const allChecked = items.length > 0 && items.every((i) => checkedIds.includes(i.id));
 
-  function resolveLabel(item: StagedItem) {
-    return categories.find((c) => c.id === item.category_id)?.label ?? '기타';
+  function resolveCategory(item: StagedItem) {
+    const cat = categories.find((c) => c.id === item.category_id);
+    return { label: cat?.label ?? '기타', emoji: cat?.emoji };
   }
 
   function openEdit(item: StagedItem) {
@@ -182,23 +185,16 @@ export function PromptIngredientStagingScreen({
                 onClick={() => openEdit(item)}
                 disabled={isSaving}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-normal text-gray-900">{item.name}</span>
-                  <span className="shrink-0 text-sm font-semibold text-gray-900">
-                    {item.price.toLocaleString()}원
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{resolveLabel(item)}</span>
-                  {item.store && (
-                    <>
-                      <span className="text-gray-300">|</span>
-                      <span className="truncate">{item.store}</span>
-                    </>
-                  )}
-                  <span className="text-gray-300">|</span>
-                  <span>{item.count}개</span>
-                </div>
+                <IngredientItem
+                  name={item.name}
+                  price={item.price}
+                  count={item.count}
+                  unit={item.unit}
+                  store={item.store}
+                  categoryLabel={resolveCategory(item).label}
+                  categoryEmoji={resolveCategory(item).emoji}
+                  size="sm"
+                />
               </button>
             </div>
           );

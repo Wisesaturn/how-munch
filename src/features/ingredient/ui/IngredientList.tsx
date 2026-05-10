@@ -50,14 +50,23 @@ export function IngredientList({ householdId, ingredients, onEdit }: IngredientL
           </h3>
           <div className="flex flex-col gap-1.5">
             {items.map((item) => (
-              // category may be missing in edge cases (deleted/legacy rows); show raw id fallback.
-              <IngredientItem
+              <button
                 key={item.id}
-                ingredient={item}
-                onEdit={onEdit}
-                categoryLabel={getCategoryById(item.category_id)?.label ?? ''}
-                categoryEmoji={getCategoryById(item.category_id)?.emoji ?? ''}
-              />
+                type="button"
+                className="text-foreground flex w-full appearance-none flex-col gap-1 rounded-lg border bg-white px-3 py-2.5 text-left"
+                onClick={() => onEdit(item)}
+              >
+                <IngredientItem
+                  name={item.name}
+                  brand={item.brand}
+                  price={item.price}
+                  count={item.count}
+                  unit={item.unit}
+                  store={item.store}
+                  categoryLabel={getCategoryById(item.category_id)?.label ?? ''}
+                  categoryEmoji={getCategoryById(item.category_id)?.emoji ?? ''}
+                />
+              </button>
             ))}
           </div>
         </div>
