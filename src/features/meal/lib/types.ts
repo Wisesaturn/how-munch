@@ -6,8 +6,10 @@ interface EditorIngredient {
   fridge_item_id: string;
   /** 개 단위: 수량. g/kg 단위: 0 (사용 안 함) */
   amount: number;
-  /** g/kg 단위 전용 — 'used' | 'depleted'. 개 단위는 undefined */
-  usage_status?: IngredientUsageStatus;
+  /** 항상 포함 — g/kg: 'used' | 'depleted'. 개 단위: 항상 'used' */
+  usage_status: IngredientUsageStatus;
+  /** 냉장고 품목 단위 — 재료 선택 시 fridgeItems에서 주입 */
+  unit?: IngredientUnit;
 }
 
 interface EditorDish {

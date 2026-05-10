@@ -8,10 +8,13 @@ import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { type MealType } from '@/entities/meal';
 
 type IngredientUsageStatus = 'used' | 'depleted';
+type IngredientUnit = 'count' | 'g' | 'kg';
 
 interface UpsertMealIngredient {
   fridge_item_id: string;
-  /** 개 단위: 수량 필수. g/kg 단위: null */
+  /** 냉장고 품목 단위 — g/kg vs 개 판별 기준 */
+  unit?: IngredientUnit;
+  /** 개 단위: 수량. g/kg 단위: 없음 */
   amount?: number | null;
   /** g/kg 단위: 'used' | 'depleted'. 개 단위: 없음 */
   usage_status?: IngredientUsageStatus;
@@ -34,12 +37,19 @@ function toSafePositiveAmount(value: unknown) {
   return amount;
 }
 
+function isWeightUnit(unit?: IngredientUnit) {
+  return unit === 'g' || unit === 'kg';
+}
+
 function normalizeIngredient(ingredient: UpsertMealIngredient) {
   if (!ingredient.fridge_item_id) return null;
 
-  // g/kg 품목: usage_status 기반
-  if (ingredient.usage_status === 'used' || ingredient.usage_status === 'depleted') {
-    return { fridge_item_id: ingredient.fridge_item_id, usage_status: ingredient.usage_status };
+  if (isWeightUnit(ingredient.unit)) {
+    // g/kg 품목: usage_status 기반
+    if (ingredient.usage_status === 'used' || ingredient.usage_status === 'depleted') {
+      return { fridge_item_id: ingredient.fridge_item_id, usage_status: ingredient.usage_status };
+    }
+    return null;
   }
 
   // 개 품목: amount 기반
@@ -60,7 +70,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data: meals, error: mealsError } = await supabase
     .from('meals')
-    .select('*, dishes(*, ingredients:dish_ingredients(*))')
+    .select('*, dishes(*, ingredients:dish_ingredients(*, fridge_items(unit, name)))')
     .eq('household_id', householdId)
     .eq('date', date)
     .order('type', { ascending: true });

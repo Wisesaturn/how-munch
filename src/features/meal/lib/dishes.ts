@@ -32,7 +32,7 @@ function appendIngredient(dishes: EditorDish[], dishIndex: number) {
           ...dish,
           ingredients: [
             ...dish.ingredients,
-            { fridge_item_id: '', amount: 0, usage_status: undefined },
+            { fridge_item_id: '', amount: 0, usage_status: 'used' as IngredientUsageStatus },
           ],
         }
       : dish,
@@ -77,7 +77,7 @@ function replaceIngredientItem(
               ...ingredient,
               fridge_item_id: fridgeItemId,
               amount: 0,
-              usage_status: undefined,
+              usage_status: 'used' as IngredientUsageStatus,
             }
           : ingredient,
       ),

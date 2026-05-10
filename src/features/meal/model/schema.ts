@@ -36,6 +36,7 @@ function createMealEditorDishesSchema(
                 .trim()
                 .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '재료' })),
               amount: z.number().min(0, ERROR_MSG.RANGE.MIN({ fieldName: '재료 수량', min: 0 })),
+              usage_status: z.enum(['used', 'depleted']),
             }),
           )
           .min(1, '메뉴마다 재료를 1개 이상 추가해 주세요'),

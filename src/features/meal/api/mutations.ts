@@ -9,10 +9,12 @@ export interface MealEditorDishInput {
   name: string;
   ingredients: Array<{
     fridge_item_id: string;
-    /** 개 단위: 수량. g/kg 단위: undefined */
+    /** 개 단위: 수량. g/kg 단위: 0 (Route Handler에서 무시) */
     amount?: number;
-    /** g/kg 단위: 'used' | 'depleted'. 개 단위: undefined */
-    usage_status?: 'used' | 'depleted';
+    /** 항상 포함 — g/kg: 'used' | 'depleted'. 개 단위: 항상 'used' */
+    usage_status: 'used' | 'depleted';
+    /** 냉장고 품목 단위 — Route Handler에서 g/kg vs 개 판별에 사용 */
+    unit?: 'count' | 'g' | 'kg';
   }>;
 }
 

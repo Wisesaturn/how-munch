@@ -19,7 +19,8 @@ function toEditorDishes(meal: Meal | null): EditorDish[] {
       ingredients: (dish.ingredients ?? []).map((ingredient) => ({
         fridge_item_id: ingredient.fridge_item_id,
         amount: normalizeAmount(Number(ingredient.amount ?? 0)),
-        usage_status: ingredient.usage_status ?? undefined,
+        unit: ingredient.fridge_items?.unit ?? undefined,
+        usage_status: ingredient.usage_status ?? 'used',
       })),
     }));
 }

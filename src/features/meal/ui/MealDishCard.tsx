@@ -25,7 +25,7 @@ interface MealDishCardProps {
 }
 
 function MealDishCard({ dishIndex }: MealDishCardProps) {
-  const { dishes, changeDishes } = useMealEditorContext('MealDishCard');
+  const { dishes, fridgeItems, changeDishes } = useMealEditorContext('MealDishCard');
   const dish = dishes[dishIndex];
   if (!dish) return null;
 
@@ -77,9 +77,29 @@ function MealDishCard({ dishIndex }: MealDishCardProps) {
               <MealIngredientRow
                 key={`${dishIndex}-${ingredientIndex}`}
                 ingredient={ingredient}
-                onIngredientItemChange={(value) =>
-                  changeDishes(replaceIngredientItem(dishes, dishIndex, ingredientIndex, value))
-                }
+                onIngredientItemChange={(value) => {
+                  let nextDishes = replaceIngredientItem(dishes, dishIndex, ingredientIndex, value);
+                  const selectedItem = fridgeItems.find((item) => item.id === value);
+                  if (selectedItem) {
+                    nextDishes = nextDishes.map((dish, di) =>
+                      di !== dishIndex
+                        ? dish
+                        : {
+                            ...dish,
+                            ingredients: dish.ingredients.map((ing, ii) =>
+                              ii !== ingredientIndex
+                                ? ing
+                                : {
+                                    ...ing,
+                                    unit: selectedItem.unit,
+                                    usage_status: 'used' as const,
+                                  },
+                            ),
+                          },
+                    );
+                  }
+                  changeDishes(nextDishes);
+                }}
                 onIngredientAmountChange={(value) =>
                   changeDishes(replaceIngredientAmount(dishes, dishIndex, ingredientIndex, value))
                 }

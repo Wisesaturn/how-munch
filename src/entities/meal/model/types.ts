@@ -12,6 +12,8 @@ export interface DishIngredient {
   amount: number | null;
   /** 사용 상태 — g/kg 단위: 'used' | 'depleted', 개 단위: 'used' */
   usage_status: 'used' | 'depleted' | null;
+  /** join된 냉장고 품목 정보 */
+  fridge_items: { unit: 'count' | 'g' | 'kg'; name: string } | null;
   created_at: string;
 }
 
