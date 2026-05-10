@@ -49,3 +49,6 @@ next-env.d.ts
 # commit-convention 센티널 파일 (훅 가드레일용)
 .claude/.cc-active
 docs
+
+# playwright mcp
+.playwright-mcp/
