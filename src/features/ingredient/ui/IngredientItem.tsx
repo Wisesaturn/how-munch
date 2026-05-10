@@ -32,7 +32,7 @@ export function IngredientItem({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col">
           {brand ? <span className="truncate text-xs text-gray-400">{brand}</span> : null}
           <span
