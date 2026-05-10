@@ -82,7 +82,6 @@ export function PromptIngredientStagingEditScreen({
           }}
           storeNames={storeNames}
           onSubmit={handleSubmit}
-          disableUnitSelect
         />
       </div>
       <CTAButton type="submit" form={formId} color="confirm" variant="filled" hideOnScroll>
