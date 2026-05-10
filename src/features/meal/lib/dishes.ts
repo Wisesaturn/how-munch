@@ -111,6 +111,8 @@ function replaceIngredientAmount(
 /**
  * @description 드래그&드롭 결과를 반영해 dishes 배열의 순서를 변경합니다.
  * source 인덱스에서 destination 인덱스로 요소를 이동합니다.
+ * @deprecated MealEditorScreen의 드래그앤드롭 UI가 제거되면서 호출처가 없어졌습니다.
+ * sort_order 재활용 시 DnD를 다시 붙이거나 다른 순서 변경 UI를 구현할 때 함께 복구합니다.
  */
 function reorderDishes(dishes: EditorDish[], sourceIndex: number, destinationIndex: number) {
   const result = [...dishes];

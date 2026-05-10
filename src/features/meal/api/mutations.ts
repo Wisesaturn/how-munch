@@ -53,7 +53,11 @@ interface ReorderDishesInput {
   }>;
 }
 
-/** 끼니 내 dish 순서(sort_order) 배치 업데이트 */
+/**
+ * @deprecated MealPage의 드래그앤드롭 UI가 제거되면서 호출처가 없어졌습니다.
+ * sort_order 재활용 시 순서 변경 UI를 다시 구현할 때 함께 복구합니다.
+ * 서버 RPC(reorder_dishes)와 API 엔드포인트(PATCH /api/meals/dishes)는 유지됩니다.
+ */
 export function useReorderDishesMutation() {
   const queryClient = useQueryClient();
 
