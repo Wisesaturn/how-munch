@@ -82,7 +82,7 @@ export function ProductNameSearchScreen({
                   submitQuery();
                 }
               }}
-              placeholder={`${fieldLabel}을 입력하세요`}
+              placeholder={`${josa(fieldLabel ?? '', '을/를')} 입력하세요`}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
