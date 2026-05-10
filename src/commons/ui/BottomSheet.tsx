@@ -57,13 +57,15 @@ interface BottomSheetContentProps extends PropsWithChildren<ComponentProps<'div'
   className?: string;
 }
 
-function BottomSheetContent({ className, ...props }: BottomSheetContentProps) {
+function BottomSheetContent({ className, children, ...props }: BottomSheetContentProps) {
   return (
     <div
       data-slot="bottom-sheet-content"
       className={cn('overflow-y-auto p-4', className)}
       {...props}
-    />
+    >
+      {children}
+    </div>
   );
 }
 BottomSheetContent.displayName = 'BottomSheet.Content';

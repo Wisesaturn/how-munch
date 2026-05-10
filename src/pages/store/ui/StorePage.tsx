@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { addMonths, format, subMonths } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
@@ -18,6 +19,8 @@ import {
   useIngredientsQuery,
   WeeklyStats,
 } from '@/features/ingredient';
+
+import { StoreAddMethodSheet } from './StoreAddMethodSheet';
 
 interface StorePageProps {
   householdId: string;
@@ -44,14 +47,20 @@ export function StorePage({ householdId, userId }: StorePageProps) {
   const handlePrevMonth = () => setCurrentDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentDate((d) => addMonths(d, 1));
 
-  const openIngredientAddSheet = (defaultName?: string) => {
+  function openIngredientAdd(defaultName?: string) {
     stackFlowActions.push('IngredientAddActivity', {
       householdId,
       userId,
       defaultName,
       suggestions: ingredients.map((i) => i.name),
     });
-  };
+  }
+
+  function openPromptIngredientAdd() {
+    stackFlowActions.push('PromptIngredientAddActivity', { householdId, userId });
+  }
+
+  const openIngredientAddSheet = openIngredientAdd;
 
   const openIngredientEditSheet = (ingredient: Ingredient) => {
     stackFlowActions.push('IngredientEditActivity', {
@@ -116,7 +125,28 @@ export function StorePage({ householdId, userId }: StorePageProps) {
 
       {/* FAB 추가 버튼 */}
       <Button
-        onClick={() => openIngredientAddSheet()}
+        onClick={() => {
+          overlay.open(({ isOpen, close, unmount }) => {
+            function closeSheet() {
+              close();
+              window.setTimeout(unmount, 300);
+            }
+            return (
+              <StoreAddMethodSheet
+                open={isOpen}
+                onClose={closeSheet}
+                onDirectAdd={() => {
+                  closeSheet();
+                  openIngredientAdd();
+                }}
+                onPromptAdd={() => {
+                  closeSheet();
+                  openPromptIngredientAdd();
+                }}
+              />
+            );
+          });
+        }}
         color="primary"
         className="fixed right-4 [bottom:calc(constant(safe-area-inset-bottom)+84px)] [bottom:calc(env(safe-area-inset-bottom)+84px)] z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
         size="icon-lg"

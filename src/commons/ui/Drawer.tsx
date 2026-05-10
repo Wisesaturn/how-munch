@@ -82,12 +82,15 @@ const DrawerContent = React.forwardRef<
     <DrawerOverlay />
     <DrawerPrimitive.Content
       ref={ref}
+      aria-describedby={undefined}
+      {...props}
       className={cn(
         'safe-area-padding-bottom fixed right-0 bottom-0 left-0 z-[var(--z-drawer-content)] mt-24 flex max-h-[85vh] flex-col rounded-t-2xl border bg-white',
         className,
       )}
-      {...props}
     >
+      {/* Radix Title 접근성 경고 방지 */}
+      <DrawerPrimitive.Title aria-hidden className="sr-only" />
       <DrawerHandle />
       {children}
     </DrawerPrimitive.Content>

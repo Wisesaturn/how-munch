@@ -19,3 +19,13 @@ export {
   resolvePendingProductNameCallback,
   clearPendingProductNameCallback,
 } from './model/productNameSearchStore';
+export {
+  setPendingPromptEditCallback,
+  resolvePendingPromptEditCallback,
+  clearPendingPromptEditCallback,
+} from './model/promptIngredientEditStore';
+export { usePromptIngredientStore } from './model/promptIngredientStore';
+export { type StagedItem } from './lib/parseAiResponse';
+export { PromptIngredientAddScreen } from './ui/PromptIngredientAddScreen';
+export { PromptIngredientStagingScreen } from './ui/PromptIngredientStagingScreen';
+export { PromptIngredientStagingEditScreen } from './ui/PromptIngredientStagingEditScreen';

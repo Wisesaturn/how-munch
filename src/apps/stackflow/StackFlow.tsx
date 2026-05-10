@@ -19,12 +19,16 @@ import {
   useFridgeBrandNamesQuery,
 } from '@/features/fridge';
 import {
+  PromptIngredientAddScreen,
+  PromptIngredientStagingEditScreen,
+  PromptIngredientStagingScreen,
   clearPendingProductNameCallback,
   IngredientAddScreen,
   IngredientEditScreen,
   ProductNameSearchScreen,
   resolvePendingProductNameCallback,
   setPendingProductNameCallback,
+  type StagedItem,
   useIngredientBrandNamesQuery,
 } from '@/features/ingredient';
 import { MealEditorScreen } from '@/features/meal';
@@ -329,6 +333,81 @@ function NotificationSettingsActivity() {
   return <NotificationSettingsScreen onClose={pop} />;
 }
 
+function PromptIngredientAddActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    userId: string;
+  };
+}) {
+  const { pop, push } = useActions();
+
+  function handleParsed() {
+    push('PromptIngredientStagingActivity', {
+      householdId: params.householdId,
+      userId: params.userId,
+    });
+  }
+
+  return (
+    <PromptIngredientAddScreen
+      onClose={pop}
+      onParsed={handleParsed}
+      householdId={params.householdId}
+    />
+  );
+}
+
+function PromptIngredientStagingActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    userId: string;
+  };
+}) {
+  const { pop, push } = useActions();
+
+  function openEdit(item: StagedItem) {
+    push('PromptIngredientStagingEditActivity', {
+      householdId: params.householdId,
+      userId: params.userId,
+      item,
+    });
+  }
+
+  return (
+    <PromptIngredientStagingScreen
+      onClose={pop}
+      onComplete={() => pop(2)}
+      householdId={params.householdId}
+      userId={params.userId}
+      onEditItem={openEdit}
+    />
+  );
+}
+
+function PromptIngredientStagingEditActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    userId: string;
+    item: StagedItem;
+  };
+}) {
+  const { pop } = useActions();
+
+  return (
+    <PromptIngredientStagingEditScreen
+      onClose={pop}
+      item={params.item}
+      householdId={params.householdId}
+    />
+  );
+}
+
 function ProductNameSearchActivity({
   params,
 }: {
@@ -381,6 +460,9 @@ const appStackFlow = stackflow({
     ProfileSettingsActivity,
     ProfileEditActivity,
     ProductNameSearchActivity,
+    PromptIngredientAddActivity,
+    PromptIngredientStagingActivity,
+    PromptIngredientStagingEditActivity,
   },
   plugins: [
     basicRendererPlugin(),
@@ -402,6 +484,9 @@ const appStackFlow = stackflow({
         ProfileSettingsActivity: '/profile/settings',
         ProfileEditActivity: '/profile/edit',
         ProductNameSearchActivity: '/search/product-name',
+        PromptIngredientAddActivity: '/ingredient/ai/add',
+        PromptIngredientStagingActivity: '/ingredient/ai/staging',
+        PromptIngredientStagingEditActivity: '/ingredient/ai/staging/edit',
       },
       fallbackActivity: () => 'IdleActivity',
       useHash: true,
