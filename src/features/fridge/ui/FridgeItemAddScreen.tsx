@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import { cn, ERROR_MSG } from '@/commons/lib';
 import {
+  Checkbox,
   CTAButton,
   Counter,
   DatePicker,
@@ -373,11 +374,9 @@ export function FridgeItemAddScreen({
           <form.Field name="is_subdivided">
             {(field) => (
               <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={field.state.value}
-                  onChange={(event) => field.handleChange(event.target.checked)}
-                  className="size-4 rounded border-gray-300"
+                  onCheckedChange={(checked) => field.handleChange(checked as boolean)}
                 />
                 <span className="text-sm font-medium">소분 보관 여부</span>
               </label>
@@ -396,17 +395,14 @@ export function FridgeItemAddScreen({
               <Form.Field field={field}>
                 <Form.Label required>구매일</Form.Label>
                 <label className="mb-1 flex items-center gap-2 text-xs text-gray-600">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={isPurchasedDateUnknown}
-                    onChange={(event) => {
-                      const checked = event.target.checked;
-                      setIsPurchasedDateUnknown(checked);
+                    onCheckedChange={(checked) => {
+                      setIsPurchasedDateUnknown(checked as boolean);
                       if (checked) {
                         field.handleChange(format(today, 'yyyy-MM-dd'));
                       }
                     }}
-                    className="size-4 rounded border-gray-300"
                   />
                   구매일 모름
                 </label>

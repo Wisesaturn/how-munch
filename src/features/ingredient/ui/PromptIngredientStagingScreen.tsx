@@ -4,7 +4,7 @@ import { Check, ChevronLeft, Loader2, X } from 'lucide-react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
 import { cn } from '@/commons/lib';
-import { Button, CTAButton } from '@/commons/ui';
+import { Button, Checkbox, CTAButton } from '@/commons/ui';
 
 import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
@@ -168,12 +168,10 @@ export function PromptIngredientStagingScreen({
                 {isCompleted || isCurrentlySaving ? (
                   <SaveStateIcon state={state} />
                 ) : (
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={checked}
-                    onChange={() => toggleCheck(item.id)}
+                    onCheckedChange={() => toggleCheck(item.id)}
                     disabled={isSaving}
-                    className="size-4 accent-emerald-500"
                   />
                 )}
               </div>

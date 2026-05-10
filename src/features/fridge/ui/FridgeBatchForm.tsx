@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { Button, Counter, DatePicker, Textarea } from '@/commons/ui';
+import { Button, Checkbox, Counter, DatePicker, Textarea } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import {
@@ -182,17 +182,14 @@ export function FridgeBatchForm({
           <Form.Field field={field}>
             <Form.Label required>구매일</Form.Label>
             <div className="mb-1 flex items-center gap-2 text-xs text-gray-600">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isPurchasedDateUnknown}
-                onChange={(event) => {
-                  const checked = event.target.checked;
-                  setIsPurchasedDateUnknown(checked);
+                onCheckedChange={(checked) => {
+                  setIsPurchasedDateUnknown(checked as boolean);
                   if (checked) {
                     field.handleChange(format(today, 'yyyy-MM-dd'));
                   }
                 }}
-                className="size-4 rounded border-gray-300"
               />
               구매일 모름
             </div>

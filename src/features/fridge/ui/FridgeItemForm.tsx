@@ -7,7 +7,7 @@ import { ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 
 import { cn, ERROR_MSG } from '@/commons/lib';
-import { Button, Input, Select } from '@/commons/ui';
+import { Button, Checkbox, Input, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { type IngredientUnit } from '@/entities/ingredient';
@@ -219,11 +219,9 @@ export function FridgeItemForm({
       <form.Field name="is_subdivided">
         {(field) => (
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={field.state.value}
-              onChange={(e) => field.handleChange(e.target.checked)}
-              className="size-4 rounded border-gray-300"
+              onCheckedChange={(checked) => field.handleChange(checked as boolean)}
             />
             <span className="text-sm">소분 보관</span>
           </label>

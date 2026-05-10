@@ -7,6 +7,7 @@ export { BottomSheet } from './BottomSheet';
 export { Button, buttonVariants } from './Button';
 export { Calendar } from './Calendar';
 export { Card } from './Card';
+export { Checkbox, type CheckboxProps } from './Checkbox';
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
 export {
   DeleteConfirmBottomSheet,
