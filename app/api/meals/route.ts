@@ -8,15 +8,15 @@ import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { type MealType } from '@/entities/meal';
 
 type IngredientUsageStatus = 'used' | 'depleted';
-type IngredientUnit = 'count' | 'g' | 'kg';
+type IngredientUnit = 'count' | 'g' | 'kg' | 'ml' | 'l';
 
 interface UpsertMealIngredient {
   fridge_item_id: string;
-  /** 냉장고 품목 단위 — g/kg vs 개 판별 기준 */
+  /** 냉장고 품목 단위 — g/kg/ml/L vs 개 판별 기준 */
   unit?: IngredientUnit;
-  /** 개 단위: 수량. g/kg 단위: 없음 */
+  /** 개 단위: 수량. g/kg/ml/L 단위: 없음 */
   amount?: number | null;
-  /** g/kg 단위: 'used' | 'depleted'. 개 단위: 없음 */
+  /** g/kg/ml/L 단위: 'used' | 'depleted'. 개 단위: 없음 */
   usage_status?: IngredientUsageStatus;
 }
 
@@ -37,15 +37,15 @@ function toSafePositiveAmount(value: unknown) {
   return amount;
 }
 
-function isWeightUnit(unit?: IngredientUnit) {
-  return unit === 'g' || unit === 'kg';
+function isUsageStatusUnit(unit?: IngredientUnit) {
+  return unit === 'g' || unit === 'kg' || unit === 'ml' || unit === 'l';
 }
 
 function normalizeIngredient(ingredient: UpsertMealIngredient) {
   if (!ingredient.fridge_item_id) return null;
 
-  if (isWeightUnit(ingredient.unit)) {
-    // g/kg 품목: usage_status 기반
+  if (isUsageStatusUnit(ingredient.unit)) {
+    // g/kg/ml/L 품목: usage_status 기반
     if (ingredient.usage_status === 'used' || ingredient.usage_status === 'depleted') {
       return { fridge_item_id: ingredient.fridge_item_id, usage_status: ingredient.usage_status };
     }
