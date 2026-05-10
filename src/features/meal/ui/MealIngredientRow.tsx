@@ -5,7 +5,7 @@ import { ChevronRight, X } from 'lucide-react';
 import { Badge, Button, Checkbox, Select } from '@/commons/ui';
 import { cn } from '@/commons/lib';
 
-import { isWeightUnit } from '@/entities/ingredient';
+import { isVolumeUnit, isWeightUnit } from '@/entities/ingredient';
 
 import {
   type EditorIngredient,
@@ -133,7 +133,7 @@ function MealIngredientRow({
         </Button>
       </div>
 
-      {isWeightUnit(selectedUnit) ? (
+      {isWeightUnit(selectedUnit) || isVolumeUnit(selectedUnit) ? (
         <label
           className={cn(
             'flex cursor-pointer items-center gap-2',
