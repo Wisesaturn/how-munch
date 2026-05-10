@@ -14,6 +14,11 @@ import { useIngredientCategory } from '@/entities/ingredient-category';
 
 import { IngredientItem } from './IngredientItem';
 
+function formatDailyTotal(items: Ingredient[]) {
+  const total = items.reduce((sum, item) => sum + item.price, 0);
+  return total === 0 ? '0원' : `-${total.toLocaleString('ko-KR')}원`;
+}
+
 interface IngredientListProps {
   householdId: string;
   ingredients: Ingredient[];
@@ -45,8 +50,9 @@ export function IngredientList({ householdId, ingredients, onEdit }: IngredientL
     <div className="flex flex-col gap-4">
       {grouped.map(([date, items]) => (
         <div key={date} className="flex flex-col gap-1.5">
-          <h3 className="px-1 text-xs font-semibold text-gray-500">
-            {format(new Date(date), 'M월 d일 (EEEE)', { locale: ko })}
+          <h3 className="flex items-center justify-between px-1 text-xs font-semibold text-gray-500">
+            <span>{format(new Date(date), 'M월 d일 (EEEE)', { locale: ko })}</span>
+            <span className="text-gray-400">{formatDailyTotal(items)}</span>
           </h3>
           <div className="flex flex-col gap-1.5">
             {items.map((item) => (
