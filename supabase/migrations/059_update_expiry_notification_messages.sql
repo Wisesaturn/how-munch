@@ -1,10 +1,18 @@
--- Function: public.generate_expiry_soon_notifications
--- Source: supabase/migrations/059_update_expiry_notification_messages.sql
--- 역할: 유통기한 임박 재고를 스캔하여 알림 레코드를 생성합니다.
--- 동작:
--- 1. 대상 날짜 기준 임박/만료 후보를 수집합니다(테스트 이메일 지정 시 해당 유저로 제한).
--- 2. 재고 수량(total_count > 0)인 재료만 알림 대상으로 포함합니다.
--- 3. 유저+가구 기준으로 재료를 요약(최대 3개)하여 하루 1건 알림을 생성합니다.
+-- ============================================================
+-- Update expiry notification message structure
+-- ============================================================
+-- 변경 사항:
+-- 1. title: 상태 요약 역할로 명확화
+--    - 초과: '큰일났어요... 도와주세요!' → '유통기한이 지났어요! 🚨'
+--    - 임박: '유통기한 임박 재료가 기다리고 있어요!' → '유통기한이 다가오고 있어요 ⏰'
+-- 2. body: 재료 나열 + 행동 유도 역할로 명확화
+--    - 구분자 '...' → ' · '
+--    - 초과 CTA: '냉장고에서 화석이 되가고 있어요! 🔨' → '빨리 사용해 주세요! 🚨'
+--    - 임박 CTA: '잊으신 건 아니겠죠? 어서 소비해 주세요 🥗' → '얼른 꺼내 드세요! 🥗'
+
+drop function if exists public.generate_expiry_soon_notifications(date);
+drop function if exists public.generate_expiry_soon_notifications(date, text);
+
 create or replace function public.generate_expiry_soon_notifications(
   p_target_date date default current_date,
   p_test_email text default null
@@ -209,3 +217,9 @@ begin
   return v_inserted_count;
 end;
 $$;
+
+revoke all on function public.generate_expiry_soon_notifications(date, text) from public;
+revoke all on function public.generate_expiry_soon_notifications(date, text) from authenticated;
+grant execute on function public.generate_expiry_soon_notifications(date, text) to service_role;
+
+select pg_notify('pgrst', 'reload schema');
