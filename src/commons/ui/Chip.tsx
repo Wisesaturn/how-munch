@@ -65,7 +65,7 @@ function ChipRow({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="chip-row"
       className={cn(
-        'flex w-full min-w-0 gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        'flex w-full min-w-0 touch-pan-x gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         className,
       )}
       {...props}

@@ -25,6 +25,7 @@ import {
   clearPendingProductNameCallback,
   IngredientAddScreen,
   IngredientEditScreen,
+  IngredientSearchScreen,
   ProductNameSearchScreen,
   resolvePendingProductNameCallback,
   setPendingProductNameCallback,
@@ -408,6 +409,32 @@ function PromptIngredientStagingEditActivity({
   );
 }
 
+function IngredientSearchActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+  };
+}) {
+  const { pop, push } = useActions();
+
+  function selectIngredient(ingredient: Ingredient) {
+    push('IngredientEditActivity', {
+      householdId: params.householdId,
+      ingredient,
+      suggestions: [],
+    });
+  }
+
+  return (
+    <IngredientSearchScreen
+      onClose={pop}
+      householdId={params.householdId}
+      onIngredientSelect={selectIngredient}
+    />
+  );
+}
+
 function ProductNameSearchActivity({
   params,
 }: {
@@ -448,6 +475,7 @@ const appStackFlow = stackflow({
     PlaceholderActivity,
     IngredientAddActivity,
     IngredientEditActivity,
+    IngredientSearchActivity,
     FridgeItemAddActivity,
     FridgeItemEditActivity,
     FridgeItemSubdivideActivity,
@@ -472,6 +500,7 @@ const appStackFlow = stackflow({
         PlaceholderActivity: '/placeholder',
         IngredientAddActivity: '/ingredient/add',
         IngredientEditActivity: '/ingredient/edit',
+        IngredientSearchActivity: '/ingredient/search',
         FridgeItemAddActivity: '/fridge/item/add',
         FridgeItemEditActivity: '/fridge/item/edit',
         FridgeItemSubdivideActivity: '/fridge/item/subdivide',

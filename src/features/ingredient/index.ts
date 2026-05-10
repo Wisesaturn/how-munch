@@ -1,5 +1,6 @@
 export {
   useIngredientsQuery,
+  useIngredientSearchInfiniteQuery,
   useStoreNamesQuery,
   useIngredientBrandNamesQuery,
 } from './api/queries';
@@ -9,6 +10,8 @@ export {
   useDeleteIngredientMutation,
 } from './api/mutations';
 export { IngredientAddScreen } from './ui/IngredientAddScreen';
+export { IngredientItem } from './ui/IngredientItem';
+export { IngredientSearchScreen } from './ui/IngredientSearchScreen';
 export { IngredientEditScreen } from './ui/IngredientEditScreen';
 export { IngredientList } from './ui/IngredientList';
 export { IngredientSearch } from './ui/IngredientSearch';

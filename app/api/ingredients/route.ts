@@ -1,39 +1,68 @@
 import { type NextRequest } from 'next/server';
 
-import { format, endOfMonth, startOfMonth } from 'date-fns';
-
 import { withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
-import { type Json } from '@/commons/model/types';
+import { type Json, type Page, type PageInfo } from '@/commons/model/types';
 
-/** GET /api/ingredients?householdId=&year=&month= — 월별 장보기 내역 조회 */
+import { type Ingredient } from '@/entities/ingredient';
+
+/** GET /api/ingredients?householdId=&startDate=&endDate=&q=&page=&pageSize= — 장보기 내역 조회 */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
   const { searchParams } = req.nextUrl;
   const householdId = searchParams.get('householdId');
-  const year = Number(searchParams.get('year'));
-  const month = Number(searchParams.get('month'));
+  const startDate = searchParams.get('startDate');
+  const endDate = searchParams.get('endDate');
+  const q = searchParams.get('q') ?? '';
+  const page = Math.max(1, Number(searchParams.get('page') ?? '1'));
+  const pageSize = Math.max(1, Number(searchParams.get('pageSize') ?? '200'));
 
-  if (!householdId || !year || !month) {
-    return apiResponse.BAD_REQUEST('CMN_002', 'householdId, year, month가 필요합니다.');
+  if (!householdId || !startDate || !endDate) {
+    return apiResponse.BAD_REQUEST('CMN_002', 'householdId, startDate, endDate가 필요합니다.');
   }
 
-  const target = new Date(year, month - 1);
-  const start = format(startOfMonth(target), 'yyyy-MM-dd');
-  const end = format(endOfMonth(target), 'yyyy-MM-dd');
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('ingredients')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('household_id', householdId)
     .is('deleted_at', null)
-    .gte('date', start)
-    .lte('date', end)
-    .order('date', { ascending: false });
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: false })
+    .range(from, to);
+
+  if (q.trim()) {
+    query = query.ilike('name', `%${q.trim()}%`);
+  }
+
+  const { data, count, error } = await query;
 
   if (error) return apiResponse.INTERNAL_ERROR();
-  return apiResponse.OK(data ?? []);
+
+  const totalElements = count ?? 0;
+  const totalPages = Math.ceil(totalElements / pageSize);
+
+  const pageInfo: PageInfo = {
+    page,
+    pageSize,
+    totalElements,
+    totalPages,
+    numberOfElements: data?.length ?? 0,
+    empty: (data?.length ?? 0) === 0,
+    first: page === 1,
+    last: page >= totalPages,
+  };
+
+  const result: Page<Ingredient[]> = {
+    contents: (data ?? []) as Ingredient[],
+    pageInfo,
+  };
+
+  return apiResponse.OK(result);
 });
 
 /** POST /api/ingredients — 장보기 항목 추가 */

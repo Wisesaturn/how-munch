@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-import { addMonths, format, subMonths } from 'date-fns';
+import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -13,12 +13,7 @@ import { Button } from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
-import {
-  IngredientList,
-  IngredientSearch,
-  useIngredientsQuery,
-  WeeklyStats,
-} from '@/features/ingredient';
+import { IngredientList, useIngredientsQuery, WeeklyStats } from '@/features/ingredient';
 
 import { StoreAddMethodSheet } from './StoreAddMethodSheet';
 
@@ -29,18 +24,17 @@ interface StorePageProps {
 
 export function StorePage({ householdId, userId }: StorePageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [search, setSearch] = useState('');
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
+  const startDate = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+  const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
 
-  const { data: ingredients = [], isLoading } = useIngredientsQuery(householdId, year, month);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return ingredients;
-    const q = search.trim().toLowerCase();
-    return ingredients.filter((item) => item.name.toLowerCase().includes(q));
-  }, [ingredients, search]);
+  const { data: ingredients = [], isLoading } = useIngredientsQuery(
+    householdId,
+    startDate,
+    endDate,
+  );
 
   const totalSpending = ingredients.reduce((sum, item) => sum + item.price, 0);
 
@@ -60,18 +54,12 @@ export function StorePage({ householdId, userId }: StorePageProps) {
     stackFlowActions.push('PromptIngredientAddActivity', { householdId, userId });
   }
 
-  const openIngredientAddSheet = openIngredientAdd;
-
   const openIngredientEditSheet = (ingredient: Ingredient) => {
     stackFlowActions.push('IngredientEditActivity', {
       householdId,
       ingredient,
       suggestions: ingredients.map((i) => i.name),
     });
-  };
-
-  const handleAddFromSearch = () => {
-    openIngredientAddSheet(search.trim());
   };
 
   return (
@@ -93,20 +81,8 @@ export function StorePage({ householdId, userId }: StorePageProps) {
         </span>
       </section>
 
-      {/* 검색 */}
-      <IngredientSearch value={search} onChange={setSearch} />
-
-      {/* 검색 결과 없을 때 바로 추가 */}
-      {search.trim() && filtered.length === 0 && !isLoading && (
-        <div className="flex items-center justify-center py-2">
-          <Button variant="outline" size="sm" onClick={handleAddFromSearch}>
-            &apos;{search.trim()}&apos; 바로 추가
-          </Button>
-        </div>
-      )}
-
       {/* 주차별 통계 */}
-      {!search.trim() && ingredients.length > 0 && (
+      {ingredients.length > 0 && (
         <WeeklyStats ingredients={ingredients} year={year} month={month} />
       )}
 
@@ -118,7 +94,7 @@ export function StorePage({ householdId, userId }: StorePageProps) {
       ) : (
         <IngredientList
           householdId={householdId}
-          ingredients={filtered}
+          ingredients={ingredients}
           onEdit={openIngredientEditSheet}
         />
       )}
