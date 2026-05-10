@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { josa } from 'es-hangul';
 import { Search, X } from 'lucide-react';
 
 import { Badge, InputGroup } from '@/commons/ui';
@@ -146,7 +147,7 @@ export function ProductNameSearchScreen({
         )}
         {uniqueSuggestions.length === 0 && !trimmedQuery && (
           <div className="flex flex-col items-center py-12 text-sm text-gray-400">
-            <p>{fieldLabel}을 검색하거나 직접 입력하세요</p>
+            <p>{josa(fieldLabel ?? '', '을/를')} 검색하거나 직접 입력하세요</p>
           </div>
         )}
       </div>
