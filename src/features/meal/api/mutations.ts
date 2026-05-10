@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/commons/lib';
 
 import { fridgeItemKeys } from '@/entities/fridge-item';
+import { type IngredientUnit } from '@/entities/ingredient';
 import { mealKeys, type MealType } from '@/entities/meal';
 
 export interface MealEditorDishInput {
@@ -14,7 +15,7 @@ export interface MealEditorDishInput {
     /** 항상 포함 — g/kg: 'used' | 'depleted'. 개 단위: 항상 'used' */
     usage_status: 'used' | 'depleted';
     /** 냉장고 품목 단위 — Route Handler에서 g/kg vs 개 판별에 사용 */
-    unit?: 'count' | 'g' | 'kg';
+    unit?: IngredientUnit;
   }>;
 }
 

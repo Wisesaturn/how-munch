@@ -13,6 +13,7 @@ import { Form } from '@/commons/ui/Form';
 
 import {
   convertIngredientAmount,
+  isVolumeUnit,
   isWeightUnit,
   normalizeAmountByUnit,
   resolveAmountMin,
@@ -72,7 +73,7 @@ function createIngredientFormSchema(categoryIds: string[]) {
         .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: '20자' })),
       brand: z.string().max(30, ERROR_MSG.RANGE.MAX({ fieldName: '브랜드', max: '30자' })),
       count: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-      unit: z.enum(['count', 'g', 'kg']),
+      unit: z.enum(['count', 'g', 'kg', 'ml', 'l']),
       store: z.string().max(20, ERROR_MSG.RANGE.MAX({ fieldName: '구매처', max: '20자' })),
       price: z
         .number()
@@ -95,7 +96,7 @@ function createIngredientFormSchema(categoryIds: string[]) {
           code: 'custom',
           path: ['count'],
           message:
-            value.unit === 'kg'
+            value.unit === 'kg' || value.unit === 'l'
               ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
               : '수량은 정수만 입력할 수 있습니다',
         });
@@ -317,7 +318,12 @@ export function IngredientForm({
                       return;
                     }
 
-                    if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
+                    if (
+                      isWeightUnit(currentUnit) ||
+                      isWeightUnit(nextUnit) ||
+                      isVolumeUnit(currentUnit) ||
+                      isVolumeUnit(nextUnit)
+                    ) {
                       form.setFieldValue('count', resolveAmountMin(nextUnit));
                     }
                   }}
@@ -331,6 +337,8 @@ export function IngredientForm({
                     <Select.Item value="count">개</Select.Item>
                     <Select.Item value="g">g</Select.Item>
                     <Select.Item value="kg">kg</Select.Item>
+                    <Select.Item value="ml">ml</Select.Item>
+                    <Select.Item value="l">l</Select.Item>
                   </Select.Content>
                 </Select>
               </Form.Field>

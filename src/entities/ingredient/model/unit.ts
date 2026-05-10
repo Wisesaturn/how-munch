@@ -1,11 +1,18 @@
 /** 재료 수량 단위 */
-export type IngredientUnit = 'count' | 'g' | 'kg';
+export type IngredientUnit = 'count' | 'g' | 'kg' | 'ml' | 'l';
 
 /**
  * @description 무게 단위(g, kg)인지 확인합니다.
  */
 export function isWeightUnit(unit: IngredientUnit | undefined) {
   return unit === 'g' || unit === 'kg';
+}
+
+/**
+ * @description 부피 단위(ml, l)인지 확인합니다.
+ */
+export function isVolumeUnit(unit: IngredientUnit | undefined) {
+  return unit === 'ml' || unit === 'l';
 }
 
 /**
@@ -27,15 +34,42 @@ export function fromGrams(grams: number, unit: IngredientUnit) {
 }
 
 /**
- * @description 동일 계열 단위 간 수량을 변환합니다. 개 단위와 교차하면 null을 반환합니다.
+ * @description 단위 값을 ml 기준으로 변환합니다.
+ */
+export function toMilliliters(value: number, unit: IngredientUnit) {
+  if (unit === 'l') return value * 1000;
+  if (unit === 'ml') return value;
+  return null;
+}
+
+/**
+ * @description ml 기준 값을 목표 단위로 변환합니다.
+ */
+export function fromMilliliters(ml: number, unit: IngredientUnit) {
+  if (unit === 'l') return ml / 1000;
+  if (unit === 'ml') return ml;
+  return null;
+}
+
+/**
+ * @description 동일 계열 단위 간 수량을 변환합니다. 계열이 다르거나 개 단위와 교차하면 null을 반환합니다.
  */
 export function convertIngredientAmount(value: number, from: IngredientUnit, to: IngredientUnit) {
   if (from === to) return value;
-  if (!isWeightUnit(from) || !isWeightUnit(to)) return null;
 
-  const grams = toGrams(value, from);
-  if (grams === null) return null;
-  return fromGrams(grams, to);
+  if (isWeightUnit(from) && isWeightUnit(to)) {
+    const grams = toGrams(value, from);
+    if (grams === null) return null;
+    return fromGrams(grams, to);
+  }
+
+  if (isVolumeUnit(from) && isVolumeUnit(to)) {
+    const ml = toMilliliters(value, from);
+    if (ml === null) return null;
+    return fromMilliliters(ml, to);
+  }
+
+  return null;
 }
 
 /**
@@ -49,11 +83,24 @@ export function formatWeightAuto(value: number, unit: IngredientUnit) {
 }
 
 /**
+ * @description 부피 값은 1000ml 이상이면 l(소수점 1자리), 미만이면 ml로 표시합니다.
+ */
+export function formatVolumeAuto(value: number, unit: IngredientUnit) {
+  const ml = toMilliliters(value, unit);
+  if (ml === null) return String(value);
+  if (ml >= 1000) return `${(ml / 1000).toFixed(1)}l`;
+  return `${Math.round(ml)}ml`;
+}
+
+/**
  * @description 수량과 단위를 사용자 표시 문자열로 변환합니다.
  */
-export function formatIngredientAmount(value: number, unit: IngredientUnit, dynamicWeight = false) {
+export function formatIngredientAmount(value: number, unit: IngredientUnit, dynamicUnit = false) {
   if (unit === 'count') return `${value}개`;
-  if (dynamicWeight) return formatWeightAuto(value, unit);
+  if (dynamicUnit) {
+    if (isWeightUnit(unit)) return formatWeightAuto(value, unit);
+    if (isVolumeUnit(unit)) return formatVolumeAuto(value, unit);
+  }
   return `${value}${unit}`;
 }
 
@@ -61,7 +108,7 @@ export function formatIngredientAmount(value: number, unit: IngredientUnit, dyna
  * @description 단위별 수량 입력 최소값을 반환합니다.
  */
 export function resolveAmountMin(unit: IngredientUnit) {
-  if (unit === 'kg') return 0.1;
+  if (unit === 'kg' || unit === 'l') return 0.1;
   return 1;
 }
 
@@ -69,7 +116,7 @@ export function resolveAmountMin(unit: IngredientUnit) {
  * @description 단위별 수량 입력 step 값을 반환합니다.
  */
 export function resolveAmountStep(unit: IngredientUnit) {
-  if (unit === 'kg') return 0.1;
+  if (unit === 'kg' || unit === 'l') return 0.1;
   return 1;
 }
 
@@ -78,15 +125,15 @@ export function resolveAmountStep(unit: IngredientUnit) {
  */
 export function normalizeAmountByUnit(value: number, unit: IngredientUnit) {
   if (!Number.isFinite(value)) return resolveAmountMin(unit);
-  if (unit === 'kg') return Number(value.toFixed(1));
+  if (unit === 'kg' || unit === 'l') return Number(value.toFixed(1));
   return Math.round(value);
 }
 
 /**
- * @description 단위별 수량 소수점 유효성을 검사합니다. kg는 소수점 1자리, 나머지는 정수만 허용합니다.
+ * @description 단위별 수량 소수점 유효성을 검사합니다. kg/l는 소수점 1자리, 나머지는 정수만 허용합니다.
  */
 export function validateAmountPrecisionByUnit(value: number, unit: IngredientUnit) {
   if (!Number.isFinite(value)) return false;
-  if (unit === 'kg') return Number.isInteger(value * 10);
+  if (unit === 'kg' || unit === 'l') return Number.isInteger(value * 10);
   return Number.isInteger(value);
 }

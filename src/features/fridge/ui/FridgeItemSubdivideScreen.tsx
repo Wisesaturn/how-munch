@@ -26,6 +26,8 @@ const UNIT_LABEL: Record<FridgeItemUnit, string> = {
   count: '개',
   g: 'g',
   kg: 'kg',
+  ml: 'ml',
+  l: 'l',
 };
 
 const subdivideSchema = z.object({
@@ -108,7 +110,7 @@ export function FridgeItemSubdivideScreen({
                 <Slider
                   min={0}
                   max={totalCount}
-                  step={unit === 'count' ? 1 : 0.1}
+                  step={unit === 'count' || unit === 'g' || unit === 'ml' ? 1 : 0.1}
                   value={[field.state.value]}
                   onValueChange={(v) => field.handleChange(v[0])}
                   invalid={Boolean(field.state.meta.errors[0])}

@@ -53,7 +53,7 @@ function createFridgeItemFormSchema(categoryIds: string[]) {
     category_id: z.string().refine((value) => categoryIds.includes(value), {
       message: ERROR_MSG.SELECT.REQUIRED({ fieldName: '카테고리' }),
     }),
-    unit: z.enum(['count', 'g', 'kg']),
+    unit: z.enum(['count', 'g', 'kg', 'ml', 'l']),
     is_subdivided: z.boolean(),
   });
 }
@@ -209,6 +209,8 @@ export function FridgeItemForm({
                 <Select.Item value="count">개</Select.Item>
                 <Select.Item value="g">g</Select.Item>
                 <Select.Item value="kg">kg</Select.Item>
+                <Select.Item value="ml">ml</Select.Item>
+                <Select.Item value="l">l</Select.Item>
               </Select.Content>
             </Select>
             <Form.Error />
