@@ -2,7 +2,7 @@
 
 import { ChevronRight, X } from 'lucide-react';
 
-import { Badge, Button, SegmentControl, Select } from '@/commons/ui';
+import { Badge, Button, Checkbox, Select } from '@/commons/ui';
 import { cn } from '@/commons/lib';
 
 import { isWeightUnit } from '@/entities/ingredient';
@@ -134,15 +134,28 @@ function MealIngredientRow({
       </div>
 
       {isWeightUnit(selectedUnit) ? (
-        <SegmentControl
-          value={ingredient.usage_status ?? 'used'}
-          onValueChange={(value) => onUsageStatusChange(value as IngredientUsageStatus)}
-          size="md"
-          disabled={!selectedIngredient}
+        <label
+          className={cn(
+            'flex cursor-pointer items-center gap-2',
+            !selectedIngredient && 'cursor-not-allowed',
+          )}
         >
-          <SegmentControl.Item value="used">사용</SegmentControl.Item>
-          <SegmentControl.Item value="depleted">소진</SegmentControl.Item>
-        </SegmentControl>
+          <Checkbox
+            checked={ingredient.usage_status === 'depleted'}
+            onCheckedChange={(checked) =>
+              onUsageStatusChange(checked === true ? 'depleted' : 'used')
+            }
+            disabled={!selectedIngredient}
+          />
+          <span
+            className={cn(
+              'text-sm',
+              !selectedIngredient ? 'text-muted-foreground' : 'text-gray-700',
+            )}
+          >
+            소진됨
+          </span>
+        </label>
       ) : (
         <MealIngredientWeightControl
           min={sliderMin}
