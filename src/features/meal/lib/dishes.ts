@@ -124,7 +124,7 @@ function reorderDishes(dishes: EditorDish[], sourceIndex: number, destinationInd
 }
 
 /**
- * @description 지정한 메뉴/재료의 usage_status를 교체합니다. (g/kg 단위 전용)
+ * @description 지정한 메뉴/재료의 usage_status를 교체합니다. (g/kg, ml/L 단위 전용)
  */
 function replaceIngredientUsageStatus(
   dishes: EditorDish[],

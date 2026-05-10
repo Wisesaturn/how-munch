@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ERROR_MSG } from '@/commons/lib';
 
 import {
+  isVolumeUnit,
   isWeightUnit,
   resolveAmountMin,
   validateAmountPrecisionByUnit,
@@ -72,8 +73,8 @@ function createMealEditorDishesSchema(
           const stockInfo = fridgeStockInfoById[ingredient.fridge_item_id];
           if (!stockInfo) return;
 
-          // g/kg 단위는 usage_status로 처리 — amount 검증 건너뜀
-          if (isWeightUnit(stockInfo.unit)) return;
+          // g/kg, ml/L 단위는 usage_status로 처리 — amount 검증 건너뜀
+          if (isWeightUnit(stockInfo.unit) || isVolumeUnit(stockInfo.unit)) return;
 
           const minAmount = resolveAmountMin(stockInfo.unit);
           if (ingredient.amount < minAmount) {

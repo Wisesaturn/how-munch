@@ -9,6 +9,8 @@ function resolveIngredientUnitLabel(unit: IngredientUnit | undefined) {
   if (unit === 'count') return '개';
   if (unit === 'g') return 'g';
   if (unit === 'kg') return 'kg';
+  if (unit === 'ml') return 'ml';
+  if (unit === 'l') return 'l';
   return '단위';
 }
 
