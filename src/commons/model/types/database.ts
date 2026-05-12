@@ -229,6 +229,7 @@ export interface Database {
           is_subdivided: boolean;
           category_id: string;
           from_grocery: boolean;
+          created_by: string | null;
           deleted_at: string | null;
           created_at: string;
           updated_at: string;
@@ -244,6 +245,7 @@ export interface Database {
           is_subdivided?: boolean;
           category_id?: string;
           from_grocery?: boolean;
+          created_by?: string | null;
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -259,6 +261,7 @@ export interface Database {
           is_subdivided?: boolean;
           category_id?: string;
           from_grocery?: boolean;
+          created_by?: string | null;
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -288,6 +291,7 @@ export interface Database {
           expiry_date: string | null;
           purchased_date: string;
           memo: string | null;
+          created_by: string | null;
           deleted_at: string | null;
           created_at: string;
           updated_at: string;
@@ -299,6 +303,7 @@ export interface Database {
           expiry_date?: string | null;
           purchased_date?: string;
           memo?: string | null;
+          created_by?: string | null;
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -310,6 +315,7 @@ export interface Database {
           expiry_date?: string | null;
           purchased_date?: string;
           memo?: string | null;
+          created_by?: string | null;
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -330,6 +336,7 @@ export interface Database {
           household_id: string;
           date: string;
           type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+          created_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -338,6 +345,7 @@ export interface Database {
           household_id: string;
           date: string;
           type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -346,6 +354,7 @@ export interface Database {
           household_id?: string;
           date?: string;
           type?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };

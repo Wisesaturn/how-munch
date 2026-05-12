@@ -1,12 +1,111 @@
--- Function: public.upsert_meal_with_usage
--- Source: supabase/migrations/060_add_created_by_columns.sql
--- 역할: 식단 저장 시 dish/ingredient와 배치 사용량 차감을 원자적으로 처리합니다.
+-- Migration: 060_add_created_by_columns
+-- 역할: fridge_items, fridge_item_batches, meals 테이블에 created_by 컬럼을 추가합니다.
 -- 동작:
--- 1. 기존 meal usage를 롤백한 뒤 새 dishes/ingredients를 재저장합니다.
--- 2. usage_status='used' (g/kg): dish_ingredients에만 기록, 배치 변화 없음.
--- 3. usage_status='depleted' (g/kg): 해당 품목 전체 배치를 0으로 소진, meal_batch_usages 기록.
--- 4. usage_status 없이 amount>0 (개): FIFO 배치 차감 후 부족 시 도메인 예외 발생.
--- 5. meals 테이블에 created_by(auth.uid())를 기록합니다 (신규 등록 시에만, 수정 시 유지).
+-- 1. 각 테이블에 nullable created_by uuid 컬럼을 추가합니다.
+-- 2. auth.users FK를 설정합니다 (삭제 시 NULL 처리).
+-- 3. 조회 성능을 위한 인덱스를 생성합니다.
+-- 4. create_fridge_item_with_batch, upsert_meal_with_usage RPC를 업데이트하여 created_by를 기록합니다.
+
+alter table public.fridge_items
+  add column created_by uuid references auth.users(id) on delete set null;
+
+alter table public.fridge_item_batches
+  add column created_by uuid references auth.users(id) on delete set null;
+
+alter table public.meals
+  add column created_by uuid references auth.users(id) on delete set null;
+
+create index idx_fridge_items_created_by on public.fridge_items (created_by);
+create index idx_fridge_item_batches_created_by on public.fridge_item_batches (created_by);
+create index idx_meals_created_by on public.meals (created_by);
+
+-- create_fridge_item_with_batch RPC 업데이트: created_by 기록
+create or replace function public.create_fridge_item_with_batch(
+  p_household_id uuid,
+  p_name text,
+  p_brand text default null,
+  p_category_id uuid default null,
+  p_unit text default 'count',
+  p_is_subdivided boolean default false,
+  p_from_grocery boolean default false,
+  p_quantity numeric default 1,
+  p_purchased_date date default current_date,
+  p_expiry_date date default null,
+  p_memo text default null
+)
+returns public.fridge_items
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_item public.fridge_items%rowtype;
+  v_category_id uuid;
+begin
+  if auth.uid() is null then
+    raise exception using
+      errcode = 'A0001',
+      message = '로그인이 필요합니다.',
+      hint = 'AUTH_UNAUTHORIZED';
+  end if;
+
+  if not public.is_household_member(p_household_id) then
+    raise exception using
+      errcode = 'A0002',
+      message = '권한이 없습니다.',
+      hint = 'COMMON_PERMISSION_DENIED';
+  end if;
+
+  v_category_id := public.normalize_ingredient_category_id(p_household_id, p_category_id);
+
+  insert into public.fridge_items (
+    household_id,
+    name,
+    brand,
+    category_id,
+    unit,
+    total_count,
+    max_count,
+    is_subdivided,
+    from_grocery,
+    created_by
+  )
+  values (
+    p_household_id,
+    p_name,
+    p_brand,
+    v_category_id,
+    coalesce(p_unit, 'count'),
+    coalesce(p_quantity, 1),
+    coalesce(p_quantity, 1),
+    coalesce(p_is_subdivided, false),
+    coalesce(p_from_grocery, false),
+    auth.uid()
+  )
+  returning * into v_item;
+
+  insert into public.fridge_item_batches (
+    fridge_item_id,
+    quantity,
+    purchased_date,
+    expiry_date,
+    memo,
+    created_by
+  )
+  values (
+    v_item.id,
+    coalesce(p_quantity, 1),
+    coalesce(p_purchased_date, current_date),
+    p_expiry_date,
+    p_memo,
+    auth.uid()
+  );
+
+  return v_item;
+end;
+$$;
+
+-- upsert_meal_with_usage RPC 업데이트: created_by 기록
 create or replace function public.upsert_meal_with_usage(
   p_household_id uuid,
   p_date date,

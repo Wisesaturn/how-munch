@@ -1,9 +1,10 @@
 -- Function: public.create_fridge_item_with_batch
--- Source: supabase/migrations/038_drop_legacy_category_columns_and_use_category_id.sql
+-- Source: supabase/migrations/060_add_created_by_columns.sql
 -- 역할: 냉장고 아이템과 첫 배치를 동시에 생성합니다.
 -- 동작:
 -- 1. category_id를 정규화하고 item을 생성합니다.
 -- 2. 입력 수량으로 첫 batch를 생성하고 item을 반환합니다.
+-- 3. fridge_items와 fridge_item_batches에 created_by(auth.uid())를 기록합니다.
 create function public.create_fridge_item_with_batch(
   p_household_id uuid,
   p_name text,
@@ -51,7 +52,8 @@ begin
     total_count,
     max_count,
     is_subdivided,
-    from_grocery
+    from_grocery,
+    created_by
   )
   values (
     p_household_id,
@@ -62,7 +64,8 @@ begin
     coalesce(p_quantity, 1),
     coalesce(p_quantity, 1),
     coalesce(p_is_subdivided, false),
-    coalesce(p_from_grocery, false)
+    coalesce(p_from_grocery, false),
+    auth.uid()
   )
   returning * into v_item;
 
@@ -71,14 +74,16 @@ begin
     quantity,
     purchased_date,
     expiry_date,
-    memo
+    memo,
+    created_by
   )
   values (
     v_item.id,
     coalesce(p_quantity, 1),
     coalesce(p_purchased_date, current_date),
     p_expiry_date,
-    p_memo
+    p_memo,
+    auth.uid()
   );
 
   return v_item;
