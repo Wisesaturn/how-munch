@@ -4,6 +4,7 @@ import { withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
+import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseholdNotification';
 
 /** GET /api/fridge?householdId=&search= — 냉장고 재고 전체 조회 (배치 포함) */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
@@ -30,7 +31,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 });
 
 /** POST /api/fridge — 냉장고 아이템 + 첫 배치 동시 추가 */
-export const POST = withAuth(async (req: NextRequest, { supabase }) => {
+export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   const body = await req.json();
   const { item, batch } = body;
 
@@ -57,6 +58,29 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
     if (domainError) return apiResponse.CONFLICT(domainError.code, domainError.message);
     return apiResponse.INTERNAL_ERROR();
   }
+
+  void (async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('user_id', userId)
+      .single();
+    const nickname = profile?.nickname ?? '가구원';
+
+    dispatchHouseholdNotification({
+      accessToken: session.access_token,
+      householdId: item.household_id,
+      triggeredBy: userId,
+      type: 'fridge_item_added',
+      title: '냉장고 재료 추가',
+      body: `${nickname}님이 ${item.name}을(를) 추가했어요`,
+    });
+  })();
 
   return apiResponse.CREATED(data);
 });

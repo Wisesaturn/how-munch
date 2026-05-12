@@ -4,10 +4,11 @@ import { withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
+import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseholdNotification';
 import { type Json } from '@/commons/model/types';
 
 /** POST /api/fridge/batches — 기존 아이템에 배치 추가 */
-export const POST = withAuth(async (req: NextRequest, { supabase }) => {
+export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   const body = await req.json();
 
   const { data, error } = await supabase.from('fridge_item_batches').insert(body).select().single();
@@ -17,6 +18,36 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
     if (domainError) return apiResponse.CONFLICT(domainError.code, domainError.message);
     return apiResponse.INTERNAL_ERROR();
   }
+
+  void (async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: fridgeItem } = await supabase
+      .from('fridge_items')
+      .select('household_id, name')
+      .eq('id', data.fridge_item_id)
+      .single();
+    if (!fridgeItem) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('user_id', userId)
+      .single();
+    const nickname = profile?.nickname ?? '가구원';
+
+    dispatchHouseholdNotification({
+      accessToken: session.access_token,
+      householdId: fridgeItem.household_id,
+      triggeredBy: userId,
+      type: 'fridge_item_added',
+      title: '냉장고 재료 추가',
+      body: `${nickname}님이 ${fridgeItem.name}을(를) 추가했어요`,
+    });
+  })();
 
   return apiResponse.CREATED(data);
 });

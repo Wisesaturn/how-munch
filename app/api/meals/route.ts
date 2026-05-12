@@ -4,6 +4,7 @@ import { withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
+import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseholdNotification';
 
 import { type MealType } from '@/entities/meal';
 
@@ -79,8 +80,15 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
   return apiResponse.OK(meals ?? []);
 });
 
+const MEAL_TYPE_LABEL: Record<MealType, string> = {
+  breakfast: '아침',
+  lunch: '점심',
+  dinner: '저녁',
+  snack: '간식',
+};
+
 /** POST /api/meals — 식단 저장 (해당 meal type 전체 교체) */
-export const POST = withAuth(async (req: NextRequest, { supabase }) => {
+export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   const body: UpsertMealBody = await req.json();
   const { householdId, date, type, dishes } = body;
 
@@ -106,6 +114,30 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
     if (domainError) return apiResponse.CONFLICT(domainError.code, domainError.message);
     return apiResponse.INTERNAL_ERROR();
   }
+
+  void (async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('user_id', userId)
+      .single();
+    const nickname = profile?.nickname ?? '가구원';
+    const mealLabel = MEAL_TYPE_LABEL[type] ?? type;
+
+    dispatchHouseholdNotification({
+      accessToken: session.access_token,
+      householdId,
+      triggeredBy: userId,
+      type: 'meal_added',
+      title: '식단 등록',
+      body: `${nickname}님이 ${mealLabel}을(를) 등록했어요`,
+    });
+  })();
 
   return apiResponse.CREATED(data);
 });
