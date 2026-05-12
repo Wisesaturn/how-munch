@@ -1,15 +1,19 @@
--- Function: public.delete_ingredient_with_cleanup
--- Source: supabase/migrations/062_fix_delete_ingredient_with_cleanup_meal_check.sql
--- 역할: 장보기 삭제 시 연결된 냉장고 리소스를 함께 정리합니다.
--- 동작:
--- 1. 연결 batch/item 상태를 확인해 soft delete를 연쇄 수행합니다.
--- 2. linked_fridge_batch_id가 있는 경우: soft_delete_fridge_batch가 배치 단위 식단 사용
---    여부를 검증하므로 이후 soft_delete_ingredient의 재검증 없이 직접 ingredients를 삭제한다.
---    (soft_delete_fridge_batch 내부에서 linked_fridge_batch_id를 NULL로 클리어하면
---    soft_delete_ingredient가 fridge_item 단위 검사로 fallback되어 같은 재료의 다른
---    배치를 사용하는 식단이 있을 때 잘못된 차단이 발생하는 문제 수정)
--- 3. linked_fridge_item_id만 있는 경우: 활성 배치가 없으면 fridge_item까지 soft delete 후
---    soft_delete_ingredient를 호출한다.
+-- ============================================================
+-- Fix: delete_ingredient_with_cleanup의 잘못된 식단 사용 검사 수정
+-- ============================================================
+-- 문제:
+--   장보기 항목 삭제 시 delete_ingredient_with_cleanup이 내부적으로
+--   soft_delete_fridge_batch → soft_delete_ingredient 순으로 호출한다.
+--   soft_delete_fridge_batch는 성공 후 ingredients.linked_fridge_batch_id를 NULL로 클리어한다.
+--   이후 soft_delete_ingredient가 ingredient를 다시 읽으면 linked_fridge_batch_id = NULL이므로
+--   fridge_item 단위(elif 분기)로 meal_batch_usages를 검사한다.
+--   같은 재료의 다른 배치를 다른 식단에서 사용 중이면 이 검사에 걸려 잘못된 차단이 발생한다.
+--   (장보기 배치 자체는 식단에서 사용 안 하는데도 삭제 불가 에러가 발생)
+--
+-- 수정:
+--   linked_fridge_batch_id가 있는 경우, soft_delete_fridge_batch의 배치 단위 검증이
+--   완료된 후 soft_delete_ingredient를 거치지 않고 직접 ingredients를 soft delete한다.
+
 create or replace function public.delete_ingredient_with_cleanup(p_ingredient_id uuid)
 returns void
 language plpgsql
