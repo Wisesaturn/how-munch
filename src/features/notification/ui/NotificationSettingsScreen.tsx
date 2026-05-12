@@ -54,6 +54,8 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
         is_permission_asked: isPermissionAsked,
         quiet_hours_start: null,
         quiet_hours_end: null,
+        fridge_item_added_enabled: preferences?.fridge_item_added_enabled ?? false,
+        meal_added_enabled: preferences?.meal_added_enabled ?? false,
       },
     });
   }

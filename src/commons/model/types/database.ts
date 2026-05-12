@@ -533,6 +533,8 @@ export interface Database {
           is_permission_asked: boolean;
           quiet_hours_start: string | null;
           quiet_hours_end: string | null;
+          fridge_item_added_enabled: boolean;
+          meal_added_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -543,6 +545,8 @@ export interface Database {
           is_permission_asked?: boolean;
           quiet_hours_start?: string | null;
           quiet_hours_end?: string | null;
+          fridge_item_added_enabled?: boolean;
+          meal_added_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -553,6 +557,8 @@ export interface Database {
           is_permission_asked?: boolean;
           quiet_hours_start?: string | null;
           quiet_hours_end?: string | null;
+          fridge_item_added_enabled?: boolean;
+          meal_added_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };

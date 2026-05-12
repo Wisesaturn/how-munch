@@ -141,6 +141,8 @@ interface UpdateNotificationPreferencesParams {
     | 'is_permission_asked'
     | 'quiet_hours_start'
     | 'quiet_hours_end'
+    | 'fridge_item_added_enabled'
+    | 'meal_added_enabled'
   >;
 }
 
@@ -175,6 +177,12 @@ export function useUpsertNotificationPreferencesMutation() {
           variables.values.is_permission_asked ?? previousPreferences?.is_permission_asked ?? false,
         quiet_hours_start: variables.values.quiet_hours_start ?? null,
         quiet_hours_end: variables.values.quiet_hours_end ?? null,
+        fridge_item_added_enabled:
+          variables.values.fridge_item_added_enabled ??
+          previousPreferences?.fridge_item_added_enabled ??
+          false,
+        meal_added_enabled:
+          variables.values.meal_added_enabled ?? previousPreferences?.meal_added_enabled ?? false,
         created_at: previousPreferences?.created_at ?? now,
         updated_at: now,
       };
