@@ -1,5 +1,7 @@
 import { type NextRequest } from 'next/server';
 
+import { josa } from 'es-hangul';
+
 import { withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
@@ -45,7 +47,7 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
       triggeredBy: userId,
       type: 'fridge_item_added',
       title: '냉장고 재료 추가',
-      body: `${nickname}님이 ${fridgeItem.name}을(를) 추가했어요`,
+      body: `${nickname}님이 ${josa(fridgeItem.name, '을/를')} 추가했어요`,
     });
   })();
 
