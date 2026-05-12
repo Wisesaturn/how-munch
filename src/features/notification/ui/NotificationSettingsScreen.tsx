@@ -40,6 +40,20 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   const expiryOption = toExpiryNotificationOption(
     preferences?.expiry_remind_days ?? [...DEFAULT_EXPIRY_REMIND_DAYS],
   );
+  const fridgeItemAddedEnabled = preferences?.fridge_item_added_enabled ?? false;
+  const mealAddedEnabled = preferences?.meal_added_enabled ?? false;
+
+  function buildBaseValues() {
+    return {
+      expiry_soon_enabled: expiryEnabled,
+      expiry_remind_days: toExpiryRemindDays(expiryOption),
+      is_permission_asked: preferences?.is_permission_asked ?? false,
+      quiet_hours_start: null,
+      quiet_hours_end: null,
+      fridge_item_added_enabled: fridgeItemAddedEnabled,
+      meal_added_enabled: mealAddedEnabled,
+    };
+  }
 
   function savePreferences(
     nextEnabled: boolean,
@@ -49,14 +63,21 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
     upsertPreferencesMutation.mutate({
       userId: user.id,
       values: {
+        ...buildBaseValues(),
         expiry_soon_enabled: nextEnabled,
         expiry_remind_days: toExpiryRemindDays(nextOption),
         is_permission_asked: isPermissionAsked,
-        quiet_hours_start: null,
-        quiet_hours_end: null,
-        fridge_item_added_enabled: preferences?.fridge_item_added_enabled ?? false,
-        meal_added_enabled: preferences?.meal_added_enabled ?? false,
       },
+    });
+  }
+
+  function saveActivityPreference(
+    key: 'fridge_item_added_enabled' | 'meal_added_enabled',
+    value: boolean,
+  ) {
+    upsertPreferencesMutation.mutate({
+      userId: user.id,
+      values: { ...buildBaseValues(), [key]: value },
     });
   }
 
@@ -166,6 +187,30 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
               >
                 보내기
               </Button>
+            </div>
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content className="space-y-3 py-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">냉장고 재료 추가 알림</p>
+              <Switch
+                checked={fridgeItemAddedEnabled}
+                onCheckedChange={(checked) =>
+                  saveActivityPreference('fridge_item_added_enabled', Boolean(checked))
+                }
+                disabled={upsertPreferencesMutation.isPending}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">식단 등록 알림</p>
+              <Switch
+                checked={mealAddedEnabled}
+                onCheckedChange={(checked) =>
+                  saveActivityPreference('meal_added_enabled', Boolean(checked))
+                }
+                disabled={upsertPreferencesMutation.isPending}
+              />
             </div>
           </Card.Content>
         </Card>
