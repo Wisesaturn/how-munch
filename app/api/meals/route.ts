@@ -31,6 +31,7 @@ interface UpsertMealBody {
     name: string;
     ingredients: Array<UpsertMealIngredient>;
   }>;
+  isNew?: boolean;
 }
 
 function toSafePositiveAmount(value: unknown) {
@@ -92,7 +93,7 @@ const MEAL_TYPE_LABEL: Record<MealType, string> = {
 /** POST /api/meals — 식단 저장 (해당 meal type 전체 교체) */
 export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   const body: UpsertMealBody = await req.json();
-  const { householdId, date, type, dishes } = body;
+  const { householdId, date, type, dishes, isNew } = body;
 
   if (!householdId || !date || !type) {
     return apiResponse.BAD_REQUEST('CMN_002', '필수 항목이 누락되었습니다.');
@@ -118,6 +119,8 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   }
 
   void (async () => {
+    if (!isNew) return;
+
     const {
       data: { session },
     } = await supabase.auth.getSession();

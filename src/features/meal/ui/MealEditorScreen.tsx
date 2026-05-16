@@ -105,7 +105,7 @@ export function MealEditorScreen({
     },
     onSubmit: ({ value }) => {
       upsertMutation.mutate(
-        { householdId, date, type, dishes: value.dishes },
+        { householdId, date, type, dishes: value.dishes, isNew: !isEditMode },
         {
           onSuccess: () => {
             Toast.success(ALERT_MSG.saveSuccess);
