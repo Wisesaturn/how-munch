@@ -14,7 +14,8 @@ export function useAddIngredientMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: IngredientInsert) => apiClient.post<Ingredient>('/api/ingredients', input),
+    mutationFn: (input: IngredientInsert & { skipNotification?: boolean }) =>
+      apiClient.post<Ingredient>('/api/ingredients', input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
@@ -33,6 +34,14 @@ export function useUpdateIngredientMutation() {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
     },
+  });
+}
+
+/** AI 다중 추가 후 가구 활동 알림 단건 통합 발송 */
+export function useDispatchHouseholdActivityMutation() {
+  return useMutation({
+    mutationFn: (input: { householdId: string; itemNames: string[]; triggeredBy: string }) =>
+      apiClient.post('/api/notification/household-activity', input),
   });
 }
 

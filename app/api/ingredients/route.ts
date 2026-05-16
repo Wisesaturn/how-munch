@@ -90,28 +90,30 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     return apiResponse.INTERNAL_ERROR();
   }
 
-  void (async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) return;
+  if (!body.skipNotification) {
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('nickname')
-      .eq('user_id', userId)
-      .single();
-    const nickname = profile?.nickname ?? '가구원';
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('user_id', userId)
+        .single();
+      const nickname = profile?.nickname ?? '가구원';
 
-    dispatchHouseholdNotification({
-      accessToken: session.access_token,
-      householdId: body.household_id,
-      triggeredBy: userId,
-      type: 'fridge_item_added',
-      title: '냉장고 재료 추가',
-      body: `${nickname}님이 ${josa(body.name, '을/를')} 추가했어요`,
-    });
-  })();
+      dispatchHouseholdNotification({
+        accessToken: session.access_token,
+        householdId: body.household_id,
+        triggeredBy: userId,
+        type: 'fridge_item_added',
+        title: '냉장고 재료 추가',
+        body: `${nickname}님이 ${josa(body.name, '을/를')} 추가했어요`,
+      });
+    })();
+  }
 
   return apiResponse.CREATED(data);
 });

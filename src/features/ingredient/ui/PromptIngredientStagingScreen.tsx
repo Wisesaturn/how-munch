@@ -8,7 +8,7 @@ import { Button, Checkbox, CTAButton } from '@/commons/ui';
 
 import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
-import { useAddIngredientMutation } from '../api/mutations';
+import { useAddIngredientMutation, useDispatchHouseholdActivityMutation } from '../api/mutations';
 import { type StagedItem } from '../lib/parseAiResponse';
 import { setPendingPromptEditCallback } from '../model/promptIngredientEditStore';
 import { type SaveState, usePromptIngredientStore } from '../model/promptIngredientStore';
@@ -61,6 +61,7 @@ export function PromptIngredientStagingScreen({
   const { items, checkedIds, saveStates, toggleCheck, toggleAll, updateItem, setSaveState, reset } =
     usePromptIngredientStore();
   const addMutation = useAddIngredientMutation();
+  const dispatchActivityMutation = useDispatchHouseholdActivityMutation();
   const { data: categories = [] } = useIngredientCategoriesQuery(householdId);
 
   const isSaving = Object.values(saveStates).some((s) => s === 'saving');
@@ -84,6 +85,8 @@ export function PromptIngredientStagingScreen({
   async function saveAll() {
     if (isSaving || selectedItems.length === 0) return;
 
+    const successNames: string[] = [];
+
     for (const item of selectedItems) {
       setSaveState(item.id, 'saving');
       const nextState = await addMutation
@@ -98,11 +101,23 @@ export function PromptIngredientStagingScreen({
           unit: item.unit,
           store: item.store || null,
           price: item.price,
+          skipNotification: true,
         })
-        .then(() => 'success' as const)
+        .then(() => {
+          successNames.push(item.name);
+          return 'success' as const;
+        })
         .catch(() => 'error' as const);
       setSaveState(item.id, nextState);
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    }
+
+    if (successNames.length > 0) {
+      dispatchActivityMutation.mutate({
+        householdId,
+        itemNames: successNames,
+        triggeredBy: userId,
+      });
     }
 
     reset();
