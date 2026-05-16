@@ -93,7 +93,7 @@ export function PromptIngredientStagingScreen({
           date: item.date,
           category_id: item.category_id,
           name: item.name,
-          brand: null,
+          brand: item.brand || null,
           count: item.count,
           unit: item.unit,
           store: item.store || null,

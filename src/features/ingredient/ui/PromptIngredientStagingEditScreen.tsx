@@ -31,6 +31,7 @@ export function PromptIngredientStagingEditScreen({
   function handleSubmit(values: IngredientFormValues) {
     resolvePendingPromptEditCallback({
       name: values.name,
+      brand: values.brand,
       price: values.price,
       count: values.count,
       unit: values.unit,
@@ -74,7 +75,7 @@ export function PromptIngredientStagingEditScreen({
             date: item.date,
             category_id: item.category_id,
             name: item.name,
-            brand: '',
+            brand: item.brand,
             count: item.count,
             unit: item.unit,
             store: item.store,

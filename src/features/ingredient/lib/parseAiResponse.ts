@@ -6,6 +6,7 @@ import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 export interface StagedItem {
   id: string;
   name: string;
+  brand: string;
   price: number;
   count: number;
   unit: IngredientUnit;
@@ -78,6 +79,7 @@ export function parseAiResponse(
       return {
         id: crypto.randomUUID(),
         name: typeof item['name'] === 'string' ? item['name'].trim() : '',
+        brand: '',
         price: typeof item['price'] === 'number' ? Math.round(item['price']) : 0,
         count: typeof item['count'] === 'number' ? item['count'] : 1,
         unit: 'count' as IngredientUnit,
