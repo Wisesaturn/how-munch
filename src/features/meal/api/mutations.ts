@@ -24,7 +24,7 @@ interface UpsertMealInput {
   date: string;
   type: MealType;
   dishes: MealEditorDishInput[];
-  isNew?: boolean;
+  skipNotification?: boolean;
 }
 
 /** 식단 저장(해당 meal type 전체 교체) */
