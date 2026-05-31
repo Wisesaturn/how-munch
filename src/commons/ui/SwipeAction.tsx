@@ -58,7 +58,7 @@ interface SwipeActionProps {
    * 오른쪽 액션 패널 너비 (px)
    * @default 120
    */
-  actionsWidth?: number;
+  rightActionsWidth?: number;
   /**
    * 왼쪽 액션 패널 너비 (px)
    * @default 120
@@ -86,7 +86,7 @@ export function SwipeAction({
   children,
   rightActions = [],
   leftActions = [],
-  actionsWidth = 120,
+  rightActionsWidth = 120,
   leftActionsWidth = 120,
   groupId,
   className,
@@ -103,7 +103,11 @@ export function SwipeAction({
   // 그룹 레지스트리에서 이 인스턴스를 식별하는 고유 심볼
   const instanceId = useRef(Symbol());
 
-  const rightOpacity = useTransform(xSpring, [-actionsWidth, -actionsWidth * 0.25, 0], [1, 1, 0]);
+  const rightOpacity = useTransform(
+    xSpring,
+    [-rightActionsWidth, -rightActionsWidth * 0.25, 0],
+    [1, 1, 0],
+  );
   const leftOpacity = useTransform(
     xSpring,
     [0, leftActionsWidth * 0.25, leftActionsWidth],
@@ -143,7 +147,7 @@ export function SwipeAction({
       }, 50);
     }
 
-    const isFastLeft = info.velocity.x < -450 && info.offset.x < -(actionsWidth * 0.2);
+    const isFastLeft = info.velocity.x < -450 && info.offset.x < -(rightActionsWidth * 0.2);
     const isFastRight = info.velocity.x > 450 && info.offset.x > leftActionsWidth * 0.2;
 
     if (isFastLeft && hasRight) {
@@ -160,8 +164,8 @@ export function SwipeAction({
       return;
     }
 
-    if (info.offset.x < -(actionsWidth * 0.35) && hasRight) {
-      snapTo(-actionsWidth);
+    if (info.offset.x < -(rightActionsWidth * 0.35) && hasRight) {
+      snapTo(-rightActionsWidth);
     } else if (info.offset.x > leftActionsWidth * 0.35 && hasLeft) {
       snapTo(leftActionsWidth);
     } else {
@@ -175,25 +179,25 @@ export function SwipeAction({
       {hasRight && (
         <motion.div
           className="absolute inset-y-0 right-0 flex items-stretch"
-          style={{ width: actionsWidth, opacity: rightOpacity }}
+          style={{ width: rightActionsWidth, opacity: rightOpacity }}
           aria-hidden
         >
-          {rightActions.map((action) => (
+          {rightActions.map((rightAction) => (
             <button
-              key={action.id}
+              key={rightAction.id}
               type="button"
               onClick={() => {
                 snapTo(0);
-                action.onPress();
+                rightAction.onPress();
               }}
               className={cn(
                 'flex flex-1 flex-col items-center justify-center gap-1 transition-opacity active:opacity-70',
-                action.className,
+                rightAction.className,
               )}
             >
-              {action.icon && <span className="text-white">{action.icon}</span>}
-              {action.label && (
-                <span className="text-[11px] font-medium text-white">{action.label}</span>
+              {rightAction.icon && <span className="text-white">{rightAction.icon}</span>}
+              {rightAction.label && (
+                <span className="text-[11px] font-medium text-white">{rightAction.label}</span>
               )}
             </button>
           ))}
@@ -207,22 +211,22 @@ export function SwipeAction({
           style={{ width: leftActionsWidth, opacity: leftOpacity }}
           aria-hidden
         >
-          {leftActions.map((action) => (
+          {leftActions.map((leftAction) => (
             <button
-              key={action.id}
+              key={leftAction.id}
               type="button"
               onClick={() => {
                 snapTo(0);
-                action.onPress();
+                leftAction.onPress();
               }}
               className={cn(
                 'flex flex-1 flex-col items-center justify-center gap-1 transition-opacity active:opacity-70',
-                action.className,
+                leftAction.className,
               )}
             >
-              {action.icon && <span className="text-white">{action.icon}</span>}
-              {action.label && (
-                <span className="text-[11px] font-medium text-white">{action.label}</span>
+              {leftAction.icon && <span className="text-white">{leftAction.icon}</span>}
+              {leftAction.label && (
+                <span className="text-[11px] font-medium text-white">{leftAction.label}</span>
               )}
             </button>
           ))}
@@ -234,7 +238,7 @@ export function SwipeAction({
         drag="x"
         dragDirectionLock
         dragConstraints={{
-          left: hasRight ? -actionsWidth : 0,
+          left: hasRight ? -rightActionsWidth : 0,
           right: hasLeft ? leftActionsWidth : 0,
         }}
         dragElastic={{

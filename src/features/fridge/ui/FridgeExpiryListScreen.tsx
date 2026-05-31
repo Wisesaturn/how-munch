@@ -10,7 +10,7 @@ import { Activity, Button, DeleteConfirmBottomSheet, SwipeAction, Toast } from '
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { useIngredientCategory } from '@/entities/ingredient-category';
 
-import { useDiscardBatchMutation } from '../api/mutations';
+import { useDeleteBatchMutation } from '../api/mutations';
 import { getDaysUntilExpiry } from '../lib/expiry';
 
 import { ExpiryBadge } from './ExpiryBadge';
@@ -64,24 +64,24 @@ interface ExpiryItemProps {
 }
 
 function ExpiryItem({ entry }: ExpiryItemProps) {
-  const discardMutation = useDiscardBatchMutation();
+  const deleteMutation = useDeleteBatchMutation();
 
-  function openDiscardConfirm() {
+  function openDeleteConfirm() {
     overlay.open(({ isOpen, close, unmount }) => {
       function closeSheet() {
         close();
         window.setTimeout(unmount, 200);
       }
 
-      function confirmDiscard() {
+      function confirmDelete() {
         closeSheet();
-        discardMutation.mutate(entry.batchId, {
+        deleteMutation.mutate(entry.batchId, {
           onSuccess: () => {
-            Toast.success('재고를 전부 버렸습니다');
+            Toast.success('재고를 삭제했습니다');
           },
           onError: (error) => {
             Toast.error(
-              error instanceof Error ? error.message : '재고 소진 중 오류가 발생했습니다',
+              error instanceof Error ? error.message : '재고 삭제 중 오류가 발생했습니다',
             );
           },
         });
@@ -91,11 +91,11 @@ function ExpiryItem({ entry }: ExpiryItemProps) {
         <DeleteConfirmBottomSheet
           open={isOpen}
           onClose={closeSheet}
-          onConfirm={confirmDiscard}
-          title="재고를 전부 버리시겠습니까?"
-          description="버린 재고는 복구할 수 없습니다."
-          confirmLabel="전부 버리기"
-          isPending={discardMutation.isPending}
+          onConfirm={confirmDelete}
+          title="재고를 삭제하시겠습니까?"
+          description="삭제된 재고는 복구할 수 없습니다."
+          confirmLabel="삭제"
+          isPending={deleteMutation.isPending}
         />
       );
     });
@@ -108,10 +108,10 @@ function ExpiryItem({ entry }: ExpiryItemProps) {
           id: 'discard',
           icon: <Trash2 className="size-4" />,
           className: 'bg-red-500',
-          onPress: openDiscardConfirm,
+          onPress: openDeleteConfirm,
         },
       ]}
-      actionsWidth={80}
+      rightActionsWidth={80}
       groupId="fridge-expiry"
       className="border-b border-gray-100 last:border-b-0"
     >

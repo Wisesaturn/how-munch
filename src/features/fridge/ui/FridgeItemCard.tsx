@@ -1,15 +1,17 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
 import { cn } from '@/commons/lib';
-import { Activity, ProgressBar, SwipeAction } from '@/commons/ui';
+import { Activity, DeleteConfirmBottomSheet, ProgressBar, SwipeAction, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { formatIngredientAmount } from '@/entities/ingredient';
 
+import { useDeleteFridgeItemMutation, useDiscardFridgeItemMutation } from '../api/mutations';
 import { getDaysUntilExpiry } from '../lib/expiry';
 
 import { ExpiryBadge } from './ExpiryBadge';
@@ -37,6 +39,9 @@ export function FridgeItemCard({
   onOpenSheet,
   onAddBatch,
 }: FridgeItemCardProps) {
+  const discardMutation = useDiscardFridgeItemMutation();
+  const deleteMutation = useDeleteFridgeItemMutation();
+
   const usedAmountByBatchId = new Map<string, number>();
   for (const usage of item.meal_batch_usages ?? []) {
     const prev = usedAmountByBatchId.get(usage.batch_id) ?? 0;
@@ -65,7 +70,62 @@ export function FridgeItemCard({
     .map((b) => ({ batch: b, days: getDaysUntilExpiry(b.expiry_date!) }))
     .sort((a, b) => a.days - b.days)[0];
 
-  const swipeActions = [
+  const hasUsage = totalUsedCount > 0;
+
+  function openDeleteConfirm() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 200);
+      }
+
+      function confirmAction() {
+        closeSheet();
+        if (hasUsage) {
+          discardMutation.mutate(item.id, {
+            onSuccess: () => Toast.success('재고를 전부 소진 처리했습니다'),
+            onError: (error) =>
+              Toast.error(
+                error instanceof Error ? error.message : '소진 처리 중 오류가 발생했습니다',
+              ),
+          });
+        } else {
+          deleteMutation.mutate(item.id, {
+            onSuccess: () => Toast.success('재료를 삭제했습니다'),
+            onError: (error) =>
+              Toast.error(error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다'),
+          });
+        }
+      }
+
+      return (
+        <DeleteConfirmBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onConfirm={confirmAction}
+          title={hasUsage ? '재고를 전부 소진 처리할까요?' : '재료를 삭제하시겠습니까?'}
+          description={
+            hasUsage
+              ? '식단에 사용된 기록은 유지됩니다.'
+              : '재료와 모든 재고가 삭제되며 복구할 수 없습니다.'
+          }
+          confirmLabel={hasUsage ? '전부 소진' : '삭제'}
+          isPending={discardMutation.isPending || deleteMutation.isPending}
+        />
+      );
+    });
+  }
+
+  const leftSwipeRightActions = [
+    {
+      id: 'delete',
+      icon: <Trash2 className="size-4" />,
+      className: 'bg-red-500',
+      onPress: openDeleteConfirm,
+    },
+  ];
+
+  const rightSwipeLeftActions = [
     {
       id: 'subdivide',
       label: '소분',
@@ -89,8 +149,10 @@ export function FridgeItemCard({
 
   return (
     <SwipeAction
-      rightActions={swipeActions}
-      actionsWidth={124}
+      rightActions={leftSwipeRightActions}
+      leftActions={rightSwipeLeftActions}
+      rightActionsWidth={80}
+      leftActionsWidth={124}
       groupId="fridge-card"
       className="rounded-xl"
     >
