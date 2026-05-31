@@ -107,6 +107,14 @@ project-root/
 - 날짜/기간 계산은 `date-fns`를 우선 사용한다
 - 범용 유틸 함수는 `es-toolkit`을 우선 사용한다
 - 한국어 처리: es-hangul 사용
+- 애니메이션은 `framer-motion`을 기본으로 사용한다. CSS transition/animation 직접 작성 대신 `motion.*` 컴포넌트와 `AnimatePresence`를 활용한다
+  - 마운트/언마운트 전환: `AnimatePresence` + `initial` / `animate` / `exit` props
+  - 공통 easing: `ease: 'easeInOut'`, duration은 150–300ms 범위
+  - `motion-reduce` 환경을 고려해 duration을 하드코딩하지 말고 필요 시 `useReducedMotion()`을 적용한다
+- 인라인 `style` prop은 최소화한다
+  - 정적 스타일은 Tailwind className으로 작성한다 (예: `style={{ background: 'linear-gradient(to right, transparent, white)' }}` → `className="bg-gradient-to-r from-transparent to-white"`)
+  - 변형 조합이 복잡해지면 `cva`로 variant를 정의한다
+  - 런타임 값이 필요한 동적 스타일(예: `width: someVar + 'px'`, `transform: translateX(${x}px)`)에만 인라인 style을 허용한다
 - type import는 `import { type Foo }` 인라인 스타일 사용
 - Supabase 클라이언트: `import { createBrowserClient } from '@/commons/api/supabase'` (client), `import { createClient } from '@/commons/api/supabase/server'` (server)
 - proxy.ts — 프로젝트 루트에 위치 (Next.js 16 proxy convention, Supabase 세션 리프레시)

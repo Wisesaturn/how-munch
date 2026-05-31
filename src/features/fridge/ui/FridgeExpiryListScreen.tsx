@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
@@ -108,32 +109,30 @@ function ExpiryItem({ entry, isActive, onActivate, onDeactivate }: ExpiryItemPro
       <span className="flex-1 text-sm font-medium text-gray-900">{entry.itemName}</span>
       <ExpiryBadge daysLeft={entry.daysLeft} />
 
-      <div
-        className="absolute inset-y-0 right-0 z-20 flex items-center transition-all duration-300"
-        style={{
-          width: isActive ? '180px' : '0px',
-          opacity: isActive ? 1 : 0,
-          pointerEvents: isActive ? 'auto' : 'none',
-        }}
-      >
-        <div
-          className="absolute inset-y-0 left-0 w-16"
-          style={{
-            background: 'linear-gradient(to right, transparent, white)',
-          }}
-        />
-        <div className="absolute inset-y-0 right-0 left-16 bg-white" />
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          className="relative z-10 mr-3 ml-auto shrink-0 whitespace-nowrap"
-          onClick={openDiscardConfirm}
-          disabled={discardMutation.isPending}
-        >
-          재고 버리기
-        </Button>
-      </div>
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            className="absolute inset-y-0 right-0 z-20 flex items-center"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 160, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+          >
+            <div className="absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-transparent to-white" />
+            <div className="absolute inset-y-0 right-0 left-14 bg-white" />
+            <Button
+              type="button"
+              variant="destructive"
+              size="xs"
+              className="relative z-10 mr-3 ml-auto shrink-0 whitespace-nowrap"
+              onClick={openDiscardConfirm}
+              disabled={discardMutation.isPending}
+            >
+              재고 버리기
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </li>
   );
 }
