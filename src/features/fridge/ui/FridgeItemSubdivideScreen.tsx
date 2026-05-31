@@ -5,7 +5,7 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { CTAButton, Counter, Input, Slider, Toast } from '@/commons/ui';
+import { CTAButton, Counter, Input, Select, Slider, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { type FridgeItemBatch, type FridgeItemUnit } from '@/entities/fridge-item';
@@ -30,6 +30,12 @@ const UNIT_LABEL: Record<FridgeItemUnit, string> = {
   l: 'L',
 };
 
+const FRIDGE_ITEM_UNITS: FridgeItemUnit[] = ['count', 'g', 'kg', 'ml', 'l'];
+
+function resolveCounterStep(unit: FridgeItemUnit): number {
+  return unit === 'count' || unit === 'g' || unit === 'ml' ? 1 : 0.1;
+}
+
 const subdivideSchema = z.object({
   consume_amount: z
     .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '소분 수량' }) })
@@ -38,6 +44,7 @@ const subdivideSchema = z.object({
     .string()
     .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '품목명' }))
     .max(100, ERROR_MSG.RANGE.MAX({ fieldName: '품목명', max: 100 })),
+  new_item_unit: z.enum(['count', 'g', 'kg', 'ml', 'l']),
   new_item_quantity: z
     .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '소분한 양' }) })
     .min(0.001, ERROR_MSG.RANGE.GREATER_THAN({ fieldName: '소분한 양', min: 0 })),
@@ -59,6 +66,7 @@ export function FridgeItemSubdivideScreen({
     defaultValues: {
       consume_amount: 0,
       new_item_name: '',
+      new_item_unit: unit,
       new_item_quantity: 1,
     },
     validators: {
@@ -72,6 +80,7 @@ export function FridgeItemSubdivideScreen({
           consume_amount: value.consume_amount,
           new_item_name: value.new_item_name,
           new_item_quantity: value.new_item_quantity,
+          new_item_unit: value.new_item_unit,
           new_expiry_date: calcSuggestedExpiryDate(batches, value.consume_amount),
         },
         {
@@ -110,7 +119,7 @@ export function FridgeItemSubdivideScreen({
                 <Slider
                   min={0}
                   max={totalCount}
-                  step={unit === 'count' || unit === 'g' || unit === 'ml' ? 1 : 0.1}
+                  step={resolveCounterStep(unit)}
                   value={[field.state.value]}
                   onValueChange={(v) => field.handleChange(v[0])}
                   invalid={Boolean(field.state.meta.errors[0])}
@@ -140,23 +149,53 @@ export function FridgeItemSubdivideScreen({
           )}
         </form.Field>
 
-        <form.Field name="new_item_quantity">
+        <form.Field name="new_item_unit">
           {(field) => (
             <Form.Field field={field}>
-              <Form.Label required>소분한 양은 어떻게 되나요?</Form.Label>
-              <Form.Control>
-                <Counter
-                  value={field.state.value}
-                  min={0.001}
-                  step={1}
-                  onValueChange={(v) => field.handleChange(v)}
-                  invalid={Boolean(field.state.meta.errors[0])}
-                />
-              </Form.Control>
+              <Form.Label required>단위</Form.Label>
+              <Select
+                value={field.state.value}
+                onValueChange={(value) => field.handleChange(value as FridgeItemUnit)}
+              >
+                <Form.Control>
+                  <Select.Trigger>
+                    <Select.Value placeholder="단위를 선택하세요" />
+                  </Select.Trigger>
+                </Form.Control>
+                <Select.Content>
+                  {FRIDGE_ITEM_UNITS.map((u) => (
+                    <Select.Item key={u} value={u}>
+                      {UNIT_LABEL[u]}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
               <Form.Error />
             </Form.Field>
           )}
         </form.Field>
+
+        <form.Subscribe selector={(state) => state.values.new_item_unit}>
+          {(selectedUnit) => (
+            <form.Field name="new_item_quantity">
+              {(field) => (
+                <Form.Field field={field}>
+                  <Form.Label required>소분한 양은 어떻게 되나요?</Form.Label>
+                  <Form.Control>
+                    <Counter
+                      value={field.state.value}
+                      min={0.001}
+                      step={resolveCounterStep(selectedUnit)}
+                      onValueChange={(v) => field.handleChange(v)}
+                      invalid={Boolean(field.state.meta.errors[0])}
+                    />
+                  </Form.Control>
+                  <Form.Error />
+                </Form.Field>
+              )}
+            </form.Field>
+          )}
+        </form.Subscribe>
       </form>
 
       <CTAButton

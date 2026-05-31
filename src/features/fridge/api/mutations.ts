@@ -94,6 +94,7 @@ interface SubdivideFridgeItemInput {
   new_item_name: string;
   new_item_quantity: number;
   new_expiry_date?: string | null;
+  new_item_unit?: string | null;
 }
 
 /** 냉장고 아이템 소분 — FIFO 차감 후 새 독립 fridge_item 생성 */
