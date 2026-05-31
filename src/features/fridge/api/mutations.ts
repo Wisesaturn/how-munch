@@ -75,6 +75,19 @@ export function useUpdateBatchMutation() {
   });
 }
 
+/** 냉장고 배치 재고 소진 (버리기) */
+export function useDiscardBatchMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => apiClient.post('/api/fridge/batches/discard', { id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
+    },
+  });
+}
+
 /** 냉장고 아이템 전체 재고 소진 (버리기) */
 export function useDiscardFridgeItemMutation() {
   const queryClient = useQueryClient();

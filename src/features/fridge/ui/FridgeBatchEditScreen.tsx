@@ -8,7 +8,11 @@ import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui'
 import { type FridgeItemBatch } from '@/entities/fridge-item';
 import { type IngredientUnit } from '@/entities/ingredient';
 
-import { useDeleteBatchMutation, useUpdateBatchMutation } from '../api/mutations';
+import {
+  useDeleteBatchMutation,
+  useDiscardBatchMutation,
+  useUpdateBatchMutation,
+} from '../api/mutations';
 import { useBatchUsedAmountQuery } from '../api/queries';
 
 import { type FridgeBatchFormValues, FridgeBatchForm } from './FridgeBatchForm';
@@ -29,6 +33,7 @@ export function FridgeBatchEditScreen({
 }: FridgeBatchEditScreenProps) {
   const mutation = useUpdateBatchMutation();
   const deleteMutation = useDeleteBatchMutation();
+  const discardMutation = useDiscardBatchMutation();
   const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
   const formId = `fridge-batch-edit-form-${batch.id}`;
   const totalQuantity = Number(batch.quantity) + Number(usedAmount);
@@ -74,18 +79,15 @@ export function FridgeBatchEditScreen({
   }
 
   function discardBatch() {
-    mutation.mutate(
-      { id: batch.id, quantity: usedAmount },
-      {
-        onSuccess: () => {
-          Toast.success('재고를 전부 버렸습니다');
-          onClose();
-        },
-        onError: (error) => {
-          Toast.error(getErrorMessage(error));
-        },
+    discardMutation.mutate(batch.id, {
+      onSuccess: () => {
+        Toast.success('재고를 전부 버렸습니다');
+        onClose();
       },
-    );
+      onError: (error) => {
+        Toast.error(getErrorMessage(error));
+      },
+    });
   }
 
   function openDeleteConfirm() {
