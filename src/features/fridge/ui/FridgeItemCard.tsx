@@ -88,7 +88,12 @@ export function FridgeItemCard({
   ];
 
   return (
-    <SwipeAction rightActions={swipeActions} actionsWidth={124} className="rounded-xl">
+    <SwipeAction
+      rightActions={swipeActions}
+      actionsWidth={124}
+      groupId="fridge-card"
+      className="rounded-xl"
+    >
       <button
         type="button"
         disabled={isOutOfStock}

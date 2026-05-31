@@ -112,6 +112,7 @@ function ExpiryItem({ entry }: ExpiryItemProps) {
         },
       ]}
       actionsWidth={80}
+      groupId="fridge-expiry"
       className="border-b border-gray-100 last:border-b-0"
     >
       <li className="flex items-center gap-3 bg-white py-3">

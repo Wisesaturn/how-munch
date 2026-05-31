@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useRef } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
 import {
   animate,
@@ -12,6 +12,25 @@ import {
 } from 'framer-motion';
 
 import { cn } from '../lib';
+
+/* -------------------------------------------------------------------------------------------------
+ * Group registry — 같은 groupId 내 하나만 열림
+ * -----------------------------------------------------------------------------------------------*/
+
+// groupId → (instanceId → close 콜백) 맵
+const groupRegistry = new Map<string, Map<symbol, () => void>>();
+
+function registerGroupMember(groupId: string, id: symbol, close: () => void): () => void {
+  if (!groupRegistry.has(groupId)) groupRegistry.set(groupId, new Map());
+  groupRegistry.get(groupId)!.set(id, close);
+  return () => groupRegistry.get(groupId)?.delete(id);
+}
+
+function closeOthersInGroup(groupId: string, excludeId: symbol) {
+  groupRegistry.get(groupId)?.forEach((close, id) => {
+    if (id !== excludeId) close();
+  });
+}
 
 /* -------------------------------------------------------------------------------------------------
  * Types
@@ -45,6 +64,10 @@ interface SwipeActionProps {
    * @default 120
    */
   leftActionsWidth?: number;
+  /**
+   * 동일 그룹 내 하나만 열림 — 같은 groupId를 가진 다른 항목은 자동으로 닫힘
+   */
+  groupId?: string;
   className?: string;
 }
 
@@ -54,9 +77,10 @@ interface SwipeActionProps {
 
 /**
  * @description iOS 스타일 스와이프 액션 컴포넌트.
- * - 왼쪽 스와이프 → 오른쪽 패널 노출 (actions)
+ * - 왼쪽 스와이프 → 오른쪽 패널 노출 (rightActions)
  * - 오른쪽 스와이프 → 왼쪽 패널 노출 (leftActions)
  * - 빠른 스와이프(|velocity| > 450)는 첫 번째 액션을 즉시 실행하고 닫힘
+ * - groupId를 지정하면 같은 그룹 내 다른 항목이 열릴 때 자동으로 닫힘
  */
 export function SwipeAction({
   children,
@@ -64,6 +88,7 @@ export function SwipeAction({
   leftActions = [],
   actionsWidth = 120,
   leftActionsWidth = 120,
+  groupId,
   className,
 }: SwipeActionProps) {
   const hasRight = actions.length > 0;
@@ -75,6 +100,8 @@ export function SwipeAction({
   const revealedRef = useRef<'right' | 'left' | null>(null);
   // 드래그 직후 발생하는 spurious click 억제용
   const justDraggedRef = useRef(false);
+  // 그룹 레지스트리에서 이 인스턴스를 식별하는 고유 심볼
+  const instanceId = useRef(Symbol());
 
   const rightOpacity = useTransform(xSpring, [-actionsWidth, -actionsWidth * 0.25, 0], [1, 1, 0]);
   const leftOpacity = useTransform(
@@ -83,11 +110,28 @@ export function SwipeAction({
     [0, 1, 1],
   );
 
+  useEffect(
+    function registerInGroup() {
+      if (!groupId) return;
+      return registerGroupMember(groupId, instanceId.current, () => {
+        animate(x, 0, { type: 'spring', bounce: 0, duration: 0.3 });
+        revealedRef.current = null;
+      });
+    },
+    [groupId, x],
+  );
+
   function snapTo(toX: number) {
     animate(x, toX, { type: 'spring', bounce: 0, duration: 0.3 });
-    if (toX < 0) revealedRef.current = 'right';
-    else if (toX > 0) revealedRef.current = 'left';
-    else revealedRef.current = null;
+    if (toX < 0) {
+      revealedRef.current = 'right';
+      if (groupId) closeOthersInGroup(groupId, instanceId.current);
+    } else if (toX > 0) {
+      revealedRef.current = 'left';
+      if (groupId) closeOthersInGroup(groupId, instanceId.current);
+    } else {
+      revealedRef.current = null;
+    }
   }
 
   function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
