@@ -1,13 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Trash2 } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
-import { Button, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
+import { Button, DeleteConfirmBottomSheet, SwipeAction, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
@@ -54,12 +51,9 @@ function buildExpiryEntries(items: FridgeItemWithBatches[]): ExpiryItemEntry[] {
 
 interface ExpiryItemProps {
   entry: ExpiryItemEntry;
-  isActive: boolean;
-  onActivate: () => void;
-  onDeactivate: () => void;
 }
 
-function ExpiryItem({ entry, isActive, onActivate, onDeactivate }: ExpiryItemProps) {
+function ExpiryItem({ entry }: ExpiryItemProps) {
   const discardMutation = useDiscardBatchMutation();
 
   function openDiscardConfirm() {
@@ -74,7 +68,6 @@ function ExpiryItem({ entry, isActive, onActivate, onDeactivate }: ExpiryItemPro
         discardMutation.mutate(entry.batchId, {
           onSuccess: () => {
             Toast.success('재고를 전부 버렸습니다');
-            onDeactivate();
           },
           onError: (error) => {
             Toast.error(
@@ -99,41 +92,23 @@ function ExpiryItem({ entry, isActive, onActivate, onDeactivate }: ExpiryItemPro
   }
 
   return (
-    <li className="relative flex items-center gap-3 overflow-hidden py-3">
-      <button
-        type="button"
-        className="absolute inset-0 z-10"
-        onClick={isActive ? onDeactivate : onActivate}
-        aria-label={isActive ? '닫기' : '재고 버리기 열기'}
-      />
-      <span className="flex-1 text-sm font-medium text-gray-900">{entry.itemName}</span>
-      <ExpiryBadge daysLeft={entry.daysLeft} />
-
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            className="absolute inset-y-0 right-0 z-20 flex items-center"
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 160, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeInOut' }}
-          >
-            <div className="absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-transparent to-white" />
-            <div className="absolute inset-y-0 right-0 left-14 bg-white" />
-            <Button
-              type="button"
-              variant="destructive"
-              size="xs"
-              className="relative z-10 mr-3 ml-auto shrink-0 whitespace-nowrap"
-              onClick={openDiscardConfirm}
-              disabled={discardMutation.isPending}
-            >
-              재고 버리기
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </li>
+    <SwipeAction
+      rightActions={[
+        {
+          id: 'discard',
+          icon: <Trash2 className="size-4" />,
+          className: 'bg-red-500',
+          onPress: openDiscardConfirm,
+        },
+      ]}
+      actionsWidth={80}
+      className="border-b border-gray-100 last:border-b-0"
+    >
+      <li className="flex items-center gap-3 bg-white py-3">
+        <span className="flex-1 text-sm font-medium text-gray-900">{entry.itemName}</span>
+        <ExpiryBadge daysLeft={entry.daysLeft} />
+      </li>
+    </SwipeAction>
   );
 }
 
@@ -149,15 +124,6 @@ interface FridgeExpiryListScreenProps {
 /** 만료됐거나 만료 임박한 재료 목록을 보여주는 Stackflow Screen */
 export function FridgeExpiryListScreen({ onClose, items }: FridgeExpiryListScreenProps) {
   const expiryEntries = buildExpiryEntries(items);
-  const [activeKey, setActiveKey] = useState<string | null>(null);
-
-  function activate(key: string) {
-    setActiveKey(key);
-  }
-
-  function deactivate() {
-    setActiveKey(null);
-  }
 
   return (
     <AppScreen
@@ -186,19 +152,10 @@ export function FridgeExpiryListScreen({ onClose, items }: FridgeExpiryListScree
             <p className="mt-1 text-xs text-gray-400">모든 재료가 유통기한 내에 있습니다</p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100">
-            {expiryEntries.map((entry) => {
-              const key = `${entry.itemId}-${entry.batchId}`;
-              return (
-                <ExpiryItem
-                  key={key}
-                  entry={entry}
-                  isActive={activeKey === key}
-                  onActivate={() => activate(key)}
-                  onDeactivate={deactivate}
-                />
-              );
-            })}
+          <ul>
+            {expiryEntries.map((entry) => (
+              <ExpiryItem key={`${entry.itemId}-${entry.batchId}`} entry={entry} />
+            ))}
           </ul>
         )}
       </div>

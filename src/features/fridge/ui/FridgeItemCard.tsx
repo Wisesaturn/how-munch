@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, PackageOpen, Scissors } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
@@ -69,7 +69,6 @@ export function FridgeItemCard({
     {
       id: 'subdivide',
       label: '소분',
-      icon: <Scissors className="size-4" />,
       className: 'bg-indigo-500',
       onPress: () =>
         stackFlowActions.push('FridgeItemSubdivideActivity', {
@@ -83,14 +82,13 @@ export function FridgeItemCard({
     {
       id: 'add-batch',
       label: '재고추가',
-      icon: <PackageOpen className="size-4" />,
       className: 'bg-emerald-500',
       onPress: () => onAddBatch(item),
     },
   ];
 
   return (
-    <SwipeAction actions={swipeActions} actionsWidth={124} className="rounded-xl">
+    <SwipeAction rightActions={swipeActions} actionsWidth={124} className="rounded-xl">
       <button
         type="button"
         disabled={isOutOfStock}
