@@ -1,4 +1,5 @@
 // shared UI components barrel export
+export { Activity } from './Activity';
 export { Accordion } from './Accordion';
 export { Alert } from './Alert';
 export { AlertDialog, type AlertDialogProps } from './AlertDialog';
@@ -39,6 +40,7 @@ export {
   type SingleSelectBottomSheetProps,
 } from './SingleSelectBottomSheet';
 export { Slider } from './Slider';
+export { SwipeAction, type SwipeActionItem } from './SwipeAction';
 export { Switch } from './Switch';
 export { TextareaGroup, TextareaGroupElement, type TextareaGroupProps } from './TextareaGroup';
 export { Textarea, type TextareaProps } from './Textarea';

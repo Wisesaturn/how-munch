@@ -9,7 +9,7 @@ import { overlay } from 'overlay-kit';
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
-import { Button } from '@/commons/ui';
+import { Activity, Button } from '@/commons/ui';
 
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type IngredientUnit } from '@/entities/ingredient';
@@ -19,6 +19,7 @@ import {
   ALL_CATEGORY_ID,
   ExpiryBanner,
   FridgeBatchAddBottomSheet,
+  FridgeBatchListBottomSheet,
   FridgeCategoryFilter,
   FridgeItemList,
   FridgeSearch,
@@ -98,6 +99,34 @@ export function FridgePage({ householdId }: FridgePageProps) {
     stackFlowActions.push('FridgeBatchEditActivity', { batch, unit, fromStore });
   };
 
+  const openFridgeBatchListSheet = (item: FridgeItemWithBatches) => {
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeSheet = () => createOverlayCloseHandler(close, unmount);
+      return (
+        <FridgeBatchListBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          item={item}
+          onAddBatch={() => {
+            closeSheet();
+            window.setTimeout(() => openFridgeBatchAddSheet(item), 250);
+          }}
+          onEditItem={() => {
+            closeSheet();
+            window.setTimeout(() => openFridgeItemEditSheet(item), 250);
+          }}
+          onEditBatch={(batch) => {
+            closeSheet();
+            window.setTimeout(
+              () => openFridgeBatchEditSheet(batch, item.unit, item.from_grocery),
+              250,
+            );
+          }}
+        />
+      );
+    });
+  };
+
   async function changeSearchValue(value: string) {
     await setSearchValue(value);
   }
@@ -107,9 +136,11 @@ export function FridgePage({ householdId }: FridgePageProps) {
   }
 
   return (
-    <div className="flex max-w-[430px] flex-col gap-4 overflow-x-hidden px-4 pb-5">
-      {/* 만료 임박 배너 */}
-      {!searchValue.trim() && <ExpiryBanner items={items} onPress={openFridgeExpiryList} />}
+    <div className="flex max-w-[430px] flex-col gap-4 px-4 pb-5">
+      {/* 만료 임박 배너 — Activity로 검색 중에도 상태 보존 */}
+      <Activity visible={!searchValue.trim()} name="expiry-banner">
+        <ExpiryBanner items={items} onPress={openFridgeExpiryList} />
+      </Activity>
 
       {/* 검색 */}
       <FridgeSearch value={searchValue} onChange={changeSearchValue} />
@@ -133,9 +164,8 @@ export function FridgePage({ householdId }: FridgePageProps) {
           householdId={householdId}
           items={filteredItems}
           isSearching={Boolean(searchValue.trim())}
-          onEditItem={openFridgeItemEditSheet}
+          onOpenSheet={openFridgeBatchListSheet}
           onAddBatch={openFridgeBatchAddSheet}
-          onEditBatch={openFridgeBatchEditSheet}
         />
       )}
 

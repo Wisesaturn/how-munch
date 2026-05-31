@@ -3,8 +3,7 @@ import { Search } from 'lucide-react';
 
 import { EmptyState } from '@/commons/ui';
 
-import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
-import { type IngredientUnit } from '@/entities/ingredient';
+import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { useIngredientCategory } from '@/entities/ingredient-category';
 
 import { FridgeItemCard } from './FridgeItemCard';
@@ -13,9 +12,8 @@ interface FridgeItemListProps {
   householdId: string;
   items: FridgeItemWithBatches[];
   isSearching?: boolean;
-  onEditItem: (item: FridgeItemWithBatches) => void;
+  onOpenSheet: (item: FridgeItemWithBatches) => void;
   onAddBatch: (item: FridgeItemWithBatches) => void;
-  onEditBatch: (batch: FridgeItemBatch, unit: IngredientUnit, fromStore: boolean) => void;
 }
 
 /** 카테고리별 그룹핑 냉장고 리스트 */
@@ -23,9 +21,8 @@ export function FridgeItemList({
   householdId,
   items,
   isSearching,
-  onEditItem,
+  onOpenSheet,
   onAddBatch,
-  onEditBatch,
 }: FridgeItemListProps) {
   const { categories, getCategoryById } = useIngredientCategory(householdId);
   const categoryOrder: string[] = categories.map((category) => category.id);
@@ -87,9 +84,8 @@ export function FridgeItemList({
                   key={item.id}
                   item={item}
                   categoryEmoji={cat?.emoji}
-                  onEditItem={onEditItem}
+                  onOpenSheet={onOpenSheet}
                   onAddBatch={onAddBatch}
-                  onEditBatch={onEditBatch}
                 />
               ))}
             </div>

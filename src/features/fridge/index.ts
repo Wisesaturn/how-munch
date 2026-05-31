@@ -21,6 +21,7 @@ export { FridgeItemList } from './ui/FridgeItemList';
 export { FridgeItemAddScreen } from './ui/FridgeItemAddScreen';
 export { FridgeItemEditScreen } from './ui/FridgeItemEditScreen';
 export { FridgeBatchAddBottomSheet } from './ui/FridgeBatchAddBottomSheet';
+export { FridgeBatchListBottomSheet } from './ui/FridgeBatchListBottomSheet';
 export { FridgeBatchEditScreen } from './ui/FridgeBatchEditScreen';
 export { FridgeFilterSettingsScreen } from './ui/FridgeFilterSettingsScreen';
 export { FridgeExpiryListScreen } from './ui/FridgeExpiryListScreen';
