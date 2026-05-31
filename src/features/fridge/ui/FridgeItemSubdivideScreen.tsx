@@ -24,10 +24,10 @@ interface FridgeItemSubdivideScreenProps {
 
 const UNIT_LABEL: Record<FridgeItemUnit, string> = {
   count: '개',
-  g: 'g',
-  kg: 'kg',
-  ml: 'ml',
-  l: 'l',
+  g: 'G',
+  kg: 'Kg',
+  ml: 'mL',
+  l: 'L',
 };
 
 const subdivideSchema = z.object({
