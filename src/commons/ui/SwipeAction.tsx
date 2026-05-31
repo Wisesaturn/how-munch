@@ -84,14 +84,14 @@ interface SwipeActionProps {
  */
 export function SwipeAction({
   children,
-  rightActions: actions = [],
+  rightActions = [],
   leftActions = [],
   actionsWidth = 120,
   leftActionsWidth = 120,
   groupId,
   className,
 }: SwipeActionProps) {
-  const hasRight = actions.length > 0;
+  const hasRight = rightActions.length > 0;
   const hasLeft = leftActions.length > 0;
 
   const x = useMotionValue(0);
@@ -149,7 +149,7 @@ export function SwipeAction({
     if (isFastLeft && hasRight) {
       animate(x, 0, { type: 'spring', bounce: 0 });
       revealedRef.current = null;
-      actions[0]?.onPress();
+      rightActions[0]?.onPress();
       return;
     }
 
@@ -178,7 +178,7 @@ export function SwipeAction({
           style={{ width: actionsWidth, opacity: rightOpacity }}
           aria-hidden
         >
-          {actions.map((action) => (
+          {rightActions.map((action) => (
             <button
               key={action.id}
               type="button"
