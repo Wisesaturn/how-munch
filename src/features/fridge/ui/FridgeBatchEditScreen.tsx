@@ -32,6 +32,7 @@ export function FridgeBatchEditScreen({
   const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
   const formId = `fridge-batch-edit-form-${batch.id}`;
   const totalQuantity = Number(batch.quantity) + Number(usedAmount);
+  const isInMeal = usedAmount > 0;
   const quantityUnitLabel = unit === 'count' ? '개' : unit;
 
   function getErrorMessage(error: unknown) {
@@ -72,6 +73,21 @@ export function FridgeBatchEditScreen({
     });
   }
 
+  function discardBatch() {
+    mutation.mutate(
+      { id: batch.id, quantity: usedAmount },
+      {
+        onSuccess: () => {
+          Toast.success('재고를 전부 버렸습니다');
+          onClose();
+        },
+        onError: (error) => {
+          Toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
+
   function openDeleteConfirm() {
     overlay.open(({ isOpen, close, unmount }) => {
       function closeSheet() {
@@ -91,6 +107,31 @@ export function FridgeBatchEditScreen({
           onConfirm={confirmDelete}
           title="재고를 삭제하시겠습니까?"
           description="삭제된 재고는 복구할 수 없습니다."
+        />
+      );
+    });
+  }
+
+  function openDiscardConfirm() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 200);
+      }
+
+      function confirmDiscard() {
+        closeSheet();
+        discardBatch();
+      }
+
+      return (
+        <DeleteConfirmBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onConfirm={confirmDiscard}
+          title="재고를 전부 버리시겠습니까?"
+          description="버린 재고는 복구할 수 없습니다."
+          confirmLabel="전부 버리기"
         />
       );
     });
@@ -123,9 +164,9 @@ export function FridgeBatchEditScreen({
           color="danger"
           variant="subtle"
           disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
-          onClick={openDeleteConfirm}
+          onClick={isInMeal ? openDiscardConfirm : openDeleteConfirm}
         >
-          삭제
+          {isInMeal ? '버리기' : '삭제'}
         </CTAConfirmButton.Left>
         <CTAConfirmButton.Right
           type="submit"

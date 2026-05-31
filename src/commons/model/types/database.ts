@@ -722,6 +722,10 @@ export interface Database {
         Args: { p_household_id: string | null; p_category_code: string };
         Returns: string;
       };
+      discard_fridge_item: {
+        Args: { p_fridge_item_id: string };
+        Returns: undefined;
+      };
       soft_delete_fridge_item: {
         Args: { p_fridge_item_id: string };
         Returns: undefined;

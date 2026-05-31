@@ -7,7 +7,11 @@ import { Button, CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/com
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 
-import { useDeleteFridgeItemMutation, useUpdateFridgeItemMutation } from '../api/mutations';
+import {
+  useDeleteFridgeItemMutation,
+  useDiscardFridgeItemMutation,
+  useUpdateFridgeItemMutation,
+} from '../api/mutations';
 
 import { type FridgeItemFormValues, FridgeItemForm } from './FridgeItemForm';
 
@@ -29,8 +33,10 @@ export function FridgeItemEditScreen({
 }: FridgeItemEditScreenProps) {
   const mutation = useUpdateFridgeItemMutation();
   const deleteMutation = useDeleteFridgeItemMutation();
+  const discardMutation = useDiscardFridgeItemMutation();
   const formId = `fridge-item-edit-form-${item.id}`;
   const disableUnitSelect = item.fridge_item_batches.length > 0;
+  const isInMeal = (item.meal_batch_usages?.length ?? 0) > 0;
 
   function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message;
@@ -71,6 +77,18 @@ export function FridgeItemEditScreen({
     });
   }
 
+  function discardItem() {
+    discardMutation.mutate(item.id, {
+      onSuccess: () => {
+        Toast.success('재료를 전부 버렸습니다');
+        onClose();
+      },
+      onError: (error) => {
+        Toast.error(getErrorMessage(error));
+      },
+    });
+  }
+
   function openDeleteConfirm() {
     overlay.open(({ isOpen, close, unmount }) => {
       function closeSheet() {
@@ -90,6 +108,31 @@ export function FridgeItemEditScreen({
           onConfirm={confirmDelete}
           title="재료를 삭제하시겠습니까?"
           description="삭제된 재료는 복구할 수 없습니다."
+        />
+      );
+    });
+  }
+
+  function openDiscardConfirm() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 200);
+      }
+
+      function confirmDiscard() {
+        closeSheet();
+        discardItem();
+      }
+
+      return (
+        <DeleteConfirmBottomSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onConfirm={confirmDiscard}
+          title="재료를 전부 버리시겠습니까?"
+          description="버린 재료는 복구할 수 없습니다."
+          confirmLabel="전부 버리기"
         />
       );
     });
@@ -133,17 +176,21 @@ export function FridgeItemEditScreen({
           type="button"
           color="danger"
           variant="subtle"
-          disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
-          onClick={openDeleteConfirm}
+          disabled={Boolean(
+            mutation.isPending || deleteMutation.isPending || discardMutation.isPending,
+          )}
+          onClick={isInMeal ? openDiscardConfirm : openDeleteConfirm}
         >
-          삭제
+          {isInMeal ? '버리기' : '삭제'}
         </CTAConfirmButton.Left>
         <CTAConfirmButton.Right
           type="submit"
           form={formId}
           color="confirm"
           variant="filled"
-          disabled={Boolean(mutation.isPending || deleteMutation.isPending)}
+          disabled={Boolean(
+            mutation.isPending || deleteMutation.isPending || discardMutation.isPending,
+          )}
         >
           저장
         </CTAConfirmButton.Right>
