@@ -1,12 +1,14 @@
 'use client';
 
+import { format } from 'date-fns';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { ChevronLeft, Trash2 } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
-import { Button, DeleteConfirmBottomSheet, SwipeAction, Toast } from '@/commons/ui';
+import { Activity, Button, DeleteConfirmBottomSheet, SwipeAction, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
+import { useIngredientCategory } from '@/entities/ingredient-category';
 
 import { useDiscardBatchMutation } from '../api/mutations';
 import { getDaysUntilExpiry } from '../lib/expiry';
@@ -20,14 +22,20 @@ import { ExpiryBadge } from './ExpiryBadge';
 interface ExpiryItemEntry {
   itemId: string;
   itemName: string;
+  categoryEmoji?: string;
   batchId: string;
+  purchasedDate: string;
   daysLeft: number;
 }
 
-function buildExpiryEntries(items: FridgeItemWithBatches[]): ExpiryItemEntry[] {
+function buildExpiryEntries(
+  items: FridgeItemWithBatches[],
+  getCategoryById: (id: string) => { emoji: string } | null,
+): ExpiryItemEntry[] {
   const entries: ExpiryItemEntry[] = [];
 
   for (const item of items) {
+    const category = getCategoryById(item.category_id);
     for (const batch of item.fridge_item_batches) {
       if (batch.expiry_date === null || Number(batch.quantity) <= 0) continue;
       const daysLeft = getDaysUntilExpiry(batch.expiry_date);
@@ -35,7 +43,9 @@ function buildExpiryEntries(items: FridgeItemWithBatches[]): ExpiryItemEntry[] {
         entries.push({
           itemId: item.id,
           itemName: item.name,
+          categoryEmoji: category?.emoji,
           batchId: batch.id,
+          purchasedDate: batch.purchased_date,
           daysLeft,
         });
       }
@@ -105,7 +115,17 @@ function ExpiryItem({ entry }: ExpiryItemProps) {
       className="border-b border-gray-100 last:border-b-0"
     >
       <li className="flex items-center gap-3 bg-white py-3">
-        <span className="flex-1 text-sm font-medium text-gray-900">{entry.itemName}</span>
+        <Activity visible={!!entry.categoryEmoji}>
+          <span className="font-tossface shrink-0 text-base" aria-hidden>
+            {entry.categoryEmoji}
+          </span>
+        </Activity>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-sm font-medium text-gray-900">{entry.itemName}</span>
+          <span className="text-xs text-gray-400">
+            구매 {format(new Date(entry.purchasedDate), 'MM.dd')}
+          </span>
+        </div>
         <ExpiryBadge daysLeft={entry.daysLeft} />
       </li>
     </SwipeAction>
@@ -123,7 +143,9 @@ interface FridgeExpiryListScreenProps {
 
 /** 만료됐거나 만료 임박한 재료 목록을 보여주는 Stackflow Screen */
 export function FridgeExpiryListScreen({ onClose, items }: FridgeExpiryListScreenProps) {
-  const expiryEntries = buildExpiryEntries(items);
+  const householdId = items[0]?.household_id ?? null;
+  const { getCategoryById } = useIngredientCategory(householdId);
+  const expiryEntries = buildExpiryEntries(items, getCategoryById);
 
   return (
     <AppScreen
