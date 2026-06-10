@@ -218,7 +218,7 @@ export function MealDateStrip({
 
   return (
     <section data-slot="meal-date-strip" className="flex flex-col gap-3">
-      <div className="flex min-h-8 items-center justify-between">
+      <div className="flex h-9 items-center justify-between">
         <button
           type="button"
           onClick={openCalendarSheet}
