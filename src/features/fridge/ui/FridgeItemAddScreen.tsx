@@ -99,7 +99,7 @@ function createFridgeItemCreateFormSchema(categoryIds: string[]) {
           code: 'custom',
           path: ['quantity'],
           message:
-            value.unit === 'kg'
+            value.unit === 'kg' || value.unit === 'l'
               ? '수량은 소수점 첫째 자리까지 입력할 수 있습니다'
               : '수량은 정수만 입력할 수 있습니다',
         });
