@@ -38,6 +38,9 @@ export function useUpsertMealMutation() {
         queryKey: mealKeys.listByDate(variables.householdId, variables.date),
       });
       queryClient.invalidateQueries({
+        queryKey: mealKeys.summaries(variables.householdId),
+      });
+      queryClient.invalidateQueries({
         queryKey: mealKeys.fridgeItems(variables.householdId),
       });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });

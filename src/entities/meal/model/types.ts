@@ -13,7 +13,7 @@ export interface DishIngredient {
   /** 사용 상태 — g/kg 단위: 'used' | 'depleted', 개 단위: 'used' */
   usage_status: 'used' | 'depleted' | null;
   /** join된 냉장고 품목 정보 */
-  fridge_items: { unit: 'count' | 'g' | 'kg'; name: string } | null;
+  fridge_items: { unit: 'count' | 'g' | 'kg'; name: string; category_id: string } | null;
   created_at: string;
 }
 
@@ -30,6 +30,14 @@ export interface Dish {
   ingredients: DishIngredient[];
   created_at: string;
   updated_at: string;
+}
+
+/** 식단 요약 — 기간 조회용 경량 데이터 (주간 스트립 dot 표시 등) */
+export interface MealSummary {
+  /** 식사 날짜 (YYYY-MM-DD) */
+  date: string;
+  /** 식사 유형 */
+  type: MealType;
 }
 
 /** 식단 — 날짜/식사 유형별 식사 기록 컨테이너 */

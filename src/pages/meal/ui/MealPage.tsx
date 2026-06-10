@@ -2,22 +2,17 @@
 
 import { useMemo, useState } from 'react';
 
-import { addDays, format, subDays } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronRight as ChevronRightSmall,
-  UtensilsCrossed,
-} from 'lucide-react';
+import { format } from 'date-fns';
+import { ChevronRight, UtensilsCrossed } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
-import { Badge, Button, Card, EmptyState } from '@/commons/ui';
+import { Card, EmptyState } from '@/commons/ui';
 
+import { useIngredientCategory } from '@/entities/ingredient-category';
 import { type Dish, type Meal, type MealType } from '@/entities/meal';
 
-import { useMealsByDateQuery } from '@/features/meal';
+import { MealDateStrip, useMealsByDateQuery } from '@/features/meal';
 
 interface MealPageProps {
   householdId: string;
@@ -43,11 +38,35 @@ function buildSortedDishesMap(meals: Meal[]): Map<MealType, Dish[]> {
   return map;
 }
 
+interface IngredientPreviewEntry {
+  id: string;
+  name: string;
+  emoji?: string;
+}
+
+function buildIngredientPreview(
+  dish: Dish,
+  getCategoryById: (id: string) => { emoji: string } | null,
+): IngredientPreviewEntry[] {
+  return dish.ingredients.flatMap((ingredient) => {
+    const fridgeItem = ingredient.fridge_items;
+    if (!fridgeItem) return [];
+    return [
+      {
+        id: ingredient.id,
+        name: fridgeItem.name,
+        emoji: getCategoryById(fridgeItem.category_id)?.emoji,
+      },
+    ];
+  });
+}
+
 export function MealPage({ householdId }: MealPageProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const { data: meals = [], isLoading } = useMealsByDateQuery(householdId, dateKey);
+  const { getCategoryById } = useIngredientCategory(householdId);
 
   const mealMap = useMemo(() => {
     return new Map(meals.map((meal) => [meal.type, meal]));
@@ -62,30 +81,11 @@ export function MealPage({ householdId }: MealPageProps) {
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
-      <section className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setSelectedDate((d) => subDays(d, 1))}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <h2 className="text-base font-bold">
-            {format(selectedDate, 'M월 d일 EEEE', { locale: ko })}
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setSelectedDate((d) => addDays(d, 1))}
-          >
-            <ChevronRightSmall className="size-4" />
-          </Button>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
-          오늘
-        </Button>
-      </section>
+      <MealDateStrip
+        householdId={householdId}
+        selectedDate={selectedDate}
+        onSelectedDateChange={setSelectedDate}
+      />
 
       {isLoading ? (
         <div className="py-12 text-center text-sm text-gray-400">불러오는 중...</div>
@@ -117,20 +117,30 @@ export function MealPage({ householdId }: MealPageProps) {
                     </EmptyState.Root>
                   ) : (
                     <ul className="space-y-2">
-                      {dishes.map((dish) => (
-                        <li
-                          key={dish.id}
-                          className="rounded-md bg-gray-50 px-3 py-2 text-sm transition-shadow"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex items-center justify-between">
+                      {dishes.map((dish) => {
+                        const ingredientPreview = buildIngredientPreview(dish, getCategoryById);
+
+                        return (
+                          <li key={dish.id} className="rounded-md bg-gray-50 px-3 py-2 text-sm">
                             <p className="font-medium">{dish.name}</p>
-                            {dish.ingredients.length > 0 && (
-                              <Badge variant="secondary">재료 {dish.ingredients.length}</Badge>
+                            {ingredientPreview.length > 0 && (
+                              <p className="mt-1 truncate text-xs text-gray-500">
+                                {ingredientPreview.map((entry, entryIndex) => (
+                                  <span key={entry.id}>
+                                    {entryIndex > 0 && <span className="text-gray-300"> · </span>}
+                                    {entry.emoji && (
+                                      <span className="font-tossface" aria-hidden>
+                                        {entry.emoji}{' '}
+                                      </span>
+                                    )}
+                                    {entry.name}
+                                  </span>
+                                ))}
+                              </p>
                             )}
-                          </div>
-                        </li>
-                      ))}
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </Card.Content>

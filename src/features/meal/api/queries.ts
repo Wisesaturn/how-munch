@@ -4,7 +4,7 @@ import { apiClient } from '@/commons/lib';
 import { type Database } from '@/commons/model/types';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
-import { mealKeys, type Meal } from '@/entities/meal';
+import { mealKeys, type Meal, type MealSummary } from '@/entities/meal';
 
 type FridgeItem = Database['public']['Tables']['fridge_items']['Row'];
 
@@ -21,6 +21,21 @@ export function useMealsByDateQuery(householdId: string | null, date: string) {
     queryKey: mealKeys.listByDate(householdId ?? '', date),
     queryFn: householdId
       ? () => apiClient.get<Meal[]>('/api/meals', { householdId, date })
+      : skipToken,
+  });
+}
+
+/** 기간 내 식단 존재 여부 요약 조회 — 주간 날짜 스트립 dot 표시용 */
+export function useMealSummaryByRangeQuery(
+  householdId: string | null,
+  startDate: string,
+  endDate: string,
+) {
+  return useQuery({
+    queryKey: mealKeys.summaryByRange(householdId ?? '', startDate, endDate),
+    queryFn: householdId
+      ? () =>
+          apiClient.get<MealSummary[]>('/api/meals/summary', { householdId, startDate, endDate })
       : skipToken,
   });
 }
