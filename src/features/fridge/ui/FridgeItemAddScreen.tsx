@@ -72,7 +72,7 @@ function createFridgeItemCreateFormSchema(categoryIds: string[]) {
         .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '재료명', max: '20자' })),
       brand: z.string().max(30, ERROR_MSG.RANGE.MAX({ fieldName: '브랜드', max: '30자' })),
       quantity: z.number().max(1_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' })),
-      unit: z.enum(['count', 'g', 'kg']),
+      unit: z.enum(['count', 'g', 'kg', 'ml', 'l']),
       is_subdivided: z.boolean(),
       purchased_date: z
         .string()
