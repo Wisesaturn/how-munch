@@ -1,4 +1,4 @@
-import { skipToken, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, skipToken, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/commons/lib';
 import { type Database } from '@/commons/model/types';
@@ -15,13 +15,14 @@ export interface MealFridgeItemOption extends Pick<
   fridge_item_batches: Array<Pick<FridgeItemBatch, 'purchased_date' | 'quantity'>>;
 }
 
-/** 특정 날짜 식단 조회 */
+/** 특정 날짜 식단 조회 — 날짜 전환 시 이전 데이터를 유지해 깜빡임을 방지한다 */
 export function useMealsByDateQuery(householdId: string | null, date: string) {
   return useQuery({
     queryKey: mealKeys.listByDate(householdId ?? '', date),
     queryFn: householdId
       ? () => apiClient.get<Meal[]>('/api/meals', { householdId, date })
       : skipToken,
+    placeholderData: keepPreviousData,
   });
 }
 

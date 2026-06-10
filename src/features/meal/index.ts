@@ -10,6 +10,6 @@ export {
   useMealSummaryByRangeQuery,
 } from './api/queries';
 
+export { MealCardList } from './ui/MealCardList';
 export { MealDateStrip } from './ui/MealDateStrip';
-export { MealDishList } from './ui/MealDishList';
 export { MealEditorScreen } from './ui/MealEditorScreen';
