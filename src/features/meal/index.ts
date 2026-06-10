@@ -11,4 +11,5 @@ export {
 } from './api/queries';
 
 export { MealDateStrip } from './ui/MealDateStrip';
+export { MealDishList } from './ui/MealDishList';
 export { MealEditorScreen } from './ui/MealEditorScreen';
