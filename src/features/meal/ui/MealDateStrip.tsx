@@ -2,25 +2,18 @@
 
 import { useMemo, useState } from 'react';
 
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  format,
-  isSameDay,
-  isToday,
-  startOfMonth,
-  startOfWeek,
-} from 'date-fns';
+import { addDays, addWeeks, format, isSameDay, isToday, startOfWeek } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { AnimatePresence, motion, useReducedMotion, type PanInfo } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
 import { cn } from '@/commons/lib';
-import { BottomSheet, Button, Calendar } from '@/commons/ui';
+import { Button } from '@/commons/ui';
 
 import { useMealSummaryByRangeQuery } from '../api/queries';
+
+import { MealCalendarBottomSheet } from './MealCalendarBottomSheet';
 
 /* -------------------------------------------------------------------------------------------------
  * Constants & Helpers
@@ -47,85 +40,6 @@ function getWeekdayLabelClassName(dayIndex: number) {
   if (dayIndex === 0) return 'text-red-500';
   if (dayIndex === 6) return 'text-blue-500';
   return 'text-gray-500';
-}
-
-/* -------------------------------------------------------------------------------------------------
- * MealCalendarJumpSheet
- * -----------------------------------------------------------------------------------------------*/
-
-interface MealCalendarJumpSheetProps {
-  open: boolean;
-  selectedDate: Date;
-  onClose: () => void;
-  onDateSelect: (date: Date) => void;
-}
-
-function MealCalendarJumpSheet({
-  open,
-  selectedDate,
-  onClose,
-  onDateSelect,
-}: MealCalendarJumpSheetProps) {
-  const [displayMonth, setDisplayMonth] = useState(() => startOfMonth(selectedDate));
-
-  function moveToPreviousMonth() {
-    setDisplayMonth((current) => addMonths(current, -1));
-  }
-
-  function moveToNextMonth() {
-    setDisplayMonth((current) => addMonths(current, 1));
-  }
-
-  function changeDisplayMonth(month?: Date) {
-    if (!month) return;
-    setDisplayMonth(startOfMonth(month));
-  }
-
-  function selectDate(date?: Date) {
-    if (!date) return;
-    onDateSelect(date);
-  }
-
-  return (
-    <BottomSheet open={open} onClose={onClose}>
-      <BottomSheet.Header heading="날짜 이동" />
-      <BottomSheet.Content className="flex flex-col items-center gap-2 pb-6">
-        <div className="flex items-center justify-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={moveToPreviousMonth}
-            aria-label="이전 달"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="min-w-24 text-center text-sm font-semibold text-gray-900">
-            {format(displayMonth, 'yyyy년 M월')}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={moveToNextMonth}
-            aria-label="다음 달"
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
-        <Calendar
-          mode="single"
-          month={displayMonth}
-          onMonthChange={changeDisplayMonth}
-          selected={selectedDate}
-          onSelect={selectDate}
-          hideNavigation
-          hideMonthCaption
-          className="w-full max-w-[320px] border-none bg-transparent p-0 shadow-none"
-        />
-      </BottomSheet.Content>
-    </BottomSheet>
-  );
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -200,17 +114,17 @@ export function MealDateStrip({
         window.setTimeout(unmount, 200);
       }
 
-      function selectCalendarDate(date: Date) {
+      function selectCalendarDate(date?: Date) {
+        if (!date) return;
         onSelectedDateChange(date);
-        closeSheet();
       }
 
       return (
-        <MealCalendarJumpSheet
+        <MealCalendarBottomSheet
           open={isOpen}
-          selectedDate={selectedDate}
           onClose={closeSheet}
-          onDateSelect={selectCalendarDate}
+          value={selectedDate}
+          onValueChange={selectCalendarDate}
         />
       );
     });
