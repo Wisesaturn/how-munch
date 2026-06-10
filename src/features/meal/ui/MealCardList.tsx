@@ -6,7 +6,6 @@ import { addDays, format } from 'date-fns';
 import { AnimatePresence, motion, useReducedMotion, type PanInfo } from 'framer-motion';
 import { ChevronRight, UtensilsCrossed } from 'lucide-react';
 
-import { cn } from '@/commons/lib';
 import { Card, EmptyState } from '@/commons/ui';
 
 import { type Dish, type Meal, type MealType } from '@/entities/meal';
@@ -72,11 +71,7 @@ export function MealCardList({
   const shouldReduceMotion = useReducedMotion();
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const {
-    data: meals = [],
-    isLoading,
-    isPlaceholderData,
-  } = useMealsByDateQuery(householdId, dateKey);
+  const { data: meals = [], isLoading } = useMealsByDateQuery(householdId, dateKey);
 
   // 날짜 변경 방향 추적 — yyyy-MM-dd 키는 사전순 비교가 시간순 비교와 일치한다
   const [syncedDateKey, setSyncedDateKey] = useState(dateKey);
@@ -119,10 +114,7 @@ export function MealCardList({
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.15}
           onDragEnd={settleDayDrag}
-          className={cn(
-            'touch-pan-y space-y-3 transition-opacity',
-            isPlaceholderData && 'opacity-60',
-          )}
+          className="touch-pan-y space-y-3"
         >
           {MEAL_TYPE_ORDER.map((type) => {
             const dishes = dishesMap.get(type) ?? [];
