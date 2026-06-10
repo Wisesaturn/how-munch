@@ -24,6 +24,7 @@ import { Form } from '@/commons/ui/Form';
 
 import {
   convertIngredientAmount,
+  isVolumeUnit,
   isWeightUnit,
   normalizeAmountByUnit,
   resolveAmountMin,
@@ -342,7 +343,12 @@ export function FridgeItemAddScreen({
                           return;
                         }
 
-                        if (isWeightUnit(currentUnit) || isWeightUnit(nextUnit)) {
+                        if (
+                          isWeightUnit(currentUnit) ||
+                          isWeightUnit(nextUnit) ||
+                          isVolumeUnit(currentUnit) ||
+                          isVolumeUnit(nextUnit)
+                        ) {
                           form.setFieldValue('quantity', resolveAmountMin(nextUnit));
                         }
                       }}
@@ -356,6 +362,8 @@ export function FridgeItemAddScreen({
                         <Select.Item value="count">개</Select.Item>
                         <Select.Item value="g">G</Select.Item>
                         <Select.Item value="kg">Kg</Select.Item>
+                        <Select.Item value="ml">mL</Select.Item>
+                        <Select.Item value="l">L</Select.Item>
                       </Select.Content>
                     </Select>
                   </Form.Field>
