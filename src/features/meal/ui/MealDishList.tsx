@@ -52,16 +52,18 @@ export function MealDishList({ householdId, dishes }: MealDishListProps) {
           <li key={dish.id} className="rounded-md bg-gray-50 px-3 py-2 text-sm">
             <p className="font-medium">{dish.name}</p>
             {ingredientPreview.length > 0 && (
-              <p className="mt-1 truncate text-xs text-gray-500">
+              <p className="mt-1 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs text-gray-500">
                 {ingredientPreview.map((entry, entryIndex) => (
-                  <span key={entry.id}>
-                    {entryIndex > 0 && <span className="text-gray-300"> · </span>}
+                  <span key={entry.id} className="whitespace-nowrap">
                     {entry.emoji && (
-                      <span className="font-tossface" aria-hidden>
-                        {entry.emoji}{' '}
+                      <span className="font-tossface mr-0.5" aria-hidden>
+                        {entry.emoji}
                       </span>
                     )}
                     {entry.name}
+                    {entryIndex < ingredientPreview.length - 1 && (
+                      <span className="text-gray-300"> ·</span>
+                    )}
                   </span>
                 ))}
               </p>
