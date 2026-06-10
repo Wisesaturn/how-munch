@@ -136,7 +136,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
   }
 
   return (
-    <div className="flex max-w-[430px] flex-col gap-4 px-4 pb-5">
+    <div className="flex flex-col gap-4 px-4 pb-5">
       {/* 만료 임박 배너 — Activity로 검색 중에도 상태 보존 */}
       <Activity visible={!searchValue.trim()} name="expiry-banner">
         <ExpiryBanner items={items} onPress={openFridgeExpiryList} />

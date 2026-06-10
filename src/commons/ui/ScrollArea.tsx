@@ -22,7 +22,12 @@ const ScrollArea = React.forwardRef<
     className={cn('relative overflow-hidden', className)}
     {...props}
   >
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    {/* [&>div]:block! — Radix Viewport 내부 래퍼(display:table; min-width:100%)가 자식의
+        max-content 너비(nowrap 텍스트, 가로 스크롤 행 등)만큼 부풀어 레이아웃을 밀어내는 문제 교정.
+        세로 스크롤 전용이므로 block으로 강제해도 스크롤 측정에 영향 없음.
+        @see https://github.com/radix-ui/primitives/issues/2722
+        @see https://github.com/radix-ui/primitives/issues/3646 */}
+    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit] [&>div]:block! [&>div]:min-w-0!">
       {children}
     </ScrollAreaPrimitive.Viewport>
     <ScrollBar className={!showScrollBar ? 'pointer-events-none opacity-0' : undefined} />
