@@ -20,6 +20,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   if (error) return apiResponse.INTERNAL_ERROR();
 
-  const total = (data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-  return apiResponse.OK(total);
+  const rows = data ?? [];
+  const usedAmount = rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+  return apiResponse.OK({ usedAmount, hasUsage: rows.length > 0 });
 });

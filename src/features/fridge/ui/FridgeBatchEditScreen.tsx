@@ -34,10 +34,11 @@ export function FridgeBatchEditScreen({
   const mutation = useUpdateBatchMutation();
   const deleteMutation = useDeleteBatchMutation();
   const discardMutation = useDiscardBatchMutation();
-  const { data: usedAmount = 0 } = useBatchUsedAmountQuery(batch.id);
+  const { data: batchUsage } = useBatchUsedAmountQuery(batch.id);
+  const usedAmount = batchUsage?.usedAmount ?? 0;
+  const isInMeal = batchUsage?.hasUsage ?? false;
   const formId = `fridge-batch-edit-form-${batch.id}`;
-  const totalQuantity = Number(batch.quantity) + Number(usedAmount);
-  const isInMeal = usedAmount > 0;
+  const totalQuantity = Number(batch.quantity) + usedAmount;
   const quantityUnitLabel = unit === 'count' ? '개' : unit;
 
   function getErrorMessage(error: unknown) {

@@ -33,12 +33,15 @@ export function useFridgeItemsQuery({
   });
 }
 
-/** 배치별 식단 사용량 합계 조회 */
+/** 배치별 식단 사용량 합계 및 연결 여부 조회 */
 export function useBatchUsedAmountQuery(batchId: string | null) {
   return useQuery({
     queryKey: fridgeItemKeys.batchUsage(batchId ?? ''),
     queryFn: batchId
-      ? () => apiClient.get<number>('/api/fridge/batch-usage', { batchId })
+      ? () =>
+          apiClient.get<{ usedAmount: number; hasUsage: boolean }>('/api/fridge/batch-usage', {
+            batchId,
+          })
       : skipToken,
   });
 }
