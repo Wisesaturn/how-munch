@@ -10,7 +10,7 @@ import { Activity, Button, DeleteConfirmBottomSheet, SwipeAction, Toast } from '
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { useIngredientCategory } from '@/entities/ingredient-category';
 
-import { useDeleteBatchMutation } from '../api/mutations';
+import { useDeleteBatchMutation, useDiscardBatchMutation } from '../api/mutations';
 import { getDaysUntilExpiry } from '../lib/expiry';
 
 import { ExpiryBadge } from './ExpiryBadge';
@@ -26,6 +26,7 @@ interface ExpiryItemEntry {
   batchId: string;
   purchasedDate: string;
   daysLeft: number;
+  isInMeal: boolean;
 }
 
 function buildExpiryEntries(
@@ -40,6 +41,7 @@ function buildExpiryEntries(
       if (batch.expiry_date === null || Number(batch.quantity) <= 0) continue;
       const daysLeft = getDaysUntilExpiry(batch.expiry_date);
       if (daysLeft <= 3) {
+        const isInMeal = (item.meal_batch_usages ?? []).some((u) => u.batch_id === batch.id);
         entries.push({
           itemId: item.id,
           itemName: item.name,
@@ -47,6 +49,7 @@ function buildExpiryEntries(
           batchId: batch.id,
           purchasedDate: batch.purchased_date,
           daysLeft,
+          isInMeal,
         });
       }
     }
@@ -64,38 +67,50 @@ interface ExpiryItemProps {
 }
 
 function ExpiryItem({ entry }: ExpiryItemProps) {
+  const discardMutation = useDiscardBatchMutation();
   const deleteMutation = useDeleteBatchMutation();
 
-  function openDeleteConfirm() {
+  function openConfirm() {
     overlay.open(({ isOpen, close, unmount }) => {
       function closeSheet() {
         close();
         window.setTimeout(unmount, 200);
       }
 
-      function confirmDelete() {
+      function confirmAction() {
         closeSheet();
-        deleteMutation.mutate(entry.batchId, {
-          onSuccess: () => {
-            Toast.success('재고를 삭제했습니다');
-          },
-          onError: (error) => {
-            Toast.error(
-              error instanceof Error ? error.message : '재고 삭제 중 오류가 발생했습니다',
-            );
-          },
-        });
+        if (entry.isInMeal) {
+          discardMutation.mutate(entry.batchId, {
+            onSuccess: () => Toast.success('재고를 소진 처리했습니다'),
+            onError: (error) =>
+              Toast.error(
+                error instanceof Error ? error.message : '소진 처리 중 오류가 발생했습니다',
+              ),
+          });
+        } else {
+          deleteMutation.mutate(entry.batchId, {
+            onSuccess: () => Toast.success('재고를 삭제했습니다'),
+            onError: (error) =>
+              Toast.error(
+                error instanceof Error ? error.message : '재고 삭제 중 오류가 발생했습니다',
+              ),
+          });
+        }
       }
 
       return (
         <DeleteConfirmBottomSheet
           open={isOpen}
           onClose={closeSheet}
-          onConfirm={confirmDelete}
-          title="재고를 삭제하시겠습니까?"
-          description="삭제된 재고는 복구할 수 없습니다."
-          confirmLabel="삭제"
-          isPending={deleteMutation.isPending}
+          onConfirm={confirmAction}
+          title={entry.isInMeal ? '재고를 소진 처리할까요?' : '재고를 삭제하시겠습니까?'}
+          description={
+            entry.isInMeal
+              ? '식단에 사용된 기록은 유지됩니다.'
+              : '삭제된 재고는 복구할 수 없습니다.'
+          }
+          confirmLabel={entry.isInMeal ? '소진' : '삭제'}
+          isPending={discardMutation.isPending || deleteMutation.isPending}
         />
       );
     });
@@ -108,7 +123,7 @@ function ExpiryItem({ entry }: ExpiryItemProps) {
           id: 'discard',
           icon: <Trash2 className="size-4" />,
           className: 'bg-red-500',
-          onPress: openDeleteConfirm,
+          onPress: openConfirm,
         },
       ]}
       rightActionsWidth={80}
