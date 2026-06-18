@@ -70,7 +70,7 @@ export function FridgeItemCard({
     .map((b) => ({ batch: b, days: getDaysUntilExpiry(b.expiry_date!) }))
     .sort((a, b) => a.days - b.days)[0];
 
-  const hasUsage = totalUsedCount > 0;
+  const hasUsage = (item.meal_batch_usages ?? []).length > 0;
 
   function openDeleteConfirm() {
     overlay.open(({ isOpen, close, unmount }) => {
