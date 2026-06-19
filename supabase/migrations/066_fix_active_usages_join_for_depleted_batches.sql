@@ -1,10 +1,6 @@
--- Function: public.get_fridge_items_with_active_batches
--- Source: supabase/migrations/046_add_get_fridge_items_with_active_batches_rpc.sql
--- 역할: 냉장고 목록 조회 시 활성 배치(수량 > 0) 기준으로 재고/사용량을 정합성 있게 반환합니다.
--- 동작:
--- 1. 요청 유저의 household 멤버십과 냉장고 숨김 설정(hide_depleted)을 확인합니다.
--- 2. 수량 > 0, 삭제되지 않은 배치만 활성 배치로 간주해 item을 필터링합니다.
--- 3. 활성 배치와 해당 배치 사용량(meal_batch_usages)만 묶어 JSON 형태로 반환합니다.
+-- 비-개 단위 재료가 소진(depleted) 처리되면 배치 quantity가 0이 되어
+-- active_batches(quantity > 0) 조인에서 meal_batch_usages가 누락되는 문제 수정.
+-- visible_batches(quantity >= 0) 조인으로 변경해 소진된 배치의 사용 기록도 포함한다.
 create or replace function public.get_fridge_items_with_active_batches(
   p_household_id uuid,
   p_search_keyword text default null
