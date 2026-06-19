@@ -61,4 +61,9 @@ export interface MealBatchUsage {
 export interface FridgeItemWithBatches extends FridgeItem {
   fridge_item_batches: FridgeItemBatch[];
   meal_batch_usages?: MealBatchUsage[];
+  /**
+   * 식단 사용 이력 유무 (dish_ingredients 기준)
+   * g/kg 'used'처럼 meal_batch_usages 행이 없는 사용까지 포함한다.
+   */
+  has_meal_usage?: boolean;
 }

@@ -41,7 +41,11 @@ function buildExpiryEntries(
       if (batch.expiry_date === null || Number(batch.quantity) <= 0) continue;
       const daysLeft = getDaysUntilExpiry(batch.expiry_date);
       if (daysLeft <= 3) {
-        const isInMeal = (item.meal_batch_usages ?? []).some((u) => u.batch_id === batch.id);
+        // 식단 사용 이력은 dish_ingredients 기준(has_meal_usage)이 완전한 출처다.
+        // g/kg 'used'처럼 meal_batch_usages 행이 없는 사용도 소진 처리 대상에 포함한다.
+        const isInMeal =
+          item.has_meal_usage === true ||
+          (item.meal_batch_usages ?? []).some((u) => u.batch_id === batch.id);
         entries.push({
           itemId: item.id,
           itemName: item.name,
