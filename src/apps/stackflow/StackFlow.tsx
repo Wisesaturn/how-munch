@@ -32,7 +32,14 @@ import {
   type StagedItem,
   useIngredientBrandNamesQuery,
 } from '@/features/ingredient';
-import { MealEditorScreen } from '@/features/meal';
+import {
+  MealEditorScreen,
+  FridgeItemSearchScreen,
+  setPendingFridgeItemCallback,
+  resolvePendingFridgeItemCallback,
+  clearPendingFridgeItemCallback,
+  type FridgeItemSearchOption,
+} from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
 
@@ -288,15 +295,13 @@ function MealEditorActivity({
   const { pop, push } = useActions();
 
   function openFridgeItemSearch(
-    suggestions: string[],
-    depletedNames: string[],
-    onSelectName: (name: string) => void,
+    items: FridgeItemSearchOption[],
+    onSelectId: (fridgeItemId: string) => void,
   ) {
-    setPendingProductNameCallback(onSelectName);
-    push('ProductNameSearchActivity', {
+    setPendingFridgeItemCallback(onSelectId);
+    push('FridgeItemSearchActivity', {
       fieldLabel: '재료',
-      suggestions,
-      depletedNames,
+      items,
     });
   }
 
@@ -467,6 +472,36 @@ function ProductNameSearchActivity({
   );
 }
 
+function FridgeItemSearchActivity({
+  params,
+}: {
+  params: {
+    fieldLabel?: string;
+    items?: FridgeItemSearchOption[];
+  };
+}) {
+  const { pop } = useActions();
+
+  function handleSelectItem(fridgeItemId: string) {
+    resolvePendingFridgeItemCallback(fridgeItemId);
+    pop();
+  }
+
+  function handleClose() {
+    clearPendingFridgeItemCallback();
+    pop();
+  }
+
+  return (
+    <FridgeItemSearchScreen
+      onClose={handleClose}
+      onSelectItem={handleSelectItem}
+      fieldLabel={params.fieldLabel}
+      items={params.items}
+    />
+  );
+}
+
 const appStackFlow = stackflow({
   transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
@@ -488,6 +523,7 @@ const appStackFlow = stackflow({
     ProfileSettingsActivity,
     ProfileEditActivity,
     ProductNameSearchActivity,
+    FridgeItemSearchActivity,
     PromptIngredientAddActivity,
     PromptIngredientStagingActivity,
     PromptIngredientStagingEditActivity,
@@ -513,6 +549,7 @@ const appStackFlow = stackflow({
         ProfileSettingsActivity: '/profile/settings',
         ProfileEditActivity: '/profile/edit',
         ProductNameSearchActivity: '/search/product-name',
+        FridgeItemSearchActivity: '/search/fridge-item',
         PromptIngredientAddActivity: '/ingredient/ai/add',
         PromptIngredientStagingActivity: '/ingredient/ai/staging',
         PromptIngredientStagingEditActivity: '/ingredient/ai/staging/edit',

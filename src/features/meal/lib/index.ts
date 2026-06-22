@@ -1,6 +1,7 @@
 export type {
   EditorDish,
   EditorIngredient,
+  FridgeItemSearchOption,
   FridgeStockInfo,
   IngredientUsageStatus,
   MealFridgeItem,

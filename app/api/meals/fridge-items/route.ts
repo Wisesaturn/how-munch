@@ -24,10 +24,11 @@ export const GET = withAuth(async (req: NextRequest, { userId, supabase }) => {
 
   let query = supabase
     .from('fridge_items')
-    .select('id, name, total_count, unit, fridge_item_batches(purchased_date, quantity)')
+    .select('id, name, brand, total_count, unit, fridge_item_batches(purchased_date, quantity)')
     .eq('household_id', householdId)
     .is('deleted_at', null)
-    .order('name', { ascending: true });
+    .order('name', { ascending: true })
+    .order('brand', { ascending: true, nullsFirst: true });
 
   if (hideDepletedFridgeItems) {
     if (selectedIds.length > 0) {

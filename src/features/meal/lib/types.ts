@@ -27,13 +27,23 @@ interface FridgeStockInfo {
 interface MealFridgeItem {
   id: string;
   name: string;
+  brand?: string | null;
   total_count: number | string;
   unit: IngredientUnit;
+}
+
+/** 식단 재고 선택 Screen에 전달되는 항목 — 브랜드별로 구분된 개별 fridge_item */
+interface FridgeItemSearchOption {
+  id: string;
+  name: string;
+  brand?: string | null;
+  depleted: boolean;
 }
 
 export type {
   EditorDish,
   EditorIngredient,
+  FridgeItemSearchOption,
   FridgeStockInfo,
   IngredientUsageStatus,
   MealFridgeItem,

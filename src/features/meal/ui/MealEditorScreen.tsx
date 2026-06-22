@@ -15,7 +15,7 @@ import { type Meal, type MealType } from '@/entities/meal';
 
 import { useDeleteMealMutation, useUpsertMealMutation } from '../api/mutations';
 import { useFridgeItemsForMealQuery } from '../api/queries';
-import { appendDish, createFridgeStockInfoById } from '../lib';
+import { appendDish, createFridgeStockInfoById, type FridgeItemSearchOption } from '../lib';
 import {
   createInUseStockAmountByItemId,
   createMealEditorDishesSchema,
@@ -31,11 +31,10 @@ interface MealEditorScreenProps {
   date: string;
   type: MealType;
   meal: Meal | null;
-  /** 재료 검색 Screen 진입 핸들러 — 선택값은 fridge_item_id로 변환되어 반영된다 */
+  /** 재료 검색 Screen 진입 핸들러 — 선택된 fridge_item_id가 그대로 반영된다 */
   onOpenFridgeItemSearch?: (
-    suggestions: string[],
-    depletedNames: string[],
-    onSelectName: (name: string) => void,
+    items: FridgeItemSearchOption[],
+    onSelectId: (fridgeItemId: string) => void,
   ) => void;
 }
 
@@ -180,16 +179,15 @@ export function MealEditorScreen({
 
   const isMutating = upsertMutation.isPending || deleteMutation.isPending;
 
-  function openFridgeItemSearch(currentItemId: string, onSelectId: (id: string) => void) {
+  function openFridgeItemSearch(_currentItemId: string, onSelectId: (id: string) => void) {
     if (!onOpenFridgeItemSearch) return;
-    const suggestions = fridgeItems.map((item) => item.name);
-    const depletedNames = fridgeItems
-      .filter((item) => Number(item.total_count) <= 0)
-      .map((item) => item.name);
-    onOpenFridgeItemSearch(suggestions, depletedNames, (selectedName) => {
-      const item = fridgeItems.find((i) => i.name === selectedName);
-      if (item) onSelectId(item.id);
-    });
+    const items: FridgeItemSearchOption[] = fridgeItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      brand: item.brand,
+      depleted: Number(item.total_count) <= 0,
+    }));
+    onOpenFridgeItemSearch(items, onSelectId);
   }
 
   return (

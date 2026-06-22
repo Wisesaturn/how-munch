@@ -10,7 +10,7 @@ type FridgeItem = Database['public']['Tables']['fridge_items']['Row'];
 
 export interface MealFridgeItemOption extends Pick<
   FridgeItem,
-  'id' | 'name' | 'total_count' | 'unit'
+  'id' | 'name' | 'brand' | 'total_count' | 'unit'
 > {
   fridge_item_batches: Array<Pick<FridgeItemBatch, 'purchased_date' | 'quantity'>>;
 }
