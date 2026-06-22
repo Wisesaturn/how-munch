@@ -90,6 +90,8 @@ begin
   where f.household_id = v_ingredient.household_id
     and f.deleted_at is null
     and lower(btrim(f.name)) = lower(btrim(v_ingredient.name))
+    and coalesce(nullif(lower(btrim(f.brand)), ''), '')
+      = coalesce(nullif(lower(btrim(v_ingredient.brand)), ''), '')
     and f.unit = v_ingredient.unit
     and f.category_id = v_ingredient.category_id
   order by f.created_at asc
