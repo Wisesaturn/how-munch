@@ -29,7 +29,8 @@ export function useUpdateFridgeItemMutation() {
       apiClient.put<FridgeItem>('/api/fridge', { id, ...updates }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
-      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
+      // 재료 이름/정보 변경이 식단 카드 표시에도 반영되도록 식단 관련 캐시 전체 무효화
+      queryClient.invalidateQueries({ queryKey: mealKeys.all });
     },
   });
 }
