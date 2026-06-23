@@ -1,5 +1,13 @@
 # GitHub 이슈 작성 가이드
 
+필요한 섹션만 골라 읽는다.
+
+- **이슈 제목 규칙** — 유형 구분 기준 + 종결 어미. 유형 판단·제목 작성 시.
+- **유형별 템플릿** — 기능 구현 / 상태 개선 / 버그 리포트 / 리팩토링 / 유지보수. 발행할 이슈의 **해당 유형 1종만** 펼쳐 사용.
+- **gh CLI 명령어 패턴** — 이슈 생성·조회·sub-issue 연결·브랜치 반영.
+
+---
+
 ## 이슈 제목 규칙
 
 이슈 제목은 **한국어 문장형**으로 작성한다.
@@ -173,6 +181,18 @@ EOF
 
 ```bash
 gh issue list
+```
+
+### sub-issue 연결 (네이티브 REST API)
+
+부모 이슈와 자식 이슈를 모두 생성한 뒤, 자식의 **REST id**(이슈 번호 아님)로 연결합니다.
+
+```bash
+PARENT={부모 이슈번호}
+CHILD_ID=$(gh api repos/wisesaturn/how-munch/issues/{자식 이슈번호} --jq .id)
+gh api --method POST \
+  repos/wisesaturn/how-munch/issues/$PARENT/sub_issues \
+  -F sub_issue_id=$CHILD_ID
 ```
 
 ### 이슈 번호를 브랜치명에 반영
