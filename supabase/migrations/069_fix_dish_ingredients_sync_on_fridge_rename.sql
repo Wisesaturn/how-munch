@@ -1,9 +1,15 @@
--- Function: public.update_ingredient_with_fridge
--- Source: supabase/migrations/038_drop_legacy_category_columns_and_use_category_id.sql
--- 역할: 장보기 항목 수정 시 연결 냉장고 재고를 정합성 있게 동기화합니다.
+-- Migration: 069_fix_dish_ingredients_sync_on_fridge_rename
+-- 역할: 장보기에서 재료 이름/브랜드를 수정해 fridge_item이 교체·소프트 삭제될 때,
+--       해당 fridge_item을 참조하는 dish_ingredients도 새 fridge_item으로 동기화한다.
 -- 동작:
--- 1. ingredient 업데이트 후 동일 품목 fridge_item을 재조회/생성합니다.
--- 2. 연결 배치를 목표 fridge_item으로 이동하고 수량/사용량 정합성을 유지합니다.
+-- 1. update_ingredient_with_fridge의 두 소프트 삭제 분기에 dish_ingredients 갱신을 추가한다.
+-- 2. 기존 데이터 정정: 소프트 삭제된 fridge_item을 참조하는 dish_ingredients를
+--    meal_batch_usages를 통해 올바른 fridge_item으로 갱신한다.
+
+/* -------------------------------------------------------------------------------------------------
+ * 1. update_ingredient_with_fridge 함수 수정
+ * -----------------------------------------------------------------------------------------------*/
+
 create or replace function public.update_ingredient_with_fridge(
   p_ingredient_id uuid,
   p_updates jsonb default '{}'::jsonb
@@ -246,3 +252,39 @@ begin
   return v_ingredient;
 end;
 $$;
+
+/* -------------------------------------------------------------------------------------------------
+ * 2. 기존 데이터 정정 — 소프트 삭제된 fridge_item을 참조하는 dish_ingredients 갱신
+ *    - meal_batch_usages를 경유해 해당 meal에서 살아있는 fridge_item으로 매핑한다.
+ *    - 한 meal 내에서 동일 unit+category의 활성 fridge_item이 1개일 때만 갱신 (안전 조건).
+ *    - 멱등: 이미 살아있는 fridge_item을 참조하는 dish_ingredients는 변경 없음.
+ * -----------------------------------------------------------------------------------------------*/
+
+update public.dish_ingredients di
+set fridge_item_id = subq.new_fridge_item_id
+from (
+  select distinct on (di2.id)
+    di2.id,
+    mbu.fridge_item_id as new_fridge_item_id
+  from public.dish_ingredients di2
+  join public.dishes d on d.id = di2.dish_id
+  join public.fridge_items dead_fi on dead_fi.id = di2.fridge_item_id
+    and dead_fi.deleted_at is not null
+  join public.meal_batch_usages mbu on mbu.meal_id = d.meal_id
+  join public.fridge_items live_fi on live_fi.id = mbu.fridge_item_id
+    and live_fi.deleted_at is null
+    and live_fi.unit = dead_fi.unit
+    and live_fi.category_id = dead_fi.category_id
+  where (
+    -- 이 meal에서 dead_fi와 unit+category가 일치하는 활성 fridge_item이 정확히 1개인 경우만 갱신
+    select count(distinct mbu2.fridge_item_id)
+    from public.meal_batch_usages mbu2
+    join public.fridge_items live_fi2 on live_fi2.id = mbu2.fridge_item_id
+      and live_fi2.deleted_at is null
+      and live_fi2.unit = dead_fi.unit
+      and live_fi2.category_id = dead_fi.category_id
+    where mbu2.meal_id = d.meal_id
+  ) = 1
+  order by di2.id
+) subq
+where di.id = subq.id;
