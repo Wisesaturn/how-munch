@@ -42,8 +42,16 @@ export function FridgeItemCard({
   const discardMutation = useDiscardFridgeItemMutation();
   const deleteMutation = useDeleteFridgeItemMutation();
 
+  const activeBatches = item.fridge_item_batches.filter(
+    (b) => !b.deleted_at && Number(b.quantity) > 0,
+  );
+  const activeBatchIds = new Set(activeBatches.map((b) => b.id));
+
+  // 완전히 소진된(quantity=0) 옛 배치의 사용 이력은 잔여율 계산에서 제외한다.
+  // 그렇지 않으면 같은 재료를 재등록해도 예전 소진량이 분모에 남아 100%가 되지 않는다.
   const usedAmountByBatchId = new Map<string, number>();
   for (const usage of item.meal_batch_usages ?? []) {
+    if (!activeBatchIds.has(usage.batch_id)) continue;
     const prev = usedAmountByBatchId.get(usage.batch_id) ?? 0;
     usedAmountByBatchId.set(usage.batch_id, prev + Number(usage.amount));
   }
@@ -58,10 +66,6 @@ export function FridgeItemCard({
     item.unit === 'count' && !isOutOfStock
       ? getRemainingRate(item.total_count, totalUsedCount)
       : null;
-
-  const activeBatches = item.fridge_item_batches.filter(
-    (b) => !b.deleted_at && Number(b.quantity) > 0,
-  );
   const hasExpiredBatch = activeBatches.some(
     (b) => b.expiry_date && getDaysUntilExpiry(b.expiry_date) < 0,
   );
