@@ -66,19 +66,21 @@ function IngredientAddActivity({
   const { pop, push } = useActions();
   const { data: brandNames } = useIngredientBrandNamesQuery(params.householdId);
 
-  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+  function openProductNameSearch(currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '품목명',
       suggestions: params.suggestions ?? [],
+      currentName,
     });
   }
 
-  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+  function openBrandSearch(currentBrand: string, onSelect: (brand: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '브랜드',
       suggestions: brandNames ?? [],
+      currentName: currentBrand,
     });
   }
 
@@ -105,19 +107,21 @@ function FridgeItemAddActivity({
   const { pop, push } = useActions();
   const { data: brandNames } = useFridgeBrandNamesQuery(params.householdId);
 
-  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+  function openProductNameSearch(currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '재료명',
       suggestions: params.suggestions ?? [],
+      currentName,
     });
   }
 
-  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+  function openBrandSearch(currentBrand: string, onSelect: (brand: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '브랜드',
       suggestions: brandNames ?? [],
+      currentName: currentBrand,
     });
   }
 
@@ -142,19 +146,21 @@ function FridgeItemEditActivity({
   const { pop, push } = useActions();
   const { data: brandNames } = useFridgeBrandNamesQuery(params.item.household_id);
 
-  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+  function openProductNameSearch(currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '재료명',
       suggestions: params.suggestions ?? [],
+      currentName,
     });
   }
 
-  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+  function openBrandSearch(currentBrand: string, onSelect: (brand: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '브랜드',
       suggestions: brandNames ?? [],
+      currentName: currentBrand,
     });
   }
 
@@ -255,19 +261,21 @@ function IngredientEditActivity({
   const { pop, push } = useActions();
   const { data: brandNames } = useIngredientBrandNamesQuery(params.householdId);
 
-  function openProductNameSearch(_currentName: string, onSelect: (name: string) => void) {
+  function openProductNameSearch(currentName: string, onSelect: (name: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '품목명',
       suggestions: params.suggestions ?? [],
+      currentName,
     });
   }
 
-  function openBrandSearch(_currentBrand: string, onSelect: (brand: string) => void) {
+  function openBrandSearch(currentBrand: string, onSelect: (brand: string) => void) {
     setPendingProductNameCallback(onSelect);
     push('ProductNameSearchActivity', {
       fieldLabel: '브랜드',
       suggestions: brandNames ?? [],
+      currentName: currentBrand,
     });
   }
 
@@ -447,6 +455,7 @@ function ProductNameSearchActivity({
     fieldLabel?: string;
     suggestions?: string[];
     depletedNames?: string[];
+    currentName?: string;
   };
 }) {
   const { pop } = useActions();
@@ -468,6 +477,7 @@ function ProductNameSearchActivity({
       fieldLabel={params.fieldLabel}
       suggestions={params.suggestions}
       depletedNames={params.depletedNames}
+      defaultQuery={params.currentName}
     />
   );
 }
