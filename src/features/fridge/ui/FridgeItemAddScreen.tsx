@@ -360,9 +360,9 @@ export function FridgeItemAddScreen({
                       </Form.Control>
                       <Select.Content>
                         <Select.Item value="count">개</Select.Item>
-                        <Select.Item value="g">G</Select.Item>
-                        <Select.Item value="kg">Kg</Select.Item>
-                        <Select.Item value="ml">mL</Select.Item>
+                        <Select.Item value="g">g</Select.Item>
+                        <Select.Item value="kg">kg</Select.Item>
+                        <Select.Item value="ml">ml</Select.Item>
                         <Select.Item value="l">L</Select.Item>
                       </Select.Content>
                     </Select>

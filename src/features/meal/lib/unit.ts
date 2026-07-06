@@ -7,9 +7,9 @@ import { normalizeAmount } from '../model/amount';
  */
 function resolveIngredientUnitLabel(unit: IngredientUnit | undefined) {
   if (unit === 'count') return '개';
-  if (unit === 'g') return 'G';
-  if (unit === 'kg') return 'Kg';
-  if (unit === 'ml') return 'mL';
+  if (unit === 'g') return 'g';
+  if (unit === 'kg') return 'kg';
+  if (unit === 'ml') return 'ml';
   if (unit === 'l') return 'L';
   return '단위';
 }
