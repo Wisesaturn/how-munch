@@ -35,8 +35,10 @@ export function FridgeItemEditScreen({
   const deleteMutation = useDeleteFridgeItemMutation();
   const discardMutation = useDiscardFridgeItemMutation();
   const formId = `fridge-item-edit-form-${item.id}`;
-  const disableUnitSelect = item.fridge_item_batches.length > 0;
-  const isInMeal = (item.meal_batch_usages?.length ?? 0) > 0;
+  // 식단 사용 이력은 dish_ingredients 기준(has_meal_usage)이 완전한 출처다.
+  // g/kg 'used'처럼 meal_batch_usages 행이 없는 사용도 단위 잠금 대상에 포함한다.
+  const isInMeal = item.has_meal_usage === true || (item.meal_batch_usages?.length ?? 0) > 0;
+  const disableUnitSelect = isInMeal;
 
   function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message;

@@ -31,4 +31,10 @@ export interface Ingredient {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
+  /**
+   * 연결된 냉장고 재료/배치의 식단 사용 이력 유무.
+   * linked_fridge_item_id 기준 dish_ingredients 존재 여부 또는
+   * linked_fridge_batch_id 기준 meal_batch_usages 존재 여부로 계산된다.
+   */
+  has_meal_usage?: boolean;
 }
