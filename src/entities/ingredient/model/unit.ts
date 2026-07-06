@@ -78,8 +78,8 @@ export function convertIngredientAmount(value: number, from: IngredientUnit, to:
 export function formatWeightAuto(value: number, unit: IngredientUnit) {
   const grams = toGrams(value, unit);
   if (grams === null) return String(value);
-  if (grams >= 1000) return `${(grams / 1000).toFixed(1)}Kg`;
-  return `${Math.round(grams)}G`;
+  if (grams >= 1000) return `${(grams / 1000).toFixed(1)}kg`;
+  return `${Math.round(grams)}g`;
 }
 
 /**
@@ -89,7 +89,7 @@ export function formatVolumeAuto(value: number, unit: IngredientUnit) {
   const ml = toMilliliters(value, unit);
   if (ml === null) return String(value);
   if (ml >= 1000) return `${(ml / 1000).toFixed(1)}L`;
-  return `${Math.round(ml)}mL`;
+  return `${Math.round(ml)}ml`;
 }
 
 /**
@@ -103,9 +103,9 @@ export function formatIngredientAmount(value: number, unit: IngredientUnit, dyna
   }
   const UNIT_DISPLAY: Record<IngredientUnit, string> = {
     count: '개',
-    g: 'G',
-    kg: 'Kg',
-    ml: 'mL',
+    g: 'g',
+    kg: 'kg',
+    ml: 'ml',
     l: 'L',
   };
   return `${value}${UNIT_DISPLAY[unit]}`;

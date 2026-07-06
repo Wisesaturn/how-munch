@@ -24,9 +24,9 @@ interface FridgeItemSubdivideScreenProps {
 
 const UNIT_LABEL: Record<FridgeItemUnit, string> = {
   count: '개',
-  g: 'G',
-  kg: 'Kg',
-  ml: 'mL',
+  g: 'g',
+  kg: 'kg',
+  ml: 'ml',
   l: 'L',
 };
 
