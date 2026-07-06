@@ -46,6 +46,41 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   if (error) return apiResponse.INTERNAL_ERROR();
 
+  const ingredients = (data ?? []) as Ingredient[];
+
+  const fridgeItemIds = [
+    ...new Set(ingredients.map((i) => i.linked_fridge_item_id).filter((id): id is string => !!id)),
+  ];
+  const fridgeBatchIds = [
+    ...new Set(ingredients.map((i) => i.linked_fridge_batch_id).filter((id): id is string => !!id)),
+  ];
+
+  const [dishIngredientsResult, mealBatchUsagesResult] = await Promise.all([
+    fridgeItemIds.length
+      ? supabase
+          .from('dish_ingredients')
+          .select('fridge_item_id')
+          .in('fridge_item_id', fridgeItemIds)
+      : Promise.resolve({ data: [] as { fridge_item_id: string }[] }),
+    fridgeBatchIds.length
+      ? supabase.from('meal_batch_usages').select('batch_id').in('batch_id', fridgeBatchIds)
+      : Promise.resolve({ data: [] as { batch_id: string }[] }),
+  ]);
+
+  const usedFridgeItemIds = new Set(
+    (dishIngredientsResult.data ?? []).map((row) => row.fridge_item_id),
+  );
+  const usedFridgeBatchIds = new Set((mealBatchUsagesResult.data ?? []).map((row) => row.batch_id));
+
+  const contents = ingredients.map((ingredient) => ({
+    ...ingredient,
+    has_meal_usage:
+      (!!ingredient.linked_fridge_item_id &&
+        usedFridgeItemIds.has(ingredient.linked_fridge_item_id)) ||
+      (!!ingredient.linked_fridge_batch_id &&
+        usedFridgeBatchIds.has(ingredient.linked_fridge_batch_id)),
+  }));
+
   const totalElements = count ?? 0;
   const totalPages = Math.ceil(totalElements / pageSize);
 
@@ -54,14 +89,14 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
     pageSize,
     totalElements,
     totalPages,
-    numberOfElements: data?.length ?? 0,
-    empty: (data?.length ?? 0) === 0,
+    numberOfElements: contents.length,
+    empty: contents.length === 0,
     first: page === 1,
     last: page >= totalPages,
   };
 
   const result: Page<Ingredient[]> = {
-    contents: (data ?? []) as Ingredient[],
+    contents,
     pageInfo,
   };
 

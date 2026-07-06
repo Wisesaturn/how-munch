@@ -119,7 +119,7 @@ export function IngredientEditScreen({
           onSubmit={handleSubmit}
           isSubmitting={updateMutation.isPending}
           isDeleting={deleteMutation.isPending}
-          disableUnitSelect
+          disableUnitSelect={ingredient.has_meal_usage === true}
           onOpenProductNameSearch={onOpenProductNameSearch}
           onOpenBrandSearch={onOpenBrandSearch}
         />
