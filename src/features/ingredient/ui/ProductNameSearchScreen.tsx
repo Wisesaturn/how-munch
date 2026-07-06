@@ -19,6 +19,8 @@ interface ProductNameSearchScreenProps {
   suggestions?: string[];
   /** 소진 상태인 항목 이름 목록 — 해당 항목에 소진 뱃지를 표시한다 */
   depletedNames?: string[];
+  /** 검색창 진입 시 미리 채워둘 기존 값 (수정 진입 시 현재 품목명 등) */
+  defaultQuery?: string;
 }
 
 /** 상품명 검색 전용 Screen — onClose/onSelectName을 Activity에서 주입받아 동작한다 */
@@ -28,14 +30,16 @@ export function ProductNameSearchScreen({
   fieldLabel = '상품명',
   suggestions = [],
   depletedNames = [],
+  defaultQuery = '',
 }: ProductNameSearchScreenProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(defaultQuery);
   const inputRef = useRef<HTMLInputElement>(null);
   const depletedSet = new Set(depletedNames);
 
-  useEffect(function focusOnMount() {
+  useEffect(function focusAndSelectOnMount() {
     const timer = window.setTimeout(() => {
       inputRef.current?.focus();
+      inputRef.current?.select();
     }, 100);
     return () => window.clearTimeout(timer);
   }, []);
