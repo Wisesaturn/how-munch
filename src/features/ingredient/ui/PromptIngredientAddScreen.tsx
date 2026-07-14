@@ -56,6 +56,7 @@ export function PromptIngredientAddScreen({
   const [payload, setPayload] = useState<ImagePayload | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [stepIndex, setStepIndex] = useState(0);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
     function revokePreviewOnChange() {
@@ -64,6 +65,12 @@ export function PromptIngredientAddScreen({
     },
     [preview],
   );
+
+  useEffect(function clearResetTimerOnUnmount() {
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    };
+  }, []);
 
   useEffect(
     function cycleAnalyzingSteps() {
@@ -102,6 +109,12 @@ export function PromptIngredientAddScreen({
       });
       setItems(items);
       onParsed(items);
+      resetTimerRef.current = setTimeout(() => {
+        setStatus('idle');
+        setPreview(null);
+        setPayload(null);
+        setErrorMessage('');
+      }, 2000);
     } catch (err) {
       // 사용자에겐 친화적 message를, 콘솔엔 실제 원인(cause)을 남긴다
       console.error('[receipt-parse]', err instanceof Error ? (err.cause ?? err) : err);
