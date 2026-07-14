@@ -26,6 +26,7 @@ function isSupportedMediaType(value: unknown): value is SupportedMediaType {
 /**
  * POST /api/ingredients/parse-receipt — 영수증 이미지를 Claude Vision으로 분석해 StagedItem[]으로 반환한다.
  * Claude 호출 → 텍스트 응답을 parseAiResponse로 파싱(category_id 매핑·중복 병합·날짜 보정)까지 서버에서 처리한다.
+ * 날짜 보정 기준일(today)은 클라이언트 로컬 날짜를 받아 서버 타임존(UTC) 편차를 방지한다.
  */
 export const POST = withAuth(async (req: NextRequest) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -37,6 +38,9 @@ export const POST = withAuth(async (req: NextRequest) => {
   const categories: IngredientCategoryOption[] = Array.isArray(body.categories)
     ? body.categories
     : [];
+  const today: unknown = body.today;
+  const resolvedToday =
+    typeof today === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(today) ? today : undefined;
 
   if (typeof imageBase64 !== 'string' || imageBase64.length === 0) {
     return apiResponse.BAD_REQUEST('CMN_002', '이미지가 필요합니다.');
@@ -76,7 +80,12 @@ export const POST = withAuth(async (req: NextRequest) => {
       .join('')
       .trim();
   } catch (err) {
-    return apiResponse.INTERNAL_ERROR('영수증 분석에 실패했어요. 다시 시도해 주세요.', err);
+    // 실제 원인은 서버 로그로만 남기고, 프로덕션 응답에는 내부 예외를 노출하지 않는다
+    console.error('[parse-receipt] Vision 호출 실패', err);
+    return apiResponse.INTERNAL_ERROR(
+      '영수증 분석에 실패했어요. 다시 시도해 주세요.',
+      process.env.NODE_ENV === 'production' ? undefined : err,
+    );
   }
 
   if (!text) {
@@ -84,7 +93,7 @@ export const POST = withAuth(async (req: NextRequest) => {
   }
 
   try {
-    const items = parseAiResponse(text, categories);
+    const items = parseAiResponse(text, categories, resolvedToday);
     return apiResponse.OK({ items });
   } catch (err) {
     return apiResponse.BAD_REQUEST(

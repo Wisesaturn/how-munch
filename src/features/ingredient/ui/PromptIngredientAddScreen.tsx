@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { format } from 'date-fns';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Camera, ChevronLeft, ImagePlus, Loader2, ReceiptText, Sparkles } from 'lucide-react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
@@ -97,6 +98,7 @@ export function PromptIngredientAddScreen({
         imageBase64: payload.base64,
         mimeType: payload.mimeType,
         categories,
+        today: format(new Date(), 'yyyy-MM-dd'),
       });
       setItems(items);
       onParsed(items);

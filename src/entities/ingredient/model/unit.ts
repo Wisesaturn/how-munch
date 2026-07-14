@@ -162,7 +162,7 @@ export function parseProductNameUnit(
   const fallback = { count: safeCount, unit: 'count' as IngredientUnit };
 
   // 1) 개수 표기 우선 (예: '5개입', '3팩', '2입')
-  const countMatch = name.match(/(\d+)\s*(개입|개|입|팩|봉지|봉|포|매|구|알|병|캔)/);
+  const countMatch = name.match(/(\d+)\s*(개입|개|팩|입)/);
   if (countMatch) {
     const quantity = Number.parseInt(countMatch[1], 10);
     if (Number.isFinite(quantity) && quantity > 0) {

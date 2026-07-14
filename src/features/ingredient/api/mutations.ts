@@ -47,6 +47,7 @@ export function useParseReceiptMutation() {
       imageBase64: string;
       mimeType: string;
       categories: IngredientCategoryOption[];
+      today: string;
     }) => apiClient.post<{ items: StagedItem[] }>('/api/ingredients/parse-receipt', input),
   });
 }
