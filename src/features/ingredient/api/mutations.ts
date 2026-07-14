@@ -5,6 +5,9 @@ import { type Database } from '@/commons/model/types';
 
 import { fridgeItemKeys } from '@/entities/fridge-item';
 import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
+import { type IngredientCategoryOption } from '@/entities/ingredient-category';
+
+import { type StagedItem } from '../lib/parseAiResponse';
 
 type IngredientInsert = Database['public']['Tables']['ingredients']['Insert'];
 type IngredientUpdate = Database['public']['Tables']['ingredients']['Update'];
@@ -34,6 +37,18 @@ export function useUpdateIngredientMutation() {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
     },
+  });
+}
+
+/** 영수증 이미지를 Claude Vision으로 분석해 파싱된 항목(StagedItem[])을 받아온다 */
+export function useParseReceiptMutation() {
+  return useMutation({
+    mutationFn: (input: {
+      imageBase64: string;
+      mimeType: string;
+      categories: IngredientCategoryOption[];
+      today: string;
+    }) => apiClient.post<{ items: StagedItem[] }>('/api/ingredients/parse-receipt', input),
   });
 }
 

@@ -11,6 +11,7 @@ export {
   isVolumeUnit,
   isWeightUnit,
   normalizeAmountByUnit,
+  parseProductNameUnit,
   resolveAmountMin,
   resolveAmountStep,
   toGrams,

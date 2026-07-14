@@ -8,7 +8,9 @@ export {
   useAddIngredientMutation,
   useUpdateIngredientMutation,
   useDeleteIngredientMutation,
+  useParseReceiptMutation,
 } from './api/mutations';
+export { buildReceiptPrompt } from './lib/receiptPrompt';
 export { IngredientAddScreen } from './ui/IngredientAddScreen';
 export { IngredientItem } from './ui/IngredientItem';
 export { IngredientSearchScreen } from './ui/IngredientSearchScreen';
@@ -28,7 +30,7 @@ export {
   clearPendingPromptEditCallback,
 } from './model/promptIngredientEditStore';
 export { usePromptIngredientStore } from './model/promptIngredientStore';
-export { type StagedItem } from './lib/parseAiResponse';
+export { parseAiResponse, type StagedItem } from './lib/parseAiResponse';
 export { PromptIngredientAddScreen } from './ui/PromptIngredientAddScreen';
 export { PromptIngredientStagingScreen } from './ui/PromptIngredientStagingScreen';
 export { PromptIngredientStagingEditScreen } from './ui/PromptIngredientStagingEditScreen';
