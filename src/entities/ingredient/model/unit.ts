@@ -144,3 +144,27 @@ export function validateAmountPrecisionByUnit(value: number, unit: IngredientUni
   if (unit === 'kg' || unit === 'l') return Number.isInteger(value * 10);
   return Number.isInteger(value);
 }
+
+/**
+ * @description 상품명에서 용량/중량 표기(g/kg/ml/l)를 추출해 count와 unit을 계산합니다.
+ * 상품명에 용량이 있으면 `{ count: 용량숫자 × receiptCount, unit: 해당 단위 }`를,
+ * 없으면 `{ count: receiptCount, unit: 'count' }`를 반환합니다.
+ * 대소문자를 무시하고 소수점을 허용하며 첫 번째 매칭만 사용합니다.
+ * (예: '서울우유 1L' × 2 → `{ count: 2, unit: 'l' }`, '삼겹살 500g' × 1 → `{ count: 500, unit: 'g' }`)
+ */
+export function parseProductNameUnit(
+  name: string,
+  receiptCount: number,
+): { count: number; unit: IngredientUnit } {
+  const safeCount = Number.isFinite(receiptCount) && receiptCount > 0 ? receiptCount : 1;
+  const fallback = { count: safeCount, unit: 'count' as IngredientUnit };
+
+  const match = name.match(/(\d+(?:\.\d+)?)\s*(kg|g|ml|l)\b/i);
+  if (!match) return fallback;
+
+  const amount = Number.parseFloat(match[1]);
+  if (!Number.isFinite(amount) || amount <= 0) return fallback;
+
+  const unit = match[2].toLowerCase() as IngredientUnit;
+  return { count: normalizeAmountByUnit(amount * safeCount, unit), unit };
+}

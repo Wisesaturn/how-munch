@@ -56,8 +56,8 @@ export function StoreAddMethodSheet({
         <MethodItem
           icon={<ScanText className="size-5 text-blue-600" />}
           iconBg="bg-blue-50"
-          label="AI에게 부탁하기"
-          description="영수증이나 목록을 AI로 한 번에 입력해요"
+          label="영수증 업로드"
+          description="영수증으로 한번에 입력해요"
           onClick={onPromptAdd}
         />
       </BottomSheet.Content>

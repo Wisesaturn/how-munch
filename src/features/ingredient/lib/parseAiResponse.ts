@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 
-import { type IngredientUnit } from '@/entities/ingredient';
+import { type IngredientUnit, parseProductNameUnit } from '@/entities/ingredient';
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 
 export interface StagedItem {
@@ -76,13 +76,17 @@ export function parseAiResponse(
           ? item['category_code']
           : 'other';
 
+      const name = typeof item['name'] === 'string' ? item['name'].trim() : '';
+      const receiptCount = typeof item['count'] === 'number' ? item['count'] : 1;
+      const { count, unit } = parseProductNameUnit(name, receiptCount);
+
       return {
         id: crypto.randomUUID(),
-        name: typeof item['name'] === 'string' ? item['name'].trim() : '',
+        name,
         brand: '',
         price: typeof item['price'] === 'number' ? Math.round(item['price']) : 0,
-        count: typeof item['count'] === 'number' ? item['count'] : 1,
-        unit: 'count' as IngredientUnit,
+        count,
+        unit,
         store: typeof item['store'] === 'string' ? item['store'].trim() : '',
         date:
           typeof item['date'] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item['date'])
