@@ -17,7 +17,8 @@ export interface StagedItem {
 }
 
 /**
- * @description name + price + store + date + category_code + unit이 모두 같은 항목을 하나로 병합하고 count를 합산한다.
+ * @description name + price + store + date + category_code + unit이 모두 같은 항목을 하나로 병합하고 count와 price를 함께 합산한다.
+ * price는 개당 단가가 아니라 해당 품목의 총 지출액이므로, 동일 항목이 여러 줄로 찍혀 병합될 때 지출액이 유실되지 않도록 price도 누적한다.
  * unit을 키에 포함해 표기 방식이 달라 단위가 갈린 항목이 잘못 합산되지 않도록 한다.
  */
 function mergeDuplicates(items: StagedItem[]): StagedItem[] {
@@ -28,6 +29,7 @@ function mergeDuplicates(items: StagedItem[]): StagedItem[] {
     const existing = seen.get(key);
     if (existing) {
       existing.count += item.count;
+      existing.price += item.price;
     } else {
       seen.set(key, { ...item });
     }
