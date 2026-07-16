@@ -6,6 +6,8 @@ import { Toast } from '@/commons/ui';
 import { fridgeItemKeys, type FridgeItem, type FridgeItemBatch } from '@/entities/fridge-item';
 import { mealKeys } from '@/entities/meal';
 
+import { type CategoryExpiryDefaultRow } from './queries';
+
 /** 냉장고 아이템 + 첫 배치 동시 추가 */
 export function useAddFridgeItemMutation() {
   const queryClient = useQueryClient();
@@ -145,20 +147,39 @@ interface UpsertCategoryExpiryDefaultInput {
   days: number | null;
 }
 
-/** 카테고리별 기본 유효기간 설정 저장 (days=null이면 제거) */
+/** 카테고리별 기본 유효기간 설정 저장 (days=null이면 제거) — 낙관적 업데이트 적용 */
 export function useUpsertCategoryExpiryDefaultMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (input: UpsertCategoryExpiryDefaultInput) =>
       apiClient.put('/api/fridge/category-expiry-defaults', input),
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables) => {
+      const queryKey = fridgeItemKeys.categoryExpiryDefaults(variables.householdId);
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousRows = queryClient.getQueryData<CategoryExpiryDefaultRow[]>(queryKey);
+      queryClient.setQueryData<CategoryExpiryDefaultRow[]>(queryKey, (rows = []) => {
+        const withoutCategory = rows.filter((row) => row.category_id !== variables.categoryId);
+        if (variables.days === null) return withoutCategory;
+        return [
+          ...withoutCategory,
+          { category_id: variables.categoryId, default_expiry_days: variables.days },
+        ];
+      });
+
+      return { queryKey, previousRows };
+    },
+    onError: (error, _variables, context) => {
+      if (context) {
+        queryClient.setQueryData(context.queryKey, context.previousRows);
+      }
+      Toast.error(error.message);
+    },
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({
         queryKey: fridgeItemKeys.categoryExpiryDefaults(variables.householdId),
       });
-    },
-    onError: (error) => {
-      Toast.error(error.message);
     },
   });
 }

@@ -9,13 +9,16 @@ interface FridgePreferences {
   hide_depleted_fridge_items: boolean;
 }
 
-interface CategoryExpiryDefaultRow {
+export interface CategoryExpiryDefaultRow {
   category_id: string;
   default_expiry_days: number;
 }
 
 /** categoryId → 기본 유효기간(일수) 맵 */
 export type CategoryExpiryDefaultsMap = Record<string, number>;
+
+// 가구 카테고리 기본 유효기간은 자주 바뀌지 않으므로 카테고리 목록과 동일하게 6시간 캐시한다.
+const CATEGORY_EXPIRY_DEFAULTS_STALE_TIME = 1000 * 60 * 60 * 6;
 
 /** 냉장고 재고 전체 조회 (배치 포함) */
 export function useFridgeItemsQuery({
@@ -68,6 +71,7 @@ export function useFridgePreferencesQuery(userId: string | null) {
 export function useCategoryExpiryDefaultsQuery(householdId: string | null) {
   return useQuery({
     queryKey: fridgeItemKeys.categoryExpiryDefaults(householdId ?? ''),
+    staleTime: CATEGORY_EXPIRY_DEFAULTS_STALE_TIME,
     queryFn: householdId
       ? () =>
           apiClient.get<CategoryExpiryDefaultRow[]>('/api/fridge/category-expiry-defaults', {
