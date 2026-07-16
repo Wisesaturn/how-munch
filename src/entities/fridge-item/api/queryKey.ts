@@ -6,4 +6,6 @@ export const fridgeItemKeys = {
   batchUsage: (batchId: string) => [...fridgeItemKeys.all, 'batch-usage', batchId] as const,
   preferences: (userId: string) => [...fridgeItemKeys.all, 'preferences', userId] as const,
   brands: (householdId: string) => [...fridgeItemKeys.all, 'brands', householdId] as const,
+  categoryExpiryDefaults: (householdId: string) =>
+    [...fridgeItemKeys.all, 'category-expiry-defaults', householdId] as const,
 };

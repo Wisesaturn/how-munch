@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
 import { ChevronRight } from 'lucide-react';
+import { useConditionalEffect } from 'react-simplikit';
 import { z } from 'zod';
 
 import { cn, ERROR_MSG } from '@/commons/lib';
@@ -38,7 +39,9 @@ import {
   useIngredientCategoriesQuery,
 } from '@/entities/ingredient-category';
 
+import { useCategoryExpiryDefaultsQuery } from '../api/queries';
 import { useAddFridgeItemMutation } from '../api/mutations';
+import { computeExpiryDate } from '../lib/expiry';
 
 interface FridgeItemAddScreenProps {
   onClose: () => void;
@@ -84,6 +87,14 @@ function createFridgeItemCreateFormSchema(categoryIds: string[]) {
       memo: z.string().max(300, ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: '300자' })),
     })
     .superRefine((value, ctx) => {
+      if (value.expiry_date && value.purchased_date && value.expiry_date < value.purchased_date) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['expiry_date'],
+          message: ERROR_MSG.DATE.ON_OR_AFTER({ fieldName: '유통기한', baseName: '구매일' }),
+        });
+      }
+
       const minQuantity = resolveAmountMin(value.unit);
 
       if (value.quantity < minQuantity) {
@@ -143,6 +154,9 @@ export function FridgeItemAddScreen({
   const mutation = useAddFridgeItemMutation();
   const formId = 'fridge-item-add-form';
   const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
+  const { data: expiryDefaults } = useCategoryExpiryDefaultsQuery(householdId);
+  // 사용자가 유통기한을 직접 수정했는지 추적 — true면 카테고리 기본값으로 덮어쓰지 않는다.
+  const isExpiryDirtyRef = useRef(false);
   const categoryIds = useMemo(
     () => categoryOptions.map((category) => category.id),
     [categoryOptions],
@@ -203,6 +217,21 @@ export function FridgeItemAddScreen({
   const quantityStep = resolveAmountStep(selectedUnit);
   const quantityMin = resolveAmountMin(selectedUnit);
 
+  // 기본 유효기간 설정이 로드되면, 사용자가 아직 유통기한을 건드리지 않았고 비어 있을 때
+  // 초기 카테고리 기본값으로 defaultValue를 채운다. (카테고리 변경 시 채움은 필드 listener에서 처리)
+  useConditionalEffect(
+    function prefillExpiryFromCategoryDefault() {
+      if (isExpiryDirtyRef.current || form.state.values.expiry_date) return;
+      const nextExpiry = computeExpiryDate(
+        form.state.values.purchased_date,
+        expiryDefaults?.[form.state.values.category_id],
+      );
+      if (nextExpiry) form.setFieldValue('expiry_date', nextExpiry);
+    },
+    [expiryDefaults] as const,
+    (previousDeps, currentDeps) => previousDeps?.[0] !== currentDeps[0],
+  );
+
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '재료 추가' }}>
       <form
@@ -218,7 +247,19 @@ export function FridgeItemAddScreen({
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-xs font-semibold text-gray-500">기본 정보</legend>
 
-          <form.Field name="category_id">
+          <form.Field
+            name="category_id"
+            listeners={{
+              onChange: ({ value }) => {
+                if (isExpiryDirtyRef.current) return;
+                const nextExpiry = computeExpiryDate(
+                  form.state.values.purchased_date,
+                  expiryDefaults?.[value],
+                );
+                form.setFieldValue('expiry_date', nextExpiry ?? '');
+              },
+            }}
+          >
             {(field) => <CategoryFormField field={field} options={categoryOptions} />}
           </form.Field>
 
@@ -437,7 +478,10 @@ export function FridgeItemAddScreen({
                 <Form.Control>
                   <DatePicker
                     value={parseDateValue(field.state.value)}
-                    onChange={(date) => field.handleChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                    onChange={(date) => {
+                      isExpiryDirtyRef.current = true;
+                      field.handleChange(date ? format(date, 'yyyy-MM-dd') : '');
+                    }}
                     placeholder="유통기한을 선택하세요"
                   />
                 </Form.Control>

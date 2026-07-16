@@ -6,8 +6,12 @@ import { ChevronLeft } from 'lucide-react';
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { Button, Card, Switch } from '@/commons/ui';
 
+import { useProfileQuery } from '@/entities/profile';
+
 import { useFridgePreferencesQuery } from '../api/queries';
 import { useUpsertFridgePreferencesMutation } from '../api/mutations';
+
+import { CategoryExpiryDefaultsSection } from './CategoryExpiryDefaultsSection';
 
 interface FridgeFilterSettingsScreenProps {
   onClose: () => void;
@@ -16,8 +20,10 @@ interface FridgeFilterSettingsScreenProps {
 /** 냉장고 필터 설정 화면 */
 export function FridgeFilterSettingsScreen({ onClose }: FridgeFilterSettingsScreenProps) {
   const { data: user } = useUserSuspenseQuery();
+  const { data: profile } = useProfileQuery(user.id);
   const { data: preferences } = useFridgePreferencesQuery(user.id);
   const upsertFridgePreferencesMutation = useUpsertFridgePreferencesMutation();
+  const householdId = profile?.household_id ?? null;
 
   const hideDepletedItems = preferences?.hide_depleted_fridge_items ?? false;
 
@@ -66,6 +72,8 @@ export function FridgeFilterSettingsScreen({ onClose }: FridgeFilterSettingsScre
             </div>
           </Card.Content>
         </Card>
+
+        {householdId ? <CategoryExpiryDefaultsSection householdId={householdId} /> : null}
       </div>
     </AppScreen>
   );
