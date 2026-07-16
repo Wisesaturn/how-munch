@@ -138,6 +138,31 @@ export function useSubdivideFridgeItemMutation() {
   });
 }
 
+interface UpsertCategoryExpiryDefaultInput {
+  householdId: string;
+  categoryId: string;
+  /** null이면 해당 카테고리 설정을 제거(미설정) */
+  days: number | null;
+}
+
+/** 카테고리별 기본 유효기간 설정 저장 (days=null이면 제거) */
+export function useUpsertCategoryExpiryDefaultMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpsertCategoryExpiryDefaultInput) =>
+      apiClient.put('/api/fridge/category-expiry-defaults', input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: fridgeItemKeys.categoryExpiryDefaults(variables.householdId),
+      });
+    },
+    onError: (error) => {
+      Toast.error(error.message);
+    },
+  });
+}
+
 interface UpsertFridgePreferencesInput {
   userId: string;
   values: { hide_depleted_fridge_items: boolean };

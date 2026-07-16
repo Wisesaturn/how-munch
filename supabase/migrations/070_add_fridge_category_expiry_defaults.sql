@@ -1,11 +1,47 @@
--- Function: public.add_ingredient_with_fridge
--- Source: supabase/migrations/038_drop_legacy_category_columns_and_use_category_id.sql
---         supabase/migrations/070_add_fridge_category_expiry_defaults.sql (카테고리 기본 유효기간 반영)
--- 역할: 장보기 항목 생성과 냉장고 아이템/배치 연결을 한 트랜잭션으로 처리합니다.
--- 동작:
--- 1. ingredient를 생성하고 category_id를 정규화합니다.
--- 2. 카테고리 기본 유효기간이 설정돼 있으면 구매일 + 기본일수로 배치 expiry_date를 채웁니다.
--- 3. 동일 품목 fridge_item을 재사용하거나 없으면 생성한 뒤 batch를 추가합니다.
+-- 카테고리별 기본 유효기간(일수) 설정 테이블 추가 및 장보기 자동 유효기간 채움 반영.
+-- 가구(household) 단위로 카테고리별 기본 유효기간을 저장하고,
+-- 장보기(add_ingredient_with_fridge) 경로에서 구매일 + 기본일수로 배치 expiry_date를 자동 확정한다.
+
+create table if not exists public.fridge_category_expiry_defaults (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references public.households(id) on delete cascade,
+  category_id uuid not null references public.ingredient_categories(id) on delete cascade,
+  default_expiry_days integer not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint fridge_category_expiry_days_range check (default_expiry_days between 1 and 180),
+  constraint uq_fridge_category_expiry_defaults unique (household_id, category_id)
+);
+
+create index if not exists idx_fridge_category_expiry_defaults_household
+  on public.fridge_category_expiry_defaults(household_id);
+
+drop trigger if exists set_updated_at on public.fridge_category_expiry_defaults;
+create trigger set_updated_at before update on public.fridge_category_expiry_defaults
+for each row execute function public.handle_updated_at();
+
+alter table public.fridge_category_expiry_defaults enable row level security;
+
+create policy "fridge_category_expiry_defaults_select"
+  on public.fridge_category_expiry_defaults for select
+  using (public.is_household_member(household_id));
+
+create policy "fridge_category_expiry_defaults_insert"
+  on public.fridge_category_expiry_defaults for insert
+  with check (public.is_household_member(household_id));
+
+create policy "fridge_category_expiry_defaults_update"
+  on public.fridge_category_expiry_defaults for update
+  using (public.is_household_member(household_id))
+  with check (public.is_household_member(household_id));
+
+create policy "fridge_category_expiry_defaults_delete"
+  on public.fridge_category_expiry_defaults for delete
+  using (public.is_household_member(household_id));
+
+grant select, insert, update, delete on public.fridge_category_expiry_defaults to authenticated;
+
+-- add_ingredient_with_fridge: 카테고리 기본 유효기간이 설정돼 있으면 배치 expiry_date를 구매일 + 기본일수로 채운다.
 create or replace function public.add_ingredient_with_fridge(
   p_household_id uuid,
   p_name text,

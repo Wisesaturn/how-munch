@@ -2,7 +2,9 @@ export {
   useBatchUsedAmountQuery,
   useFridgeItemsQuery,
   useFridgePreferencesQuery,
+  useCategoryExpiryDefaultsQuery,
   useFridgeBrandNamesQuery,
+  type CategoryExpiryDefaultsMap,
 } from './api/queries';
 export {
   useAddFridgeItemMutation,
@@ -12,6 +14,7 @@ export {
   useUpdateBatchMutation,
   useDeleteBatchMutation,
   useUpsertFridgePreferencesMutation,
+  useUpsertCategoryExpiryDefaultMutation,
   useSubdivideFridgeItemMutation,
 } from './api/mutations';
 export { ExpiryBadge } from './ui/ExpiryBadge';

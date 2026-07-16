@@ -585,6 +585,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      fridge_category_expiry_defaults: {
+        Row: {
+          id: string;
+          household_id: string;
+          category_id: string;
+          default_expiry_days: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          category_id: string;
+          default_expiry_days: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          category_id?: string;
+          default_expiry_days?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

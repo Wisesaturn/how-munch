@@ -9,6 +9,14 @@ interface FridgePreferences {
   hide_depleted_fridge_items: boolean;
 }
 
+interface CategoryExpiryDefaultRow {
+  category_id: string;
+  default_expiry_days: number;
+}
+
+/** categoryId → 기본 유효기간(일수) 맵 */
+export type CategoryExpiryDefaultsMap = Record<string, number>;
+
 /** 냉장고 재고 전체 조회 (배치 포함) */
 export function useFridgeItemsQuery({
   householdId,
@@ -53,6 +61,21 @@ export function useFridgePreferencesQuery(userId: string | null) {
     queryFn: userId
       ? () => apiClient.get<FridgePreferences | null>('/api/fridge/preferences')
       : skipToken,
+  });
+}
+
+/** 가구 카테고리별 기본 유효기간 조회 (categoryId → 일수 맵으로 변환) */
+export function useCategoryExpiryDefaultsQuery(householdId: string | null) {
+  return useQuery({
+    queryKey: fridgeItemKeys.categoryExpiryDefaults(householdId ?? ''),
+    queryFn: householdId
+      ? () =>
+          apiClient.get<CategoryExpiryDefaultRow[]>('/api/fridge/category-expiry-defaults', {
+            householdId,
+          })
+      : skipToken,
+    select: (rows): CategoryExpiryDefaultsMap =>
+      Object.fromEntries(rows.map((row) => [row.category_id, row.default_expiry_days])),
   });
 }
 

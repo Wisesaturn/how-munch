@@ -47,6 +47,10 @@ export const ERROR_MSG = {
     MISMATCH: ({ fieldName }: { fieldName: string }) =>
       `${josa(fieldName, '이/가')} 일치하지 않습니다.` as const,
   },
+  DATE: {
+    ON_OR_AFTER: ({ fieldName, baseName }: { fieldName: string; baseName: string }) =>
+      `${josa(fieldName, '은/는')} ${baseName} 이후여야 합니다.` as const,
+  },
   RANGE: {
     BETWEEN: ({ fieldName, min, max }: RangeProps) =>
       `${josa(fieldName, '은/는')} ${min}부터 ${max}사이의 값을 입력해야 합니다.` as const,
