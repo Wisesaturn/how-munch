@@ -12,8 +12,8 @@ export interface MealEditorDishInput {
     fridge_item_id: string;
     /** 개 단위: 수량. g/kg/ml/L 단위: 0 (Route Handler에서 무시) */
     amount?: number;
-    /** 항상 포함 — g/kg/ml/L: 'used' | 'depleted'. 개 단위: 항상 'used' */
-    usage_status: 'used' | 'depleted';
+    /** 항상 포함 — g/kg/ml/L: 'used' | 'depleted_batch' | 'depleted'. 개 단위: 항상 'used' */
+    usage_status: 'used' | 'depleted' | 'depleted_batch';
     /** 냉장고 품목 단위 — Route Handler에서 g/kg/ml/L vs 개 판별에 사용 */
     unit?: IngredientUnit;
   }>;

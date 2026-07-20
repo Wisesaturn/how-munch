@@ -2,7 +2,7 @@
 
 import { ChevronRight, X } from 'lucide-react';
 
-import { Badge, Button, Checkbox, Select } from '@/commons/ui';
+import { Badge, Button, SegmentControl, Select } from '@/commons/ui';
 import { cn } from '@/commons/lib';
 
 import { isVolumeUnit, isWeightUnit } from '@/entities/ingredient';
@@ -146,28 +146,19 @@ function MealIngredientRow({
       </div>
 
       {isWeightUnit(selectedUnit) || isVolumeUnit(selectedUnit) ? (
-        <label
-          className={cn(
-            'flex cursor-pointer items-center gap-2',
-            !selectedIngredient && 'cursor-not-allowed',
-          )}
-        >
-          <Checkbox
-            checked={ingredient.usage_status === 'depleted'}
-            onCheckedChange={(checked) =>
-              onUsageStatusChange(checked === true ? 'depleted' : 'used')
-            }
+        <div className="space-y-1">
+          <SegmentControl
+            size="sm"
+            value={ingredient.usage_status}
+            onValueChange={(value) => onUsageStatusChange(value as IngredientUsageStatus)}
             disabled={!selectedIngredient}
-          />
-          <span
-            className={cn(
-              'text-sm',
-              !selectedIngredient ? 'text-muted-foreground' : 'text-gray-700',
-            )}
           >
-            소진됨
-          </span>
-        </label>
+            <SegmentControl.Item value="used">사용</SegmentControl.Item>
+            <SegmentControl.Item value="depleted_batch">묶음 소진</SegmentControl.Item>
+            <SegmentControl.Item value="depleted">전부 소진</SegmentControl.Item>
+          </SegmentControl>
+          <p className="text-xs text-gray-400">‘묶음 소진’은 가장 오래된 구매분 하나만 비워요.</p>
+        </div>
       ) : (
         <MealIngredientWeightControl
           min={sliderMin}
