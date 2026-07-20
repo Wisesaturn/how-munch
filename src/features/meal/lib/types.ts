@@ -1,12 +1,15 @@
 import { type IngredientUnit } from '@/entities/ingredient';
 
-type IngredientUsageStatus = 'used' | 'depleted';
+type IngredientUsageStatus = 'used' | 'depleted' | 'depleted_batch';
 
 interface EditorIngredient {
   fridge_item_id: string;
   /** 개 단위: 수량. g/kg, ml/L 단위: 0 (사용 안 함) */
   amount: number;
-  /** 항상 포함 — g/kg, ml/L: 'used' | 'depleted'. 개 단위: 항상 'used' */
+  /**
+   * 항상 포함 — 개 단위: 항상 'used'.
+   * g/kg, ml/L: 'used'(재고 유지) | 'depleted_batch'(가장 오래된 구매분 1개 소진) | 'depleted'(전부 소진)
+   */
   usage_status: IngredientUsageStatus;
   /** 냉장고 품목 단위 — 재료 선택 시 fridgeItems에서 주입 */
   unit?: IngredientUnit;

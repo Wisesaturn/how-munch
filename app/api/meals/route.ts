@@ -10,7 +10,7 @@ import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseh
 
 import { type MealType } from '@/entities/meal';
 
-type IngredientUsageStatus = 'used' | 'depleted';
+type IngredientUsageStatus = 'used' | 'depleted' | 'depleted_batch';
 type IngredientUnit = 'count' | 'g' | 'kg' | 'ml' | 'l';
 
 interface UpsertMealIngredient {
@@ -19,7 +19,7 @@ interface UpsertMealIngredient {
   unit?: IngredientUnit;
   /** 개 단위: 수량. g/kg/ml/L 단위: 없음 */
   amount?: number | null;
-  /** g/kg/ml/L 단위: 'used' | 'depleted'. 개 단위: 없음 */
+  /** g/kg/ml/L 단위: 'used' | 'depleted_batch' | 'depleted'. 개 단위: 없음 */
   usage_status?: IngredientUsageStatus;
 }
 
@@ -50,7 +50,11 @@ function normalizeIngredient(ingredient: UpsertMealIngredient) {
 
   if (isUsageStatusUnit(ingredient.unit)) {
     // g/kg/ml/L 품목: usage_status 기반
-    if (ingredient.usage_status === 'used' || ingredient.usage_status === 'depleted') {
+    if (
+      ingredient.usage_status === 'used' ||
+      ingredient.usage_status === 'depleted' ||
+      ingredient.usage_status === 'depleted_batch'
+    ) {
       return { fridge_item_id: ingredient.fridge_item_id, usage_status: ingredient.usage_status };
     }
     return null;

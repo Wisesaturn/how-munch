@@ -1,13 +1,20 @@
--- Function: public.upsert_meal_with_usage
--- Source: supabase/migrations/071_add_depleted_batch_usage_status.sql
--- 역할: 식단 저장 시 dish/ingredient와 배치 사용량 차감을 원자적으로 처리합니다.
+-- Migration: 071_add_depleted_batch_usage_status
+-- 역할: g/kg·ml/L 품목 소진을 '한 묶음(가장 오래된 구매분) 소진'과 '전부 소진'으로 분리합니다.
 -- 동작:
--- 1. 기존 meal usage를 롤백한 뒤 새 dishes/ingredients를 재저장합니다.
--- 2. usage_status='used' (g/kg): dish_ingredients에만 기록, 배치 변화 없음.
--- 3. usage_status='depleted_batch' (g/kg): FIFO 기준 가장 오래된 배치 1개만 0으로 소진, meal_batch_usages 기록.
--- 4. usage_status='depleted' (g/kg): 해당 품목 전체 배치를 0으로 소진, meal_batch_usages 기록.
--- 5. usage_status 없이 amount>0 (개): FIFO 배치 차감 후 부족 시 도메인 예외 발생.
--- 6. meals 테이블에 created_by(auth.uid())를 기록합니다 (신규 등록 시에만, 수정 시 유지).
+-- 1. dish_ingredients.usage_status CHECK 제약에 'depleted_batch' 값을 추가합니다.
+-- 2. upsert_meal_with_usage RPC를 갱신해 usage_status별 소진 범위를 분기합니다.
+--    - 'depleted_batch': FIFO 기준 가장 오래된 배치 1개만 quantity→0
+--    - 'depleted'      : 해당 품목 전체 배치 quantity→0 (기존 동작 유지)
+
+-- Step 1: CHECK 제약 갱신 ('used' | 'depleted' | 'depleted_batch')
+ALTER TABLE public.dish_ingredients
+  DROP CONSTRAINT IF EXISTS dish_ingredients_usage_status_check;
+
+ALTER TABLE public.dish_ingredients
+  ADD CONSTRAINT dish_ingredients_usage_status_check
+  CHECK (usage_status IN ('used', 'depleted', 'depleted_batch'));
+
+-- Step 2: RPC 갱신
 create or replace function public.upsert_meal_with_usage(
   p_household_id uuid,
   p_date date,
@@ -169,7 +176,7 @@ begin
     end if;
   end loop;
 
-  -- g/kg 한 묶음 소진: FIFO 기준 가장 오래된 배치 1개만 quantity → 0
+  -- g/kg 한 묶음 소진: FIFO 기준 가장 오래된 배치 1개만 quantity→0
   for v_depleted in
     select distinct di.fridge_item_id
     from public.dish_ingredients di

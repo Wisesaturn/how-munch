@@ -10,8 +10,8 @@ export interface DishIngredient {
   fridge_item_id: string;
   /** 사용량 — 개 단위: 숫자, g/kg 단위: null */
   amount: number | null;
-  /** 사용 상태 — g/kg 단위: 'used' | 'depleted', 개 단위: 'used' */
-  usage_status: 'used' | 'depleted' | null;
+  /** 사용 상태 — g/kg 단위: 'used' | 'depleted_batch' | 'depleted', 개 단위: 'used' */
+  usage_status: 'used' | 'depleted' | 'depleted_batch' | null;
   /** join된 냉장고 품목 정보 */
   fridge_items: { unit: 'count' | 'g' | 'kg'; name: string; category_id: string } | null;
   created_at: string;
