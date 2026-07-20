@@ -8,12 +8,21 @@ export interface DishIngredient {
   dish_id: string;
   /** 사용된 냉장고 재료 ID */
   fridge_item_id: string;
+  /** 선택한 배치(구매분) ID — 소진/차감 대상 배치 */
+  batch_id: string | null;
   /** 사용량 — 개 단위: 숫자, g/kg 단위: null */
   amount: number | null;
-  /** 사용 상태 — g/kg 단위: 'used' | 'depleted_batch' | 'depleted', 개 단위: 'used' */
-  usage_status: 'used' | 'depleted' | 'depleted_batch' | null;
+  /** 사용 상태 — g/kg 단위: 'used' | 'depleted', 개 단위: 'used' */
+  usage_status: 'used' | 'depleted' | null;
   /** join된 냉장고 품목 정보 */
   fridge_items: { unit: 'count' | 'g' | 'kg'; name: string; category_id: string } | null;
+  /** join된 선택 배치 정보 */
+  fridge_item_batches: {
+    id: string;
+    purchased_date: string;
+    quantity: number;
+    expiry_date: string | null;
+  } | null;
   created_at: string;
 }
 

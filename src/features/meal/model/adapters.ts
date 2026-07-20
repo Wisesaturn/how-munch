@@ -1,6 +1,7 @@
 import { type Meal } from '@/entities/meal';
 
-import { type EditorDish } from '../lib';
+import { type MealFridgeItemOption } from '../api/queries';
+import { type EditorDish, type MealFridgeItem } from '../lib';
 
 import { addAmount, normalizeAmount } from './amount';
 
@@ -18,6 +19,7 @@ function toEditorDishes(meal: Meal | null): EditorDish[] {
       name: dish.name === '[이름 없음]' ? '' : dish.name,
       ingredients: (dish.ingredients ?? []).map((ingredient) => ({
         fridge_item_id: ingredient.fridge_item_id,
+        batch_id: ingredient.batch_id ?? '',
         amount: normalizeAmount(Number(ingredient.amount ?? 0)),
         unit: ingredient.fridge_items?.unit ?? undefined,
         usage_status: ingredient.usage_status ?? 'used',
@@ -26,14 +28,37 @@ function toEditorDishes(meal: Meal | null): EditorDish[] {
 }
 
 /**
- * @description dishes 배열에서 재료별 총 사용량 맵을 생성합니다.
+ * @description 식단 편집용 재고 조회 결과를 배치(활성·구매일순) 포함 뷰 모델로 변환합니다.
  */
-function createInUseStockAmountByItemId(dishes: EditorDish[]) {
+function toMealFridgeItems(options: MealFridgeItemOption[]): MealFridgeItem[] {
+  return options.map((option) => ({
+    id: option.id,
+    name: option.name,
+    brand: option.brand,
+    total_count: option.total_count,
+    unit: option.unit,
+    fridge_item_batches: option.fridge_item_batches
+      .filter((batch) => batch.deleted_at === null)
+      .slice()
+      .sort((a, b) => a.purchased_date.localeCompare(b.purchased_date))
+      .map((batch) => ({
+        id: batch.id,
+        purchased_date: batch.purchased_date,
+        quantity: Number(batch.quantity),
+        expiry_date: batch.expiry_date,
+      })),
+  }));
+}
+
+/**
+ * @description dishes 배열에서 배치별 총 사용량 맵을 생성합니다.
+ */
+function createInUseStockAmountByBatchId(dishes: EditorDish[]) {
   return dishes.reduce<Record<string, number>>((accumulator, dish) => {
     dish.ingredients.forEach((ingredient) => {
-      if (!ingredient.fridge_item_id) return;
-      accumulator[ingredient.fridge_item_id] = addAmount(
-        accumulator[ingredient.fridge_item_id] ?? 0,
+      if (!ingredient.batch_id) return;
+      accumulator[ingredient.batch_id] = addAmount(
+        accumulator[ingredient.batch_id] ?? 0,
         ingredient.amount,
       );
     });
@@ -42,4 +67,4 @@ function createInUseStockAmountByItemId(dishes: EditorDish[]) {
   }, {});
 }
 
-export { createInUseStockAmountByItemId, toEditorDishes };
+export { createInUseStockAmountByBatchId, toEditorDishes, toMealFridgeItems };

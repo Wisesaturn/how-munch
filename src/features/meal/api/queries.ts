@@ -12,7 +12,9 @@ export interface MealFridgeItemOption extends Pick<
   FridgeItem,
   'id' | 'name' | 'brand' | 'total_count' | 'unit'
 > {
-  fridge_item_batches: Array<Pick<FridgeItemBatch, 'purchased_date' | 'quantity'>>;
+  fridge_item_batches: Array<
+    Pick<FridgeItemBatch, 'id' | 'purchased_date' | 'quantity' | 'expiry_date' | 'deleted_at'>
+  >;
 }
 
 /** 특정 날짜 식단 조회 — 날짜 전환 시 이전 데이터를 유지해 깜빡임을 방지한다 */

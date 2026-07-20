@@ -1,13 +1,30 @@
--- Function: public.upsert_meal_with_usage
--- Source: supabase/migrations/072_add_batch_id_to_dish_ingredients.sql
--- 역할: 식단 저장 시 dish/ingredient와 배치 사용량 차감을 원자적으로 처리합니다.
+-- Migration: 072_add_batch_id_to_dish_ingredients
+-- 역할: 식단 재료를 특정 배치(구매분) 단위로 지정하도록 바꾸고, 소진/차감을 그 배치에만 적용합니다.
 -- 동작:
--- 1. 기존 meal usage를 롤백한 뒤 새 dishes/ingredients를 재저장합니다.
--- 2. usage_status='used' (g/kg·ml/L): dish_ingredients에만 기록, 배치 변화 없음.
--- 3. usage_status='depleted' (g/kg·ml/L): 지정된 batch_id 배치를 0으로 소진, meal_batch_usages 기록.
--- 4. amount>0 (개): 지정된 batch_id 배치에서만 차감(FIFO 아님), 부족 시 도메인 예외 발생.
--- 5. 각 재료 줄은 batch_id로 특정 구매분을 지정한다 (같은 품목도 배치별로 여러 줄 가능).
--- 6. meals 테이블에 created_by(auth.uid())를 기록합니다 (신규 등록 시에만, 수정 시 유지).
+-- 1. dish_ingredients.batch_id 컬럼을 추가합니다 (fridge_item_batches FK, 배치 삭제 시 NULL).
+-- 2. usage_status CHECK 제약을 다시 'used' | 'depleted'로 되돌립니다 (depleted_batch 제거).
+-- 3. upsert_meal_with_usage RPC를 재작성해 지정된 batch_id에만 소진/차감을 적용합니다.
+--    - g/kg·ml/L usage_status='depleted': 지정 배치 quantity→0
+--    - 개 단위 amount>0: 지정 배치에서만 차감(FIFO 아님), 부족 시 도메인 예외
+--    - usage_status='used': dish_ingredients 기록만, 배치 변화 없음
+
+-- Step 1: batch_id 컬럼 추가
+ALTER TABLE public.dish_ingredients
+  ADD COLUMN IF NOT EXISTS batch_id uuid
+  REFERENCES public.fridge_item_batches(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS dish_ingredients_batch_id_idx
+  ON public.dish_ingredients(batch_id);
+
+-- Step 2: usage_status CHECK 제약 원복 ('used' | 'depleted')
+ALTER TABLE public.dish_ingredients
+  DROP CONSTRAINT IF EXISTS dish_ingredients_usage_status_check;
+
+ALTER TABLE public.dish_ingredients
+  ADD CONSTRAINT dish_ingredients_usage_status_check
+  CHECK (usage_status IN ('used', 'depleted'));
+
+-- Step 3: RPC 재작성
 create or replace function public.upsert_meal_with_usage(
   p_household_id uuid,
   p_date date,

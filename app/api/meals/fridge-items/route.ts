@@ -24,7 +24,9 @@ export const GET = withAuth(async (req: NextRequest, { userId, supabase }) => {
 
   let query = supabase
     .from('fridge_items')
-    .select('id, name, brand, total_count, unit, fridge_item_batches(purchased_date, quantity)')
+    .select(
+      'id, name, brand, total_count, unit, fridge_item_batches(id, purchased_date, quantity, expiry_date, deleted_at)',
+    )
     .eq('household_id', householdId)
     .is('deleted_at', null)
     .order('name', { ascending: true })

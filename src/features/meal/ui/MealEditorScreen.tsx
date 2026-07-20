@@ -11,16 +11,23 @@ import { z } from 'zod';
 import { extractFieldErrorMessage } from '@/commons/lib';
 import { Button, CTAButton, CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
 
+import { type IngredientUnit } from '@/entities/ingredient';
 import { type Meal, type MealType } from '@/entities/meal';
 
 import { useDeleteMealMutation, useUpsertMealMutation } from '../api/mutations';
 import { useFridgeItemsForMealQuery } from '../api/queries';
-import { appendDish, createFridgeStockInfoById, type FridgeItemSearchOption } from '../lib';
 import {
-  createInUseStockAmountByItemId,
+  appendDish,
+  createFridgeBatchInfoById,
+  type FridgeBatchSelectOption,
+  type FridgeItemSearchOption,
+} from '../lib';
+import {
+  createInUseStockAmountByBatchId,
   createMealEditorDishesSchema,
   MealEditorProvider,
   toEditorDishes,
+  toMealFridgeItems,
 } from '../model';
 
 import { MealDishCard } from './MealDishCard';
@@ -35,6 +42,12 @@ interface MealEditorScreenProps {
   onOpenFridgeItemSearch?: (
     items: FridgeItemSearchOption[],
     onSelectId: (fridgeItemId: string) => void,
+  ) => void;
+  /** 배치 선택 Screen 진입 핸들러 — 선택된 batch_id가 그대로 반영된다 */
+  onOpenFridgeBatchSelect?: (
+    batches: FridgeBatchSelectOption[],
+    unit: IngredientUnit,
+    onSelectBatchId: (batchId: string) => void,
   ) => void;
 }
 
@@ -63,6 +76,7 @@ export function MealEditorScreen({
   type,
   meal,
   onOpenFridgeItemSearch,
+  onOpenFridgeBatchSelect,
 }: MealEditorScreenProps) {
   /* -------------------------------------------------------------------------- */
   /* Header Constants                                                            */
@@ -79,18 +93,22 @@ export function MealEditorScreen({
     ),
   ].filter(Boolean);
 
-  const { data: fridgeItems = [] } = useFridgeItemsForMealQuery(householdId, selectedFridgeItemIds);
+  const { data: fridgeItemOptions = [] } = useFridgeItemsForMealQuery(
+    householdId,
+    selectedFridgeItemIds,
+  );
+  const fridgeItems = toMealFridgeItems(fridgeItemOptions);
   const upsertMutation = useUpsertMealMutation();
   const deleteMutation = useDeleteMealMutation();
 
   const maxIngredientCount = fridgeItems.length;
-  const fridgeStockInfoById = createFridgeStockInfoById(fridgeItems);
-  const inUseStockAmountByItemId = createInUseStockAmountByItemId(initialDishes);
+  const fridgeBatchInfoById = createFridgeBatchInfoById(fridgeItems);
+  const inUseStockAmountByBatchId = createInUseStockAmountByBatchId(initialDishes);
   const mealEditorFormSchema = z.object({
     dishes: createMealEditorDishesSchema(
       maxIngredientCount,
-      fridgeStockInfoById,
-      inUseStockAmountByItemId,
+      fridgeBatchInfoById,
+      inUseStockAmountByBatchId,
     ),
   });
 
@@ -190,6 +208,23 @@ export function MealEditorScreen({
     onOpenFridgeItemSearch(items, onSelectId);
   }
 
+  function openBatchSelect(fridgeItemId: string, onSelectBatchId: (batchId: string) => void) {
+    if (!onOpenFridgeBatchSelect) return;
+    const item = fridgeItems.find((fridgeItem) => fridgeItem.id === fridgeItemId);
+    if (!item) return;
+
+    const batches: FridgeBatchSelectOption[] = item.fridge_item_batches
+      .filter((batch) => Number(batch.quantity) > 0)
+      .map((batch) => ({
+        id: batch.id,
+        purchasedDate: batch.purchased_date,
+        quantity: Number(batch.quantity),
+        expiryDate: batch.expiry_date,
+      }));
+
+    onOpenFridgeBatchSelect(batches, item.unit, onSelectBatchId);
+  }
+
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: appBarTitle }}>
       <div className="space-y-3 px-4 pt-4 pb-28">
@@ -198,9 +233,10 @@ export function MealEditorScreen({
             <MealEditorProvider
               dishes={field.state.value}
               fridgeItems={fridgeItems}
-              inUseStockAmountByItemId={inUseStockAmountByItemId}
+              inUseStockAmountByBatchId={inUseStockAmountByBatchId}
               changeDishes={field.handleChange}
               openFridgeItemSearch={onOpenFridgeItemSearch ? openFridgeItemSearch : undefined}
+              openBatchSelect={onOpenFridgeBatchSelect ? openBatchSelect : undefined}
             >
               <div className="space-y-3">
                 {field.state.value.map((_, dishIndex) => (

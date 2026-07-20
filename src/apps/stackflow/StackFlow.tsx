@@ -35,10 +35,15 @@ import {
 import {
   MealEditorScreen,
   FridgeItemSearchScreen,
+  FridgeBatchSelectScreen,
   setPendingFridgeItemCallback,
   resolvePendingFridgeItemCallback,
   clearPendingFridgeItemCallback,
+  setPendingFridgeBatchCallback,
+  resolvePendingFridgeBatchCallback,
+  clearPendingFridgeBatchCallback,
   type FridgeItemSearchOption,
+  type FridgeBatchSelectOption,
 } from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
@@ -313,6 +318,18 @@ function MealEditorActivity({
     });
   }
 
+  function openFridgeBatchSelect(
+    batches: FridgeBatchSelectOption[],
+    unit: IngredientUnit,
+    onSelectBatchId: (batchId: string) => void,
+  ) {
+    setPendingFridgeBatchCallback(onSelectBatchId);
+    push('FridgeBatchSelectActivity', {
+      batches,
+      unit,
+    });
+  }
+
   return (
     <MealEditorScreen
       onClose={pop}
@@ -321,6 +338,7 @@ function MealEditorActivity({
       type={params.type}
       meal={params.meal}
       onOpenFridgeItemSearch={openFridgeItemSearch}
+      onOpenFridgeBatchSelect={openFridgeBatchSelect}
     />
   );
 }
@@ -512,6 +530,36 @@ function FridgeItemSearchActivity({
   );
 }
 
+function FridgeBatchSelectActivity({
+  params,
+}: {
+  params: {
+    batches?: FridgeBatchSelectOption[];
+    unit?: IngredientUnit;
+  };
+}) {
+  const { pop } = useActions();
+
+  function handleSelectBatch(batchId: string) {
+    resolvePendingFridgeBatchCallback(batchId);
+    pop();
+  }
+
+  function handleClose() {
+    clearPendingFridgeBatchCallback();
+    pop();
+  }
+
+  return (
+    <FridgeBatchSelectScreen
+      onClose={handleClose}
+      onSelectBatch={handleSelectBatch}
+      batches={params.batches}
+      unit={params.unit}
+    />
+  );
+}
+
 const appStackFlow = stackflow({
   transitionDuration: 360,
   initialActivity: () => 'IdleActivity',
@@ -534,6 +582,7 @@ const appStackFlow = stackflow({
     ProfileEditActivity,
     ProductNameSearchActivity,
     FridgeItemSearchActivity,
+    FridgeBatchSelectActivity,
     PromptIngredientAddActivity,
     PromptIngredientStagingActivity,
     PromptIngredientStagingEditActivity,
@@ -560,6 +609,7 @@ const appStackFlow = stackflow({
         ProfileEditActivity: '/profile/edit',
         ProductNameSearchActivity: '/search/product-name',
         FridgeItemSearchActivity: '/search/fridge-item',
+        FridgeBatchSelectActivity: '/search/fridge-batch',
         PromptIngredientAddActivity: '/ingredient/ai/add',
         PromptIngredientStagingActivity: '/ingredient/ai/staging',
         PromptIngredientStagingEditActivity: '/ingredient/ai/staging/edit',
