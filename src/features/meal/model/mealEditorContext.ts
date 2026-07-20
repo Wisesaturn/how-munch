@@ -7,9 +7,10 @@ import { type EditorDish, type MealFridgeItem } from '../lib';
 interface MealEditorContextValue {
   dishes: EditorDish[];
   fridgeItems: MealFridgeItem[];
-  inUseStockAmountByItemId: Record<string, number>;
+  inUseStockAmountByBatchId: Record<string, number>;
   changeDishes: (nextDishes: EditorDish[]) => void;
   openFridgeItemSearch?: (currentItemId: string, onSelectId: (id: string) => void) => void;
+  openBatchSelect?: (fridgeItemId: string, onSelectBatchId: (batchId: string) => void) => void;
 }
 
 const [MealEditorProvider, useMealEditorContext] =

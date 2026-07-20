@@ -32,7 +32,12 @@ function appendIngredient(dishes: EditorDish[], dishIndex: number) {
           ...dish,
           ingredients: [
             ...dish.ingredients,
-            { fridge_item_id: '', amount: 0, usage_status: 'used' as IngredientUsageStatus },
+            {
+              fridge_item_id: '',
+              batch_id: '',
+              amount: 0,
+              usage_status: 'used' as IngredientUsageStatus,
+            },
           ],
         }
       : dish,
@@ -76,6 +81,35 @@ function replaceIngredientItem(
           ? {
               ...ingredient,
               fridge_item_id: fridgeItemId,
+              batch_id: '',
+              amount: 0,
+              usage_status: 'used' as IngredientUsageStatus,
+            }
+          : ingredient,
+      ),
+    };
+  });
+}
+
+/**
+ * @description 지정한 메뉴/재료의 선택 배치(구매분)를 교체하고 수량을 초기화합니다.
+ */
+function replaceIngredientBatch(
+  dishes: EditorDish[],
+  dishIndex: number,
+  ingredientIndex: number,
+  batchId: string,
+) {
+  return dishes.map((dish, index) => {
+    if (index !== dishIndex) return dish;
+
+    return {
+      ...dish,
+      ingredients: dish.ingredients.map((ingredient, currentIndex) =>
+        currentIndex === ingredientIndex
+          ? {
+              ...ingredient,
+              batch_id: batchId,
               amount: 0,
               usage_status: 'used' as IngredientUsageStatus,
             }
@@ -151,6 +185,7 @@ export {
   excludeIngredient,
   renameDish,
   replaceIngredientAmount,
+  replaceIngredientBatch,
   replaceIngredientItem,
   replaceIngredientUsageStatus,
   reorderDishes,

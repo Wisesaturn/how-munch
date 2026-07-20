@@ -10,16 +10,18 @@ import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseh
 
 import { type MealType } from '@/entities/meal';
 
-type IngredientUsageStatus = 'used' | 'depleted' | 'depleted_batch';
+type IngredientUsageStatus = 'used' | 'depleted';
 type IngredientUnit = 'count' | 'g' | 'kg' | 'ml' | 'l';
 
 interface UpsertMealIngredient {
   fridge_item_id: string;
+  /** 선택한 배치(구매분) ID — 소진/차감 대상 배치 */
+  batch_id?: string | null;
   /** 냉장고 품목 단위 — g/kg/ml/L vs 개 판별 기준 */
   unit?: IngredientUnit;
   /** 개 단위: 수량. g/kg/ml/L 단위: 없음 */
   amount?: number | null;
-  /** g/kg/ml/L 단위: 'used' | 'depleted_batch' | 'depleted'. 개 단위: 없음 */
+  /** g/kg/ml/L 단위: 'used' | 'depleted'. 개 단위: 없음 */
   usage_status?: IngredientUsageStatus;
 }
 
@@ -48,14 +50,16 @@ function isUsageStatusUnit(unit?: IngredientUnit) {
 function normalizeIngredient(ingredient: UpsertMealIngredient) {
   if (!ingredient.fridge_item_id) return null;
 
+  const batchId = ingredient.batch_id || null;
+
   if (isUsageStatusUnit(ingredient.unit)) {
     // g/kg/ml/L 품목: usage_status 기반
-    if (
-      ingredient.usage_status === 'used' ||
-      ingredient.usage_status === 'depleted' ||
-      ingredient.usage_status === 'depleted_batch'
-    ) {
-      return { fridge_item_id: ingredient.fridge_item_id, usage_status: ingredient.usage_status };
+    if (ingredient.usage_status === 'used' || ingredient.usage_status === 'depleted') {
+      return {
+        fridge_item_id: ingredient.fridge_item_id,
+        batch_id: batchId,
+        usage_status: ingredient.usage_status,
+      };
     }
     return null;
   }
@@ -63,7 +67,7 @@ function normalizeIngredient(ingredient: UpsertMealIngredient) {
   // 개 품목: amount 기반
   const amount = toSafePositiveAmount(ingredient.amount);
   if (amount <= 0) return null;
-  return { fridge_item_id: ingredient.fridge_item_id, amount };
+  return { fridge_item_id: ingredient.fridge_item_id, batch_id: batchId, amount };
 }
 
 /** GET /api/meals?householdId=&date= — 특정 날짜 식단 조회 */
@@ -78,7 +82,9 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data: meals, error: mealsError } = await supabase
     .from('meals')
-    .select('*, dishes(*, ingredients:dish_ingredients(*, fridge_items(unit, name, category_id)))')
+    .select(
+      '*, dishes(*, ingredients:dish_ingredients(*, fridge_items(unit, name, category_id), fridge_item_batches(id, purchased_date, quantity, expiry_date)))',
+    )
     .eq('household_id', householdId)
     .eq('date', date)
     .order('type', { ascending: true });

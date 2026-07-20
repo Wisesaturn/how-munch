@@ -1,9 +1,11 @@
 export type {
   EditorDish,
   EditorIngredient,
+  FridgeBatchInfo,
+  FridgeBatchSelectOption,
   FridgeItemSearchOption,
-  FridgeStockInfo,
   IngredientUsageStatus,
+  MealFridgeBatch,
   MealFridgeItem,
 } from './types';
 
@@ -15,7 +17,7 @@ export {
   resolveWeightSliderMin,
   resolveWeightSliderStep,
 } from './unit';
-export { createFridgeStockInfoById } from './stock';
+export { createFridgeBatchInfoById } from './stock';
 export {
   appendDish,
   appendIngredient,
@@ -23,6 +25,7 @@ export {
   excludeIngredient,
   renameDish,
   replaceIngredientAmount,
+  replaceIngredientBatch,
   replaceIngredientItem,
   replaceIngredientUsageStatus,
   reorderDishes,

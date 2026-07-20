@@ -1,4 +1,4 @@
-export { createInUseStockAmountByItemId, toEditorDishes } from './adapters';
+export { createInUseStockAmountByBatchId, toEditorDishes, toMealFridgeItems } from './adapters';
 export {
   addAmount,
   isGreaterAmount,

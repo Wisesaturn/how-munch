@@ -11,6 +11,7 @@ import {
   type IngredientUsageStatus,
   renameDish,
   replaceIngredientAmount,
+  replaceIngredientBatch,
   replaceIngredientItem,
   replaceIngredientUsageStatus,
 } from '../lib';
@@ -23,7 +24,8 @@ interface MealDishCardProps {
 }
 
 function MealDishCard({ dishIndex }: MealDishCardProps) {
-  const { dishes, fridgeItems, changeDishes } = useMealEditorContext('MealDishCard');
+  const { dishes, fridgeItems, changeDishes, openBatchSelect } =
+    useMealEditorContext('MealDishCard');
   const dish = dishes[dishIndex];
   if (!dish) return null;
 
@@ -62,26 +64,54 @@ function MealDishCard({ dishIndex }: MealDishCardProps) {
             onIngredientItemChange={(value) => {
               let nextDishes = replaceIngredientItem(dishes, dishIndex, ingredientIndex, value);
               const selectedItem = fridgeItems.find((item) => item.id === value);
-              if (selectedItem) {
-                nextDishes = nextDishes.map((dish, di) =>
-                  di !== dishIndex
-                    ? dish
-                    : {
-                        ...dish,
-                        ingredients: dish.ingredients.map((ing, ii) =>
-                          ii !== ingredientIndex
-                            ? ing
-                            : {
-                                ...ing,
-                                unit: selectedItem.unit,
-                                usage_status: 'used' as const,
-                              },
-                        ),
-                      },
+
+              if (!selectedItem) {
+                changeDishes(nextDishes);
+                return;
+              }
+
+              // 선택 품목 단위 주입
+              nextDishes = nextDishes.map((currentDish, di) =>
+                di !== dishIndex
+                  ? currentDish
+                  : {
+                      ...currentDish,
+                      ingredients: currentDish.ingredients.map((ing, ii) =>
+                        ii !== ingredientIndex ? ing : { ...ing, unit: selectedItem.unit },
+                      ),
+                    },
+              );
+
+              const selectableBatches = selectedItem.fridge_item_batches.filter(
+                (batch) => Number(batch.quantity) > 0,
+              );
+              const [firstBatch] = selectableBatches;
+
+              // 배치가 1개뿐이면 자동 지정
+              if (selectableBatches.length === 1 && firstBatch) {
+                nextDishes = replaceIngredientBatch(
+                  nextDishes,
+                  dishIndex,
+                  ingredientIndex,
+                  firstBatch.id,
                 );
               }
+
               changeDishes(nextDishes);
+
+              // 배치가 2개 이상이면 선택 화면으로 진입
+              if (selectableBatches.length >= 2 && openBatchSelect) {
+                const committedDishes = nextDishes;
+                openBatchSelect(value, (batchId) =>
+                  changeDishes(
+                    replaceIngredientBatch(committedDishes, dishIndex, ingredientIndex, batchId),
+                  ),
+                );
+              }
             }}
+            onIngredientBatchChange={(batchId) =>
+              changeDishes(replaceIngredientBatch(dishes, dishIndex, ingredientIndex, batchId))
+            }
             onIngredientAmountChange={(value) =>
               changeDishes(replaceIngredientAmount(dishes, dishIndex, ingredientIndex, value))
             }
