@@ -154,10 +154,10 @@ function MealIngredientRow({
             disabled={!selectedIngredient}
           >
             <SegmentControl.Item value="used">사용</SegmentControl.Item>
-            <SegmentControl.Item value="depleted_batch">묶음 소진</SegmentControl.Item>
-            <SegmentControl.Item value="depleted">전부 소진</SegmentControl.Item>
+            <SegmentControl.Item value="depleted_batch">일부 소진</SegmentControl.Item>
+            <SegmentControl.Item value="depleted">전량 소진</SegmentControl.Item>
           </SegmentControl>
-          <p className="text-xs text-gray-400">‘묶음 소진’은 가장 오래된 구매분 하나만 비워요.</p>
+          <p className="text-xs text-gray-400">‘일부 소진’은 가장 오래된 구매분 하나만 비워요.</p>
         </div>
       ) : (
         <MealIngredientWeightControl
