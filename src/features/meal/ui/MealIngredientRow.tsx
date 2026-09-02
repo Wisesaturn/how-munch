@@ -13,6 +13,7 @@ import {
   formatIngredientAmountInfo,
   type IngredientUsageStatus,
   type MealFridgeBatch,
+  type MealFridgeItem,
   resolveSliderBoundaries,
   resolveWeightSliderMin,
   resolveWeightSliderStep,
@@ -36,6 +37,31 @@ interface MealIngredientRowProps {
 function formatBatchLabel(batch: MealFridgeBatch, unit: IngredientUnit | undefined) {
   const purchasedLabel = format(parseISO(batch.purchased_date), 'M.d');
   return `${purchasedLabel} 구매 · ${formatIngredientAmountInfo(Number(batch.quantity), unit)}`;
+}
+
+interface IngredientLabelProps {
+  selectedIngredient?: MealFridgeItem;
+  orphanedName?: string;
+}
+
+/** 재료 선택 버튼 라벨 — 선택됨 / 삭제된 참조 / 미선택 세 상태를 구분해 표시한다 */
+function IngredientLabel({ selectedIngredient, orphanedName }: IngredientLabelProps) {
+  if (selectedIngredient) {
+    return (
+      <span className="truncate">
+        {selectedIngredient.name}
+        {selectedIngredient.brand ? (
+          <span className="text-gray-400"> ({selectedIngredient.brand})</span>
+        ) : null}
+      </span>
+    );
+  }
+
+  if (orphanedName) {
+    return <span className="truncate text-gray-400">{orphanedName} (삭제됨)</span>;
+  }
+
+  return <span className="truncate">재료 선택</span>;
 }
 
 function MealIngredientRow({
@@ -81,6 +107,9 @@ function MealIngredientRow({
 
   const ingredientSelectValue = ingredient.fridge_item_id;
   const isItemDepleted = selectedIngredient ? Number(selectedIngredient.total_count) <= 0 : false;
+  // 참조하던 품목이 삭제되면 선택 목록에서 찾을 수 없어 재료 칸이 빈 채로 보인다.
+  // 이 경우 삭제 시점의 이름을 대신 노출해 사용자가 어떤 재료였는지 알고 다시 고를 수 있게 한다.
+  const orphanedName = !selectedIngredient ? ingredient.orphaned_name : undefined;
   const isUsageStatusUnit = isWeightUnit(selectedUnit) || isVolumeUnit(selectedUnit);
 
   return (
@@ -97,16 +126,10 @@ function MealIngredientRow({
             )}
           >
             <span className="flex min-w-0 items-center gap-1.5">
-              {selectedIngredient ? (
-                <span className="truncate">
-                  {selectedIngredient.name}
-                  {selectedIngredient.brand ? (
-                    <span className="text-gray-400"> ({selectedIngredient.brand})</span>
-                  ) : null}
-                </span>
-              ) : (
-                <span className="truncate">재료 선택</span>
-              )}
+              <IngredientLabel
+                selectedIngredient={selectedIngredient}
+                orphanedName={orphanedName}
+              />
               {isItemDepleted ? (
                 <Badge
                   variant="outline"
@@ -124,6 +147,11 @@ function MealIngredientRow({
               <Select.Value placeholder="재료 선택" />
             </Select.Trigger>
             <Select.Content>
+              {orphanedName ? (
+                <Select.Item value={ingredientSelectValue} disabled>
+                  <span className="text-gray-400">{orphanedName} (삭제됨)</span>
+                </Select.Item>
+              ) : null}
               {fridgeItems.map((item) => {
                 const itemDepleted = Number(item.total_count) <= 0;
 

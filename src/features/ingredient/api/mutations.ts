@@ -5,6 +5,7 @@ import { type Database } from '@/commons/model/types';
 
 import { fridgeItemKeys } from '@/entities/fridge-item';
 import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
+import { mealKeys } from '@/entities/meal';
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 
 import { type StagedItem } from '../lib/parseAiResponse';
@@ -22,6 +23,8 @@ export function useAddIngredientMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      // 장보기 추가는 냉장고 품목을 새로 만들거나 기존 품목에 병합하므로 식단 재료 선택 목록도 갱신한다
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }
@@ -36,6 +39,8 @@ export function useUpdateIngredientMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      // 이름/브랜드 변경이 냉장고 품목까지 바꾸므로 식단 카드와 재료 선택 목록을 함께 갱신한다
+      queryClient.invalidateQueries({ queryKey: mealKeys.all });
     },
   });
 }
@@ -69,6 +74,7 @@ export function useDeleteIngredientMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });
 }

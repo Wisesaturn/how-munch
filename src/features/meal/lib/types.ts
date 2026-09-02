@@ -23,6 +23,11 @@ interface EditorIngredient {
   usage_status: IngredientUsageStatus;
   /** 냉장고 품목 단위 — 재료 선택 시 fridgeItems에서 주입 */
   unit?: IngredientUnit;
+  /**
+   * 참조하던 냉장고 품목이 삭제되어 선택 목록에서 찾을 수 없는 경우의 표시용 이름.
+   * 값이 있으면 재료 칸이 빈 채로 보이지 않도록 이 이름을 대신 노출한다.
+   */
+  orphaned_name?: string;
 }
 
 interface EditorDish {

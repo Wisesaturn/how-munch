@@ -12,10 +12,18 @@ export interface DishIngredient {
   batch_id: string | null;
   /** 사용량 — 개 단위: 숫자, g/kg 단위: null */
   amount: number | null;
-  /** 사용 상태 — g/kg 단위: 'used' | 'depleted', 개 단위: 'used' */
+  /** 사용 상태 — 무게·부피 단위: 'used' | 'depleted', 개 단위: 'used' */
   usage_status: 'used' | 'depleted' | null;
+  /** 사용량 기록 방식 — 개 단위: 'quantity'(사용량 기록), 그 외: 'toggle'(사용/소진 여부만) */
+  consumption_mode: 'quantity' | 'toggle';
   /** join된 냉장고 품목 정보 */
-  fridge_items: { unit: 'count' | 'g' | 'kg'; name: string; category_id: string } | null;
+  fridge_items: {
+    unit: 'count' | 'g' | 'kg' | 'ml' | 'l';
+    name: string;
+    category_id: string;
+  } | null;
+  /** 참조하던 냉장고 품목이 삭제되어 이름만 복원한 행인지 여부 */
+  is_orphaned?: boolean;
   /** join된 선택 배치 정보 */
   fridge_item_batches: {
     id: string;

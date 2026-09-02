@@ -23,6 +23,9 @@ function toEditorDishes(meal: Meal | null): EditorDish[] {
         amount: normalizeAmount(Number(ingredient.amount ?? 0)),
         unit: ingredient.fridge_items?.unit ?? undefined,
         usage_status: ingredient.usage_status ?? 'used',
+        orphaned_name: ingredient.is_orphaned
+          ? (ingredient.fridge_items?.name ?? '삭제된 재료')
+          : undefined,
       })),
     }));
 }
