@@ -19,6 +19,7 @@ export { parseSafeNumericInput } from './numericInput';
 export {
   containsSearchText,
   isChoseongQuery,
+  matchesComposingText,
   matchesSearchText,
   normalizeSearchText,
 } from './search/hangulSearch';

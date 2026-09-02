@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   containsSearchText,
   isChoseongQuery,
+  matchesComposingText,
   matchesSearchText,
   normalizeSearchText,
 } from './hangulSearch';
@@ -51,10 +52,40 @@ describe('matchesSearchText — 초성 검색', () => {
   });
 });
 
-describe('matchesSearchText — 한글 조합 중간 상태', () => {
-  it('타이핑 도중의 조합 상태로도 찾는다', () => {
-    assert.equal(matchesSearchText('계란', '곌'), true);
+describe('matchesSearchText — 조합 중간 상태는 직접 일치가 아니다', () => {
+  it('완성되지 않은 조합은 직접 일치로 보지 않는다', () => {
+    assert.equal(matchesSearchText('계란', '곌'), false);
+    assert.equal(matchesSearchText('달걀', '닭'), false);
+    assert.equal(matchesSearchText('고구마', '곡'), false);
+  });
+
+  it('완성된 부분 문자열은 직접 일치다', () => {
     assert.equal(matchesSearchText('삼겹살', '삼겹'), true);
+    assert.equal(matchesSearchText('계란', '계'), true);
+  });
+});
+
+describe('matchesComposingText — 조합 중간 상태 (비슷한 이름 후보)', () => {
+  it('타이핑 도중의 조합 상태를 잡는다', () => {
+    assert.equal(matchesComposingText('계란', '곌'), true);
+    assert.equal(matchesComposingText('계란', '계라'), true);
+  });
+
+  it('음절 경계를 넘는 매칭도 함께 걸리므로 직접 일치와 분리해 쓴다', () => {
+    // '달'에 ㄱ을 더하면 '닭'이 되므로 IME 조합 관점에서는 정상 매칭이다.
+    assert.equal(matchesComposingText('달걀', '닭'), true);
+  });
+
+  it('초성 전용 검색어는 대상이 아니다', () => {
+    assert.equal(matchesComposingText('계란', 'ㄱㄹ'), false);
+  });
+});
+
+describe('normalizeSearchText — 다른 문자 체계', () => {
+  it('한자·가나 이름이 통째로 비워지지 않는다', () => {
+    assert.equal(normalizeSearchText('明治 牛乳'), '明治牛乳');
+    assert.equal(matchesSearchText('明治 牛乳', '牛乳'), true);
+    assert.equal(matchesSearchText('シオコンブ', 'シオ'), true);
   });
 });
 

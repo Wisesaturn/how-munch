@@ -35,7 +35,7 @@ begin
       updated_at = now()
   where user_id = v_user_id;
 
-  perform public.generate_default_search_synonyms(v_household_id);
+  perform public.seed_search_synonyms(v_household_id);
 
   return v_household_id;
 end;
