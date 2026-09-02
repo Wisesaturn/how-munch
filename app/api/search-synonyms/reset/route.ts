@@ -7,7 +7,7 @@ import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import { resolveCurrentHouseholdId } from '../household';
 
-/** POST /api/search-synonyms/reset — 내 가구의 검색 별칭을 기본 시드 상태로 되돌린다 */
+/** POST /api/search-synonyms/reset — 내 가구의 유사어를 기본 시드 상태로 되돌린다 */
 export const POST = withAuth(async (_req: NextRequest, { userId, supabase }) => {
   const householdId = await resolveCurrentHouseholdId(supabase, userId);
   if (!householdId) return apiResponse.BAD_REQUEST('CMN_002', '가구 정보를 찾을 수 없습니다.');

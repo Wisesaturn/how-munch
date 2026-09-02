@@ -41,7 +41,7 @@ export function useIngredientSearchInfiniteQuery(
   endDate: string,
   q: string,
 ) {
-  // 검색어를 별칭 그룹으로 확장해 반복 파라미터로 넘긴다.
+  // 검색어를 유사어 그룹으로 확장해 반복 파라미터로 넘긴다.
   // 사전 로드 전에는 검색어 하나만 넘어가므로 기존 동작과 같다.
   const searchKeywords = useSynonymExpandedTerms(q);
 

@@ -2,7 +2,7 @@ import { type AuthContext } from '@/apps/route';
 
 /**
  * @description 세션 사용자의 가구 id를 조회한다.
- * 검색 별칭은 가구 단위 데이터이므로 클라이언트가 보낸 householdId를 신뢰하지 않고
+ * 유사어는 가구 단위 데이터이므로 클라이언트가 보낸 householdId를 신뢰하지 않고
  * 항상 서버에서 프로필을 통해 해석한다.
  */
 export async function resolveCurrentHouseholdId(

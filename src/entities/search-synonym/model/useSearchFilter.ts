@@ -15,7 +15,7 @@ import { useSearchSynonymsQuery } from '../api/queries';
 import { type SearchFilterResult, type SearchSynonymTerm } from './types';
 
 /**
- * @description 별칭 단어 목록을 group_key 기준으로 묶는다.
+ * @description 유사어 단어 목록을 group_key 기준으로 묶는다.
  * DB는 단어 단위로 저장하지만 검색·화면 표시는 그룹 단위로 다룬다.
  */
 export function groupSynonymTerms(terms: SearchSynonymTerm[]) {
@@ -33,7 +33,7 @@ export function groupSynonymTerms(terms: SearchSynonymTerm[]) {
 /**
  * @description 검색어로 목록을 걸러 직접 일치와 비슷한 이름으로 나눈다.
  * 직접 일치는 공백 무시 부분일치와 초성 검색까지만 인정한다.
- * 별칭으로 확장된 단어와 한글 조합 중간 상태는 '비슷한 이름'으로 내려보낸다.
+ * 유사어으로 확장된 단어와 한글 조합 중간 상태는 '비슷한 이름'으로 내려보낸다.
  * 조합 중간 매칭은 음절 경계를 넘나들어('닭'이 '달걀'에 걸린다) 직접 일치로 두면
  * 재고를 골라 차감하는 화면에서 오선택 위험이 있기 때문이다.
  * 검색어가 비어 있으면 전체를 직접 일치로 돌려준다.

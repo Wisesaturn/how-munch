@@ -7,8 +7,8 @@ import { type SearchSynonymTerm } from '../model/types';
 import { searchSynonymKeys } from './queryKey';
 
 /**
- * @description 내 가구의 검색 별칭 전체를 조회한다.
- * 별칭은 등록·삭제·복원 시점에만 바뀌므로 시간 기반 만료 대신 명시적 무효화로만 갱신한다.
+ * @description 내 가구의 유사어 전체를 조회한다.
+ * 유사어는 등록·삭제·복원 시점에만 바뀌므로 시간 기반 만료 대신 명시적 무효화로만 갱신한다.
  */
 export function useSearchSynonymsQuery() {
   return useQuery({

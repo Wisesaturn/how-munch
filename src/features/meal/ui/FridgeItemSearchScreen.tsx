@@ -119,7 +119,7 @@ export function FridgeItemSearchScreen({
         {/* 직접 일치 */}
         {exact.length > 0 && <ul className="divide-y divide-gray-100">{exact.map(renderItem)}</ul>}
 
-        {/* 별칭으로 찾은 결과 — 경계를 드러내야 잘못 고르는 사고를 막는다 */}
+        {/* 유사어으로 찾은 결과 — 경계를 드러내야 잘못 고르는 사고를 막는다 */}
         {similar.length > 0 && (
           <>
             <p className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">비슷한 이름</p>
@@ -138,7 +138,7 @@ export function FridgeItemSearchScreen({
           </div>
         )}
 
-        {/* 못 찾은 그 자리에서 별칭을 등록하게 한다 */}
+        {/* 못 찾은 그 자리에서 유사어를 등록하게 한다 */}
         {trimmedQuery && (
           <div className="px-4 py-4">
             <Button
@@ -148,7 +148,7 @@ export function FridgeItemSearchScreen({
               onClick={() => setLinkSheetOpen(true)}
             >
               <Link2 className="size-4" />
-              다른 이름으로 연결하기
+              유사어 추가하기
             </Button>
           </div>
         )}

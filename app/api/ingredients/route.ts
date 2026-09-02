@@ -22,7 +22,7 @@ function toQuotedIlikeFilter(keyword: string): string {
 
 /**
  * GET /api/ingredients?householdId=&startDate=&endDate=&q=&q=&page=&pageSize= — 장보기 내역 조회
- * q는 반복 파라미터다. 클라이언트가 검색어를 별칭 그룹으로 확장해 여러 개를 보내면 OR로 묶는다.
+ * q는 반복 파라미터다. 클라이언트가 검색어를 유사어 그룹으로 확장해 여러 개를 보내면 OR로 묶는다.
  */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
   const { searchParams } = req.nextUrl;

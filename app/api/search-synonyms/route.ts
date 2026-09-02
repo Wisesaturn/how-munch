@@ -7,7 +7,7 @@ import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import { resolveCurrentHouseholdId } from './household';
 
-/** GET /api/search-synonyms — 내 가구의 검색 별칭 전체 조회 */
+/** GET /api/search-synonyms — 내 가구의 유사어 전체 조회 */
 export const GET = withAuth(async (_req: NextRequest, { userId, supabase }) => {
   const householdId = await resolveCurrentHouseholdId(supabase, userId);
   if (!householdId) return apiResponse.OK([]);
@@ -22,7 +22,7 @@ export const GET = withAuth(async (_req: NextRequest, { userId, supabase }) => {
   return apiResponse.OK(data);
 });
 
-/** POST /api/search-synonyms — 검색어와 입력 단어들을 하나의 별칭 그룹으로 연결 */
+/** POST /api/search-synonyms — 검색어와 입력 단어들을 하나의 유사어 그룹으로 연결 */
 export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   const { baseTerm, terms } = await req.json();
 
@@ -48,7 +48,7 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   return apiResponse.OK(data);
 });
 
-/** DELETE /api/search-synonyms?groupKey= 또는 ?termId= — 별칭 그룹 또는 단어 하나 삭제 */
+/** DELETE /api/search-synonyms?groupKey= 또는 ?termId= — 유사어 그룹 또는 단어 하나 삭제 */
 export const DELETE = withAuth(async (req: NextRequest, { userId, supabase }) => {
   const { searchParams } = req.nextUrl;
   const groupKey = searchParams.get('groupKey');

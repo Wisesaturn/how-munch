@@ -14,7 +14,7 @@ const FRIDGE_ITEM_EDITABLE_FIELDS = ['name', 'brand', 'category_id', 'unit', 'is
 
 /**
  * GET /api/fridge?householdId=&search=&search= — 냉장고 재고 전체 조회 (배치 포함)
- * search는 반복 파라미터다. 클라이언트가 검색어를 별칭 그룹으로 확장해 여러 개를 보내면
+ * search는 반복 파라미터다. 클라이언트가 검색어를 유사어 그룹으로 확장해 여러 개를 보내면
  * RPC가 OR 조건으로 묶어 조회한다.
  */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {

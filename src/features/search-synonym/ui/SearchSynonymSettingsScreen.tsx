@@ -21,10 +21,10 @@ interface SearchSynonymSettingsScreenProps {
 
 function resolveErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
-  return '검색 별칭을 변경하지 못했습니다';
+  return '유사어를 변경하지 못했습니다';
 }
 
-/** 검색 별칭 관리 Screen — 그룹 단위로 확인하고 단어·그룹을 삭제하거나 기본값으로 되돌린다 */
+/** 유사어 매칭 Screen — 그룹 단위로 확인하고 단어·그룹을 삭제하거나 기본값으로 되돌린다 */
 export function SearchSynonymSettingsScreen({ onClose }: SearchSynonymSettingsScreenProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const { data: terms, isLoading } = useSearchSynonymsQuery();
@@ -49,7 +49,7 @@ export function SearchSynonymSettingsScreen({ onClose }: SearchSynonymSettingsSc
 
   function resetToDefault() {
     resetMutation.mutate(undefined, {
-      onSuccess: () => Toast.success('기본 별칭으로 되돌렸습니다'),
+      onSuccess: () => Toast.success('기본 유사어로 되돌렸습니다'),
       onError: (error) => Toast.error(resolveErrorMessage(error)),
       onSettled: () => setResetDialogOpen(false),
     });
@@ -59,7 +59,7 @@ export function SearchSynonymSettingsScreen({ onClose }: SearchSynonymSettingsSc
     <AppScreen
       className="pointer-events-auto"
       appBar={{
-        title: '검색 별칭 관리',
+        title: '유사어 매칭',
         backButton: {
           render: () => (
             <Button
@@ -77,12 +77,12 @@ export function SearchSynonymSettingsScreen({ onClose }: SearchSynonymSettingsSc
     >
       <div className="safe-area-padding-bottom">
         <div className="space-y-4 p-4 pb-8">
-          <p className="px-1 text-xs text-gray-500">같은 그룹 단어들은 같이 검색됩니다.</p>
+          <p className="px-1 text-xs text-gray-500">같은 그룹은 유사어로 묶여 함께 검색됩니다.</p>
 
           {!isLoading && groups.length === 0 && (
             <EmptyState>
               <EmptyState.Content>
-                <EmptyState.Description>등록된 검색 별칭이 없습니다</EmptyState.Description>
+                <EmptyState.Description>등록된 유사어가 없습니다</EmptyState.Description>
               </EmptyState.Content>
             </EmptyState>
           )}
@@ -142,7 +142,7 @@ export function SearchSynonymSettingsScreen({ onClose }: SearchSynonymSettingsSc
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}
         title="기본값으로 되돌릴까요?"
-        description="직접 추가한 별칭이 모두 삭제되고 기본 상태로 돌아갑니다."
+        description="직접 추가한 유사어가 모두 삭제되고 기본 상태로 돌아갑니다."
         confirmLabel="복원"
         confirmDisabled={resetMutation.isPending}
         onConfirm={resetToDefault}
