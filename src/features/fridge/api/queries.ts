@@ -23,8 +23,8 @@ const CATEGORY_EXPIRY_DEFAULTS_STALE_TIME = 1000 * 60 * 60 * 6;
 
 /**
  * 냉장고 재고 전체 조회 (배치 포함)
- * 검색어는 별칭 그룹으로 확장해 서버에 반복 파라미터로 넘긴다.
- * 별칭 사전이 로드되기 전에는 검색어 하나만 넘어가므로 기존 동작과 같다.
+ * 검색어는 유사어 그룹으로 확장해 서버에 반복 파라미터로 넘긴다.
+ * 유사어 사전이 로드되기 전에는 검색어 하나만 넘어가므로 기존 동작과 같다.
  */
 export function useFridgeItemsQuery({
   householdId,

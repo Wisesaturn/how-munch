@@ -12,7 +12,7 @@ interface LinkSearchSynonymVariables {
 }
 
 /**
- * @description 검색어와 입력 단어들을 하나의 별칭 그룹으로 연결한다.
+ * @description 검색어와 입력 단어들을 하나의 유사어 그룹으로 연결한다.
  * 등록 직후 검색 결과에 바로 반영돼야 하므로 성공 시 목록 캐시를 무효화한다.
  */
 export function useLinkSearchSynonymMutation() {
@@ -34,7 +34,7 @@ interface DeleteSearchSynonymVariables {
   termId?: string;
 }
 
-/** @description 별칭 그룹 전체 또는 단어 하나를 삭제한다. */
+/** @description 유사어 그룹 전체 또는 단어 하나를 삭제한다. */
 export function useDeleteSearchSynonymMutation() {
   const queryClient = useQueryClient();
 
@@ -53,8 +53,8 @@ export function useDeleteSearchSynonymMutation() {
 }
 
 /**
- * @description 검색 별칭을 기본 시드 상태로 되돌린다.
- * 직접 추가한 별칭까지 모두 삭제되므로 호출부에서 확인 절차를 거친다.
+ * @description 유사어를 기본 시드 상태로 되돌린다.
+ * 직접 추가한 유사어까지 모두 삭제되므로 호출부에서 확인 절차를 거친다.
  */
 export function useResetSearchSynonymsMutation() {
   const queryClient = useQueryClient();

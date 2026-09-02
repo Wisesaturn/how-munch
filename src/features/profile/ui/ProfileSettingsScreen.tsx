@@ -52,7 +52,7 @@ export function ProfileSettingsScreen({ onClose }: ProfileSettingsScreenProps) {
             onClick={() => stackFlowActions.push('FridgeFilterSettingsActivity', {})}
           />
           <SettingsActionRow
-            label="검색 별칭 관리"
+            label="유사어 매칭"
             onClick={() => stackFlowActions.push('SearchSynonymSettingsActivity', {})}
           />
         </section>

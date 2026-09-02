@@ -37,7 +37,7 @@ export function isChoseongQuery(query: string): boolean {
  * 한글 조합 중간 상태는 여기 포함하지 않는다. 조합 중간 매칭은 원리상 음절 경계를 넘나들어
  * ('달'에 ㄱ을 더하면 '닭'이 되듯) '닭'이 '달걀'에 걸리는 것을 막을 수 없기 때문에,
  * 재고를 골라 차감하는 화면에서 직접 일치로 제시하면 오선택 위험이 있다.
- * matchesComposingText로 분리해 '비슷한 이름'으로 내려보낸다.
+ * matchesComposingText로 분리해 호출부에서 낮춰 노출한다.
  */
 export function matchesSearchText(target: string, query: string): boolean {
   const normalizedQuery = normalizeSearchText(query);
@@ -58,8 +58,7 @@ export function matchesSearchText(target: string, query: string): boolean {
  *
  * 자모로 분해해 부분일치시키므로, 타이핑 도중 글자가 조합되는 동안에도 결과가 유지된다.
  * 다만 앞 음절의 종성과 뒤 음절의 초성이 이어붙는 특성상 '닭'이 '달걀'에 걸리는 등
- * 의도와 다른 매칭이 함께 생긴다. 그래서 직접 일치와 분리해 두고 호출부에서
- * '비슷한 이름'으로 낮춰 노출한다.
+ * 의도와 다른 매칭이 함께 생긴다. 그래서 직접 일치와 분리해 두고 호출부에서 낮춰 노출한다.
  */
 export function matchesComposingText(target: string, query: string): boolean {
   const normalizedQuery = normalizeSearchText(query);

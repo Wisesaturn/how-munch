@@ -13,7 +13,7 @@ type CTAAnimation = {
   delay?: number;
 };
 
-const ctaActionVariants = cva(
+const ctaPrimitiveVariants = cva(
   'h-12 w-full rounded-xl border text-base font-semibold transition duration-150 ease-out disabled:cursor-not-allowed',
   {
     variants: {
@@ -79,12 +79,12 @@ interface CTAFrameProps {
   animation?: CTAAnimation;
 }
 
-interface CallToActionProps
+interface CTAPrimitiveProps
   extends
     Omit<React.ComponentProps<typeof Button>, 'variant' | 'color' | 'size'>,
-    VariantProps<typeof ctaActionVariants> {}
+    VariantProps<typeof ctaPrimitiveVariants> {}
 
-interface CTAButtonProps extends CTAFrameProps, CallToActionProps {
+interface CTAButtonProps extends CTAFrameProps, CTAPrimitiveProps {
   containerClassName?: string;
 }
 
@@ -190,9 +190,13 @@ function resolveCTAAnimationStyle(animation?: CTAAnimation): React.CSSProperties
 }
 
 /* -------------------------------------------------------------------------------------------------
- * Shared Action
+ * Primitive
  * -----------------------------------------------------------------------------------------------*/
-const CallToAction = React.forwardRef<HTMLButtonElement, CallToActionProps>(
+/**
+ * @description CTA의 버튼 부분만 담당하는 최소 단위입니다. 하단 고정 프레임은 `CTAButton`/`CTAConfirmButton`이 감싸서 제공하고,
+ * 프레임 없이 CTA 모양만 필요한 자리(`BottomSheet.Footer` 등)에서는 이 컴포넌트를 직접 씁니다.
+ */
+const CTAPrimitive = React.forwardRef<HTMLButtonElement, CTAPrimitiveProps>(
   ({ className, variant = 'filled', color = 'confirm', ...props }, ref) => {
     return (
       <Button
@@ -200,14 +204,14 @@ const CallToAction = React.forwardRef<HTMLButtonElement, CallToActionProps>(
         variant="default"
         color="mono"
         size="default"
-        className={cn(ctaActionVariants({ variant, color }), className)}
+        className={cn(ctaPrimitiveVariants({ variant, color }), className)}
         {...props}
       />
     );
   },
 );
 
-CallToAction.displayName = 'CallToAction';
+CTAPrimitive.displayName = 'CTAPrimitive';
 
 /* -------------------------------------------------------------------------------------------------
  * CTA Button
@@ -235,7 +239,7 @@ function CTAButton({
       )}
     >
       <div className="mx-auto w-full max-w-[480px]">
-        <CallToAction className={className} {...props} />
+        <CTAPrimitive className={className} {...props} />
       </div>
     </div>
   );
@@ -244,17 +248,17 @@ function CTAButton({
 /* -------------------------------------------------------------------------------------------------
  * CTA Confirm Button
  * -----------------------------------------------------------------------------------------------*/
-const CTAConfirmButtonLeft = React.forwardRef<HTMLButtonElement, CallToActionProps>(
+const CTAConfirmButtonLeft = React.forwardRef<HTMLButtonElement, CTAPrimitiveProps>(
   ({ className, ...props }, ref) => {
-    return <CallToAction ref={ref} className={cn('w-full', className)} {...props} />;
+    return <CTAPrimitive ref={ref} className={cn('w-full', className)} {...props} />;
   },
 );
 
 CTAConfirmButtonLeft.displayName = 'CTAConfirmButton.Left';
 
-const CTAConfirmButtonRight = React.forwardRef<HTMLButtonElement, CallToActionProps>(
+const CTAConfirmButtonRight = React.forwardRef<HTMLButtonElement, CTAPrimitiveProps>(
   ({ className, ...props }, ref) => {
-    return <CallToAction ref={ref} className={cn('w-full', className)} {...props} />;
+    return <CTAPrimitive ref={ref} className={cn('w-full', className)} {...props} />;
   },
 );
 
@@ -301,7 +305,9 @@ const CTAConfirmButton = Object.assign(CTAConfirmButtonRoot, {
 export {
   CTAButton,
   CTAConfirmButton,
+  CTAPrimitive,
   type CTAAnimation,
   type CTAButtonProps,
   type CTAConfirmButtonRootProps,
+  type CTAPrimitiveProps,
 };

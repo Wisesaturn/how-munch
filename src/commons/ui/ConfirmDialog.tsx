@@ -19,6 +19,11 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel?: () => void;
+  /**
+   * 확인 동작이 처리 중임을 나타낸다.
+   * 중복 확인을 막고, 되돌릴 수 없는 요청이 이미 떠난 뒤에 취소가 취소처럼 보이지 않도록 두 버튼을 함께 비활성화한다.
+   */
+  pending?: boolean;
 }
 
 function ConfirmDialog({
@@ -30,6 +35,7 @@ function ConfirmDialog({
   cancelLabel = '취소',
   onConfirm,
   onCancel,
+  pending = false,
 }: ConfirmDialogProps) {
   function cancel() {
     onCancel?.();
@@ -41,10 +47,22 @@ function ConfirmDialog({
       <Dialog.Content onPointerDownOutside={(e) => e.preventDefault()}>
         <Dialog.Header heading={title} description={description} />
         <Dialog.Footer>
-          <Button variant="outline" color="mono" className="flex-1" onClick={cancel}>
+          <Button
+            variant="outline"
+            color="mono"
+            className="flex-1"
+            disabled={pending}
+            onClick={cancel}
+          >
             {cancelLabel}
           </Button>
-          <Button variant="default" color="primary" className="flex-1" onClick={onConfirm}>
+          <Button
+            variant="default"
+            color="primary"
+            className="flex-1"
+            disabled={pending}
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </Button>
         </Dialog.Footer>

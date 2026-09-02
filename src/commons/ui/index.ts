@@ -15,7 +15,7 @@ export {
   type DeleteConfirmBottomSheetProps,
 } from './DeleteConfirmBottomSheet';
 export { Chip, ChipRow, chipVariants } from './Chip';
-export { CTAButton, CTAConfirmButton } from './CTAButton';
+export { CTAButton, CTAConfirmButton, CTAPrimitive, type CTAPrimitiveProps } from './CTAButton';
 export { Command } from './Command';
 export { ComboBox, type ComboBoxProps } from './ComboBox';
 export { Counter, type CounterProps } from './Counter';
