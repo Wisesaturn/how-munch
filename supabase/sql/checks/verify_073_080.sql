@@ -162,11 +162,20 @@ order by p.proname;
 /* ============================================================
  * E. 기능 테스트 — 실제 시나리오 재현 (전부 ROLLBACK)
  * ============================================================
- * 주의: 이 섹션은 데이터를 씁니다. 반드시 BEGIN ~ ROLLBACK 사이에서 실행하세요.
- *       SQL Editor에서 아래 블록 전체를 한 번에 실행하면 됩니다.
+ * 실행법: 아래 begin; 부터 rollback; 까지 블록만 선택해 한 번에 실행하세요.
+ *         Supabase SQL Editor는 RAISE NOTICE를 표시하지 않으므로
+ *         판정 결과를 임시 테이블에 모아 마지막에 SELECT로 돌려줍니다.
+ * 판정:   통과 열이 전부 true 여야 합니다.
  * ==========================================================*/
 
 begin;
+
+create temp table zz_verify_result (
+  순번 integer,
+  시나리오 text,
+  통과 boolean,
+  상세 text
+) on commit drop;
 
 do $$
 declare
@@ -178,20 +187,22 @@ declare
   v_item_id uuid;
   v_batch_id uuid;
   v_item_id_after uuid;
-  v_name_after text;
   v_meal_id uuid;
   v_di_item_id uuid;
   v_resolved_name text;
-  v_blocked boolean := false;
+  v_expected_name text;
+  v_usage_rows integer;
+  v_blocked boolean;
+  v_err text;
 begin
-  -- 테스트 대상 가구·사용자 선택
   select hm.household_id, hm.user_id
     into v_household_id, v_user_id
   from public.household_members hm
   limit 1;
 
   if v_household_id is null then
-    raise exception '테스트할 가구가 없습니다. household_members가 비어 있습니다.';
+    insert into zz_verify_result values (0, '사전 조건', false, 'household_members가 비어 있어 테스트 불가');
+    return;
   end if;
 
   -- auth.uid()가 동작하도록 JWT 클레임 주입
@@ -202,9 +213,11 @@ begin
   where household_id = v_household_id
   limit 1;
 
-  raise notice '--- 대상 가구 % / 사용자 % ---', v_household_id, v_user_id;
+  insert into zz_verify_result
+  values (0, '사전 조건', true, format('가구 %s / 사용자 %s', v_household_id, v_user_id));
 
-  /* ---------- 시나리오 1: 개 단위 — 제자리 이름 변경(분기 B) ---------- */
+  /* ---------- [1] 개 단위 — 제자리 이름 변경(분기 B) ---------- */
+  v_expected_name := 'ZZ테스트메추리알' || v_suffix;
 
   v_ing := public.add_ingredient_with_fridge(
     p_household_id := v_household_id,
@@ -216,28 +229,18 @@ begin
   v_item_id  := v_ing.linked_fridge_item_id;
   v_batch_id := v_ing.linked_fridge_batch_id;
 
-  -- 식단에 2개 사용 (소진 아님)
   v_meal_id := public.upsert_meal_with_usage(
     v_household_id, date '2099-01-01', 'dinner',
     jsonb_build_array(jsonb_build_object(
-      'name', 'ZZ테스트요리',
-      'sort_order', 0,
+      'name', 'ZZ테스트요리', 'sort_order', 0,
       'ingredients', jsonb_build_array(jsonb_build_object(
-        'fridge_item_id', v_item_id,
-        'batch_id', v_batch_id,
-        'amount', 2
-      ))
-    ))
+        'fridge_item_id', v_item_id, 'batch_id', v_batch_id, 'amount', 2))))
   );
 
-  -- 이름 변경
   v_ing := public.update_ingredient_with_fridge(
-    v_ing.id,
-    jsonb_build_object('name', 'ZZ테스트메추리알' || v_suffix)
+    v_ing.id, jsonb_build_object('name', v_expected_name)
   );
   v_item_id_after := v_ing.linked_fridge_item_id;
-
-  select f.name into v_name_after from public.fridge_items f where f.id = v_item_id_after;
 
   select di.fridge_item_id into v_di_item_id
   from public.dish_ingredients di
@@ -249,15 +252,14 @@ begin
   from public.fridge_items f
   where f.id = v_di_item_id and f.deleted_at is null;
 
-  raise notice '[1] 분기 B(제자리 변경)  품목 유지=%  이름=%  식단이 보는 이름=%',
-    (v_item_id = v_item_id_after), v_name_after, coalesce(v_resolved_name, '<빈 값 — 실패>');
+  insert into zz_verify_result values (
+    1, '개 단위 이름 변경 → 식단 반영',
+    v_resolved_name is not distinct from v_expected_name,
+    format('품목 유지=%s / 식단이 보는 이름=%s',
+           (v_item_id = v_item_id_after), coalesce(v_resolved_name, '<빈 값>'))
+  );
 
-  if v_resolved_name is distinct from 'ZZ테스트메추리알' || v_suffix then
-    raise warning '[1] 실패: 식단이 새 이름을 따라가지 못했습니다.';
-  end if;
-
-  /* ---------- 시나리오 2: 무게 단위 사용 중 삭제 가드(구멍 4) ---------- */
-
+  /* ---------- [2] 무게 단위 사용 중 삭제 차단(구멍 4) ---------- */
   v_ing := public.add_ingredient_with_fridge(
     p_household_id := v_household_id,
     p_name         := 'ZZ테스트돼지고기' || v_suffix,
@@ -268,53 +270,52 @@ begin
   v_item_id  := v_ing.linked_fridge_item_id;
   v_batch_id := v_ing.linked_fridge_batch_id;
 
-  -- 무게 재료를 '사용'으로만 기록 (차감 없음 → meal_batch_usages 행이 생기지 않음)
   perform public.upsert_meal_with_usage(
     v_household_id, date '2099-01-02', 'lunch',
     jsonb_build_array(jsonb_build_object(
-      'name', 'ZZ테스트찌개',
-      'sort_order', 0,
+      'name', 'ZZ테스트찌개', 'sort_order', 0,
       'ingredients', jsonb_build_array(jsonb_build_object(
-        'fridge_item_id', v_item_id,
-        'batch_id', v_batch_id,
-        'usage_status', 'used'
-      ))
-    ))
+        'fridge_item_id', v_item_id, 'batch_id', v_batch_id, 'usage_status', 'used'))))
   );
 
-  raise notice '[2] 원장(meal_batch_usages) 행 수 = %  (0이어야 정상 — 무게 used는 차감이 없음)',
-    (select count(*) from public.meal_batch_usages where batch_id = v_batch_id);
+  select count(*) into v_usage_rows
+  from public.meal_batch_usages where batch_id = v_batch_id;
 
+  v_blocked := false;
+  v_err := null;
   begin
     perform public.soft_delete_fridge_item(v_item_id);
   exception when others then
     v_blocked := true;
-    raise notice '[2] 삭제 차단됨 (기대 동작) — %', sqlerrm;
+    v_err := sqlerrm;
   end;
 
-  if not v_blocked then
-    raise warning '[2] 실패: 식단이 사용 중인 무게 재료가 삭제되었습니다. 076 가드가 동작하지 않습니다.';
-  end if;
+  insert into zz_verify_result values (
+    2, '무게 재료 사용 중 삭제 차단',
+    v_blocked,
+    format('원장 행 수=%s (0이 정상) / %s', v_usage_rows, coalesce(v_err, '차단되지 않음'))
+  );
 
-  /* ---------- 시나리오 3: 식단 참조 중 단위 변경 차단 ---------- */
-
+  /* ---------- [3] 식단 참조 중 단위 변경 차단 ---------- */
   v_blocked := false;
+  v_err := null;
   begin
     perform public.update_ingredient_with_fridge(
-      v_ing.id,
-      jsonb_build_object('unit', 'count')
+      v_ing.id, jsonb_build_object('unit', 'count')
     );
   exception when others then
     v_blocked := true;
-    raise notice '[3] 단위 변경 차단됨 (기대 동작) — %', sqlerrm;
+    v_err := sqlerrm;
   end;
 
-  if not v_blocked then
-    raise warning '[3] 실패: 식단이 참조 중인 재료의 단위가 변경되었습니다.';
-  end if;
-
-  raise notice '--- 테스트 종료 (ROLLBACK 됩니다) ---';
+  insert into zz_verify_result values (
+    3, '식단 참조 중 단위 변경 차단',
+    v_blocked,
+    coalesce(v_err, '차단되지 않음')
+  );
 end;
 $$;
+
+select * from zz_verify_result order by 순번;
 
 rollback;
