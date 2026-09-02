@@ -1,13 +1,13 @@
--- Function: public.upsert_meal_with_usage
--- Source: supabase/migrations/080_resolve_meal_usage_mode_from_fridge_unit.sql
--- 역할: 식단 저장 시 dish/ingredient와 배치 사용량 차감을 원자적으로 처리합니다.
+-- Migration: 080_resolve_meal_usage_mode_from_fridge_unit
+-- 역할: 식단 저장 시 재료의 기록 방식을 클라이언트가 보낸 unit이 아니라 DB의 실제 단위로 결정합니다.
 -- 동작:
--- 1. 기존 meal usage를 롤백한 뒤 새 dishes/ingredients를 재저장합니다.
--- 2. usage_status='used' (g/kg·ml/L): dish_ingredients에만 기록, 배치 변화 없음.
--- 3. usage_status='depleted' (g/kg·ml/L): 지정된 batch_id 배치를 0으로 소진, meal_batch_usages 기록.
--- 4. amount>0 (개): 지정된 batch_id 배치에서만 차감(FIFO 아님), 부족 시 도메인 예외 발생.
--- 5. 각 재료 줄은 batch_id로 특정 구매분을 지정한다 (같은 품목도 배치별로 여러 줄 가능).
--- 6. meals 테이블에 created_by(auth.uid())를 기록합니다 (신규 등록 시에만, 수정 시 유지).
+-- 1. 기존 구현은 요청 JSON에 usage_status가 있으면 무게 품목으로, 없으면 개 품목으로 분기했습니다.
+--    클라이언트의 냉장고 캐시가 낡아 단위가 어긋나면 amount/usage_status 조합이 깨지고,
+--    074에서 추가한 dish_ingredients CHECK 제약에 걸려 식단 저장이 실패합니다.
+-- 2. fridge_items.unit을 조회해 'count'면 amount 기반, 그 외에는 usage_status 기반으로 기록합니다.
+--    이로써 무게 품목에 amount가 실려 개수처럼 차감되던 경로도 함께 막힙니다.
+-- 3. 개수 차감 집계에 consumption_mode = 'quantity' 조건을 명시합니다.
+
 create or replace function public.upsert_meal_with_usage(
   p_household_id uuid,
   p_date date,
@@ -205,3 +205,5 @@ begin
   return v_meal_id;
 end;
 $$;
+
+select pg_notify('pgrst', 'reload schema');
