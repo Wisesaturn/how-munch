@@ -34,11 +34,13 @@ function normalizeKeyPart(value: string): string {
 
 /**
  * @description AI가 분해한 product/spec/unit을 냉장고 재고용 이름·수량·단위로 조립한다.
- * spec의 종류가 unit과 일치하면 '채택'해 수량에 곱하고 이름에서 제외하며,
- * 일치하지 않으면 '미채택'으로 두고 규격을 이름 뒤에 남긴 뒤 수량은 구매 수량만 사용한다.
- * 미채택 시 unit은 항상 'count'로 떨어뜨려, 규격 없이 무게 단위만 남는 모순을 막는다.
- * (예: '사양벌꿀' + '1kg' + count ×1 → `사양벌꿀 1kg` 1개,
- *  '삼겹살' + '500g' + g ×2 → `삼겹살` 1000g)
+ * 규격 표기의 개수 부분과 용량 부분을 서로 다른 역할로 쓴다 — 개수는 언제나 수량 계산에 들어가고,
+ * 용량은 무게·부피 단위로 채택될 때만 수량이 되며 그렇지 않으면 이름 뒤에 규격 구분자로 남는다.
+ * 무게·부피 단위는 실제 용량 표기가 있을 때만 채택하고, 없으면 'count'로 떨어뜨려
+ * 규격 없이 단위만 무게로 남는 모순을 막는다.
+ * (예: '삼겹살' + '500g 2팩' + count → `삼겹살 500g` 2개,
+ *  '삼겹살' + '500g 2팩' + g → `삼겹살` 1000g,
+ *  '사양벌꿀' + '1kg' + count → `사양벌꿀 1kg` 1개)
  */
 function resolveNameAndAmount(
   product: string,
@@ -46,24 +48,20 @@ function resolveNameAndAmount(
   aiUnit: IngredientUnit,
   purchaseCount: number,
 ): { name: string; count: number; unit: IngredientUnit } {
-  const spec = parseProductSpec(specText);
+  const { packCount, measure } = parseProductSpec(specText);
+  const packs = packCount ?? 1;
 
-  if (spec.kind === 'count' && aiUnit === 'count') {
-    return { name: product, count: spec.amount * purchaseCount, unit: 'count' };
-  }
-
-  if (spec.kind === 'measure' && (isWeightUnit(aiUnit) || isVolumeUnit(aiUnit))) {
+  if (measure && (isWeightUnit(aiUnit) || isVolumeUnit(aiUnit))) {
     return {
       name: product,
-      count: normalizeAmountByUnit(spec.amount * purchaseCount, spec.unit),
-      unit: spec.unit,
+      count: normalizeAmountByUnit(measure.amount * packs * purchaseCount, measure.unit),
+      unit: measure.unit,
     };
   }
 
-  const trimmedSpec = specText.trim();
   return {
-    name: trimmedSpec ? `${product} ${trimmedSpec}` : product,
-    count: purchaseCount,
+    name: [product, measure?.text].filter(Boolean).join(' ').trim(),
+    count: packs * purchaseCount,
     unit: 'count',
   };
 }
@@ -171,6 +169,12 @@ export function parseAiResponse(
       };
     })
     .filter((item) => item.name.length > 0);
+
+  // items는 있는데 전부 걸러졌다면 응답 형식이 계약과 어긋난 것이다(예: product 없이 name만 온 경우).
+  // 빈 배열을 성공으로 돌려주면 사용자는 원인 없이 빈 스테이징 화면만 보게 되므로 실패로 처리한다.
+  if (mapped.length === 0) {
+    throw new Error('품목을 읽지 못했습니다. 사진이 선명한지 확인하고 다시 시도해 주세요.');
+  }
 
   return mergeDuplicates(mapped);
 }

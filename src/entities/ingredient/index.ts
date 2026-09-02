@@ -1,6 +1,6 @@
 export type { Ingredient } from './model/types';
 export { ingredientKeys } from './api/queryKey';
-export type { IngredientUnit, ProductSpec, ProductSpecKind } from './model/unit';
+export type { IngredientUnit, ProductMeasure, ProductSpec } from './model/unit';
 export {
   convertIngredientAmount,
   formatIngredientAmount,
