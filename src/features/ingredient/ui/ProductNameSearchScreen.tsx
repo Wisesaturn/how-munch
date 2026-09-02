@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { josa } from 'es-hangul';
-import { Search, X } from 'lucide-react';
+import { Link2, Search, X } from 'lucide-react';
 
-import { Badge, InputGroup } from '@/commons/ui';
+import { Badge, Button, InputGroup } from '@/commons/ui';
+
+import { SearchSynonymLinkSheet, useSearchFilter } from '@/entities/search-synonym';
 
 interface ProductNameSearchScreenProps {
   /** 화면 닫기 핸들러 (Activity에서 주입) */
@@ -23,6 +25,11 @@ interface ProductNameSearchScreenProps {
   defaultQuery?: string;
 }
 
+/** 제안 항목은 이름 문자열 자체가 검색 대상이다 */
+function getSuggestionSearchTexts(name: string) {
+  return [name];
+}
+
 /** 상품명 검색 전용 Screen — onClose/onSelectName을 Activity에서 주입받아 동작한다 */
 export function ProductNameSearchScreen({
   onClose: _onClose,
@@ -33,6 +40,7 @@ export function ProductNameSearchScreen({
   defaultQuery = '',
 }: ProductNameSearchScreenProps) {
   const [query, setQuery] = useState(defaultQuery);
+  const [linkSheetOpen, setLinkSheetOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const depletedSet = new Set(depletedNames);
 
@@ -46,11 +54,9 @@ export function ProductNameSearchScreen({
 
   const trimmedQuery = query.trim();
 
-  const filteredSuggestions = trimmedQuery
-    ? suggestions.filter((name) => name.toLowerCase().includes(trimmedQuery.toLowerCase()))
-    : suggestions;
-
-  const uniqueSuggestions = [...new Set(filteredSuggestions)];
+  const uniqueNames = useMemo(() => [...new Set(suggestions)], [suggestions]);
+  const { exact, similar } = useSearchFilter(uniqueNames, query, getSuggestionSearchTexts);
+  const hasAnyResult = exact.length > 0 || similar.length > 0;
 
   function submitQuery() {
     if (!trimmedQuery) return;
@@ -60,6 +66,30 @@ export function ProductNameSearchScreen({
   function clearQuery() {
     setQuery('');
     inputRef.current?.focus();
+  }
+
+  function renderSuggestion(name: string) {
+    const isDepleted = depletedSet.has(name);
+
+    return (
+      <li key={name}>
+        <button
+          type="button"
+          onClick={() => onSelectName(name)}
+          className="flex w-full items-center gap-1.5 px-4 py-3 text-left text-sm hover:bg-gray-50 active:bg-gray-100"
+        >
+          <span>{name}</span>
+          {isDepleted && (
+            <Badge
+              variant="outline"
+              className="border-red-200 bg-red-50 px-1.5 py-0 text-[10px] text-red-600"
+            >
+              소진
+            </Badge>
+          )}
+        </button>
+      </li>
+    );
   }
 
   return (
@@ -116,45 +146,52 @@ export function ProductNameSearchScreen({
           )}
         </div>
 
-        {/* 제안 목록 */}
-        {uniqueSuggestions.length > 0 && (
-          <ul className="divide-y divide-gray-100">
-            {uniqueSuggestions.map((name) => {
-              const isDepleted = depletedSet.has(name);
-              return (
-                <li key={name}>
-                  <button
-                    type="button"
-                    onClick={() => onSelectName(name)}
-                    className="flex w-full items-center gap-1.5 px-4 py-3 text-left text-sm hover:bg-gray-50 active:bg-gray-100"
-                  >
-                    <span>{name}</span>
-                    {isDepleted && (
-                      <Badge
-                        variant="outline"
-                        className="border-red-200 bg-red-50 px-1.5 py-0 text-[10px] text-red-600"
-                      >
-                        소진
-                      </Badge>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+        {/* 직접 일치 */}
+        {exact.length > 0 && (
+          <ul className="divide-y divide-gray-100">{exact.map(renderSuggestion)}</ul>
         )}
-        {uniqueSuggestions.length === 0 && trimmedQuery && (
+
+        {/* 별칭으로 찾은 결과 — 같은 물건을 같은 이름으로 등록하도록 유도한다 */}
+        {similar.length > 0 && (
+          <>
+            <p className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">비슷한 이름</p>
+            <ul className="divide-y divide-gray-100">{similar.map(renderSuggestion)}</ul>
+          </>
+        )}
+
+        {!hasAnyResult && trimmedQuery && (
           <div className="flex flex-col items-center py-12 text-sm text-gray-400">
             <p>일치하는 기존 항목이 없습니다</p>
             <p className="mt-1">직접 입력 버튼으로 추가할 수 있습니다</p>
           </div>
         )}
-        {uniqueSuggestions.length === 0 && !trimmedQuery && (
+        {!hasAnyResult && !trimmedQuery && (
           <div className="flex flex-col items-center py-12 text-sm text-gray-400">
             <p>{josa(fieldLabel ?? '', '을/를')} 검색하거나 직접 입력하세요</p>
           </div>
         )}
+
+        {/* 못 찾은 그 자리에서 별칭을 등록하게 한다 */}
+        {trimmedQuery && (
+          <div className="px-4 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setLinkSheetOpen(true)}
+            >
+              <Link2 className="size-4" />
+              다른 이름으로 연결하기
+            </Button>
+          </div>
+        )}
       </div>
+
+      <SearchSynonymLinkSheet
+        open={linkSheetOpen}
+        onClose={() => setLinkSheetOpen(false)}
+        baseTerm={trimmedQuery}
+      />
     </AppScreen>
   );
 }

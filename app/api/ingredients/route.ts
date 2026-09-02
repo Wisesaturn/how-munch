@@ -11,13 +11,28 @@ import { type Json, type Page, type PageInfo } from '@/commons/model/types';
 
 import { type Ingredient } from '@/entities/ingredient';
 
-/** GET /api/ingredients?householdId=&startDate=&endDate=&q=&page=&pageSize= — 장보기 내역 조회 */
+/**
+ * PostgREST or 필터에 값을 안전하게 넣기 위해 큰따옴표 안에서 이스케이프한다.
+ * 검색어에 쉼표가 들어가면 필터 구문 자체가 깨지기 때문이다.
+ */
+function toQuotedIlikeFilter(keyword: string): string {
+  const escaped = keyword.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `name.ilike."%${escaped}%"`;
+}
+
+/**
+ * GET /api/ingredients?householdId=&startDate=&endDate=&q=&q=&page=&pageSize= — 장보기 내역 조회
+ * q는 반복 파라미터다. 클라이언트가 검색어를 별칭 그룹으로 확장해 여러 개를 보내면 OR로 묶는다.
+ */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
   const { searchParams } = req.nextUrl;
   const householdId = searchParams.get('householdId');
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
-  const q = searchParams.get('q') ?? '';
+  const searchKeywords = searchParams
+    .getAll('q')
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
   const page = Math.max(1, Number(searchParams.get('page') ?? '1'));
   const pageSize = Math.max(1, Number(searchParams.get('pageSize') ?? '200'));
 
@@ -38,8 +53,10 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
     .order('date', { ascending: false })
     .range(from, to);
 
-  if (q.trim()) {
-    query = query.ilike('name', `%${q.trim()}%`);
+  if (searchKeywords.length === 1) {
+    query = query.ilike('name', `%${searchKeywords[0]}%`);
+  } else if (searchKeywords.length > 1) {
+    query = query.or(searchKeywords.map(toQuotedIlikeFilter).join(','));
   }
 
   const { data, count, error } = await query;

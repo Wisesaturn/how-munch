@@ -47,6 +47,7 @@ import {
 } from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
+import { SearchSynonymSettingsScreen } from '@/features/search-synonym';
 
 function IdleActivity() {
   const activity = useActivity();
@@ -349,6 +350,12 @@ function ProfileSettingsActivity() {
   return <ProfileSettingsScreen onClose={pop} />;
 }
 
+function SearchSynonymSettingsActivity() {
+  const { pop } = useActions();
+
+  return <SearchSynonymSettingsScreen onClose={pop} />;
+}
+
 function ProfileEditActivity() {
   const { pop } = useActions();
 
@@ -605,6 +612,7 @@ const appStackFlow = stackflow({
     NotificationActivity,
     NotificationSettingsActivity,
     ProfileSettingsActivity,
+    SearchSynonymSettingsActivity,
     ProfileEditActivity,
     ProductNameSearchActivity,
     FridgeItemSearchActivity,
@@ -632,6 +640,7 @@ const appStackFlow = stackflow({
         NotificationActivity: '/notifications',
         NotificationSettingsActivity: '/notifications/settings',
         ProfileSettingsActivity: '/profile/settings',
+        SearchSynonymSettingsActivity: '/search/synonym/settings',
         ProfileEditActivity: '/profile/edit',
         ProductNameSearchActivity: '/search/product-name',
         FridgeItemSearchActivity: '/search/fridge-item',

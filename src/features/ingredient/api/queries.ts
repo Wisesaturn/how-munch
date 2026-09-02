@@ -4,6 +4,7 @@ import { apiClient } from '@/commons/lib';
 import { type Page } from '@/commons/model/types';
 
 import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
+import { useSynonymExpandedTerms } from '@/entities/search-synonym';
 
 /**
  * @description 기간별 장보기 내역 조회 (I-01).
@@ -40,16 +41,25 @@ export function useIngredientSearchInfiniteQuery(
   endDate: string,
   q: string,
 ) {
+  // 검색어를 별칭 그룹으로 확장해 반복 파라미터로 넘긴다.
+  // 사전 로드 전에는 검색어 하나만 넘어가므로 기존 동작과 같다.
+  const searchKeywords = useSynonymExpandedTerms(q);
+
   return useInfiniteQuery({
-    queryKey: ingredientKeys.search(householdId ?? '', startDate, endDate, q),
+    queryKey: ingredientKeys.search(
+      householdId ?? '',
+      startDate,
+      endDate,
+      searchKeywords.join('|'),
+    ),
     queryFn:
-      householdId && q.trim()
+      householdId && searchKeywords.length > 0
         ? ({ pageParam }: { pageParam: number }) =>
             apiClient.get<Page<Ingredient[]>>('/api/ingredients', {
               householdId,
               startDate,
               endDate,
-              q: q.trim(),
+              q: searchKeywords,
               page: String(pageParam),
               pageSize: '20',
             })

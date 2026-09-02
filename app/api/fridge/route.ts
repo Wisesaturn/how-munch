@@ -12,11 +12,15 @@ import { type Json } from '@/commons/model/types';
 /** 냉장고 품목 메타 수정에서 클라이언트가 보낼 수 있는 필드 */
 const FRIDGE_ITEM_EDITABLE_FIELDS = ['name', 'brand', 'category_id', 'unit', 'is_subdivided'];
 
-/** GET /api/fridge?householdId=&search= — 냉장고 재고 전체 조회 (배치 포함) */
+/**
+ * GET /api/fridge?householdId=&search=&search= — 냉장고 재고 전체 조회 (배치 포함)
+ * search는 반복 파라미터다. 클라이언트가 검색어를 별칭 그룹으로 확장해 여러 개를 보내면
+ * RPC가 OR 조건으로 묶어 조회한다.
+ */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
   const { searchParams } = req.nextUrl;
   const householdId = searchParams.get('householdId');
-  const search = searchParams.get('search');
+  const searchKeywords = searchParams.getAll('search').filter((keyword) => keyword.trim());
 
   if (!householdId) {
     return apiResponse.BAD_REQUEST('CMN_002', 'householdId가 필요합니다.');
@@ -24,7 +28,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data, error } = await supabase.rpc('get_fridge_items_with_active_batches', {
     p_household_id: householdId,
-    p_search_keyword: search || null,
+    p_search_keywords: searchKeywords.length > 0 ? searchKeywords : null,
   });
 
   if (error) {

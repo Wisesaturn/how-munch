@@ -1,0 +1,146 @@
+'use client';
+
+import { useRef, useState } from 'react';
+
+import { Plus, X } from 'lucide-react';
+
+import { BottomSheet, Button, CTAButton, InputGroup, Toast } from '@/commons/ui';
+
+import { useLinkSearchSynonymMutation } from '../api/mutations';
+
+interface SearchSynonymLinkSheetProps {
+  open: boolean;
+  onClose: () => void;
+  /** 검색창에 입력했던 단어 — 연결의 기준이 되며 시트에서 지울 수 없다 */
+  baseTerm: string;
+  /** 연결 저장에 성공했을 때 호출된다 */
+  onLinked?: () => void;
+}
+
+function resolveErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return '별칭을 연결하지 못했습니다';
+}
+
+/** 검색어와 다른 이름을 같은 별칭 그룹으로 묶는 BottomSheet */
+export function SearchSynonymLinkSheet({
+  open,
+  onClose,
+  baseTerm,
+  onLinked,
+}: SearchSynonymLinkSheetProps) {
+  const [draft, setDraft] = useState('');
+  const [terms, setTerms] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const linkMutation = useLinkSearchSynonymMutation();
+
+  /** 저장에 실패해도 입력 중이던 단어를 잃지 않도록, 초기화는 시트를 닫는 순간에만 한다 */
+  function closeSheet() {
+    setDraft('');
+    setTerms([]);
+    onClose();
+  }
+
+  function addTerm() {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+
+    if (trimmed === baseTerm.trim() || terms.includes(trimmed)) {
+      setDraft('');
+      return;
+    }
+
+    setTerms((previous) => [...previous, trimmed]);
+    setDraft('');
+    inputRef.current?.focus();
+  }
+
+  function removeTerm(target: string) {
+    setTerms((previous) => previous.filter((term) => term !== target));
+  }
+
+  function submitLink() {
+    if (terms.length === 0) return;
+
+    linkMutation.mutate(
+      { baseTerm: baseTerm.trim(), terms },
+      {
+        onSuccess: () => {
+          Toast.success('검색 별칭을 연결했습니다');
+          onLinked?.();
+          closeSheet();
+        },
+        onError: (error) => Toast.error(resolveErrorMessage(error)),
+      },
+    );
+  }
+
+  return (
+    <BottomSheet open={open} onClose={closeSheet}>
+      <BottomSheet.Header heading="다른 이름으로 연결하기" />
+      <BottomSheet.Content className="flex flex-col gap-4 pb-6">
+        <p className="text-sm text-gray-500">
+          <span className="font-medium text-gray-900">{baseTerm}</span>
+          (으)로 검색했을 때 함께 찾을 이름을 추가해 주세요.
+          <br />
+          짧은 단어일수록 잘 찾습니다 (예: 대란, 달걀)
+        </p>
+
+        <InputGroup>
+          <InputGroup.Input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return;
+              e.preventDefault();
+              addTerm();
+            }}
+            placeholder="연결할 단어를 입력하세요"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+          />
+          <InputGroup.Addon align="inline-end" className="border-l-0 px-1">
+            <InputGroup.Button type="button" onClick={addTerm} aria-label="단어 추가">
+              <Plus className="size-4" />
+            </InputGroup.Button>
+          </InputGroup.Addon>
+        </InputGroup>
+
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white">
+            {baseTerm}
+          </span>
+          {terms.map((term) => (
+            <span
+              key={term}
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600"
+            >
+              {term}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="size-4 text-gray-400"
+                onClick={() => removeTerm(term)}
+                aria-label={`${term} 제거`}
+              >
+                <X className="size-3" />
+              </Button>
+            </span>
+          ))}
+        </div>
+
+        <CTAButton
+          type="button"
+          onClick={submitLink}
+          disabled={terms.length === 0 || linkMutation.isPending}
+        >
+          연결하기
+        </CTAButton>
+      </BottomSheet.Content>
+    </BottomSheet>
+  );
+}

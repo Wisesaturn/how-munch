@@ -4,6 +4,7 @@
 -- 동작:
 -- 1. household 생성 후 현재 유저를 owner로 등록합니다.
 -- 2. profiles.household_id를 새 household로 갱신합니다.
+-- 3. 기본 검색 동의어(별칭) 시드를 새 household에 심습니다.
 create or replace function public.create_household_with_owner(p_name text)
 returns uuid
 language plpgsql
@@ -33,6 +34,8 @@ begin
   set household_id = v_household_id,
       updated_at = now()
   where user_id = v_user_id;
+
+  perform public.seed_search_synonyms(v_household_id);
 
   return v_household_id;
 end;

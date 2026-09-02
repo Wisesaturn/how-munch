@@ -16,6 +16,7 @@
 - `meal`
 - `notification`
 - `category`
+- `search`
 
 ## Update Rule
 

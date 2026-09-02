@@ -632,6 +632,41 @@ export interface Database {
         };
         Relationships: [];
       };
+      search_synonym_terms: {
+        Row: {
+          id: string;
+          household_id: string;
+          group_key: string;
+          term: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          group_key: string;
+          term: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          group_key?: string;
+          term?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'search_synonym_terms_household_id_fkey';
+            columns: ['household_id'];
+            isOneToOne: false;
+            referencedRelation: 'households';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       fridge_category_expiry_defaults: {
         Row: {
           id: string;
@@ -699,6 +734,14 @@ export interface Database {
         Args: { p_name: string };
         Returns: string;
       };
+      generate_default_search_synonyms: {
+        Args: { p_household_id: string };
+        Returns: number;
+      };
+      upsert_search_synonym_guarded: {
+        Args: { p_household_id: string; p_base_term: string; p_terms: string[] };
+        Returns: string;
+      };
       create_fridge_item_with_batch: {
         Args: {
           p_household_id: string;
@@ -750,7 +793,7 @@ export interface Database {
         Returns: boolean;
       };
       get_fridge_items_with_active_batches: {
-        Args: { p_household_id: string; p_search_keyword?: string | null };
+        Args: { p_household_id: string; p_search_keywords?: string[] | null };
         Returns: Json[];
       };
       get_pending_push_notifications: {
