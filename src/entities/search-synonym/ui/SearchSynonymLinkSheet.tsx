@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 
 import { Plus, X } from 'lucide-react';
 
-import { BottomSheet, Button, CTAAction, InputGroup, Toast } from '@/commons/ui';
+import { BottomSheet, Button, CTAPrimitive, InputGroup, Toast } from '@/commons/ui';
 
 import { useLinkSearchSynonymMutation } from '../api/mutations';
 
@@ -135,13 +135,13 @@ export function SearchSynonymLinkSheet({
       </BottomSheet.Content>
 
       <BottomSheet.Footer>
-        <CTAAction
+        <CTAPrimitive
           type="button"
           onClick={submitLink}
           disabled={terms.length === 0 || linkMutation.isPending}
         >
           추가하기
-        </CTAAction>
+        </CTAPrimitive>
       </BottomSheet.Footer>
     </BottomSheet>
   );
