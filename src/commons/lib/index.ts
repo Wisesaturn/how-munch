@@ -16,6 +16,18 @@ export {
   urlBase64ToUint8Array,
 } from './notification';
 export { parseSafeNumericInput } from './numericInput';
+export {
+  containsSearchText,
+  isChoseongQuery,
+  matchesSearchText,
+  normalizeSearchText,
+} from './search/hangulSearch';
+export {
+  createSynonymIndex,
+  expandWithSynonyms,
+  type SynonymGroup,
+  type SynonymIndex,
+} from './search/synonym';
 export { uuid } from './uuid';
 export { cva, type VariantProps } from 'class-variance-authority';
 // apiResponse는 server-only (next/server 의존) → Route Handler에서 직접 import: '@/commons/lib/http/apiResponse'

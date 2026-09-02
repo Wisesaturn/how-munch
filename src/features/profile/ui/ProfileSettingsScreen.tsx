@@ -51,6 +51,10 @@ export function ProfileSettingsScreen({ onClose }: ProfileSettingsScreenProps) {
             label="냉장고 설정"
             onClick={() => stackFlowActions.push('FridgeFilterSettingsActivity', {})}
           />
+          <SettingsActionRow
+            label="검색 별칭 관리"
+            onClick={() => stackFlowActions.push('SearchSynonymSettingsActivity', {})}
+          />
         </section>
 
         <section className="space-y-2">

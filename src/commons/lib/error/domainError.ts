@@ -37,6 +37,11 @@ const DOMAIN_ERROR_CODE = {
 
   // SBD: 소분(Subdivision) 도메인
   SUBDIVISION_INSUFFICIENT_STOCK: 'SBD_001',
+
+  // SRC: 검색(Search) 도메인
+  SEARCH_SYNONYM_GROUP_CONFLICT: 'SRC_001',
+  SEARCH_SYNONYM_TERM_EMPTY: 'SRC_002',
+  SEARCH_SYNONYM_TERM_DUPLICATED: 'SRC_003',
 } as const;
 
 type DomainErrorCodeKey = keyof typeof DOMAIN_ERROR_CODE;
@@ -94,6 +99,11 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
 
   // SBD
   SBD_001: '소분할 재고가 부족합니다.',
+
+  // SRC
+  SRC_001: '입력한 단어가 이미 다른 단어와 연결되어 있습니다. 설정에서 확인해 주세요.',
+  SRC_002: '연결할 단어를 입력해 주세요.',
+  SRC_003: '이미 같은 단어입니다. 다른 단어를 입력해 주세요.',
 };
 
 /**
@@ -125,6 +135,10 @@ const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
   I0005: 'INGREDIENT_NOT_FOUND',
   I0006: 'INGREDIENT_UNIT_LOCKED_BY_MEAL',
   S0001: 'SUBDIVISION_INSUFFICIENT_STOCK',
+  // 검색 도메인은 'S' 대역이 소분(Subdivision)에 선점돼 있어 'R'(seaRch)을 사용한다.
+  R0001: 'SEARCH_SYNONYM_GROUP_CONFLICT',
+  R0002: 'SEARCH_SYNONYM_TERM_EMPTY',
+  R0003: 'SEARCH_SYNONYM_TERM_DUPLICATED',
 };
 
 /**
