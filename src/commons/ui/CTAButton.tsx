@@ -192,6 +192,9 @@ function resolveCTAAnimationStyle(animation?: CTAAnimation): React.CSSProperties
 /* -------------------------------------------------------------------------------------------------
  * Shared Action
  * -----------------------------------------------------------------------------------------------*/
+/**
+ * @description CTA 버튼의 액션 부분만 담당합니다. fixed 프레임 없이 CTA 룩이 필요한 곳(BottomSheet.Footer 등)에서 `CTAAction`으로 사용합니다.
+ */
 const CallToAction = React.forwardRef<HTMLButtonElement, CallToActionProps>(
   ({ className, variant = 'filled', color = 'confirm', ...props }, ref) => {
     return (
@@ -299,8 +302,10 @@ const CTAConfirmButton = Object.assign(CTAConfirmButtonRoot, {
 });
 
 export {
+  CallToAction as CTAAction,
   CTAButton,
   CTAConfirmButton,
+  type CallToActionProps as CTAActionProps,
   type CTAAnimation,
   type CTAButtonProps,
   type CTAConfirmButtonRootProps,

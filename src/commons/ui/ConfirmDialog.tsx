@@ -19,6 +19,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel?: () => void;
+  /** 확인 버튼 비활성화 — 처리 중 중복 확인을 막을 때 사용한다 */
+  confirmDisabled?: boolean;
 }
 
 function ConfirmDialog({
@@ -30,6 +32,7 @@ function ConfirmDialog({
   cancelLabel = '취소',
   onConfirm,
   onCancel,
+  confirmDisabled = false,
 }: ConfirmDialogProps) {
   function cancel() {
     onCancel?.();
@@ -44,7 +47,13 @@ function ConfirmDialog({
           <Button variant="outline" color="mono" className="flex-1" onClick={cancel}>
             {cancelLabel}
           </Button>
-          <Button variant="default" color="primary" className="flex-1" onClick={onConfirm}>
+          <Button
+            variant="default"
+            color="primary"
+            className="flex-1"
+            disabled={confirmDisabled}
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </Button>
         </Dialog.Footer>

@@ -70,10 +70,29 @@ function BottomSheetContent({ className, children, ...props }: BottomSheetConten
 }
 BottomSheetContent.displayName = 'BottomSheet.Content';
 
+/* -------------------------------------------------------------------------------------------------
+ * Footer
+ * -----------------------------------------------------------------------------------------------*/
+type BottomSheetFooterProps = PropsWithChildren<ComponentProps<'div'>>;
+
+function BottomSheetFooter({ className, children, ...props }: BottomSheetFooterProps) {
+  return (
+    <div
+      data-slot="bottom-sheet-footer"
+      className={cn('flex shrink-0 flex-col gap-2 px-4 pt-2 pb-4', className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+BottomSheetFooter.displayName = 'BottomSheet.Footer';
+
 const BottomSheet = Object.assign(BottomSheetRoot, {
   Root: BottomSheetRoot,
   Header: BottomSheetHeader,
   Content: BottomSheetContent,
+  Footer: BottomSheetFooter,
 });
 
 BottomSheet.displayName = 'BottomSheet';

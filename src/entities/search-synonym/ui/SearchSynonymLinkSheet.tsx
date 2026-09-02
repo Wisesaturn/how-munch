@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 
 import { Plus, X } from 'lucide-react';
 
-import { BottomSheet, Button, CTAButton, InputGroup, Toast } from '@/commons/ui';
+import { BottomSheet, Button, CTAAction, InputGroup, Toast } from '@/commons/ui';
 
 import { useLinkSearchSynonymMutation } from '../api/mutations';
 
@@ -78,7 +78,7 @@ export function SearchSynonymLinkSheet({
   return (
     <BottomSheet open={open} onClose={closeSheet}>
       <BottomSheet.Header heading="다른 이름으로 연결하기" />
-      <BottomSheet.Content className="flex flex-col gap-4 pb-6">
+      <BottomSheet.Content className="flex flex-col gap-4">
         <p className="text-sm text-gray-500">
           <span className="font-medium text-gray-900">{baseTerm}</span>
           (으)로 검색했을 때 함께 찾을 이름을 추가해 주세요.
@@ -109,21 +109,21 @@ export function SearchSynonymLinkSheet({
           </InputGroup.Addon>
         </InputGroup>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex h-8 items-center rounded-full border border-emerald-600 bg-emerald-600 px-3 text-sm font-medium text-white">
             {baseTerm}
           </span>
           {terms.map((term) => (
             <span
               key={term}
-              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600"
+              className="inline-flex h-8 items-center gap-0.5 rounded-full border border-gray-200 bg-white pr-1.5 pl-3 text-sm font-medium text-gray-600"
             >
               {term}
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
-                className="size-4 text-gray-400"
+                size="icon-xs"
+                className="size-5 rounded-full bg-transparent text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                 onClick={() => removeTerm(term)}
                 aria-label={`${term} 제거`}
               >
@@ -132,15 +132,17 @@ export function SearchSynonymLinkSheet({
             </span>
           ))}
         </div>
+      </BottomSheet.Content>
 
-        <CTAButton
+      <BottomSheet.Footer>
+        <CTAAction
           type="button"
           onClick={submitLink}
           disabled={terms.length === 0 || linkMutation.isPending}
         >
           연결하기
-        </CTAButton>
-      </BottomSheet.Content>
+        </CTAAction>
+      </BottomSheet.Footer>
     </BottomSheet>
   );
 }
