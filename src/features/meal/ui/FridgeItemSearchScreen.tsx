@@ -119,7 +119,7 @@ export function FridgeItemSearchScreen({
         {/* 직접 일치 */}
         {exact.length > 0 && <ul className="divide-y divide-gray-100">{exact.map(renderItem)}</ul>}
 
-        {/* 유사어으로 찾은 결과 — 경계를 드러내야 잘못 고르는 사고를 막는다 */}
+        {/* 유사어로 찾은 결과 — 경계를 드러내야 잘못 고르는 사고를 막는다 */}
         {similar.length > 0 && (
           <>
             <p className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">비슷한 이름</p>

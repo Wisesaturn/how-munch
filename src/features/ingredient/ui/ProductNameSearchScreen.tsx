@@ -151,7 +151,7 @@ export function ProductNameSearchScreen({
           <ul className="divide-y divide-gray-100">{exact.map(renderSuggestion)}</ul>
         )}
 
-        {/* 유사어으로 찾은 결과 — 같은 물건을 같은 이름으로 등록하도록 유도한다 */}
+        {/* 유사어로 찾은 결과 — 같은 물건을 같은 이름으로 등록하도록 유도한다 */}
         {similar.length > 0 && (
           <>
             <p className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">비슷한 이름</p>

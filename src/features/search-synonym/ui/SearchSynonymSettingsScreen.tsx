@@ -144,7 +144,7 @@ export function SearchSynonymSettingsScreen({ onClose }: SearchSynonymSettingsSc
         title="기본값으로 되돌릴까요?"
         description="직접 추가한 유사어가 모두 삭제되고 기본 상태로 돌아갑니다."
         confirmLabel="복원"
-        confirmDisabled={resetMutation.isPending}
+        pending={resetMutation.isPending}
         onConfirm={resetToDefault}
       />
     </AppScreen>
