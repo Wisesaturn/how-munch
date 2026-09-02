@@ -4,7 +4,8 @@
 -- 1. consumption_mode 컬럼을 추가하고 참조 품목의 unit으로 백필합니다('count' → quantity, 그 외 → toggle).
 -- 2. toggle 행에 남아 있는 amount를 NULL로 정리합니다.
 --    실제 차감량은 meal_batch_usages가 계속 보관하므로 정보 손실은 없습니다.
--- 3. consumption_mode를 NOT NULL로 승격하고 태그드 유니온 CHECK 제약을 겁니다.
+-- 3. 모드와 어긋나는 행을 정규화한 뒤 consumption_mode/usage_status를 NOT NULL로 승격하고
+--    태그드 유니온 CHECK 제약을 겁니다.
 -- 4. BEFORE INSERT/UPDATE 트리거로 consumption_mode를 항상 단위로부터 파생시킵니다.
 
 -- Step 1: 컬럼 추가 + 백필
@@ -28,9 +29,28 @@ UPDATE public.dish_ingredients
 SET usage_status = 'used'
 WHERE usage_status IS NULL;
 
+-- quantity 행은 amount가 반드시 있어야 한다.
+-- 080 이전 구현은 요청 JSON에 usage_status가 있으면 개 품목에도 amount 없이 기록할 수 있었다.
+-- 그런 행이 남아 있으면 아래 CHECK 추가에서 마이그레이션 전체가 중단되므로 먼저 정규화한다.
+UPDATE public.dish_ingredients
+SET amount = 0
+WHERE consumption_mode = 'quantity'
+  AND amount IS NULL;
+
+-- quantity 행의 usage_status는 'used' 하나뿐이다(개 품목은 소진 상태를 쓰지 않는다).
+UPDATE public.dish_ingredients
+SET usage_status = 'used'
+WHERE consumption_mode = 'quantity'
+  AND usage_status IS DISTINCT FROM 'used';
+
 -- Step 3: 제약
 ALTER TABLE public.dish_ingredients
   ALTER COLUMN consumption_mode SET NOT NULL;
+
+-- usage_status는 두 모드 모두에서 값이 있어야 한다.
+-- NOT NULL이 아니면 CHECK의 IN 비교가 NULL로 평가돼 제약을 그냥 통과한다.
+ALTER TABLE public.dish_ingredients
+  ALTER COLUMN usage_status SET NOT NULL;
 
 ALTER TABLE public.dish_ingredients
   DROP CONSTRAINT IF EXISTS dish_ingredients_consumption_shape_check;

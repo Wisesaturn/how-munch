@@ -7,6 +7,8 @@
 -- 2. fridge_items.unit을 조회해 'count'면 amount 기반, 그 외에는 usage_status 기반으로 기록합니다.
 --    이로써 무게 품목에 amount가 실려 개수처럼 차감되던 경로도 함께 막힙니다.
 -- 3. 개수 차감 집계에 consumption_mode = 'quantity' 조건을 명시합니다.
+-- 4. 요청 형태와 실제 단위가 어긋나면 재료를 조용히 버리지 않고
+--    MEAL_INGREDIENT_UNIT_MISMATCH 예외로 알립니다.
 
 create or replace function public.upsert_meal_with_usage(
   p_household_id uuid,
@@ -119,6 +121,15 @@ begin
 
         if v_fridge_unit = 'count' then
           -- 개 품목: amount 기반 처리 (usage_status는 항상 'used')
+          -- 요청이 무게 품목 형태(usage_status만 있고 amount 없음)로 왔다면
+          -- 클라이언트가 보고 있는 단위가 실제와 다르다. 조용히 버리면 재료가 사라진 채 저장된다.
+          if v_amount is null and coalesce(v_usage_status, '') in ('used', 'depleted') then
+            raise exception using
+              errcode = 'M0004',
+              message = '재료 정보가 변경되었습니다. 새로고침한 뒤 다시 저장해 주세요.',
+              hint = 'MEAL_INGREDIENT_UNIT_MISMATCH';
+          end if;
+
           if coalesce(v_amount, 0) <= 0 then
             continue;
           end if;
@@ -129,7 +140,15 @@ begin
         end if;
 
         -- 무게·부피 품목: usage_status 기반 처리 (amount 없음)
-        if v_usage_status not in ('used', 'depleted') then
+        if v_usage_status is null and coalesce(v_amount, 0) > 0 then
+          raise exception using
+            errcode = 'M0004',
+            message = '재료 정보가 변경되었습니다. 새로고침한 뒤 다시 저장해 주세요.',
+            hint = 'MEAL_INGREDIENT_UNIT_MISMATCH';
+        end if;
+
+        -- coalesce로 NULL을 걸러낸다. NULL not in (...)은 NULL이라 분기가 성립하지 않는다.
+        if coalesce(v_usage_status, '') not in ('used', 'depleted') then
           continue;
         end if;
 

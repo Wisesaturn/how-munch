@@ -1,5 +1,5 @@
 -- Function: public.create_fridge_item_with_batch
--- Source: supabase/migrations/060_add_created_by_columns.sql
+-- Source: supabase/migrations/077_rename_grocery_item_in_place_when_exclusive.sql
 -- 역할: 냉장고 아이템과 첫 배치를 동시에 생성합니다.
 -- 동작:
 -- 1. category_id를 정규화하고 item을 생성합니다.
@@ -42,6 +42,26 @@ begin
   end if;
 
   v_category_id := public.normalize_ingredient_category_id(p_household_id, p_category_id);
+
+  -- 유니크 인덱스(uq_fridge_items_identity)가 raw 23505로 터지지 않도록 먼저 검사한다.
+  -- 소분 품목은 인덱스 대상이 아니므로 검사에서도 제외한다.
+  if not coalesce(p_is_subdivided, false) and exists (
+    select 1
+    from public.fridge_items f
+    where f.household_id = p_household_id
+      and f.deleted_at is null
+      and not f.is_subdivided
+      and lower(btrim(f.name)) = lower(btrim(p_name))
+      and coalesce(nullif(lower(btrim(f.brand)), ''), '')
+        = coalesce(nullif(lower(btrim(p_brand)), ''), '')
+      and f.unit = coalesce(p_unit, 'count')
+      and f.category_id = v_category_id
+  ) then
+    raise exception using
+      errcode = 'F0007',
+      message = '같은 이름·브랜드·단위·카테고리의 재료가 이미 있습니다.',
+      hint = 'FRIDGE_ITEM_DUPLICATE_IDENTITY';
+  end if;
 
   insert into public.fridge_items (
     household_id,
