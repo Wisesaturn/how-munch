@@ -65,7 +65,7 @@ describe('matchesSearchText — 조합 중간 상태는 직접 일치가 아니�
   });
 });
 
-describe('matchesComposingText — 조합 중간 상태 (비슷한 이름 후보)', () => {
+describe('matchesComposingText — 조합 중간 상태 (직접 일치에서 내려보낼 후보)', () => {
   it('타이핑 도중의 조합 상태를 잡는다', () => {
     assert.equal(matchesComposingText('계란', '곌'), true);
     assert.equal(matchesComposingText('계란', '계라'), true);

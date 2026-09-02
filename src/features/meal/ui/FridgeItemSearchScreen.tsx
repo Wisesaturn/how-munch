@@ -122,7 +122,7 @@ export function FridgeItemSearchScreen({
         {/* 유사어로 찾은 결과 — 경계를 드러내야 잘못 고르는 사고를 막는다 */}
         {similar.length > 0 && (
           <>
-            <p className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">비슷한 이름</p>
+            <p className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">유사어 매칭</p>
             <ul className="divide-y divide-gray-100">{similar.map(renderItem)}</ul>
           </>
         )}
