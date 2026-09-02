@@ -1,6 +1,16 @@
 /** 재료 수량 단위 */
 export type IngredientUnit = 'count' | 'g' | 'kg' | 'ml' | 'l';
 
+const INGREDIENT_UNITS: readonly IngredientUnit[] = ['count', 'g', 'kg', 'ml', 'l'];
+
+/**
+ * @description 임의의 값이 유효한 IngredientUnit인지 검사합니다.
+ * AI 응답처럼 외부에서 들어온 unit 값을 신뢰하기 전에 좁히는 용도로 사용합니다.
+ */
+export function isIngredientUnit(value: unknown): value is IngredientUnit {
+  return typeof value === 'string' && (INGREDIENT_UNITS as readonly string[]).includes(value);
+}
+
 /**
  * @description 무게 단위(g, kg)인지 확인합니다.
  */
@@ -145,40 +155,45 @@ export function validateAmountPrecisionByUnit(value: number, unit: IngredientUni
   return Number.isInteger(value);
 }
 
+/** 상품 규격 표기(spec)의 종류 — 개수형 / 용량·중량형 / 표기 없음 */
+export type ProductSpecKind = 'count' | 'measure' | 'none';
+
+/** 상품 규격 표기 파싱 결과 */
+export interface ProductSpec {
+  kind: ProductSpecKind;
+  /** 표기에서 읽어낸 수치. kind가 'none'이면 0 */
+  amount: number;
+  /** 표기가 가리키는 단위. kind가 'none'이면 'count' */
+  unit: IngredientUnit;
+}
+
 /**
- * @description 상품명에서 개수/용량 표기를 추출해 count와 unit을 계산합니다.
- * 우선순위는 개수 표기(N개·N개입·N팩 등) > 용량/중량 표기(g/kg/ml/l) > 기본(개)입니다.
- * 개수 표기가 있으면 `{ count: 개수 × receiptCount, unit: 'count' }`,
- * 없고 용량 표기가 있으면 `{ count: 용량숫자 × receiptCount, unit: 해당 단위 }`,
- * 둘 다 없으면 `{ count: receiptCount, unit: 'count' }`를 반환합니다.
- * 대소문자를 무시하고 각 표기의 첫 번째 매칭만 사용합니다.
- * (예: '우동면 5개입 1.15kg' × 1 → `{ count: 5, unit: 'count' }`, '삼겹살 500g' × 1 → `{ count: 500, unit: 'g' }`)
+ * @description 상품 규격 표기(예: '5개입', '500g', '1L')를 파싱해 종류·수치·단위를 반환합니다.
+ * 개수 표기(N개·N개입·N팩·N입)는 kind 'count', 용량/중량 표기(g·kg·ml·l)는 kind 'measure',
+ * 어느 쪽도 아니거나 빈 문자열이면 kind 'none'입니다.
+ * 개수 표기를 용량 표기보다 먼저 검사하고, 대소문자를 무시하며 각 표기의 첫 번째 매칭만 사용합니다.
+ * (예: '5개입' → `{ kind: 'count', amount: 5, unit: 'count' }`,
+ *  '500g' → `{ kind: 'measure', amount: 500, unit: 'g' }`)
  */
-export function parseProductNameUnit(
-  name: string,
-  receiptCount: number,
-): { count: number; unit: IngredientUnit } {
-  const safeCount = Number.isFinite(receiptCount) && receiptCount > 0 ? receiptCount : 1;
-  const fallback = { count: safeCount, unit: 'count' as IngredientUnit };
+export function parseProductSpec(spec: string): ProductSpec {
+  const none: ProductSpec = { kind: 'none', amount: 0, unit: 'count' };
+  if (!spec) return none;
 
   // 1) 개수 표기 우선 (예: '5개입', '3팩', '2입')
-  const countMatch = name.match(/(\d+)\s*(개입|개|팩|입)/);
+  const countMatch = spec.match(/(\d+)\s*(개입|개|팩|입)/);
   if (countMatch) {
-    const quantity = Number.parseInt(countMatch[1], 10);
-    if (Number.isFinite(quantity) && quantity > 0) {
-      return { count: quantity * safeCount, unit: 'count' };
-    }
+    const amount = Number.parseInt(countMatch[1], 10);
+    if (Number.isFinite(amount) && amount > 0) return { kind: 'count', amount, unit: 'count' };
   }
 
   // 2) 용량/중량 표기 (예: '1L', '500g')
-  const volumeMatch = name.match(/(\d+(?:\.\d+)?)\s*(kg|g|ml|l)\b/i);
-  if (volumeMatch) {
-    const amount = Number.parseFloat(volumeMatch[1]);
+  const measureMatch = spec.match(/(\d+(?:\.\d+)?)\s*(kg|g|ml|l)\b/i);
+  if (measureMatch) {
+    const amount = Number.parseFloat(measureMatch[1]);
     if (Number.isFinite(amount) && amount > 0) {
-      const unit = volumeMatch[2].toLowerCase() as IngredientUnit;
-      return { count: normalizeAmountByUnit(amount * safeCount, unit), unit };
+      return { kind: 'measure', amount, unit: measureMatch[2].toLowerCase() as IngredientUnit };
     }
   }
 
-  return fallback;
+  return none;
 }
