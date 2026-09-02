@@ -90,6 +90,7 @@ begin
   from public.fridge_items f
   where f.household_id = v_ingredient.household_id
     and f.deleted_at is null
+    and not f.is_subdivided
     and lower(btrim(f.name)) = lower(btrim(v_ingredient.name))
     and coalesce(nullif(lower(btrim(f.brand)), ''), '')
       = coalesce(nullif(lower(btrim(v_ingredient.brand)), ''), '')
