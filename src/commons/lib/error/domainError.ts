@@ -11,6 +11,7 @@ const DOMAIN_ERROR_CODE = {
   FRIDGE_ITEM_NOT_FOUND: 'FRG_004',
   FRIDGE_BATCH_NOT_FOUND: 'FRG_005',
   FRIDGE_INVALID_QUANTITY: 'FRG_006',
+  FRIDGE_ITEM_DUPLICATE_IDENTITY: 'FRG_007',
 
   // GRC: 장보기(Grocery) 도메인
   GROCERY_IN_USE_IN_MEAL: 'GRC_001',
@@ -24,6 +25,7 @@ const DOMAIN_ERROR_CODE = {
   MEAL_STOCK_INSUFFICIENT: 'MEL_001',
   MEAL_NOT_FOUND: 'MEL_002',
   MEAL_DISH_NOT_FOUND: 'MEL_003',
+  MEAL_INGREDIENT_UNIT_MISMATCH: 'MEL_004',
 
   // ING: 재료(Ingredient) 도메인
   INGREDIENT_CATEGORY_OTHER_DELETE_NOT_ALLOWED: 'ING_001',
@@ -31,6 +33,7 @@ const DOMAIN_ERROR_CODE = {
   INGREDIENT_CATEGORY_ID_NOT_FOUND: 'ING_003',
   INGREDIENT_CATEGORY_REPLACEMENT_NOT_FOUND: 'ING_004',
   INGREDIENT_NOT_FOUND: 'ING_005',
+  INGREDIENT_UNIT_LOCKED_BY_MEAL: 'ING_006',
 
   // SBD: 소분(Subdivision) 도메인
   SUBDIVISION_INSUFFICIENT_STOCK: 'SBD_001',
@@ -65,6 +68,7 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   FRG_004: '냉장고 재료를 찾을 수 없습니다.',
   FRG_005: '재고 배치를 찾을 수 없습니다.',
   FRG_006: '유효하지 않은 수량입니다.',
+  FRG_007: '같은 이름·브랜드·단위·카테고리의 재료가 이미 있습니다.',
 
   // GRC
   GRC_001: '식단에 등록되어 있는 재료는 삭제할 수 없습니다.',
@@ -78,6 +82,7 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   MEL_001: '냉장고 재고가 부족합니다. 식단 재료 수량을 확인해 주세요.',
   MEL_002: '식단을 찾을 수 없습니다.',
   MEL_003: '메뉴를 찾을 수 없습니다.',
+  MEL_004: '재료 정보가 변경되었습니다. 새로고침한 뒤 다시 저장해 주세요.',
 
   // ING
   ING_001: '기본 카테고리(기타)는 삭제할 수 없습니다.',
@@ -85,6 +90,7 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   ING_003: '유효하지 않은 카테고리입니다.',
   ING_004: '대체할 기본 카테고리(기타)를 찾을 수 없습니다.',
   ING_005: '재료를 찾을 수 없습니다.',
+  ING_006: '식단에서 사용 중인 재료는 단위를 변경할 수 없습니다.',
 
   // SBD
   SBD_001: '소분할 재고가 부족합니다.',
@@ -103,6 +109,7 @@ const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
   F0004: 'FRIDGE_ITEM_NOT_FOUND',
   F0005: 'FRIDGE_BATCH_NOT_FOUND',
   F0006: 'FRIDGE_INVALID_QUANTITY',
+  F0007: 'FRIDGE_ITEM_DUPLICATE_IDENTITY',
   C0001: 'GROCERY_IN_USE_IN_MEAL',
   H0001: 'HOUSEHOLD_INVITE_INVALID_OR_EXPIRED',
   H0002: 'HOUSEHOLD_ALREADY_MEMBER',
@@ -110,11 +117,13 @@ const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
   M0001: 'MEAL_STOCK_INSUFFICIENT',
   M0002: 'MEAL_NOT_FOUND',
   M0003: 'MEAL_DISH_NOT_FOUND',
+  M0004: 'MEAL_INGREDIENT_UNIT_MISMATCH',
   I0001: 'INGREDIENT_CATEGORY_OTHER_DELETE_NOT_ALLOWED',
   I0002: 'INGREDIENT_CATEGORY_OTHER_NOT_FOUND',
   I0003: 'INGREDIENT_CATEGORY_ID_NOT_FOUND',
   I0004: 'INGREDIENT_CATEGORY_REPLACEMENT_NOT_FOUND',
   I0005: 'INGREDIENT_NOT_FOUND',
+  I0006: 'INGREDIENT_UNIT_LOCKED_BY_MEAL',
   S0001: 'SUBDIVISION_INSUFFICIENT_STOCK',
 };
 

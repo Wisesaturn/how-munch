@@ -7,6 +7,10 @@ import { withAuth } from '@/apps/route';
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseholdNotification';
+import { type Json } from '@/commons/model/types';
+
+/** 냉장고 품목 메타 수정에서 클라이언트가 보낼 수 있는 필드 */
+const FRIDGE_ITEM_EDITABLE_FIELDS = ['name', 'brand', 'category_id', 'unit', 'is_subdivided'];
 
 /** GET /api/fridge?householdId=&search= — 냉장고 재고 전체 조회 (배치 포함) */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
@@ -96,12 +100,19 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
     return apiResponse.BAD_REQUEST('CMN_002', 'id가 필요합니다.');
   }
 
-  const { data, error } = await supabase
-    .from('fridge_items')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
+  // 허용 필드만 통과시킨다.
+  // 실제 차단은 update_fridge_item_guarded RPC와 fridge_items의 UPDATE 권한 회수가 담당하며,
+  // 이 필터는 잘못된 필드를 빠르게 걸러 주는 1차 방어선이다.
+  const patch = Object.fromEntries(
+    Object.entries(updates).filter(
+      ([key, value]) => FRIDGE_ITEM_EDITABLE_FIELDS.includes(key) && value !== undefined,
+    ),
+  ) as Json;
+
+  const { data, error } = await supabase.rpc('update_fridge_item_guarded', {
+    p_fridge_item_id: id,
+    p_updates: patch,
+  });
 
   if (error) {
     const domainError = resolveDomainError(error);

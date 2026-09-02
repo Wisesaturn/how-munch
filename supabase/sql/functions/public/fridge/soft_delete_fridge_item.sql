@@ -1,9 +1,10 @@
 -- Function: public.soft_delete_fridge_item
--- Source: supabase/migrations/031_guard_fridge_soft_delete_when_used_in_meal.sql
+-- Source: supabase/migrations/076_fix_meal_usage_guards_to_dish_ingredients.sql
 -- 역할: 냉장고 아이템을 소프트 삭제하며 연관 배치 정리를 수행합니다.
 -- 동작:
--- 1. 권한과 식단 사용 여부를 검증합니다.
--- 2. 삭제 시각을 기록하고 연관 배치 정합성을 함께 맞춥니다.
+-- 1. 권한을 검증하고, dish_ingredients 기준으로 식단 사용 여부를 확인합니다.
+-- 2. 사용 중이면 FRIDGE_IN_USE_IN_MEAL 예외를 던집니다.
+-- 3. 연관 배치를 소프트 삭제하고 장보기 링크를 끊은 뒤 아이템을 소프트 삭제합니다.
 create or replace function public.soft_delete_fridge_item(p_fridge_item_id uuid)
 returns void
 language plpgsql
@@ -36,8 +37,8 @@ begin
 
   select exists (
     select 1
-    from public.meal_batch_usages mbu
-    where mbu.fridge_item_id = p_fridge_item_id
+    from public.dish_ingredients di
+    where di.fridge_item_id = p_fridge_item_id
   )
   into v_is_used_in_meal;
 

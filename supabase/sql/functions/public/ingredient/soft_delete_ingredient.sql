@@ -1,9 +1,10 @@
 -- Function: public.soft_delete_ingredient
--- Source: supabase/migrations/031_guard_fridge_soft_delete_when_used_in_meal.sql
+-- Source: supabase/migrations/076_fix_meal_usage_guards_to_dish_ingredients.sql
 -- 역할: 장보기 항목을 소프트 삭제합니다.
 -- 동작:
 -- 1. 권한/대상 존재를 검증합니다.
--- 2. deleted_at을 설정해 논리 삭제합니다.
+-- 2. 연결된 배치(없으면 아이템) 기준으로 dish_ingredients에 식단 사용 기록이 있는지 확인합니다.
+-- 3. 사용 중이면 GROCERY_IN_USE_IN_MEAL 예외를 던지고, 아니면 deleted_at을 설정합니다.
 create or replace function public.soft_delete_ingredient(p_ingredient_id uuid)
 returns void
 language plpgsql
@@ -38,12 +39,12 @@ begin
 
   if v_linked_fridge_batch_id is not null then
     select exists (
-      select 1 from public.meal_batch_usages mbu where mbu.batch_id = v_linked_fridge_batch_id
+      select 1 from public.dish_ingredients di where di.batch_id = v_linked_fridge_batch_id
     )
     into v_is_used_in_meal;
   elsif v_linked_fridge_item_id is not null then
     select exists (
-      select 1 from public.meal_batch_usages mbu where mbu.fridge_item_id = v_linked_fridge_item_id
+      select 1 from public.dish_ingredients di where di.fridge_item_id = v_linked_fridge_item_id
     )
     into v_is_used_in_meal;
   end if;

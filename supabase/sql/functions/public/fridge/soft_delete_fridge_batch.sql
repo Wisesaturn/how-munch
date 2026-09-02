@@ -1,9 +1,10 @@
 -- Function: public.soft_delete_fridge_batch
--- Source: supabase/migrations/031_guard_fridge_soft_delete_when_used_in_meal.sql
+-- Source: supabase/migrations/076_fix_meal_usage_guards_to_dish_ingredients.sql
 -- 역할: 냉장고 배치를 소프트 삭제합니다.
 -- 동작:
--- 1. 식단 사용 중 배치인지 검증합니다.
--- 2. 삭제 처리 후 아이템 총량 동기화를 수행합니다.
+-- 1. 권한을 검증하고, dish_ingredients 기준으로 해당 배치의 식단 사용 여부를 확인합니다.
+-- 2. 배치를 소프트 삭제하고 아이템 총량을 동기화합니다.
+-- 3. 마지막 배치였고 식단이 그 아이템을 참조하지 않을 때만 아이템까지 소프트 삭제합니다.
 create or replace function public.soft_delete_fridge_batch(p_batch_id uuid)
 returns void
 language plpgsql
@@ -39,8 +40,8 @@ begin
 
   select exists (
     select 1
-    from public.meal_batch_usages mbu
-    where mbu.batch_id = p_batch_id
+    from public.dish_ingredients di
+    where di.batch_id = p_batch_id
   )
   into v_is_used_in_meal;
 
@@ -62,11 +63,18 @@ begin
 
   perform public.refresh_fridge_item_total_count(v_fridge_item_id);
 
+  -- 마지막 배치였다면 품목도 정리한다.
+  -- 다만 식단이 아직 이 품목을 참조하고 있으면(batch_id가 NULL인 과거 행 포함)
+  -- 품목을 남겨 식단의 재료 이름이 빈 값이 되지 않게 한다.
   if not exists (
     select 1
     from public.fridge_item_batches b
     where b.fridge_item_id = v_fridge_item_id
       and b.deleted_at is null
+  ) and not exists (
+    select 1
+    from public.dish_ingredients di
+    where di.fridge_item_id = v_fridge_item_id
   ) then
     update public.ingredients
     set linked_fridge_item_id = null,

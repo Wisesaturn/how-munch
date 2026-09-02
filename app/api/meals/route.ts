@@ -2,7 +2,7 @@ import { type NextRequest } from 'next/server';
 
 import { josa } from 'es-hangul';
 
-import { withAuth } from '@/apps/route';
+import { withAuth, type AuthContext } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
@@ -90,8 +90,77 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
     .order('type', { ascending: true });
 
   if (mealsError) return apiResponse.INTERNAL_ERROR();
-  return apiResponse.OK(meals ?? []);
+
+  return apiResponse.OK(await withResolvedOrphanIngredients(supabase, meals ?? []));
 });
+
+/** 식단 조회 결과에서 조인이 비어 있는 재료 행 */
+interface MealQueryIngredient {
+  fridge_item_id: string;
+  fridge_items: { unit: string; name: string; category_id: string } | null;
+  is_orphaned?: boolean;
+}
+
+interface MealQueryDish {
+  ingredients: MealQueryIngredient[] | null;
+}
+
+interface MealQueryRow {
+  dishes: MealQueryDish[] | null;
+}
+
+/**
+ * 소프트 삭제된 냉장고 품목을 참조하는 식단 재료의 이름을 보충한다.
+ *
+ * fridge_select RLS가 deleted_at is null로 막고 있어 해당 행은 조인 결과가 null이 되고,
+ * 화면에는 재료 이름이 빈 값으로 나타난다. 조인이 비어 있는 행이 있을 때만
+ * resolve_orphan_ingredient_names RPC를 호출해 이름을 채우고 is_orphaned로 표시한다.
+ */
+async function withResolvedOrphanIngredients<T extends MealQueryRow>(
+  supabase: AuthContext['supabase'],
+  meals: T[],
+): Promise<T[]> {
+  const orphanIds = buildOrphanIds(meals);
+  if (orphanIds.length === 0) return meals;
+
+  const { data, error } = await supabase.rpc('resolve_orphan_ingredient_names', {
+    p_fridge_item_ids: orphanIds,
+  });
+  if (error || !data) return meals;
+
+  const resolved = new Map(data.map((row) => [row.id, row]));
+
+  for (const meal of meals) {
+    for (const dish of meal.dishes ?? []) {
+      for (const ingredient of dish.ingredients ?? []) {
+        if (ingredient.fridge_items) continue;
+        const match = resolved.get(ingredient.fridge_item_id);
+        if (!match) continue;
+        ingredient.fridge_items = {
+          unit: match.unit,
+          name: match.name,
+          category_id: match.category_id,
+        };
+        ingredient.is_orphaned = true;
+      }
+    }
+  }
+
+  return meals;
+}
+
+/** 조인이 비어 있는 재료 행의 fridge_item_id를 중복 없이 모은다 */
+function buildOrphanIds(meals: MealQueryRow[]): string[] {
+  const ids = new Set<string>();
+  for (const meal of meals) {
+    for (const dish of meal.dishes ?? []) {
+      for (const ingredient of dish.ingredients ?? []) {
+        if (!ingredient.fridge_items) ids.add(ingredient.fridge_item_id);
+      }
+    }
+  }
+  return [...ids];
+}
 
 const MEAL_TYPE_LABEL: Record<MealType, string> = {
   breakfast: '아침',

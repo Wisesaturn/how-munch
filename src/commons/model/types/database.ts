@@ -358,7 +358,15 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'meals_household_id_fkey';
+            columns: ['household_id'];
+            isOneToOne: false;
+            referencedRelation: 'households';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       dishes: {
         Row: {
@@ -385,31 +393,70 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'dishes_meal_id_fkey';
+            columns: ['meal_id'];
+            isOneToOne: false;
+            referencedRelation: 'meals';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       dish_ingredients: {
         Row: {
           id: string;
           dish_id: string;
           fridge_item_id: string;
-          amount: number;
+          batch_id: string | null;
+          amount: number | null;
+          usage_status: 'used' | 'depleted';
+          consumption_mode: 'quantity' | 'toggle';
           created_at: string;
         };
         Insert: {
           id?: string;
           dish_id: string;
           fridge_item_id: string;
-          amount?: number;
+          batch_id?: string | null;
+          amount?: number | null;
+          usage_status?: 'used' | 'depleted';
+          consumption_mode?: 'quantity' | 'toggle';
           created_at?: string;
         };
         Update: {
           id?: string;
           dish_id?: string;
           fridge_item_id?: string;
-          amount?: number;
+          batch_id?: string | null;
+          amount?: number | null;
+          usage_status?: 'used' | 'depleted';
+          consumption_mode?: 'quantity' | 'toggle';
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'dish_ingredients_dish_id_fkey';
+            columns: ['dish_id'];
+            isOneToOne: false;
+            referencedRelation: 'dishes';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'dish_ingredients_fridge_item_id_fkey';
+            columns: ['fridge_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'fridge_items';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'dish_ingredients_batch_id_fkey';
+            columns: ['batch_id'];
+            isOneToOne: false;
+            referencedRelation: 'fridge_item_batches';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       meal_batch_usages: {
         Row: {
@@ -789,6 +836,34 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
+      };
+      update_fridge_item_guarded: {
+        Args: { p_fridge_item_id: string; p_updates?: Json };
+        Returns: {
+          id: string;
+          household_id: string;
+          name: string;
+          brand: string | null;
+          total_count: number;
+          max_count: number;
+          unit: 'count' | 'g' | 'kg' | 'ml' | 'l';
+          is_subdivided: boolean;
+          category_id: string;
+          from_grocery: boolean;
+          created_by: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
+      resolve_orphan_ingredient_names: {
+        Args: { p_fridge_item_ids: string[] };
+        Returns: {
+          id: string;
+          name: string;
+          unit: 'count' | 'g' | 'kg' | 'ml' | 'l';
+          category_id: string;
+        }[];
       };
       update_fridge_batch_guarded: {
         Args: { p_batch_id: string; p_updates?: Json };
