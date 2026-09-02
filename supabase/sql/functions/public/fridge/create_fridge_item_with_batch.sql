@@ -1,5 +1,5 @@
 -- Function: public.create_fridge_item_with_batch
--- Source: supabase/migrations/077_rename_grocery_item_in_place_when_exclusive.sql
+-- Source: supabase/migrations/081_fix_review_findings.sql
 -- 역할: 냉장고 아이템과 첫 배치를 동시에 생성합니다.
 -- 동작:
 -- 1. category_id를 정규화하고 item을 생성합니다.
@@ -42,6 +42,18 @@ begin
   end if;
 
   v_category_id := public.normalize_ingredient_category_id(p_household_id, p_category_id);
+
+  -- 중복 검사와 INSERT 사이의 경합을 막기 위해 정체성 튜플을 먼저 잠근다.
+  -- 락이 없으면 두 요청이 모두 "중복 없음"을 보고 각자 INSERT해 raw 23505가 난다.
+  perform pg_advisory_xact_lock(
+    hashtext(
+      p_household_id::text
+      || ':' || lower(btrim(p_name))
+      || ':' || coalesce(nullif(lower(btrim(p_brand)), ''), '')
+      || ':' || coalesce(p_unit, 'count')
+      || ':' || coalesce(v_category_id::text, '')
+    )
+  );
 
   -- 유니크 인덱스(uq_fridge_items_identity)가 raw 23505로 터지지 않도록 먼저 검사한다.
   -- 소분 품목은 인덱스 대상이 아니므로 검사에서도 제외한다.

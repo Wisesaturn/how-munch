@@ -1,5 +1,5 @@
 -- Function: public.upsert_meal_with_usage
--- Source: supabase/migrations/080_resolve_meal_usage_mode_from_fridge_unit.sql
+-- Source: supabase/migrations/081_fix_review_findings.sql
 -- 역할: 식단 저장 시 dish/ingredient와 배치 사용량 차감을 원자적으로 처리합니다.
 -- 동작:
 -- 1. 기존 meal usage를 롤백한 뒤 새 dishes/ingredients를 재저장합니다.
@@ -108,13 +108,35 @@ begin
         -- 기록 방식은 클라이언트가 보낸 unit이 아니라 DB의 실제 단위로 결정한다.
         -- 클라이언트 캐시가 낡아 단위가 어긋나면 amount/usage_status 조합이 깨져
         -- dish_ingredients의 CHECK 제약에 걸리기 때문이다.
+        --
+        -- 같은 조회로 가구 소속도 검증한다. 이 함수는 security definer라 RLS를 우회하므로,
+        -- 요청 JSON에 실린 재료 ID가 이 가구 것인지 여기서 확인하지 않으면
+        -- 다른 가구의 배치를 차감하거나 0으로 만들 수 있다.
         select fi.unit
           into v_fridge_unit
         from public.fridge_items fi
-        where fi.id = v_fridge_item_id;
+        where fi.id = v_fridge_item_id
+          and fi.household_id = p_household_id;
 
         if v_fridge_unit is null then
-          continue;
+          raise exception using
+            errcode = 'A0002',
+            message = '권한이 없습니다.',
+            hint = 'COMMON_PERMISSION_DENIED';
+        end if;
+
+        -- 배치도 같은 품목에 속해야 한다.
+        -- 자기 가구 품목 ID와 남의 배치 ID를 섞어 보내는 경로를 막는다.
+        if v_batch_id is not null and not exists (
+          select 1
+          from public.fridge_item_batches b
+          where b.id = v_batch_id
+            and b.fridge_item_id = v_fridge_item_id
+        ) then
+          raise exception using
+            errcode = 'A0002',
+            message = '권한이 없습니다.',
+            hint = 'COMMON_PERMISSION_DENIED';
         end if;
 
         if v_fridge_unit = 'count' then

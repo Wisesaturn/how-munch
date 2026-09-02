@@ -85,6 +85,19 @@ begin
     v_expiry_date := v_ingredient.date + v_expiry_days;
   end if;
 
+  -- 같은 정체성(가구·이름·브랜드·단위·카테고리)에 대한 동시 생성을 직렬화한다.
+  -- 매칭 대상이 없을 때는 select ... for update가 아무 행도 잠그지 못해
+  -- 동시 요청이 각각 새 품목을 만들고 uq_fridge_items_identity에서 raw 23505가 난다.
+  perform pg_advisory_xact_lock(
+    hashtext(
+      v_ingredient.household_id::text
+      || ':' || lower(btrim(v_ingredient.name))
+      || ':' || coalesce(nullif(lower(btrim(v_ingredient.brand)), ''), '')
+      || ':' || v_ingredient.unit
+      || ':' || coalesce(v_ingredient.category_id::text, '')
+    )
+  );
+
   select f.id
     into v_fridge_item_id
   from public.fridge_items f

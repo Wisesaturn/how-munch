@@ -1,5 +1,5 @@
 -- Function: public.update_ingredient_with_fridge
--- Source: supabase/migrations/077_rename_grocery_item_in_place_when_exclusive.sql
+-- Source: supabase/migrations/081_fix_review_findings.sql
 -- 역할: 장보기 항목 수정 시 연결 냉장고 재고를 정합성 있게 동기화합니다.
 -- 동작:
 -- 1. ingredient를 갱신하고, 식단이 참조 중이면 단위 변경을 막습니다.
@@ -20,7 +20,6 @@ declare
   v_household_id uuid;
   v_previous_fridge_item_id uuid;
   v_previous_batch_id uuid;
-  v_previous_unit text;
   v_target_fridge_item_id uuid;
   v_batch_id uuid;
   v_used_amount numeric := 0;
@@ -44,7 +43,6 @@ begin
   v_household_id := v_ingredient.household_id;
   v_previous_fridge_item_id := v_ingredient.linked_fridge_item_id;
   v_previous_batch_id := v_ingredient.linked_fridge_batch_id;
-  v_previous_unit := v_ingredient.unit;
 
   if not public.is_household_member(v_household_id) then
     raise exception using
@@ -92,9 +90,15 @@ begin
 
   -- 단위 변경 가드:
   -- 단위가 바뀌면 식단에 기록된 사용량/소진 상태의 의미가 통째로 달라진다.
-  -- 식단이 이미 이 재고를 참조하고 있으면 단위 변경을 막는다.
-  if v_ingredient.unit is distinct from v_previous_unit
-    and v_previous_fridge_item_id is not null
+  -- 비교 대상은 장보기 행의 이전 단위가 아니라 "냉장고 품목의 현재 단위"다.
+  -- 분기 (B)가 덮어쓰는 대상이 품목이므로, 장보기 단위가 그대로여도
+  -- 품목 단위가 다르면 식단이 참조하는 값이 바뀐다.
+  if v_previous_fridge_item_id is not null
+    and v_ingredient.unit is distinct from (
+      select f.unit
+      from public.fridge_items f
+      where f.id = v_previous_fridge_item_id
+    )
     and exists (
       select 1
       from public.dish_ingredients di

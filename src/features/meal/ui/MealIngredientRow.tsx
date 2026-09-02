@@ -79,7 +79,10 @@ function MealIngredientRow({
   /* Selection Constants                                                         */
   /* -------------------------------------------------------------------------- */
   const selectedIngredient = fridgeItems.find((item) => item.id === ingredient.fridge_item_id);
-  const selectedUnit = selectedIngredient?.unit;
+  // 참조 품목이 삭제된 행은 fridgeItems에서 찾을 수 없다.
+  // 이때도 단위는 식단 조회에서 복원돼 ingredient.unit에 들어오므로 그쪽으로 폴백한다.
+  // 폴백이 없으면 무게 재료에 사용/소진 체크박스 대신 비활성 개수 슬라이더가 렌더된다.
+  const selectedUnit = selectedIngredient?.unit ?? ingredient.unit;
   const selectableBatches =
     selectedIngredient?.fridge_item_batches.filter((batch) => Number(batch.quantity) > 0) ?? [];
   const hasMultipleBatches = selectableBatches.length >= 2;
