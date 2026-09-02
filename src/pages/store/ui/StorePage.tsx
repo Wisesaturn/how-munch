@@ -51,7 +51,11 @@ export function StorePage({ householdId, userId }: StorePageProps) {
   }
 
   function openPromptIngredientAdd() {
-    stackFlowActions.push('PromptIngredientAddActivity', { householdId, userId });
+    stackFlowActions.push('PromptIngredientAddActivity', {
+      householdId,
+      userId,
+      suggestions: ingredients.map((i) => i.name),
+    });
   }
 
   const openIngredientEditSheet = (ingredient: Ingredient) => {

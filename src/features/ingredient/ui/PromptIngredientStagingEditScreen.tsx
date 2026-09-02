@@ -18,12 +18,18 @@ interface PromptIngredientStagingEditScreenProps {
   onClose: () => void;
   item: StagedItem;
   householdId: string;
+  /** 품목명 검색 Screen 진입 핸들러 — 선택값은 form name 필드에 반영된다 */
+  onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
+  /** 브랜드 검색 Screen 진입 핸들러 — 선택값은 form brand 필드에 반영된다 */
+  onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
 }
 
 export function PromptIngredientStagingEditScreen({
   onClose,
   item,
   householdId,
+  onOpenProductNameSearch,
+  onOpenBrandSearch,
 }: PromptIngredientStagingEditScreenProps) {
   const { data: storeNames } = useStoreNamesQuery(householdId);
   const formId = `ai-staging-edit-form-${item.id}`;
@@ -83,6 +89,8 @@ export function PromptIngredientStagingEditScreen({
           }}
           storeNames={storeNames}
           onSubmit={handleSubmit}
+          onOpenProductNameSearch={onOpenProductNameSearch}
+          onOpenBrandSearch={onOpenBrandSearch}
         />
       </div>
       <CTAButton type="submit" form={formId} color="confirm" variant="filled" hideOnScroll>

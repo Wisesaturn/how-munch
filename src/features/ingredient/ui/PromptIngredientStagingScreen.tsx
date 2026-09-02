@@ -200,6 +200,7 @@ export function PromptIngredientStagingScreen({
               >
                 <IngredientItem
                   name={item.name}
+                  brand={item.brand}
                   price={item.price}
                   count={item.count}
                   unit={item.unit}

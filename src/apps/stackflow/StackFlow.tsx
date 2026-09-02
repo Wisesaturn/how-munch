@@ -371,6 +371,7 @@ function PromptIngredientAddActivity({
   params: {
     householdId: string;
     userId: string;
+    suggestions?: string[];
   };
 }) {
   const { pop, push } = useActions();
@@ -379,6 +380,7 @@ function PromptIngredientAddActivity({
     push('PromptIngredientStagingActivity', {
       householdId: params.householdId,
       userId: params.userId,
+      suggestions: params.suggestions ?? [],
     });
   }
 
@@ -397,6 +399,7 @@ function PromptIngredientStagingActivity({
   params: {
     householdId: string;
     userId: string;
+    suggestions?: string[];
   };
 }) {
   const { pop, push } = useActions();
@@ -406,6 +409,7 @@ function PromptIngredientStagingActivity({
       householdId: params.householdId,
       userId: params.userId,
       item,
+      suggestions: params.suggestions ?? [],
     });
   }
 
@@ -427,15 +431,37 @@ function PromptIngredientStagingEditActivity({
     householdId: string;
     userId: string;
     item: StagedItem;
+    suggestions?: string[];
   };
 }) {
-  const { pop } = useActions();
+  const { pop, push } = useActions();
+  const { data: brandNames } = useIngredientBrandNamesQuery(params.householdId);
+
+  function openProductNameSearch(currentName: string, onSelect: (name: string) => void) {
+    setPendingProductNameCallback(onSelect);
+    push('ProductNameSearchActivity', {
+      fieldLabel: '품목명',
+      suggestions: params.suggestions ?? [],
+      currentName,
+    });
+  }
+
+  function openBrandSearch(currentBrand: string, onSelect: (brand: string) => void) {
+    setPendingProductNameCallback(onSelect);
+    push('ProductNameSearchActivity', {
+      fieldLabel: '브랜드',
+      suggestions: brandNames ?? [],
+      currentName: currentBrand,
+    });
+  }
 
   return (
     <PromptIngredientStagingEditScreen
       onClose={pop}
       item={params.item}
       householdId={params.householdId}
+      onOpenProductNameSearch={openProductNameSearch}
+      onOpenBrandSearch={openBrandSearch}
     />
   );
 }
