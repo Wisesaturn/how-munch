@@ -1,5 +1,5 @@
 -- ============================================================
--- 073~080 적용 검증 스크립트
+-- 073~081 적용 검증 스크립트
 -- ============================================================
 -- 사용법: Supabase SQL Editor에서 섹션 단위로 실행합니다.
 -- A~D는 읽기 전용입니다. E는 트랜잭션 안에서만 쓰고 ROLLBACK으로 되돌립니다.
@@ -130,7 +130,7 @@ where schemaname = 'public' and tablename = 'fridge_items' and cmd = 'UPDATE';
 
 
 /* ============================================================
- * D. 리뷰 지적 반영 여부 (081 적용 후 전부 true 여야 함)
+ * D. 리뷰 지적 반영 여부 (081 적용 후 전부 true)
  * ==========================================================*/
 
 -- D1. [P1] upsert_meal_with_usage가 가구 소속을 검증하는가
@@ -164,20 +164,17 @@ order by p.proname;
  * ============================================================
  * 실행법: 아래 begin; 부터 rollback; 까지 블록만 선택해 한 번에 실행하세요.
  *         Supabase SQL Editor는 RAISE NOTICE를 표시하지 않으므로
- *         판정 결과를 임시 테이블에 모아 마지막에 SELECT로 돌려줍니다.
+ *         판정 결과를 세션 임시 함수가 결과 집합으로 돌려줍니다.
+ *         pg_temp 함수라 세션 밖에서 보이지 않고 롤백 시 사라집니다.
  * 판정:   통과 열이 전부 true 여야 합니다.
  * ==========================================================*/
 
 begin;
 
-create temp table zz_verify_result (
-  순번 integer,
-  시나리오 text,
-  통과 boolean,
-  상세 text
-) on commit drop;
-
-do $$
+create function pg_temp.zz_run_verify()
+returns table (순번 integer, 시나리오 text, 통과 boolean, 상세 text)
+language plpgsql
+as $fn$
 declare
   v_household_id uuid;
   v_user_id uuid;
@@ -201,7 +198,7 @@ begin
   limit 1;
 
   if v_household_id is null then
-    insert into zz_verify_result values (0, '사전 조건', false, 'household_members가 비어 있어 테스트 불가');
+    return query select 0, '사전 조건'::text, false, 'household_members가 비어 있어 테스트 불가'::text;
     return;
   end if;
 
@@ -213,8 +210,8 @@ begin
   where household_id = v_household_id
   limit 1;
 
-  insert into zz_verify_result
-  values (0, '사전 조건', true, format('가구 %s / 사용자 %s', v_household_id, v_user_id));
+  return query select 0, '사전 조건'::text, true,
+    format('가구 %s / 사용자 %s', v_household_id, v_user_id);
 
   /* ---------- [1] 개 단위 — 제자리 이름 변경(분기 B) ---------- */
   v_expected_name := 'ZZ테스트메추리알' || v_suffix;
@@ -252,12 +249,10 @@ begin
   from public.fridge_items f
   where f.id = v_di_item_id and f.deleted_at is null;
 
-  insert into zz_verify_result values (
-    1, '개 단위 이름 변경 → 식단 반영',
+  return query select 1, '개 단위 이름 변경 → 식단 반영'::text,
     v_resolved_name is not distinct from v_expected_name,
     format('품목 유지=%s / 식단이 보는 이름=%s',
-           (v_item_id = v_item_id_after), coalesce(v_resolved_name, '<빈 값>'))
-  );
+           (v_item_id = v_item_id_after), coalesce(v_resolved_name, '<빈 값>'));
 
   /* ---------- [2] 무게 단위 사용 중 삭제 차단(구멍 4) ---------- */
   v_ing := public.add_ingredient_with_fridge(
@@ -290,11 +285,8 @@ begin
     v_err := sqlerrm;
   end;
 
-  insert into zz_verify_result values (
-    2, '무게 재료 사용 중 삭제 차단',
-    v_blocked,
-    format('원장 행 수=%s (0이 정상) / %s', v_usage_rows, coalesce(v_err, '차단되지 않음'))
-  );
+  return query select 2, '무게 재료 사용 중 삭제 차단'::text, v_blocked,
+    format('원장 행 수=%s (0이 정상) / %s', v_usage_rows, coalesce(v_err, '차단되지 않음'));
 
   /* ---------- [3] 식단 참조 중 단위 변경 차단 ---------- */
   v_blocked := false;
@@ -308,14 +300,11 @@ begin
     v_err := sqlerrm;
   end;
 
-  insert into zz_verify_result values (
-    3, '식단 참조 중 단위 변경 차단',
-    v_blocked,
-    coalesce(v_err, '차단되지 않음')
-  );
+  return query select 3, '식단 참조 중 단위 변경 차단'::text, v_blocked,
+    coalesce(v_err, '차단되지 않음');
 end;
-$$;
+$fn$;
 
-select * from zz_verify_result order by 순번;
+select * from pg_temp.zz_run_verify() order by 순번;
 
 rollback;
