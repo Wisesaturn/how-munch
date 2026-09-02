@@ -3,6 +3,7 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/commons/lib';
 
 import { fridgeItemKeys, type FridgeItemWithBatches } from '@/entities/fridge-item';
+import { useSynonymExpandedTerms } from '@/entities/search-synonym';
 
 interface FridgePreferences {
   user_id: string;
@@ -20,7 +21,11 @@ export type CategoryExpiryDefaultsMap = Record<string, number>;
 // 가구 카테고리 기본 유효기간은 자주 바뀌지 않으므로 카테고리 목록과 동일하게 6시간 캐시한다.
 const CATEGORY_EXPIRY_DEFAULTS_STALE_TIME = 1000 * 60 * 60 * 6;
 
-/** 냉장고 재고 전체 조회 (배치 포함) */
+/**
+ * 냉장고 재고 전체 조회 (배치 포함)
+ * 검색어는 별칭 그룹으로 확장해 서버에 반복 파라미터로 넘긴다.
+ * 별칭 사전이 로드되기 전에는 검색어 하나만 넘어가므로 기존 동작과 같다.
+ */
 export function useFridgeItemsQuery({
   householdId,
   userId,
@@ -30,15 +35,15 @@ export function useFridgeItemsQuery({
   userId: string;
   searchInput?: string;
 }) {
-  const normalizedSearchKeyword = searchInput.trim();
+  const searchKeywords = useSynonymExpandedTerms(searchInput);
 
   return useQuery({
-    queryKey: fridgeItemKeys.list(householdId ?? '', userId, normalizedSearchKeyword),
+    queryKey: fridgeItemKeys.list(householdId ?? '', userId, searchKeywords.join('|')),
     queryFn: householdId
       ? () =>
           apiClient.get<FridgeItemWithBatches[]>('/api/fridge', {
             householdId,
-            ...(normalizedSearchKeyword && { search: normalizedSearchKeyword }),
+            ...(searchKeywords.length > 0 && { search: searchKeywords }),
           })
       : skipToken,
   });

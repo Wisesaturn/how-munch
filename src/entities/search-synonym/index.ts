@@ -7,4 +7,5 @@ export {
   useResetSearchSynonymsMutation,
 } from './api/mutations';
 export { groupSynonymTerms, useSearchFilter } from './model/useSearchFilter';
+export { useSynonymExpandedTerms } from './model/useSynonymExpandedTerms';
 export { SearchSynonymLinkSheet } from './ui/SearchSynonymLinkSheet';
