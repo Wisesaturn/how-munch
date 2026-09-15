@@ -18,28 +18,11 @@ function resolvePercentage(spent: number, amount: number): number {
 interface BudgetScopeRowProps {
   scope: BudgetScope;
   spent: number;
-  /** null이면 미설정 — 진행바 없이 쓴 금액만 보여준다 */
-  amount: number | null;
+  amount: number;
 }
 
+/** 예산을 설정한 항목 한 줄. 설정하지 않은 항목은 BudgetUnsetRow로 묶인다. */
 export function BudgetScopeRow({ scope, spent, amount }: BudgetScopeRowProps) {
-  const label = getBudgetScopeLabel(scope);
-
-  if (amount === null) {
-    return (
-      <div className="flex items-center gap-3 py-4">
-        <BudgetScopeIcon scope={scope} />
-        <div className="flex min-w-0 flex-col">
-          <span className="text-base font-medium text-gray-800">{label}</span>
-          <span className="text-xs text-gray-400">미설정 예산</span>
-        </div>
-        <span className="ml-auto shrink-0 text-sm text-gray-400">
-          {spent.toLocaleString()}원 사용
-        </span>
-      </div>
-    );
-  }
-
   const percentage = resolvePercentage(spent, amount);
   const exceeded = percentage > 100;
 
@@ -47,8 +30,8 @@ export function BudgetScopeRow({ scope, spent, amount }: BudgetScopeRowProps) {
     <div className="flex flex-col gap-2.5 py-4">
       <div className="flex items-center gap-3">
         <BudgetScopeIcon scope={scope} />
-        <span className="text-base font-medium text-gray-800">{label}</span>
-        <span className="ml-auto shrink-0 text-sm text-gray-500">
+        <span className="text-base font-medium text-gray-800">{getBudgetScopeLabel(scope)}</span>
+        <span className="ml-auto shrink-0 text-sm font-semibold text-gray-700">
           {spent.toLocaleString()} / {amount.toLocaleString()}원
         </span>
       </div>

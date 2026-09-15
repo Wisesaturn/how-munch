@@ -17,6 +17,7 @@ import { buildCumulativeSeries, getDayCount, sumSpentByScope } from '../lib/budg
 
 import { BudgetCumulativeChart } from './BudgetCumulativeChart';
 import { BudgetScopeRow } from './BudgetScopeRow';
+import { BudgetUnsetRow } from './BudgetUnsetRow';
 import { WeeklyStats } from './WeeklyStats';
 
 interface BudgetScreenProps {
@@ -44,6 +45,10 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
   const monthLabel = formatMonthLabel(yearMonth);
   // 전체 예산은 나머지 세 항목의 기준이라 목록에 섞지 않고 맨 위에서 단독으로 보여준다.
   const totalRemaining = amounts.total === null ? null : amounts.total - spent.total;
+  // 예산을 정한 항목만 진행바로 보여주고, 나머지는 맨 아래 한 줄로 묶는다.
+  const setScopes = BUDGET_ITEM_SCOPES.filter((scope) => amounts[scope] !== null);
+  const unsetScopes = BUDGET_ITEM_SCOPES.filter((scope) => amounts[scope] === null);
+  const unsetSpent = unsetScopes.reduce((sum, scope) => sum + spent[scope], 0);
 
   return (
     <AppScreen
@@ -73,8 +78,8 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
                   }`}
                 >
                   {totalRemaining < 0
-                    ? `${Math.abs(totalRemaining).toLocaleString()}원 초과`
-                    : `${totalRemaining.toLocaleString()}원 남음`}
+                    ? `${Math.abs(totalRemaining).toLocaleString()}원 초과했어요`
+                    : `${totalRemaining.toLocaleString()}원 남았어요`}
                 </span>
               </section>
             )}
@@ -94,14 +99,17 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
 
             {hasAnyBudget(amounts) ? (
               <section className="divide-y rounded-xl border bg-white px-4 py-2">
-                {BUDGET_ITEM_SCOPES.map((scope) => (
+                {setScopes.map((scope) => (
                   <BudgetScopeRow
                     key={scope}
                     scope={scope}
                     spent={spent[scope]}
-                    amount={amounts[scope]}
+                    amount={amounts[scope]!}
                   />
                 ))}
+                {unsetScopes.length > 0 && (
+                  <BudgetUnsetRow scopes={unsetScopes} spent={unsetSpent} />
+                )}
               </section>
             ) : (
               <EmptyState.Root>
