@@ -1,5 +1,9 @@
 /** 도메인별 커스텀 에러 코드 (XXX_NNN 규격) */
 const DOMAIN_ERROR_CODE = {
+  // CMN: 공통 도메인
+  DUPLICATE_ENTRY: 'CMN_003',
+  CONSTRAINT_VIOLATION: 'CMN_004',
+
   // AUT: 인증(Auth) 도메인
   AUTH_UNAUTHORIZED: 'AUT_001',
   COMMON_PERMISSION_DENIED: 'AUT_002',
@@ -67,6 +71,10 @@ interface DatabaseErrorLike {
 
 /** 도메인 에러 코드별 사용자 메시지 */
 const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
+  // CMN
+  CMN_003: '이미 같은 항목이 있습니다.',
+  CMN_004: '입력한 값이 허용 범위를 벗어났습니다.',
+
   // AUT
   AUT_001: '로그인이 필요합니다.',
   AUT_002: '권한이 없습니다.',
@@ -121,6 +129,9 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
  * RPC hint가 없는 경우 errcode로 도메인 에러를 식별한다.
  */
 const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
+  // 표준 PostgreSQL 제약 위반. 도메인 코드가 없으면 원인이 안 보이는 500으로만 떨어진다.
+  '23505': 'DUPLICATE_ENTRY',
+  '23514': 'CONSTRAINT_VIOLATION',
   A0001: 'AUTH_UNAUTHORIZED',
   A0002: 'COMMON_PERMISSION_DENIED',
   F0001: 'FRIDGE_IN_USE_IN_MEAL',

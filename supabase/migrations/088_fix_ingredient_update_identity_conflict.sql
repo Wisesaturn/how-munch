@@ -1,12 +1,15 @@
--- Function: public.update_ingredient_with_fridge
--- Source: supabase/migrations/081_fix_review_findings.sql
--- 역할: 장보기 항목 수정 시 연결 냉장고 재고를 정합성 있게 동기화합니다.
--- 동작:
--- 1. ingredient를 갱신하고, 식단이 참조 중이면 단위 변경을 막습니다.
--- 2. 정체성 튜플에 advisory lock을 건 뒤 병합 대상 품목을 찾습니다.
--- 3. 정체성이 그대로면 (0) 기존 품목을 그대로 씁니다.
--- 4. 병합 대상이 있으면 (A) 병합, 없고 단독 소유면 (B) 제자리 이름 변경, 공유 중이면 (C) 분리합니다.
--- 5. 연결 배치를 목표 품목으로 옮기고, 비게 된 옛 품목은 식단 참조를 재연결한 뒤 소프트 삭제합니다.
+-- 장보기 수정이 유니크 위반으로 막히던 문제를 고친다.
+--
+-- 같은 품목을 두 번 장보면 두 장보기 행이 냉장고 품목 하나를 공유한다.
+-- 이 상태에서 한 행의 날짜나 가격만 바꾸면 update_ingredient_with_fridge가
+--   (A) 병합 대상 탐색에서 기존 품목을 제외해 아무것도 못 찾고
+--   (B) 공유 중이라 제자리 갱신을 건너뛴 뒤
+--   (C) 정체성이 똑같은 품목을 새로 insert
+-- 해서 uq_fridge_items_identity를 위반했다. errcode 23505는 도메인 매핑이 없어
+-- 클라이언트에는 CMN_001 500으로만 보였고, 그 행은 이후 어떤 수정도 같은 경로로 실패했다.
+--
+-- 정체성이 그대로면 기존 품목이 곧 목표라는 선처리(분기 0)를 앞에 두어 (C)까지 내려가지 않게 한다.
+
 create or replace function public.update_ingredient_with_fridge(
   p_ingredient_id uuid,
   p_updates jsonb default '{}'::jsonb
@@ -326,3 +329,5 @@ begin
   return v_ingredient;
 end;
 $$;
+
+select pg_notify('pgrst', 'reload schema');

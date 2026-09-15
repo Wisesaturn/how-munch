@@ -2,9 +2,8 @@ import { type NextRequest } from 'next/server';
 
 import { josa } from 'es-hangul';
 
-import { notifyBudgetExceeded, withAuth } from '@/apps/route';
+import { notifyBudgetExceeded, respondWithDbError, withAuth } from '@/apps/route';
 
-import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseholdNotification';
 import { type Json, type Page, type PageInfo } from '@/commons/model/types';
@@ -61,7 +60,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data, count, error } = await query;
 
-  if (error) return apiResponse.INTERNAL_ERROR();
+  if (error) return respondWithDbError(error, 'GET /api/ingredients');
 
   const ingredients = (data ?? []) as Ingredient[];
 
@@ -143,11 +142,7 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     p_date: body.date ?? new Date().toISOString().slice(0, 10),
   });
 
-  if (error) {
-    const domainError = resolveDomainError(error);
-    if (domainError) return apiResponse.CONFLICT(domainError.code, domainError.message);
-    return apiResponse.INTERNAL_ERROR();
-  }
+  if (error) return respondWithDbError(error, 'POST /api/ingredients');
 
   const expenseDate = body.date ?? new Date().toISOString().slice(0, 10);
 
@@ -205,11 +200,7 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
     p_updates: patch,
   });
 
-  if (error) {
-    const domainError = resolveDomainError(error);
-    if (domainError) return apiResponse.CONFLICT(domainError.code, domainError.message);
-    return apiResponse.INTERNAL_ERROR();
-  }
+  if (error) return respondWithDbError(error, 'PUT /api/ingredients');
 
   return apiResponse.OK(data);
 });
@@ -227,11 +218,7 @@ export const DELETE = withAuth(async (req: NextRequest, { supabase }) => {
     p_ingredient_id: id,
   });
 
-  if (error) {
-    const domainError = resolveDomainError(error);
-    if (domainError) return apiResponse.CONFLICT(domainError.code, domainError.message);
-    return apiResponse.INTERNAL_ERROR();
-  }
+  if (error) return respondWithDbError(error, 'DELETE /api/ingredients');
 
   return apiResponse.NO_CONTENT();
 });

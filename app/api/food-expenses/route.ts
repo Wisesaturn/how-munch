@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server';
 
-import { notifyBudgetExceeded, withAuth } from '@/apps/route';
+import { notifyBudgetExceeded, respondWithDbError, withAuth } from '@/apps/route';
 
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { type Database, type Page, type PageInfo } from '@/commons/model/types';
@@ -77,7 +77,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data, count, error } = await query;
 
-  if (error) return apiResponse.INTERNAL_ERROR();
+  if (error) return respondWithDbError(error, 'GET /api/food-expenses');
 
   const expenses = (data ?? []) as FoodExpense[];
 
@@ -169,7 +169,7 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     .select()
     .single<DiningExpenseRow>();
 
-  if (error) return apiResponse.INTERNAL_ERROR();
+  if (error) return respondWithDbError(error, 'POST /api/food-expenses');
 
   // 예산 초과 알림 — 실패해도 외식비 저장 흐름을 막지 않는다
   void notifyBudgetExceeded({
@@ -207,7 +207,7 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
     .select()
     .single<DiningExpenseRow>();
 
-  if (error) return apiResponse.INTERNAL_ERROR();
+  if (error) return respondWithDbError(error, 'PUT /api/food-expenses');
 
   return apiResponse.OK(data);
 });
@@ -226,7 +226,7 @@ export const DELETE = withAuth(async (req: NextRequest, { supabase }) => {
     .eq('id', id)
     .is('deleted_at', null);
 
-  if (error) return apiResponse.INTERNAL_ERROR();
+  if (error) return respondWithDbError(error, 'DELETE /api/food-expenses');
 
   return apiResponse.NO_CONTENT();
 });

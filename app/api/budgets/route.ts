@@ -1,8 +1,7 @@
 import { type NextRequest } from 'next/server';
 
-import { withAuth } from '@/apps/route';
+import { respondWithDbError, withAuth } from '@/apps/route';
 
-import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { type Json } from '@/commons/model/types';
 
@@ -29,7 +28,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
     .eq('household_id', householdId)
     .eq('year_month', yearMonth);
 
-  if (error) return apiResponse.INTERNAL_ERROR();
+  if (error) return respondWithDbError(error, 'GET /api/budgets', 'badRequest');
 
   return apiResponse.OK((data ?? []) as Budget[]);
 });
@@ -52,11 +51,7 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
     p_budgets: (body.budgets ?? {}) as Json,
   });
 
-  if (error) {
-    const domainError = resolveDomainError(error);
-    if (domainError) return apiResponse.BAD_REQUEST(domainError.code, domainError.message);
-    return apiResponse.INTERNAL_ERROR();
-  }
+  if (error) return respondWithDbError(error, 'PUT /api/budgets', 'badRequest');
 
   return apiResponse.OK(data as unknown as Budget[]);
 });

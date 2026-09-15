@@ -1,8 +1,7 @@
 import { type NextRequest } from 'next/server';
 
-import { withAuth } from '@/apps/route';
+import { respondWithDbError, withAuth } from '@/apps/route';
 
-import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import { type BudgetDailyPoint } from '@/entities/budget';
@@ -30,11 +29,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
     p_year_month: yearMonth,
   });
 
-  if (error) {
-    const domainError = resolveDomainError(error);
-    if (domainError) return apiResponse.BAD_REQUEST(domainError.code, domainError.message);
-    return apiResponse.INTERNAL_ERROR();
-  }
+  if (error) return respondWithDbError(error, 'GET /api/budgets/daily-series', 'badRequest');
 
   return apiResponse.OK((data ?? []) as BudgetDailyPoint[]);
 });
