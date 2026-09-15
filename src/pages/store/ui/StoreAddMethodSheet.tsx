@@ -56,21 +56,21 @@ export function StoreAddMethodSheet({
           icon={<PenLine className="size-5 text-emerald-600" />}
           iconBg="bg-emerald-50"
           label="장보기 직접 입력"
-          description="장본 품목을 직접 입력해요"
+          description="품목을 직접 입력해요"
           onClick={onGroceryDirectAdd}
         />
         <MethodItem
           icon={<ScanText className="size-5 text-blue-600" />}
           iconBg="bg-blue-50"
           label="장보기 영수증 등록"
-          description="장본 영수증으로 한 번에 등록해요"
+          description="영수증으로 한 번에 등록해요"
           onClick={onGroceryReceiptAdd}
         />
         <MethodItem
           icon={<UtensilsCrossed className="size-5 text-orange-600" />}
           iconBg="bg-orange-50"
           label="외식비 입력"
-          description="일반적인 식비를 기록할 때 사용해요"
+          description="외식 비용을 기록할 때 사용해요"
           onClick={onDiningAdd}
         />
       </BottomSheet.Content>
