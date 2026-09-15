@@ -217,6 +217,36 @@ export interface Database {
           },
         ];
       };
+      budgets: {
+        Row: {
+          id: string;
+          household_id: string;
+          year_month: string;
+          scope: 'total' | 'grocery' | 'restaurant' | 'delivery';
+          amount: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          year_month: string;
+          scope: 'total' | 'grocery' | 'restaurant' | 'delivery';
+          amount?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          year_month?: string;
+          scope?: 'total' | 'grocery' | 'restaurant' | 'delivery';
+          amount?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       dining_expenses: {
         Row: {
           id: string;
@@ -768,6 +798,14 @@ export interface Database {
       };
     };
     Functions: {
+      upsert_household_budgets_guarded: {
+        Args: { p_household_id: string; p_year_month: string; p_budgets: Json };
+        Returns: Json;
+      };
+      get_food_expense_daily_series: {
+        Args: { p_household_id: string; p_year_month: string };
+        Returns: { year_month: string; expense_date: string; kind: string; total: number }[];
+      };
       add_ingredient_with_fridge: {
         Args: {
           p_household_id: string;

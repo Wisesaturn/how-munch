@@ -11,6 +11,7 @@ import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type Meal, type MealType } from '@/entities/meal';
 
+import { BudgetEditScreen, BudgetScreen } from '@/features/budget';
 import { DiningExpenseAddScreen, DiningExpenseEditScreen } from '@/features/dining-expense';
 import { FoodExpenseSearchScreen, toDiningExpense, toIngredient } from '@/features/food-expense';
 import {
@@ -515,6 +516,48 @@ function FoodExpenseSearchActivity({
   );
 }
 
+function BudgetActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    yearMonth: string;
+  };
+}) {
+  const { pop, push } = useActions();
+
+  function openEdit() {
+    push('BudgetEditActivity', {
+      householdId: params.householdId,
+      yearMonth: params.yearMonth,
+    });
+  }
+
+  return (
+    <BudgetScreen
+      onClose={pop}
+      onOpenEdit={openEdit}
+      householdId={params.householdId}
+      yearMonth={params.yearMonth}
+    />
+  );
+}
+
+function BudgetEditActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    yearMonth: string;
+  };
+}) {
+  const { pop } = useActions();
+
+  return (
+    <BudgetEditScreen onClose={pop} householdId={params.householdId} yearMonth={params.yearMonth} />
+  );
+}
+
 function DiningExpenseAddActivity({
   params,
 }: {
@@ -651,6 +694,8 @@ const appStackFlow = stackflow({
     FoodExpenseSearchActivity,
     DiningExpenseAddActivity,
     DiningExpenseEditActivity,
+    BudgetActivity,
+    BudgetEditActivity,
     FridgeItemAddActivity,
     FridgeItemEditActivity,
     FridgeItemSubdivideActivity,
@@ -681,6 +726,8 @@ const appStackFlow = stackflow({
         FoodExpenseSearchActivity: '/food-expense/search',
         DiningExpenseAddActivity: '/dining/add',
         DiningExpenseEditActivity: '/dining/edit',
+        BudgetActivity: '/budget',
+        BudgetEditActivity: '/budget/edit',
         FridgeItemAddActivity: '/fridge/item/add',
         FridgeItemEditActivity: '/fridge/item/edit',
         FridgeItemSubdivideActivity: '/fridge/item/subdivide',

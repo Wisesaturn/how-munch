@@ -13,6 +13,7 @@ import { Button } from '@/commons/ui';
 
 import { type FoodExpense, type FoodExpenseFilterKind } from '@/entities/food-expense';
 
+import { BudgetSummaryStrip, toYearMonth } from '@/features/budget';
 import {
   FoodExpenseKindFilter,
   FoodExpenseList,
@@ -36,6 +37,7 @@ export function StorePage({ householdId, userId }: StorePageProps) {
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
+  const yearMonth = toYearMonth(currentDate);
   const startDate = format(startOfMonth(currentDate), 'yyyy-MM-dd');
   const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
 
@@ -70,6 +72,14 @@ export function StorePage({ householdId, userId }: StorePageProps) {
       userId,
       suggestions: grocerySuggestions,
     });
+  }
+
+  function openBudget() {
+    stackFlowActions.push('BudgetActivity', { householdId, yearMonth });
+  }
+
+  function openBudgetEdit() {
+    stackFlowActions.push('BudgetEditActivity', { householdId, yearMonth });
   }
 
   function openDiningExpenseAdd() {
@@ -139,6 +149,14 @@ export function StorePage({ householdId, userId }: StorePageProps) {
           {totalSpending.toLocaleString()}원
         </span>
       </section>
+
+      {/* 예산 요약 — 탭하면 현황, 미설정이면 편집으로 직행한다 */}
+      <BudgetSummaryStrip
+        householdId={householdId}
+        yearMonth={yearMonth}
+        onOpenBudget={openBudget}
+        onOpenBudgetEdit={openBudgetEdit}
+      />
 
       {/* 종류 필터 — 스크롤 중에도 종류를 바꿀 수 있도록 상단에 붙인다 */}
       <div className="sticky top-0 z-20 -mx-4 bg-white px-4 py-2">

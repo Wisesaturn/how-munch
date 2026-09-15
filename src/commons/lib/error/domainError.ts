@@ -38,6 +38,11 @@ const DOMAIN_ERROR_CODE = {
   // SBD: 소분(Subdivision) 도메인
   SUBDIVISION_INSUFFICIENT_STOCK: 'SBD_001',
 
+  // BUD: 예산(Budget) 도메인
+  BUDGET_SCOPE_SUM_EXCEEDS_TOTAL: 'BUD_001',
+  BUDGET_YEAR_MONTH_INVALID: 'BUD_002',
+  BUDGET_AMOUNT_NEGATIVE: 'BUD_003',
+
   // SRC: 검색(Search) 도메인
   SEARCH_SYNONYM_GROUP_CONFLICT: 'SRC_001',
   SEARCH_SYNONYM_TERM_EMPTY: 'SRC_002',
@@ -100,6 +105,11 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   // SBD
   SBD_001: '소분할 재고가 부족합니다.',
 
+  // BUD
+  BUD_001: '항목별 예산 합계가 전체 예산을 초과합니다.',
+  BUD_002: '예산 연월 형식이 올바르지 않습니다.',
+  BUD_003: '예산은 0원 이상이어야 합니다.',
+
   // SRC
   SRC_001: '입력한 단어가 이미 다른 유사어 그룹에 있습니다. 설정에서 확인해 주세요.',
   SRC_002: '유사어를 입력해 주세요.',
@@ -135,6 +145,9 @@ const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
   I0005: 'INGREDIENT_NOT_FOUND',
   I0006: 'INGREDIENT_UNIT_LOCKED_BY_MEAL',
   S0001: 'SUBDIVISION_INSUFFICIENT_STOCK',
+  B0001: 'BUDGET_SCOPE_SUM_EXCEEDS_TOTAL',
+  B0002: 'BUDGET_YEAR_MONTH_INVALID',
+  B0003: 'BUDGET_AMOUNT_NEGATIVE',
   // 검색 도메인은 'S' 대역이 소분(Subdivision)에 선점돼 있어 'R'(seaRch)을 사용한다.
   R0001: 'SEARCH_SYNONYM_GROUP_CONFLICT',
   R0002: 'SEARCH_SYNONYM_TERM_EMPTY',
