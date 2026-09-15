@@ -23,6 +23,7 @@ export {
   matchesSearchText,
   normalizeSearchText,
 } from './search/hangulSearch';
+export { splitByMatchedTerms, type HighlightSegment } from './search/highlight';
 export {
   createSynonymIndex,
   expandWithSynonyms,

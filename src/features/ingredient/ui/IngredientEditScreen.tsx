@@ -91,15 +91,15 @@ export function IngredientEditScreen({
           open={isOpen}
           onClose={closeSheet}
           onConfirm={confirmDelete}
-          title="상품을 삭제하시겠습니까?"
-          description="삭제된 상품은 복구할 수 없습니다."
+          title="장보기 내역을 삭제하시겠습니까?"
+          description="삭제된 내역은 복구할 수 없습니다."
         />
       );
     });
   }
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '상품 수정' }}>
+    <AppScreen className="pointer-events-auto" appBar={{ title: '장보기 수정' }}>
       <div className="px-4 pt-4 pb-28">
         <IngredientForm
           id={ingredient.id}

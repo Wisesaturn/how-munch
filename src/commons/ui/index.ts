@@ -23,6 +23,7 @@ export { DatePicker } from './DatePicker';
 export { Dialog } from './Dialog';
 export { Drawer } from './Drawer';
 export { EmptyState } from './EmptyState';
+export { HighlightedText } from './HighlightedText';
 export { Input, type InputProps } from './Input';
 export { InputGroup, type InputGroupAddonProps, type InputGroupButtonProps } from './InputGroup';
 export { Message, messageVariants, type MessageProps } from './Message';

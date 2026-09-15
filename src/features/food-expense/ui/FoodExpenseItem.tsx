@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/commons/lib';
+import { HighlightedText } from '@/commons/ui';
 
 import { DINING_EXPENSE_KIND_LABEL, isDiningExpenseKind } from '@/entities/dining-expense';
 import { getDiningKindEmoji, type FoodExpense } from '@/entities/food-expense';
@@ -12,6 +13,8 @@ interface FoodExpenseItemProps {
   categoryLabel?: string;
   categoryEmoji?: string;
   size?: 'sm' | 'md';
+  /** 검색어(유사어 확장 포함). 품목명과 가게명에서 일치하는 구간을 굵게 칠한다 */
+  highlightTerms?: string[];
 }
 
 /**
@@ -24,6 +27,7 @@ export function FoodExpenseItem({
   categoryLabel = '',
   categoryEmoji,
   size = 'md',
+  highlightTerms,
 }: FoodExpenseItemProps) {
   // 외식비는 메뉴를 기억 못 해 비워둘 수 있다. 그때는 가게명이 제목 자리로 올라온다.
   const title = expense.name || expense.brand || '';
@@ -45,15 +49,21 @@ export function FoodExpenseItem({
     <>
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col">
-          {subtitle ? <span className="truncate text-xs text-gray-400">{subtitle}</span> : null}
-          <span
+          {subtitle ? (
+            <HighlightedText
+              text={subtitle}
+              terms={highlightTerms}
+              className="truncate text-xs text-gray-400"
+            />
+          ) : null}
+          <HighlightedText
+            text={title}
+            terms={highlightTerms}
             className={cn(
               'truncate font-normal text-gray-900',
               size === 'sm' ? 'text-sm' : 'text-base',
             )}
-          >
-            {title}
-          </span>
+          />
         </div>
         <span
           className={cn(
