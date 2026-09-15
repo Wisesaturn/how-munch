@@ -64,14 +64,6 @@ export function MainRouteAppBar() {
         className="mx-0"
         right={
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => stackFlowActions.push('NotificationActivity', {})}
-              aria-label="알림 열기"
-            >
-              <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
-            </Button>
             {profile?.household_id && (
               <>
                 <Button
@@ -102,6 +94,14 @@ export function MainRouteAppBar() {
                 </Button>
               </>
             )}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => stackFlowActions.push('NotificationActivity', {})}
+              aria-label="알림 열기"
+            >
+              <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
+            </Button>
           </div>
         }
       />
