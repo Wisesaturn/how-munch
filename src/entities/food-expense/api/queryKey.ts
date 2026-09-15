@@ -5,4 +5,6 @@ export const foodExpenseKeys = {
     [...foodExpenseKeys.all, 'list', householdId, startDate, endDate, kind] as const,
   search: (householdId: string, startDate: string, endDate: string, kind: string, q: string) =>
     [...foodExpenseKeys.all, 'search', householdId, startDate, endDate, kind, q] as const,
+  suggestions: (householdId: string, field: string, kind: string) =>
+    [...foodExpenseKeys.all, 'suggestions', householdId, field, kind] as const,
 };

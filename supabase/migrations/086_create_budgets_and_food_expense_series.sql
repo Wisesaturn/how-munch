@@ -18,17 +18,22 @@ create table if not exists public.budgets (
 create index if not exists idx_budgets_household_year_month
   on public.budgets(household_id, year_month);
 
+drop trigger if exists set_updated_at on public.budgets;
 create trigger set_updated_at before update on public.budgets
   for each row execute function public.handle_updated_at();
 
 alter table public.budgets enable row level security;
 
+drop policy if exists "budgets_select" on public.budgets;
 create policy "budgets_select" on public.budgets for select
   using (public.is_household_member(household_id));
+drop policy if exists "budgets_insert" on public.budgets;
 create policy "budgets_insert" on public.budgets for insert
   with check (public.is_household_member(household_id));
+drop policy if exists "budgets_update" on public.budgets;
 create policy "budgets_update" on public.budgets for update
   using (public.is_household_member(household_id));
+drop policy if exists "budgets_delete" on public.budgets;
 create policy "budgets_delete" on public.budgets for delete
   using (public.is_household_member(household_id));
 

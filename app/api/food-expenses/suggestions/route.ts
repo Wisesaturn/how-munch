@@ -6,14 +6,14 @@ import { withAuth } from '@/apps/route';
 
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 
-const FIELDS = ['brand', 'store'] as const;
+const FIELDS = ['name', 'brand', 'store'] as const;
 const KINDS = ['all', 'grocery', 'restaurant', 'delivery'] as const;
 
 type Field = (typeof FIELDS)[number];
 type Kind = (typeof KINDS)[number];
 
 /**
- * GET /api/food-expenses/suggestions?householdId=&field=brand|store&kind=
+ * GET /api/food-expenses/suggestions?householdId=&field=name|brand|store&kind=
  * 자동완성 후보 조회. kind로 스코프를 걸어 "이마트"가 외식 가게 후보로 뜨지 않게 한다.
  */
 export const GET = withAuth(async (req: NextRequest, { supabase }) => {
@@ -26,7 +26,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
     return apiResponse.BAD_REQUEST('CMN_002', 'householdId가 필요합니다.');
   }
   if (!(FIELDS as readonly string[]).includes(field ?? '')) {
-    return apiResponse.BAD_REQUEST('CMN_002', 'field는 brand 또는 store여야 합니다.');
+    return apiResponse.BAD_REQUEST('CMN_002', 'field는 name, brand, store 중 하나여야 합니다.');
   }
   if (!(KINDS as readonly string[]).includes(kindParam)) {
     return apiResponse.BAD_REQUEST('CMN_002', 'kind가 올바르지 않습니다.');

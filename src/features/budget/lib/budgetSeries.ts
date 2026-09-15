@@ -88,3 +88,13 @@ export function sumWeeklyTotals(
 
   return weeks;
 }
+
+/**
+ * @description 예산 대비 소진율(%)을 구한다.
+ * 예산 0원은 "0원으로 산다"는 명시적 목표라, 한 푼이라도 썼으면 초과(101%)로 본다.
+ * ProgressBar의 색 기준과 같은 규칙이어야 글자와 바가 어긋나지 않는다.
+ */
+export function resolveBudgetPercentage(spent: number, amount: number): number {
+  if (amount > 0) return Math.round((spent / amount) * 100);
+  return spent > 0 ? 101 : 0;
+}

@@ -14,13 +14,16 @@ const FILTER_KINDS = ['all', 'grocery', ...DINING_KINDS] as const;
 
 type FilterKind = (typeof FILTER_KINDS)[number];
 
+/** 검색이 훑는 컬럼. 외식비는 메뉴(name)가 선택 입력이라 가게명(brand)까지 봐야 찾을 수 있다. */
+const SEARCH_COLUMNS = ['name', 'brand'] as const;
+
 /**
  * PostgREST or 필터에 값을 안전하게 넣기 위해 큰따옴표 안에서 이스케이프한다.
  * 검색어에 쉼표가 들어가면 필터 구문 자체가 깨지기 때문이다.
  */
-function toQuotedIlikeFilter(keyword: string): string {
+function toQuotedIlikeFilters(keyword: string): string[] {
   const escaped = keyword.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  return `name.ilike."%${escaped}%"`;
+  return SEARCH_COLUMNS.map((column) => `${column}.ilike."%${escaped}%"`);
 }
 
 function resolveFilterKind(value: string | null): FilterKind {
@@ -69,10 +72,8 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
     query = query.eq('kind', kind);
   }
 
-  if (searchKeywords.length === 1) {
-    query = query.ilike('name', `%${searchKeywords[0]}%`);
-  } else if (searchKeywords.length > 1) {
-    query = query.or(searchKeywords.map(toQuotedIlikeFilter).join(','));
+  if (searchKeywords.length > 0) {
+    query = query.or(searchKeywords.flatMap(toQuotedIlikeFilters).join(','));
   }
 
   const { data, count, error } = await query;
@@ -182,10 +183,13 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
   return apiResponse.CREATED(data);
 });
 
+/** 클라이언트가 바꿀 수 있는 컬럼. 나머지는 요청에 실려와도 무시한다. */
+const EDITABLE_COLUMNS = ['date', 'name', 'brand', 'store', 'price', 'memo'] as const;
+
 /** PUT /api/food-expenses — 외식비 수정 */
 export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
   const body = await req.json();
-  const { id, kind, ...rest } = body;
+  const { id, kind } = body;
 
   if (!id) {
     return apiResponse.BAD_REQUEST('CMN_002', 'id가 필요합니다.');
@@ -194,10 +198,17 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
     return apiResponse.BAD_REQUEST('CMN_002', 'kind가 올바르지 않습니다.');
   }
 
+  // 요청 바디를 그대로 펼치면 deleted_at, user_id, created_at까지 덮어쓸 수 있다.
+  // 바꿔도 되는 컬럼만 추려서 넘긴다.
+  const patch: Record<string, unknown> = {};
+  for (const column of EDITABLE_COLUMNS) {
+    if (body[column] !== undefined) patch[column] = body[column];
+  }
+
   const { data, error } = await supabase
     .from('dining_expenses')
     .update({
-      ...rest,
+      ...patch,
       ...(kind === undefined ? {} : { kind }),
       // 배달 → 식당으로 바꾸면 남아 있던 플랫폼 값이 유령으로 따라다니므로 여기서 지운다.
       ...(kind === 'restaurant' ? { store: null } : {}),
@@ -205,9 +216,11 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
     .eq('id', id)
     .is('deleted_at', null)
     .select()
-    .single<DiningExpenseRow>();
+    .maybeSingle<DiningExpenseRow>();
 
   if (error) return respondWithDbError(error, 'PUT /api/food-expenses');
+  // maybeSingle은 0행일 때 에러 대신 null을 준다. single()은 PGRST116을 던져 500으로 떨어졌다.
+  if (!data) return apiResponse.NOT_FOUND('CMN_005', '외식비 내역을 찾을 수 없습니다.');
 
   return apiResponse.OK(data);
 });
@@ -220,13 +233,17 @@ export const DELETE = withAuth(async (req: NextRequest, { supabase }) => {
     return apiResponse.BAD_REQUEST('CMN_002', 'id가 필요합니다.');
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('dining_expenses')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .select('id')
+    .maybeSingle<{ id: string }>();
 
   if (error) return respondWithDbError(error, 'DELETE /api/food-expenses');
+  // 없는 id에 조용히 204를 주면 다른 기기에서 이미 지운 항목을 지운 척하게 된다.
+  if (!data) return apiResponse.NOT_FOUND('CMN_005', '외식비 내역을 찾을 수 없습니다.');
 
   return apiResponse.NO_CONTENT();
 });

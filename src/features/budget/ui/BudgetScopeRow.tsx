@@ -4,16 +4,9 @@ import { ProgressBar } from '@/commons/ui';
 
 import { getBudgetScopeLabel, type BudgetScope } from '@/entities/budget';
 
-import { BudgetScopeIcon } from './BudgetScopeIcon';
+import { resolveBudgetPercentage } from '../lib/budgetSeries';
 
-/**
- * 예산 0원은 "0원으로 산다"는 명시적 목표다.
- * 0으로 나눌 수 없으므로, 한 푼이라도 썼으면 초과(101%)로 본다.
- */
-function resolvePercentage(spent: number, amount: number): number {
-  if (amount > 0) return Math.round((spent / amount) * 100);
-  return spent > 0 ? 101 : 0;
-}
+import { BudgetScopeIcon } from './BudgetScopeIcon';
 
 interface BudgetScopeRowProps {
   scope: BudgetScope;
@@ -23,7 +16,7 @@ interface BudgetScopeRowProps {
 
 /** 예산을 설정한 항목 한 줄. 설정하지 않은 항목은 BudgetUnsetRow로 묶인다. */
 export function BudgetScopeRow({ scope, spent, amount }: BudgetScopeRowProps) {
-  const percentage = resolvePercentage(spent, amount);
+  const percentage = resolveBudgetPercentage(spent, amount);
   const exceeded = percentage > 100;
 
   return (

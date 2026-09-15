@@ -78,3 +78,21 @@ export function useFoodExpenseSearchInfiniteQuery(
       lastPage.pageInfo.last ? undefined : lastPage.pageInfo.page + 1,
   });
 }
+
+/**
+ * @description 자동완성 후보 조회.
+ * 목록과 달리 화면의 종류 필터를 타지 않는다. 배달만 보고 있어도 장보기 품목명을 추천해야 한다.
+ */
+export function useFoodExpenseSuggestionsQuery(
+  householdId: string | null,
+  field: 'name' | 'brand' | 'store',
+  kind: FoodExpenseFilterKind,
+) {
+  return useQuery({
+    queryKey: foodExpenseKeys.suggestions(householdId ?? '', field, kind),
+    queryFn: householdId
+      ? () =>
+          apiClient.get<string[]>('/api/food-expenses/suggestions', { householdId, field, kind })
+      : skipToken,
+  });
+}

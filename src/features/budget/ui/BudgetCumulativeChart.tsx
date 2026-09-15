@@ -43,6 +43,8 @@ interface BudgetCumulativeChartProps {
   previousSeries: number[];
   /** 대상 월의 일수 */
   dayCount: number;
+  /** 직전 월의 일수 — 대상 월과 다를 수 있어 따로 받는다 */
+  previousDayCount: number;
   /** 전체 예산 — 미설정이면 기준선을 그리지 않는다 */
   budgetAmount: number | null;
   currentLabel: string;
@@ -53,6 +55,7 @@ export function BudgetCumulativeChart({
   currentSeries,
   previousSeries,
   dayCount,
+  previousDayCount,
   budgetAmount,
   currentLabel,
   previousLabel,
@@ -70,14 +73,15 @@ export function BudgetCumulativeChart({
 
     return {
       currentPath: toPath(currentSeries, dayCount, peak),
-      previousPath: toPath(previousSeries, dayCount, peak),
+      // 직전 달을 대상 월의 일수로 그리면 31일 시리즈가 28일 격자에 눌려 viewBox 밖으로 나간다.
+      previousPath: toPath(previousSeries, previousDayCount, peak),
       budgetY:
         budgetAmount === null
           ? null
           : PADDING_Y + innerHeight - (budgetAmount / peak) * innerHeight,
       maxValue: peak,
     };
-  }, [currentSeries, previousSeries, dayCount, budgetAmount]);
+  }, [currentSeries, previousSeries, dayCount, previousDayCount, budgetAmount]);
 
   return (
     <div className="flex flex-col gap-2">

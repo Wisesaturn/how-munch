@@ -21,6 +21,7 @@ import {
   toDiningExpense,
   toIngredient,
   useFoodExpensesQuery,
+  useFoodExpenseSuggestionsQuery,
 } from '@/features/food-expense';
 
 import { StoreAddMethodSheet } from './StoreAddMethodSheet';
@@ -46,11 +47,13 @@ export function StorePage({ householdId, userId }: StorePageProps) {
   );
 
   const totalSpending = sumFoodExpensePrice(expenses);
-  // 품목명 자동완성 후보는 장보기 이름만 모은다. 외식 메뉴는 냉장고 품목이 아니다.
-  const grocerySuggestions = expenses
-    .filter((expense) => expense.kind === 'grocery')
-    .map((expense) => expense.name ?? '')
-    .filter(Boolean);
+  // 품목명 자동완성은 장보기 이름만 모은다. 외식 메뉴는 냉장고 품목이 아니다.
+  // 화면의 종류 필터와 분리해 따로 조회한다. 목록에서 뽑으면 배달만 보고 있을 때 후보가 비어버린다.
+  const { data: grocerySuggestions = [] } = useFoodExpenseSuggestionsQuery(
+    householdId,
+    'name',
+    'grocery',
+  );
 
   const handlePrevMonth = () => setCurrentDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentDate((d) => addMonths(d, 1));

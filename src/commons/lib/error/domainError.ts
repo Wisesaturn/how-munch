@@ -3,6 +3,7 @@ const DOMAIN_ERROR_CODE = {
   // CMN: 공통 도메인
   DUPLICATE_ENTRY: 'CMN_003',
   CONSTRAINT_VIOLATION: 'CMN_004',
+  RESOURCE_NOT_FOUND: 'CMN_005',
 
   // AUT: 인증(Auth) 도메인
   AUTH_UNAUTHORIZED: 'AUT_001',
@@ -74,6 +75,7 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   // CMN
   CMN_003: '이미 같은 항목이 있습니다.',
   CMN_004: '입력한 값이 허용 범위를 벗어났습니다.',
+  CMN_005: '요청한 항목을 찾을 수 없습니다.',
 
   // AUT
   AUT_001: '로그인이 필요합니다.',

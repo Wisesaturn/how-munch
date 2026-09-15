@@ -30,17 +30,22 @@ create index if not exists idx_dining_expenses_household_date
 create index if not exists idx_dining_expenses_household_kind
   on public.dining_expenses(household_id, kind);
 
+drop trigger if exists set_updated_at on public.dining_expenses;
 create trigger set_updated_at before update on public.dining_expenses
   for each row execute function public.handle_updated_at();
 
 alter table public.dining_expenses enable row level security;
 
+drop policy if exists "dining_expenses_select" on public.dining_expenses;
 create policy "dining_expenses_select" on public.dining_expenses for select
   using (public.is_household_member(household_id));
+drop policy if exists "dining_expenses_insert" on public.dining_expenses;
 create policy "dining_expenses_insert" on public.dining_expenses for insert
   with check (public.is_household_member(household_id));
+drop policy if exists "dining_expenses_update" on public.dining_expenses;
 create policy "dining_expenses_update" on public.dining_expenses for update
   using (public.is_household_member(household_id));
+drop policy if exists "dining_expenses_delete" on public.dining_expenses;
 create policy "dining_expenses_delete" on public.dining_expenses for delete
   using (public.is_household_member(household_id));
 

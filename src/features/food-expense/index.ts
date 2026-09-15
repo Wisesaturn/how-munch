@@ -1,4 +1,8 @@
-export { useFoodExpensesQuery, useFoodExpenseSearchInfiniteQuery } from './api/queries';
+export {
+  useFoodExpensesQuery,
+  useFoodExpenseSearchInfiniteQuery,
+  useFoodExpenseSuggestionsQuery,
+} from './api/queries';
 export { sumFoodExpensePrice, toDiningExpense, toIngredient } from './lib/foodExpense';
 export { FoodExpenseItem } from './ui/FoodExpenseItem';
 export { FoodExpenseKindFilter } from './ui/FoodExpenseKindFilter';

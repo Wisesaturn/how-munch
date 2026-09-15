@@ -12,6 +12,7 @@ export {
 export {
   buildCumulativeSeries,
   getDayCount,
+  resolveBudgetPercentage,
   sumSpentByScope,
   sumWeeklyTotals,
 } from './lib/budgetSeries';

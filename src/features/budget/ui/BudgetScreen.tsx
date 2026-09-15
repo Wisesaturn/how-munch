@@ -89,6 +89,7 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
                 currentSeries={currentSeries}
                 previousSeries={previousSeries}
                 dayCount={dayCount}
+                previousDayCount={getDayCount(previousYearMonth)}
                 budgetAmount={amounts.total}
                 currentLabel={monthLabel}
                 previousLabel={formatMonthLabel(previousYearMonth)}

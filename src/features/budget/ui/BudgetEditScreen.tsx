@@ -166,97 +166,107 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
       loaded && previousLoaded && !hasCurrent && hasPrevious,
   );
 
+  // 쿼리가 도착하기 전에 폼을 열면, 사용자가 한 칸이라도 건드리는 순간 isTouched가 서서
+  // TanStack Form이 defaultValues를 다시 받지 않는다. 그 상태로 저장하면 기존 예산이 null로 지워진다.
+  const isReady = isSuccess && isPreviousLoaded;
+
   return (
     <AppScreen
       className="pointer-events-auto"
       appBar={{ title: `${formatMonthLabel(yearMonth)} 예산 편집` }}
     >
-      <div className="px-4 pt-4 pb-28">
-        <form
-          id={formId}
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-          className="flex flex-col gap-4"
-        >
-          {/* 월 예산 — 나머지 세 항목의 기준이라 따로 둔다 */}
-          <section className="flex flex-col gap-2 rounded-xl border bg-white p-4">
-            <form.Field name="total">
-              {(field) => (
-                <Form.Field field={field}>
-                  <Form.Label className="text-base text-gray-800">월 예산</Form.Label>
-                  <Form.Control>
-                    <BudgetAmountInput
-                      value={field.state.value}
-                      onValueChange={(next) => field.handleChange(next)}
-                      invalid={Boolean(field.state.meta.errors[0])}
-                    />
-                  </Form.Control>
-                  <Form.Error />
-                </Form.Field>
-              )}
-            </form.Field>
-
-            <form.Subscribe selector={(state) => state.values}>
-              {(values) => {
-                const itemSum =
-                  (values.grocery ?? 0) + (values.restaurant ?? 0) + (values.delivery ?? 0);
-
-                if (values.total === null) {
-                  return (
-                    <p className="text-xs text-gray-400">
-                      월 예산을 정하면 항목별로 나눠 담을 수 있어요
-                    </p>
-                  );
-                }
-
-                const remaining = values.total - itemSum;
-
-                return (
-                  <div className="flex flex-col gap-1.5">
-                    <ProgressBar value={itemSum} max={values.total} />
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400">
-                        {itemSum.toLocaleString()} / {values.total.toLocaleString()}원
-                      </span>
-                      <span
-                        className={
-                          remaining < 0
-                            ? 'font-semibold text-red-500'
-                            : 'font-semibold text-gray-700'
-                        }
-                      >
-                        {remaining < 0
-                          ? `${Math.abs(remaining).toLocaleString()}원 초과`
-                          : `${remaining.toLocaleString()}원 남음`}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }}
-            </form.Subscribe>
-          </section>
-
-          {/* 항목별 예산 */}
-          <section className="divide-y rounded-xl border bg-white px-4">
-            {ITEM_SCOPES.map((scope) => (
-              <form.Field key={scope} name={scope}>
+      {!isReady ? (
+        <div className="flex justify-center py-12">
+          <span className="text-sm text-gray-400">불러오는 중...</span>
+        </div>
+      ) : (
+        <div className="px-4 pt-4 pb-28">
+          <form
+            id={formId}
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+            className="flex flex-col gap-4"
+          >
+            {/* 월 예산 — 나머지 세 항목의 기준이라 따로 둔다 */}
+            <section className="flex flex-col gap-2 rounded-xl border bg-white p-4">
+              <form.Field name="total">
                 {(field) => (
-                  <BudgetScopeField
-                    icon={<BudgetScopeIcon scope={scope} />}
-                    label={getBudgetScopeLabel(scope)}
-                    lastMonthSpent={lastMonthSpent[scope]}
-                    value={field.state.value}
-                    onValueChange={(next) => field.handleChange(next)}
-                  />
+                  <Form.Field field={field}>
+                    <Form.Label className="text-base text-gray-800">월 예산</Form.Label>
+                    <Form.Control>
+                      <BudgetAmountInput
+                        value={field.state.value}
+                        onValueChange={(next) => field.handleChange(next)}
+                        invalid={Boolean(field.state.meta.errors[0])}
+                      />
+                    </Form.Control>
+                    <Form.Error />
+                  </Form.Field>
                 )}
               </form.Field>
-            ))}
-          </section>
-        </form>
-      </div>
+
+              <form.Subscribe selector={(state) => state.values}>
+                {(values) => {
+                  const itemSum =
+                    (values.grocery ?? 0) + (values.restaurant ?? 0) + (values.delivery ?? 0);
+
+                  if (values.total === null) {
+                    return (
+                      <p className="text-xs text-gray-400">
+                        월 예산을 정하면 항목별로 나눠 담을 수 있어요
+                      </p>
+                    );
+                  }
+
+                  const remaining = values.total - itemSum;
+
+                  return (
+                    <div className="flex flex-col gap-1.5">
+                      <ProgressBar value={itemSum} max={values.total} />
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-400">
+                          {itemSum.toLocaleString()} / {values.total.toLocaleString()}원
+                        </span>
+                        <span
+                          className={
+                            remaining < 0
+                              ? 'font-semibold text-red-500'
+                              : 'font-semibold text-gray-700'
+                          }
+                        >
+                          {remaining < 0
+                            ? `${Math.abs(remaining).toLocaleString()}원 초과`
+                            : `${remaining.toLocaleString()}원 남음`}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }}
+              </form.Subscribe>
+            </section>
+
+            {/* 항목별 예산 */}
+            <section className="divide-y rounded-xl border bg-white px-4">
+              {ITEM_SCOPES.map((scope) => (
+                <form.Field key={scope} name={scope}>
+                  {(field) => (
+                    <BudgetScopeField
+                      icon={<BudgetScopeIcon scope={scope} />}
+                      label={getBudgetScopeLabel(scope)}
+                      lastMonthSpent={lastMonthSpent[scope]}
+                      value={field.state.value}
+                      onValueChange={(next) => field.handleChange(next)}
+                    />
+                  )}
+                </form.Field>
+              ))}
+            </section>
+          </form>
+        </div>
+      )}
 
       {/* 저장 버튼은 비활성화하지 않는다. 눌렀을 때 이유를 알려주는 편이 전달이 낫다. */}
       <CTAButton
@@ -265,7 +275,7 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
         color="confirm"
         variant="filled"
         hideOnScroll
-        disabled={upsertMutation.isPending}
+        disabled={!isReady || upsertMutation.isPending}
       >
         저장
       </CTAButton>

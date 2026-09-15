@@ -1,11 +1,12 @@
--- 역할: 지출이 추가된 직후 해당 월의 예산 초과 여부를 판정해 알림 레코드를 만든다.
--- 동작:
---   1. 호출자가 해당 가구 구성원인지 검증한다(security definer라 RLS를 우회하기 때문).
---   2. 대상 월의 scope별 지출 합계를 v_food_expenses에서 구한다.
---   3. 예산이 설정된 scope 중 지출이 예산을 넘은 것만 남긴다.
---   4. budget_exceeded_enabled가 켜진 가구원마다 알림을 insert한다.
--- 비고: dedupe_key로 월 × scope × 사용자당 1회만 남아, 지출을 추가할 때마다 알림이 쏟아지지 않는다.
---       push는 route가 즉시 보내므로 push_sent_at을 채워 cron 재발송을 막는다.
+-- 예산 초과 알림이 두 번 발송되던 문제를 고친다.
+--
+-- create_budget_exceeded_notifications는 push_sent_at 없이 알림 행을 넣었고,
+-- route(notifyBudgetExceeded)가 그 직후 dispatch-household-notification으로 push를 한 번 보냈다.
+-- 그런데 get_pending_push_notifications는 type을 가리지 않고
+-- push_sent_at is null and read_at is null인 행을 전부 집어가므로,
+-- 다음 cron(만료 알림, 주간 지출 알림)이 돌 때 같은 예산 초과 알림이 다시 발송됐다.
+--
+-- 즉시 발송하는 알림이므로 insert 시점에 push_sent_at을 채워 cron 대상에서 제외한다.
 
 create or replace function public.create_budget_exceeded_notifications(
   p_household_id uuid,
@@ -115,3 +116,5 @@ begin
   return v_inserted_count;
 end;
 $$;
+
+select pg_notify('pgrst', 'reload schema');
