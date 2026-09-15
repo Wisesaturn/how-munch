@@ -213,7 +213,7 @@ export function IngredientForm({
                     onOpenProductNameSearch(field.state.value, (name) => field.handleChange(name))
                   }
                   className={cn(
-                    'border-input flex h-10 w-full items-center justify-between rounded-md border bg-white px-3 py-2 text-sm',
+                    'border-input flex h-10 w-full items-center justify-between rounded-md border bg-white px-3 text-sm',
                     'hover:bg-accent transition-colors',
                     field.state.meta.errors.length > 0 && 'border-destructive',
                     !field.state.value && 'text-muted-foreground',
@@ -249,7 +249,7 @@ export function IngredientForm({
                     onOpenBrandSearch(field.state.value, (brand) => field.handleChange(brand))
                   }
                   className={cn(
-                    'border-input flex h-10 w-full items-center justify-between rounded-md border bg-white px-3 py-2 text-sm',
+                    'border-input flex h-10 w-full items-center justify-between rounded-md border bg-white px-3 text-sm',
                     'hover:bg-accent transition-colors',
                     field.state.meta.errors.length > 0 && 'border-destructive',
                     !field.state.value && 'text-muted-foreground',
