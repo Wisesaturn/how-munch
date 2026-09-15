@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/commons/lib';
 import { type Database } from '@/commons/model/types';
 
+import { budgetKeys } from '@/entities/budget';
 import { foodExpenseKeys } from '@/entities/food-expense';
 import { fridgeItemKeys } from '@/entities/fridge-item';
 import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
@@ -25,6 +26,8 @@ export function useAddIngredientMutation() {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       // 식비 탭은 통합 뷰를 읽으므로 장보기 변경도 함께 무효화해야 즉시 반영된다
       queryClient.invalidateQueries({ queryKey: foodExpenseKeys.all });
+      // 지출이 바뀌면 예산 소진율과 일자별 시리즈도 같이 낡는다
+      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
       // 장보기 추가는 냉장고 품목을 새로 만들거나 기존 품목에 병합하므로 식단 재료 선택 목록도 갱신한다
       queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
@@ -43,6 +46,8 @@ export function useUpdateIngredientMutation() {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       // 식비 탭은 통합 뷰를 읽으므로 장보기 변경도 함께 무효화해야 즉시 반영된다
       queryClient.invalidateQueries({ queryKey: foodExpenseKeys.all });
+      // 지출이 바뀌면 예산 소진율과 일자별 시리즈도 같이 낡는다
+      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
       // 이름/브랜드 변경이 냉장고 품목까지 바꾸므로 식단 카드와 재료 선택 목록을 함께 갱신한다
       queryClient.invalidateQueries({ queryKey: mealKeys.all });
@@ -80,6 +85,8 @@ export function useDeleteIngredientMutation() {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       // 식비 탭은 통합 뷰를 읽으므로 장보기 변경도 함께 무효화해야 즉시 반영된다
       queryClient.invalidateQueries({ queryKey: foodExpenseKeys.all });
+      // 지출이 바뀌면 예산 소진율과 일자별 시리즈도 같이 낡는다
+      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
       queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },

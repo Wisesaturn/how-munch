@@ -3,19 +3,24 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/commons/lib';
 import { type Database } from '@/commons/model/types';
 
+import { budgetKeys } from '@/entities/budget';
 import { diningExpenseKeys, type DiningExpense } from '@/entities/dining-expense';
 import { foodExpenseKeys } from '@/entities/food-expense';
 
 type DiningExpenseInsert = Database['public']['Tables']['dining_expenses']['Insert'];
 type DiningExpenseUpdate = Database['public']['Tables']['dining_expenses']['Update'];
 
-/** 외식비는 냉장고·식단과 연결되지 않으므로 통합 목록과 자동완성 후보만 갱신하면 된다 */
+/**
+ * 외식비는 냉장고·식단과 연결되지 않지만 식비 지출에는 포함된다.
+ * 통합 목록과 자동완성 후보, 그리고 예산 소진율까지 함께 갱신한다.
+ */
 function useInvalidateDiningExpenses() {
   const queryClient = useQueryClient();
 
   return () => {
     queryClient.invalidateQueries({ queryKey: foodExpenseKeys.all });
     queryClient.invalidateQueries({ queryKey: diningExpenseKeys.all });
+    queryClient.invalidateQueries({ queryKey: budgetKeys.all });
   };
 }
 
