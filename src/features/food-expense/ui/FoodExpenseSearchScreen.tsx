@@ -10,14 +10,17 @@ import { ChevronLeft, Search, X } from 'lucide-react';
 import { useConditionalEffect } from 'react-simplikit';
 import { useIntersectionObserver } from 'usehooks-ts';
 
+import { cn } from '@/commons/lib';
 import { Button, Chip, ChipRow, InputGroup } from '@/commons/ui';
 
-import { type Ingredient } from '@/entities/ingredient';
+import { type FoodExpense, type FoodExpenseFilterKind } from '@/entities/food-expense';
 import { useIngredientCategory } from '@/entities/ingredient-category';
+import { useSynonymExpandedTerms } from '@/entities/search-synonym';
 
-import { useIngredientSearchInfiniteQuery } from '../api/queries';
+import { useFoodExpenseSearchInfiniteQuery } from '../api/queries';
 
-import { IngredientItem } from './IngredientItem';
+import { FoodExpenseItem } from './FoodExpenseItem';
+import { FoodExpenseKindFilter } from './FoodExpenseKindFilter';
 
 /* -------------------------------------------------------------------------------------------------
  * Types
@@ -50,23 +53,24 @@ function computeDateRange(period: PeriodKey): { startDate: string; endDate: stri
 }
 
 /* -------------------------------------------------------------------------------------------------
- * IngredientSearchScreen
+ * FoodExpenseSearchScreen
  * -----------------------------------------------------------------------------------------------*/
 
-interface IngredientSearchScreenProps {
+interface FoodExpenseSearchScreenProps {
   householdId: string;
   onClose: () => void;
-  onIngredientSelect: (ingredient: Ingredient) => void;
+  onExpenseSelect: (expense: FoodExpense) => void;
 }
 
-export function IngredientSearchScreen({
+export function FoodExpenseSearchScreen({
   householdId,
   onClose,
-  onIngredientSelect,
-}: IngredientSearchScreenProps) {
+  onExpenseSelect,
+}: FoodExpenseSearchScreenProps) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [period, setPeriod] = useState<PeriodKey>('1개월');
+  const [kind, setKind] = useState<FoodExpenseFilterKind>('all');
 
   const applyDebounce = useMemo(
     () => debounce((value: string) => setDebouncedQuery(value), 300),
@@ -90,7 +94,10 @@ export function IngredientSearchScreen({
   const { getCategoryById } = useIngredientCategory(householdId);
 
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useIngredientSearchInfiniteQuery(householdId, startDate, endDate, debouncedQuery);
+    useFoodExpenseSearchInfiniteQuery(householdId, startDate, endDate, kind, debouncedQuery);
+
+  // 서버에 보낸 것과 같은 확장 단어 목록이다. 유사어로 걸린 행은 실제로 들어 있는 단어가 굵어진다.
+  const highlightTerms = useSynonymExpandedTerms(debouncedQuery);
 
   const allItems = data?.pages.flatMap((page) => page.contents) ?? [];
   const grouped = Object.entries(groupBy(allItems, (item) => item.date)).sort(([a], [b]) =>
@@ -114,23 +121,32 @@ export function IngredientSearchScreen({
       className="pointer-events-auto"
       appBar={{
         title: (
-          <InputGroup className="border-none border-gray-200">
+          <InputGroup
+            className={cn(
+              'w-full rounded-full border-none bg-gray-100 pr-1 shadow-none',
+              // 앱바 안에서는 포커스 링이 둥근 배경 위에 겹쳐 보인다. 배경색만으로 충분하다.
+              'has-[[data-slot=input-group-control]:focus-visible]:border-transparent',
+              'has-[[data-slot=input-group-control]:focus-visible]:ring-0',
+            )}
+          >
             <InputGroup.Input
               type="text"
               value={query}
               onChange={(e) => updateQuery(e.target.value)}
-              placeholder="품목명 검색"
+              placeholder="품목명, 가게명 검색"
               autoFocus
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
+              className="bg-transparent px-4"
             />
             {query && (
               <InputGroup.Button
                 variant="ghost"
                 onClick={() => updateQuery('')}
                 aria-label="검색어 지우기"
+                className="size-7 shrink-0 rounded-full"
               >
                 <X className="size-3.5" />
               </InputGroup.Button>
@@ -147,8 +163,9 @@ export function IngredientSearchScreen({
       }}
     >
       <div className="flex flex-col">
-        {/* 기간 필터 */}
-        <div className="sticky top-0 z-10 bg-white px-4 py-3">
+        {/* 종류 + 기간 필터 */}
+        <div className="sticky top-0 z-10 flex flex-col gap-2 bg-white px-4 py-3">
+          <FoodExpenseKindFilter value={kind} onValueChange={setKind} />
           <ChipRow>
             {PERIODS.map((p) => (
               <Chip key={p} selected={period === p} onClick={() => setPeriod(p)}>
@@ -162,7 +179,7 @@ export function IngredientSearchScreen({
         {!trimmedQuery && (
           <div className="flex flex-col items-center gap-2 py-20 text-gray-400">
             <Search className="size-10 text-gray-200" />
-            <p className="text-sm">품목명을 입력해 검색하세요</p>
+            <p className="text-sm">품목명이나 가게명을 입력해 검색하세요</p>
           </div>
         )}
 
@@ -195,17 +212,17 @@ export function IngredientSearchScreen({
                       key={item.id}
                       type="button"
                       className="text-foreground flex w-full appearance-none flex-col gap-1 rounded-lg border bg-white px-3 py-2.5 text-left"
-                      onClick={() => onIngredientSelect(item)}
+                      onClick={() => onExpenseSelect(item)}
                     >
-                      <IngredientItem
-                        name={item.name}
-                        brand={item.brand}
-                        price={item.price}
-                        count={item.count}
-                        unit={item.unit}
-                        store={item.store}
-                        categoryLabel={getCategoryById(item.category_id)?.label ?? ''}
-                        categoryEmoji={getCategoryById(item.category_id)?.emoji ?? ''}
+                      <FoodExpenseItem
+                        expense={item}
+                        categoryLabel={
+                          item.category_id ? (getCategoryById(item.category_id)?.label ?? '') : ''
+                        }
+                        categoryEmoji={
+                          item.category_id ? (getCategoryById(item.category_id)?.emoji ?? '') : ''
+                        }
+                        highlightTerms={highlightTerms}
                       />
                     </button>
                   ))}

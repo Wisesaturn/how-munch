@@ -2,7 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 
-import { Search, Settings, SlidersHorizontal } from 'lucide-react';
+import { format } from 'date-fns';
+import { ChartColumn, Search, Settings, SlidersHorizontal } from 'lucide-react';
 
 import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
@@ -17,7 +18,7 @@ import { MainAppBar } from '@/modules/main-app-bar';
 
 function getMainTitle(pathname: string | null) {
   if (!pathname) return '';
-  if (pathname.startsWith('/store')) return '장보기';
+  if (pathname.startsWith('/store')) return '식비';
   if (pathname.startsWith('/fridge')) return '냉장고';
   if (pathname.startsWith('/meal')) return '식단';
   if (pathname.startsWith('/profile')) return '프로필';
@@ -63,6 +64,36 @@ export function MainRouteAppBar() {
         className="mx-0"
         right={
           <div className="flex items-center gap-1">
+            {profile?.household_id && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() =>
+                    stackFlowActions.push('FoodExpenseSearchActivity', {
+                      householdId: profile.household_id!,
+                    })
+                  }
+                  aria-label="식비 검색"
+                >
+                  <Search className="size-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() =>
+                    stackFlowActions.push('BudgetActivity', {
+                      householdId: profile.household_id!,
+                      // 앱바는 페이지가 보고 있는 달을 알지 못하므로 이번 달로 연다.
+                      yearMonth: format(new Date(), 'yyyy-MM'),
+                    })
+                  }
+                  aria-label="예산 현황 열기"
+                >
+                  <ChartColumn className="size-5" />
+                </Button>
+              </>
+            )}
             <Button
               variant="ghost"
               size="icon-sm"
@@ -71,20 +102,6 @@ export function MainRouteAppBar() {
             >
               <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
             </Button>
-            {profile?.household_id && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() =>
-                  stackFlowActions.push('IngredientSearchActivity', {
-                    householdId: profile.household_id!,
-                  })
-                }
-                aria-label="장보기 검색"
-              >
-                <Search className="size-5" />
-              </Button>
-            )}
           </div>
         }
       />

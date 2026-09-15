@@ -1,5 +1,10 @@
 /** 도메인별 커스텀 에러 코드 (XXX_NNN 규격) */
 const DOMAIN_ERROR_CODE = {
+  // CMN: 공통 도메인
+  DUPLICATE_ENTRY: 'CMN_003',
+  CONSTRAINT_VIOLATION: 'CMN_004',
+  RESOURCE_NOT_FOUND: 'CMN_005',
+
   // AUT: 인증(Auth) 도메인
   AUTH_UNAUTHORIZED: 'AUT_001',
   COMMON_PERMISSION_DENIED: 'AUT_002',
@@ -38,6 +43,11 @@ const DOMAIN_ERROR_CODE = {
   // SBD: 소분(Subdivision) 도메인
   SUBDIVISION_INSUFFICIENT_STOCK: 'SBD_001',
 
+  // BUD: 예산(Budget) 도메인
+  BUDGET_SCOPE_SUM_EXCEEDS_TOTAL: 'BUD_001',
+  BUDGET_YEAR_MONTH_INVALID: 'BUD_002',
+  BUDGET_AMOUNT_NEGATIVE: 'BUD_003',
+
   // SRC: 검색(Search) 도메인
   SEARCH_SYNONYM_GROUP_CONFLICT: 'SRC_001',
   SEARCH_SYNONYM_TERM_EMPTY: 'SRC_002',
@@ -62,6 +72,11 @@ interface DatabaseErrorLike {
 
 /** 도메인 에러 코드별 사용자 메시지 */
 const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
+  // CMN
+  CMN_003: '이미 같은 항목이 있습니다.',
+  CMN_004: '입력한 값이 허용 범위를 벗어났습니다.',
+  CMN_005: '요청한 항목을 찾을 수 없습니다.',
+
   // AUT
   AUT_001: '로그인이 필요합니다.',
   AUT_002: '권한이 없습니다.',
@@ -100,6 +115,11 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
   // SBD
   SBD_001: '소분할 재고가 부족합니다.',
 
+  // BUD
+  BUD_001: '항목별 예산 합계가 전체 예산을 초과합니다.',
+  BUD_002: '예산 연월 형식이 올바르지 않습니다.',
+  BUD_003: '예산은 0원 이상이어야 합니다.',
+
   // SRC
   SRC_001: '입력한 단어가 이미 다른 유사어 그룹에 있습니다. 설정에서 확인해 주세요.',
   SRC_002: '유사어를 입력해 주세요.',
@@ -111,6 +131,9 @@ const DOMAIN_ERROR_MESSAGE: Record<DomainApiCode, string> = {
  * RPC hint가 없는 경우 errcode로 도메인 에러를 식별한다.
  */
 const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
+  // 표준 PostgreSQL 제약 위반. 도메인 코드가 없으면 원인이 안 보이는 500으로만 떨어진다.
+  '23505': 'DUPLICATE_ENTRY',
+  '23514': 'CONSTRAINT_VIOLATION',
   A0001: 'AUTH_UNAUTHORIZED',
   A0002: 'COMMON_PERMISSION_DENIED',
   F0001: 'FRIDGE_IN_USE_IN_MEAL',
@@ -135,6 +158,9 @@ const POSTGRES_ERRCODE_TO_KEY: Partial<Record<string, DomainErrorCodeKey>> = {
   I0005: 'INGREDIENT_NOT_FOUND',
   I0006: 'INGREDIENT_UNIT_LOCKED_BY_MEAL',
   S0001: 'SUBDIVISION_INSUFFICIENT_STOCK',
+  B0001: 'BUDGET_SCOPE_SUM_EXCEEDS_TOTAL',
+  B0002: 'BUDGET_YEAR_MONTH_INVALID',
+  B0003: 'BUDGET_AMOUNT_NEGATIVE',
   // 검색 도메인은 'S' 대역이 소분(Subdivision)에 선점돼 있어 'R'(seaRch)을 사용한다.
   R0001: 'SEARCH_SYNONYM_GROUP_CONFLICT',
   R0002: 'SEARCH_SYNONYM_TERM_EMPTY',

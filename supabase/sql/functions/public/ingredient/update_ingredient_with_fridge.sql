@@ -4,8 +4,9 @@
 -- 동작:
 -- 1. ingredient를 갱신하고, 식단이 참조 중이면 단위 변경을 막습니다.
 -- 2. 정체성 튜플에 advisory lock을 건 뒤 병합 대상 품목을 찾습니다.
--- 3. 병합 대상이 있으면 (A) 병합, 없고 단독 소유면 (B) 제자리 이름 변경, 공유 중이면 (C) 분리합니다.
--- 4. 연결 배치를 목표 품목으로 옮기고, 비게 된 옛 품목은 식단 참조를 재연결한 뒤 소프트 삭제합니다.
+-- 3. 정체성이 그대로면 (0) 기존 품목을 그대로 씁니다.
+-- 4. 병합 대상이 있으면 (A) 병합, 없고 단독 소유면 (B) 제자리 이름 변경, 공유 중이면 (C) 분리합니다.
+-- 5. 연결 배치를 목표 품목으로 옮기고, 비게 된 옛 품목은 식단 참조를 재연결한 뒤 소프트 삭제합니다.
 create or replace function public.update_ingredient_with_fridge(
   p_ingredient_id uuid,
   p_updates jsonb default '{}'::jsonb
@@ -125,26 +126,51 @@ begin
     )
   );
 
+  -- 분기 (0): 정체성(이름·브랜드·단위·카테고리)이 그대로면 옮길 곳이 없다. 기존 품목이 곧 목표다.
+  -- 이 선처리가 없으면 날짜나 가격만 바꿔도 아래 분기 (C)까지 내려가 같은 정체성의 품목을
+  -- 새로 만들고, uq_fridge_items_identity(활성 품목 1개) 유니크 위반으로 수정 자체가 막힌다.
+  -- 같은 품목을 두 번 장봐서 두 장보기 행이 한 품목을 공유할 때 실제로 이 경로를 탔다.
+  if v_previous_fridge_item_id is not null then
+    select f.id
+      into v_target_fridge_item_id
+    from public.fridge_items f
+    where f.id = v_previous_fridge_item_id
+      and f.deleted_at is null
+      and not f.is_subdivided
+      and lower(btrim(f.name)) = lower(btrim(v_ingredient.name))
+      and coalesce(nullif(lower(btrim(f.brand)), ''), '') = v_brand_norm
+      and f.unit = v_ingredient.unit
+      and f.category_id = v_ingredient.category_id
+    for update;
+  end if;
+
   -- 분기 (A): 새 이름과 같은 정체성의 다른 활성 품목이 있으면 그쪽으로 병합한다.
   -- 소분으로 파생된 품목은 장보기와 무관한 별도 재고이므로 병합 대상에서 제외한다.
-  select f.id
-    into v_target_fridge_item_id
-  from public.fridge_items f
-  where f.household_id = v_ingredient.household_id
-    and f.deleted_at is null
-    and not f.is_subdivided
-    and f.id is distinct from v_previous_fridge_item_id
-    and lower(btrim(f.name)) = lower(btrim(v_ingredient.name))
-    and coalesce(nullif(lower(btrim(f.brand)), ''), '') = v_brand_norm
-    and f.unit = v_ingredient.unit
-    and f.category_id = v_ingredient.category_id
-  order by f.created_at asc
-  limit 1
-  for update;
+  if v_target_fridge_item_id is null then
+    select f.id
+      into v_target_fridge_item_id
+    from public.fridge_items f
+    where f.household_id = v_ingredient.household_id
+      and f.deleted_at is null
+      and not f.is_subdivided
+      and f.id is distinct from v_previous_fridge_item_id
+      and lower(btrim(f.name)) = lower(btrim(v_ingredient.name))
+      and coalesce(nullif(lower(btrim(f.brand)), ''), '') = v_brand_norm
+      and f.unit = v_ingredient.unit
+      and f.category_id = v_ingredient.category_id
+    order by f.created_at asc
+    limit 1
+    for update;
+  end if;
 
-  -- 분기 (B): 병합 대상이 없고 기존 품목을 이 장보기 항목이 단독으로 쓰고 있으면 제자리에서 이름을 바꾼다.
-  -- 참조가 끊기지 않으므로 식단은 자동으로 새 이름을 따라간다.
-  if v_target_fridge_item_id is null and v_previous_fridge_item_id is not null then
+  -- 분기 (B): 목표가 없거나 기존 품목 그대로인데, 이 장보기 항목이 그 품목을 단독으로 쓰고 있으면
+  -- 제자리에서 갱신한다. 참조가 끊기지 않으므로 식단은 자동으로 새 이름을 따라간다.
+  -- 공유 중이면 갱신하지 않는다. max_count를 건드리면 다른 장보기 행의 몫까지 덮어쓴다.
+  if v_previous_fridge_item_id is not null
+    and (
+      v_target_fridge_item_id is null
+      or v_target_fridge_item_id = v_previous_fridge_item_id
+    ) then
     select
       not exists (
         select 1

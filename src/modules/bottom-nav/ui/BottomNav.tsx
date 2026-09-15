@@ -5,12 +5,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-import { CalendarDays, Package, Snowflake, User } from 'lucide-react';
+import { CalendarDays, Receipt, Snowflake, User } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
 
 const NAV_ITEMS = [
-  { href: '/store', label: '장보기', icon: Package },
+  { href: '/store', label: '식비', icon: Receipt },
   { href: '/fridge', label: '냉장고', icon: Snowflake },
   { href: '/meal', label: '식단', icon: CalendarDays },
   { href: '/profile', label: '프로필', icon: User },

@@ -217,6 +217,84 @@ export interface Database {
           },
         ];
       };
+      budgets: {
+        Row: {
+          id: string;
+          household_id: string;
+          year_month: string;
+          scope: 'total' | 'grocery' | 'restaurant' | 'delivery';
+          amount: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          year_month: string;
+          scope: 'total' | 'grocery' | 'restaurant' | 'delivery';
+          amount?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          year_month?: string;
+          scope?: 'total' | 'grocery' | 'restaurant' | 'delivery';
+          amount?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      dining_expenses: {
+        Row: {
+          id: string;
+          household_id: string;
+          user_id: string | null;
+          date: string;
+          kind: 'restaurant' | 'delivery';
+          name: string | null;
+          brand: string;
+          store: string | null;
+          price: number;
+          memo: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          user_id?: string | null;
+          date: string;
+          kind: 'restaurant' | 'delivery';
+          name?: string | null;
+          brand: string;
+          store?: string | null;
+          price?: number;
+          memo?: string | null;
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          user_id?: string | null;
+          date?: string;
+          kind?: 'restaurant' | 'delivery';
+          name?: string | null;
+          brand?: string;
+          store?: string | null;
+          price?: number;
+          memo?: string | null;
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       fridge_items: {
         Row: {
           id: string;
@@ -582,6 +660,8 @@ export interface Database {
           quiet_hours_end: string | null;
           fridge_item_added_enabled: boolean;
           meal_added_enabled: boolean;
+          budget_exceeded_enabled: boolean;
+          weekly_expense_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -594,6 +674,8 @@ export interface Database {
           quiet_hours_end?: string | null;
           fridge_item_added_enabled?: boolean;
           meal_added_enabled?: boolean;
+          budget_exceeded_enabled?: boolean;
+          weekly_expense_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -606,6 +688,8 @@ export interface Database {
           quiet_hours_end?: string | null;
           fridge_item_added_enabled?: boolean;
           meal_added_enabled?: boolean;
+          budget_exceeded_enabled?: boolean;
+          weekly_expense_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -696,9 +780,46 @@ export interface Database {
       };
     };
     Views: {
-      [_ in never]: never;
+      v_food_expenses: {
+        Row: {
+          id: string;
+          household_id: string;
+          user_id: string | null;
+          kind: 'grocery' | 'restaurant' | 'delivery';
+          date: string;
+          name: string | null;
+          brand: string | null;
+          store: string | null;
+          price: number;
+          category_id: string | null;
+          count: number | null;
+          unit: 'count' | 'g' | 'kg' | 'ml' | 'l' | null;
+          linked_fridge_item_id: string | null;
+          linked_fridge_batch_id: string | null;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
+      create_budget_exceeded_notifications: {
+        Args: { p_household_id: string; p_year_month: string };
+        Returns: number;
+      };
+      generate_weekly_expense_notifications: {
+        Args: { p_target_date?: string };
+        Returns: number;
+      };
+      upsert_household_budgets_guarded: {
+        Args: { p_household_id: string; p_year_month: string; p_budgets: Json };
+        Returns: Json;
+      };
+      get_food_expense_daily_series: {
+        Args: { p_household_id: string; p_year_month: string };
+        Returns: { year_month: string; expense_date: string; kind: string; total: number }[];
+      };
       add_ingredient_with_fridge: {
         Args: {
           p_household_id: string;

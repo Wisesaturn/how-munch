@@ -42,6 +42,8 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   );
   const fridgeItemAddedEnabled = preferences?.fridge_item_added_enabled ?? false;
   const mealAddedEnabled = preferences?.meal_added_enabled ?? false;
+  const budgetExceededEnabled = preferences?.budget_exceeded_enabled ?? true;
+  const weeklyExpenseEnabled = preferences?.weekly_expense_enabled ?? true;
 
   function buildBaseValues() {
     return {
@@ -52,6 +54,8 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
       quiet_hours_end: null,
       fridge_item_added_enabled: fridgeItemAddedEnabled,
       meal_added_enabled: mealAddedEnabled,
+      budget_exceeded_enabled: budgetExceededEnabled,
+      weekly_expense_enabled: weeklyExpenseEnabled,
     };
   }
 
@@ -72,7 +76,11 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   }
 
   function saveActivityPreference(
-    key: 'fridge_item_added_enabled' | 'meal_added_enabled',
+    key:
+      | 'fridge_item_added_enabled'
+      | 'meal_added_enabled'
+      | 'budget_exceeded_enabled'
+      | 'weekly_expense_enabled',
     value: boolean,
   ) {
     upsertPreferencesMutation.mutate({
@@ -208,6 +216,30 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                 checked={mealAddedEnabled}
                 onCheckedChange={(checked) =>
                   saveActivityPreference('meal_added_enabled', Boolean(checked))
+                }
+                disabled={upsertPreferencesMutation.isPending}
+              />
+            </div>
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content className="space-y-3 py-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">예산 초과 알림</p>
+              <Switch
+                checked={budgetExceededEnabled}
+                onCheckedChange={(checked) =>
+                  saveActivityPreference('budget_exceeded_enabled', Boolean(checked))
+                }
+                disabled={upsertPreferencesMutation.isPending}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">주간 지출 알림</p>
+              <Switch
+                checked={weeklyExpenseEnabled}
+                onCheckedChange={(checked) =>
+                  saveActivityPreference('weekly_expense_enabled', Boolean(checked))
                 }
                 disabled={upsertPreferencesMutation.isPending}
               />
