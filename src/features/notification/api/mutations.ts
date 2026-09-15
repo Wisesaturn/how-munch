@@ -143,6 +143,8 @@ interface UpdateNotificationPreferencesParams {
     | 'quiet_hours_end'
     | 'fridge_item_added_enabled'
     | 'meal_added_enabled'
+    | 'budget_exceeded_enabled'
+    | 'weekly_expense_enabled'
   >;
 }
 
@@ -183,6 +185,14 @@ export function useUpsertNotificationPreferencesMutation() {
           false,
         meal_added_enabled:
           variables.values.meal_added_enabled ?? previousPreferences?.meal_added_enabled ?? false,
+        budget_exceeded_enabled:
+          variables.values.budget_exceeded_enabled ??
+          previousPreferences?.budget_exceeded_enabled ??
+          true,
+        weekly_expense_enabled:
+          variables.values.weekly_expense_enabled ??
+          previousPreferences?.weekly_expense_enabled ??
+          true,
         created_at: previousPreferences?.created_at ?? now,
         updated_at: now,
       };

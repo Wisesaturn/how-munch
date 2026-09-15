@@ -3,17 +3,23 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { sendNotification, setVapidDetails, type WebPushError } from 'npm:web-push';
 
-// 역할: 가구원 활동(냉장고 추가, 식단 등록) 발생 시 해당 가구의 다른 멤버에게 push 알림을 발송한다.
+// 역할: 가구 이벤트(냉장고 추가, 식단 등록, 예산 초과) 발생 시 해당 가구 멤버에게 push 알림을 발송한다.
 // 동작:
 // 1. 호출자 JWT 검증 (user 클라이언트로 getUser)
 // 2. 요청 바디에서 householdId, triggeredBy, type, title, body, payload 수신
-// 3. household_members에서 triggeredBy를 제외한 멤버 목록 조회
+// 3. household_members에서 멤버 목록 조회 (예산 초과는 유발자 포함 — 돈을 쓴 사람도 초과 사실을 알아야 한다)
 // 4. 각 멤버의 notification_preferences에서 해당 type의 토글 확인 (off이면 스킵)
 // 5. 활성 push 구독 조회 → sendNotification 발송
 // 6. 만료 구독(404/410) → deactivate 처리
 // 7. 항상 200 반환 (fire-and-forget — 발송 실패가 메인 저장 흐름을 블로킹하지 않음)
 
-type NotificationType = 'fridge_item_added' | 'meal_added';
+type NotificationType = 'fridge_item_added' | 'meal_added' | 'budget_exceeded';
+
+const PREFERENCE_KEY: Record<NotificationType, string> = {
+  fridge_item_added: 'fridge_item_added_enabled',
+  meal_added: 'meal_added_enabled',
+  budget_exceeded: 'budget_exceeded_enabled',
+};
 
 interface RequestBody {
   householdId: string;
@@ -76,17 +82,25 @@ Deno.serve(async (request: Request) => {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
   }
 
-  const preferenceKey =
-    type === 'fridge_item_added' ? 'fridge_item_added_enabled' : 'meal_added_enabled';
+  const preferenceKey = PREFERENCE_KEY[type];
+  if (!preferenceKey) {
+    return new Response(JSON.stringify({ error: 'Unsupported notification type' }), {
+      status: 400,
+    });
+  }
 
   const serviceClient = createClient(supabaseUrl, serviceRoleKey);
 
-  // 가구 멤버 목록 조회 (triggeredBy 제외)
-  const { data: members, error: membersError } = await serviceClient
+  // 가구 멤버 목록 조회. 활동 알림은 유발자를 제외하지만, 예산 초과는 유발자도 받아야 한다.
+  const membersQuery = serviceClient
     .from('household_members')
     .select('user_id')
-    .eq('household_id', householdId)
-    .neq('user_id', triggeredBy);
+    .eq('household_id', householdId);
+
+  const { data: members, error: membersError } =
+    type === 'budget_exceeded'
+      ? await membersQuery
+      : await membersQuery.neq('user_id', triggeredBy);
 
   if (membersError || !members || members.length === 0) {
     return new Response(JSON.stringify({ dispatched: 0 }), { status: 200 });

@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server';
 
-import { withAuth } from '@/apps/route';
+import { notifyBudgetExceeded, withAuth } from '@/apps/route';
 
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { type Database, type Page, type PageInfo } from '@/commons/model/types';
@@ -150,12 +150,14 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     return apiResponse.BAD_REQUEST('CMN_002', 'household_id, kind, brand가 필요합니다.');
   }
 
+  const expenseDate = body.date ?? new Date().toISOString().slice(0, 10);
+
   const { data, error } = await supabase
     .from('dining_expenses')
     .insert({
       household_id: body.household_id,
       user_id: userId,
-      date: body.date ?? new Date().toISOString().slice(0, 10),
+      date: expenseDate,
       kind: body.kind,
       name: body.name || null,
       brand: body.brand,
@@ -168,6 +170,14 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     .single<DiningExpenseRow>();
 
   if (error) return apiResponse.INTERNAL_ERROR();
+
+  // 예산 초과 알림 — 실패해도 외식비 저장 흐름을 막지 않는다
+  void notifyBudgetExceeded({
+    supabase,
+    userId,
+    householdId: body.household_id,
+    date: expenseDate,
+  });
 
   return apiResponse.CREATED(data);
 });

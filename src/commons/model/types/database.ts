@@ -660,6 +660,8 @@ export interface Database {
           quiet_hours_end: string | null;
           fridge_item_added_enabled: boolean;
           meal_added_enabled: boolean;
+          budget_exceeded_enabled: boolean;
+          weekly_expense_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -672,6 +674,8 @@ export interface Database {
           quiet_hours_end?: string | null;
           fridge_item_added_enabled?: boolean;
           meal_added_enabled?: boolean;
+          budget_exceeded_enabled?: boolean;
+          weekly_expense_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -684,6 +688,8 @@ export interface Database {
           quiet_hours_end?: string | null;
           fridge_item_added_enabled?: boolean;
           meal_added_enabled?: boolean;
+          budget_exceeded_enabled?: boolean;
+          weekly_expense_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -798,6 +804,14 @@ export interface Database {
       };
     };
     Functions: {
+      create_budget_exceeded_notifications: {
+        Args: { p_household_id: string; p_year_month: string };
+        Returns: number;
+      };
+      generate_weekly_expense_notifications: {
+        Args: { p_target_date?: string };
+        Returns: number;
+      };
       upsert_household_budgets_guarded: {
         Args: { p_household_id: string; p_year_month: string; p_budgets: Json };
         Returns: Json;

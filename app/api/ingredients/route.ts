@@ -2,7 +2,7 @@ import { type NextRequest } from 'next/server';
 
 import { josa } from 'es-hangul';
 
-import { withAuth } from '@/apps/route';
+import { notifyBudgetExceeded, withAuth } from '@/apps/route';
 
 import { resolveDomainError } from '@/commons/lib';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
@@ -148,6 +148,16 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     if (domainError) return apiResponse.CONFLICT(domainError.code, domainError.message);
     return apiResponse.INTERNAL_ERROR();
   }
+
+  const expenseDate = body.date ?? new Date().toISOString().slice(0, 10);
+
+  // 예산 초과 알림 — 실패해도 장보기 저장 흐름을 막지 않는다
+  void notifyBudgetExceeded({
+    supabase,
+    userId,
+    householdId: body.household_id,
+    date: expenseDate,
+  });
 
   if (!body.skipNotification) {
     void (async () => {
