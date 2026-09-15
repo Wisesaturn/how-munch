@@ -37,7 +37,9 @@ const [SegmentControlProvider, useSegmentControl] =
  * -----------------------------------------------------------------------------------------------*/
 
 const segmentControlVariants = cva(
-  'relative inline-flex w-full items-center rounded-full shadow-[0_4px_16px_-10px_rgba(6,95,70,0.4)] select-none',
+  // items-stretch — 항목이 콘텐츠 높이로 줄면 pill(absolute inset-0)도 같이 작아져
+  // 트랙 안에서 떠 보인다. 항목이 트랙 높이(패딩 제외)를 꽉 채워야 pill이 영역에 맞는다.
+  'relative inline-flex w-full items-stretch rounded-full shadow-[0_4px_16px_-10px_rgba(6,95,70,0.4)] select-none',
   {
     variants: {
       size: {
