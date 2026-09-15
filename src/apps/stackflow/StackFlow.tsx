@@ -5,10 +5,14 @@ import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
+import { type DiningExpense } from '@/entities/dining-expense';
+import { type FoodExpense } from '@/entities/food-expense';
 import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type Meal, type MealType } from '@/entities/meal';
 
+import { DiningExpenseAddScreen, DiningExpenseEditScreen } from '@/features/dining-expense';
+import { FoodExpenseSearchScreen, toDiningExpense, toIngredient } from '@/features/food-expense';
 import {
   FridgeBatchEditScreen,
   FridgeExpiryListScreen,
@@ -25,7 +29,6 @@ import {
   clearPendingProductNameCallback,
   IngredientAddScreen,
   IngredientEditScreen,
-  IngredientSearchScreen,
   ProductNameSearchScreen,
   resolvePendingProductNameCallback,
   setPendingProductNameCallback,
@@ -473,7 +476,7 @@ function PromptIngredientStagingEditActivity({
   );
 }
 
-function IngredientSearchActivity({
+function FoodExpenseSearchActivity({
   params,
 }: {
   params: {
@@ -482,19 +485,63 @@ function IngredientSearchActivity({
 }) {
   const { pop, push } = useActions();
 
-  function selectIngredient(ingredient: Ingredient) {
-    push('IngredientEditActivity', {
-      householdId: params.householdId,
-      ingredient,
-      suggestions: [],
-    });
+  // 통합 검색 결과는 장보기와 외식비가 섞여 있어, 종류에 맞는 편집 화면으로 갈라 보낸다.
+  function selectExpense(expense: FoodExpense) {
+    const ingredient = toIngredient(expense);
+    if (ingredient) {
+      push('IngredientEditActivity', {
+        householdId: params.householdId,
+        ingredient,
+        suggestions: [],
+      });
+      return;
+    }
+
+    const diningExpense = toDiningExpense(expense);
+    if (diningExpense) {
+      push('DiningExpenseEditActivity', {
+        householdId: params.householdId,
+        expense: diningExpense,
+      });
+    }
   }
 
   return (
-    <IngredientSearchScreen
+    <FoodExpenseSearchScreen
       onClose={pop}
       householdId={params.householdId}
-      onIngredientSelect={selectIngredient}
+      onExpenseSelect={selectExpense}
+    />
+  );
+}
+
+function DiningExpenseAddActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+  };
+}) {
+  const { pop } = useActions();
+
+  return <DiningExpenseAddScreen onClose={pop} householdId={params.householdId} />;
+}
+
+function DiningExpenseEditActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    expense: DiningExpense;
+  };
+}) {
+  const { pop } = useActions();
+
+  return (
+    <DiningExpenseEditScreen
+      onClose={pop}
+      householdId={params.householdId}
+      expense={params.expense}
     />
   );
 }
@@ -601,7 +648,9 @@ const appStackFlow = stackflow({
     PlaceholderActivity,
     IngredientAddActivity,
     IngredientEditActivity,
-    IngredientSearchActivity,
+    FoodExpenseSearchActivity,
+    DiningExpenseAddActivity,
+    DiningExpenseEditActivity,
     FridgeItemAddActivity,
     FridgeItemEditActivity,
     FridgeItemSubdivideActivity,
@@ -629,7 +678,9 @@ const appStackFlow = stackflow({
         PlaceholderActivity: '/placeholder',
         IngredientAddActivity: '/ingredient/add',
         IngredientEditActivity: '/ingredient/edit',
-        IngredientSearchActivity: '/ingredient/search',
+        FoodExpenseSearchActivity: '/food-expense/search',
+        DiningExpenseAddActivity: '/dining/add',
+        DiningExpenseEditActivity: '/dining/edit',
         FridgeItemAddActivity: '/fridge/item/add',
         FridgeItemEditActivity: '/fridge/item/edit',
         FridgeItemSubdivideActivity: '/fridge/item/subdivide',

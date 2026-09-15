@@ -5,42 +5,44 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { groupBy } from 'es-toolkit';
-import { ShoppingCart } from 'lucide-react';
+import { Receipt } from 'lucide-react';
 
 import { EmptyState } from '@/commons/ui';
 
-import { type Ingredient } from '@/entities/ingredient';
+import { type FoodExpense } from '@/entities/food-expense';
 import { useIngredientCategory } from '@/entities/ingredient-category';
 
-import { IngredientItem } from './IngredientItem';
+import { sumFoodExpensePrice } from '../lib/foodExpense';
 
-function formatDailyTotal(items: Ingredient[]) {
-  const total = items.reduce((sum, item) => sum + item.price, 0);
+import { FoodExpenseItem } from './FoodExpenseItem';
+
+function formatDailyTotal(items: FoodExpense[]) {
+  const total = sumFoodExpensePrice(items);
   return total === 0 ? '0원' : `-${total.toLocaleString('ko-KR')}원`;
 }
 
-interface IngredientListProps {
+interface FoodExpenseListProps {
   householdId: string;
-  ingredients: Ingredient[];
-  onEdit: (ingredient: Ingredient) => void;
+  expenses: FoodExpense[];
+  onSelect: (expense: FoodExpense) => void;
 }
 
-export function IngredientList({ householdId, ingredients, onEdit }: IngredientListProps) {
+export function FoodExpenseList({ householdId, expenses, onSelect }: FoodExpenseListProps) {
   const { getCategoryById } = useIngredientCategory(householdId);
   const grouped = useMemo(() => {
-    const groups = groupBy(ingredients, (item) => item.date);
+    const groups = groupBy(expenses, (item) => item.date);
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
-  }, [ingredients]);
+  }, [expenses]);
 
-  if (ingredients.length === 0) {
+  if (expenses.length === 0) {
     return (
       <EmptyState.Root>
         <EmptyState.Content>
           <EmptyState.Indicator>
-            <ShoppingCart className="size-10 text-gray-300" />
+            <Receipt className="size-10 text-gray-300" />
           </EmptyState.Indicator>
-          <EmptyState.Title>장보기 내역이 없습니다</EmptyState.Title>
-          <EmptyState.Description>+ 버튼을 눌러 장보기 내역을 추가해 보세요</EmptyState.Description>
+          <EmptyState.Title>식비 내역이 없습니다</EmptyState.Title>
+          <EmptyState.Description>+ 버튼을 눌러 식비 내역을 추가해 보세요</EmptyState.Description>
         </EmptyState.Content>
       </EmptyState.Root>
     );
@@ -60,17 +62,16 @@ export function IngredientList({ householdId, ingredients, onEdit }: IngredientL
                 key={item.id}
                 type="button"
                 className="text-foreground flex w-full appearance-none flex-col gap-1 rounded-lg border bg-white px-3 py-2.5 text-left"
-                onClick={() => onEdit(item)}
+                onClick={() => onSelect(item)}
               >
-                <IngredientItem
-                  name={item.name}
-                  brand={item.brand}
-                  price={item.price}
-                  count={item.count}
-                  unit={item.unit}
-                  store={item.store}
-                  categoryLabel={getCategoryById(item.category_id)?.label ?? ''}
-                  categoryEmoji={getCategoryById(item.category_id)?.emoji ?? ''}
+                <FoodExpenseItem
+                  expense={item}
+                  categoryLabel={
+                    item.category_id ? (getCategoryById(item.category_id)?.label ?? '') : ''
+                  }
+                  categoryEmoji={
+                    item.category_id ? (getCategoryById(item.category_id)?.emoji ?? '') : ''
+                  }
                 />
               </button>
             ))}

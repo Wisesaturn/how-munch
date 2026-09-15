@@ -217,6 +217,54 @@ export interface Database {
           },
         ];
       };
+      dining_expenses: {
+        Row: {
+          id: string;
+          household_id: string;
+          user_id: string | null;
+          date: string;
+          kind: 'restaurant' | 'delivery';
+          name: string | null;
+          brand: string;
+          store: string | null;
+          price: number;
+          memo: string | null;
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          user_id?: string | null;
+          date: string;
+          kind: 'restaurant' | 'delivery';
+          name?: string | null;
+          brand: string;
+          store?: string | null;
+          price?: number;
+          memo?: string | null;
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          user_id?: string | null;
+          date?: string;
+          kind?: 'restaurant' | 'delivery';
+          name?: string | null;
+          brand?: string;
+          store?: string | null;
+          price?: number;
+          memo?: string | null;
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       fridge_items: {
         Row: {
           id: string;
@@ -696,7 +744,28 @@ export interface Database {
       };
     };
     Views: {
-      [_ in never]: never;
+      v_food_expenses: {
+        Row: {
+          id: string;
+          household_id: string;
+          user_id: string | null;
+          kind: 'grocery' | 'restaurant' | 'delivery';
+          date: string;
+          name: string | null;
+          brand: string | null;
+          store: string | null;
+          price: number;
+          category_id: string | null;
+          count: number | null;
+          unit: 'count' | 'g' | 'kg' | 'ml' | 'l' | null;
+          linked_fridge_item_id: string | null;
+          linked_fridge_batch_id: string | null;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       add_ingredient_with_fridge: {

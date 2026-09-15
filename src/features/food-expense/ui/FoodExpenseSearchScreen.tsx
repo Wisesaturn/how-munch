@@ -12,12 +12,13 @@ import { useIntersectionObserver } from 'usehooks-ts';
 
 import { Button, Chip, ChipRow, InputGroup } from '@/commons/ui';
 
-import { type Ingredient } from '@/entities/ingredient';
+import { type FoodExpense, type FoodExpenseFilterKind } from '@/entities/food-expense';
 import { useIngredientCategory } from '@/entities/ingredient-category';
 
-import { useIngredientSearchInfiniteQuery } from '../api/queries';
+import { useFoodExpenseSearchInfiniteQuery } from '../api/queries';
 
-import { IngredientItem } from './IngredientItem';
+import { FoodExpenseItem } from './FoodExpenseItem';
+import { FoodExpenseKindFilter } from './FoodExpenseKindFilter';
 
 /* -------------------------------------------------------------------------------------------------
  * Types
@@ -50,23 +51,24 @@ function computeDateRange(period: PeriodKey): { startDate: string; endDate: stri
 }
 
 /* -------------------------------------------------------------------------------------------------
- * IngredientSearchScreen
+ * FoodExpenseSearchScreen
  * -----------------------------------------------------------------------------------------------*/
 
-interface IngredientSearchScreenProps {
+interface FoodExpenseSearchScreenProps {
   householdId: string;
   onClose: () => void;
-  onIngredientSelect: (ingredient: Ingredient) => void;
+  onExpenseSelect: (expense: FoodExpense) => void;
 }
 
-export function IngredientSearchScreen({
+export function FoodExpenseSearchScreen({
   householdId,
   onClose,
-  onIngredientSelect,
-}: IngredientSearchScreenProps) {
+  onExpenseSelect,
+}: FoodExpenseSearchScreenProps) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [period, setPeriod] = useState<PeriodKey>('1개월');
+  const [kind, setKind] = useState<FoodExpenseFilterKind>('all');
 
   const applyDebounce = useMemo(
     () => debounce((value: string) => setDebouncedQuery(value), 300),
@@ -90,7 +92,7 @@ export function IngredientSearchScreen({
   const { getCategoryById } = useIngredientCategory(householdId);
 
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useIngredientSearchInfiniteQuery(householdId, startDate, endDate, debouncedQuery);
+    useFoodExpenseSearchInfiniteQuery(householdId, startDate, endDate, kind, debouncedQuery);
 
   const allItems = data?.pages.flatMap((page) => page.contents) ?? [];
   const grouped = Object.entries(groupBy(allItems, (item) => item.date)).sort(([a], [b]) =>
@@ -147,8 +149,9 @@ export function IngredientSearchScreen({
       }}
     >
       <div className="flex flex-col">
-        {/* 기간 필터 */}
-        <div className="sticky top-0 z-10 bg-white px-4 py-3">
+        {/* 종류 + 기간 필터 */}
+        <div className="sticky top-0 z-10 flex flex-col gap-2 bg-white px-4 py-3">
+          <FoodExpenseKindFilter value={kind} onValueChange={setKind} />
           <ChipRow>
             {PERIODS.map((p) => (
               <Chip key={p} selected={period === p} onClick={() => setPeriod(p)}>
@@ -195,17 +198,16 @@ export function IngredientSearchScreen({
                       key={item.id}
                       type="button"
                       className="text-foreground flex w-full appearance-none flex-col gap-1 rounded-lg border bg-white px-3 py-2.5 text-left"
-                      onClick={() => onIngredientSelect(item)}
+                      onClick={() => onExpenseSelect(item)}
                     >
-                      <IngredientItem
-                        name={item.name}
-                        brand={item.brand}
-                        price={item.price}
-                        count={item.count}
-                        unit={item.unit}
-                        store={item.store}
-                        categoryLabel={getCategoryById(item.category_id)?.label ?? ''}
-                        categoryEmoji={getCategoryById(item.category_id)?.emoji ?? ''}
+                      <FoodExpenseItem
+                        expense={item}
+                        categoryLabel={
+                          item.category_id ? (getCategoryById(item.category_id)?.label ?? '') : ''
+                        }
+                        categoryEmoji={
+                          item.category_id ? (getCategoryById(item.category_id)?.emoji ?? '') : ''
+                        }
                       />
                     </button>
                   ))}

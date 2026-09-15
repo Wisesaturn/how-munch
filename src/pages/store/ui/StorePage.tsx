@@ -11,9 +11,17 @@ import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 
 import { Button } from '@/commons/ui';
 
-import { type Ingredient } from '@/entities/ingredient';
+import { type FoodExpense, type FoodExpenseFilterKind } from '@/entities/food-expense';
 
-import { IngredientList, useIngredientsQuery, WeeklyStats } from '@/features/ingredient';
+import {
+  FoodExpenseKindFilter,
+  FoodExpenseList,
+  sumFoodExpensePrice,
+  toDiningExpense,
+  toIngredient,
+  useFoodExpensesQuery,
+  WeeklyStats,
+} from '@/features/food-expense';
 
 import { StoreAddMethodSheet } from './StoreAddMethodSheet';
 
@@ -24,29 +32,35 @@ interface StorePageProps {
 
 export function StorePage({ householdId, userId }: StorePageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [kind, setKind] = useState<FoodExpenseFilterKind>('all');
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
   const startDate = format(startOfMonth(currentDate), 'yyyy-MM-dd');
   const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
 
-  const { data: ingredients = [], isLoading } = useIngredientsQuery(
+  const { data: expenses = [], isLoading } = useFoodExpensesQuery(
     householdId,
     startDate,
     endDate,
+    kind,
   );
 
-  const totalSpending = ingredients.reduce((sum, item) => sum + item.price, 0);
+  const totalSpending = sumFoodExpensePrice(expenses);
+  // 품목명 자동완성 후보는 장보기 이름만 모은다. 외식 메뉴는 냉장고 품목이 아니다.
+  const grocerySuggestions = expenses
+    .filter((expense) => expense.kind === 'grocery')
+    .map((expense) => expense.name ?? '')
+    .filter(Boolean);
 
   const handlePrevMonth = () => setCurrentDate((d) => subMonths(d, 1));
   const handleNextMonth = () => setCurrentDate((d) => addMonths(d, 1));
 
-  function openIngredientAdd(defaultName?: string) {
+  function openIngredientAdd() {
     stackFlowActions.push('IngredientAddActivity', {
       householdId,
       userId,
-      defaultName,
-      suggestions: ingredients.map((i) => i.name),
+      suggestions: grocerySuggestions,
     });
   }
 
@@ -54,17 +68,58 @@ export function StorePage({ householdId, userId }: StorePageProps) {
     stackFlowActions.push('PromptIngredientAddActivity', {
       householdId,
       userId,
-      suggestions: ingredients.map((i) => i.name),
+      suggestions: grocerySuggestions,
     });
   }
 
-  const openIngredientEditSheet = (ingredient: Ingredient) => {
-    stackFlowActions.push('IngredientEditActivity', {
-      householdId,
-      ingredient,
-      suggestions: ingredients.map((i) => i.name),
+  function openDiningExpenseAdd() {
+    stackFlowActions.push('DiningExpenseAddActivity', { householdId });
+  }
+
+  function openExpenseEdit(expense: FoodExpense) {
+    const ingredient = toIngredient(expense);
+    if (ingredient) {
+      stackFlowActions.push('IngredientEditActivity', {
+        householdId,
+        ingredient,
+        suggestions: grocerySuggestions,
+      });
+      return;
+    }
+
+    const diningExpense = toDiningExpense(expense);
+    if (diningExpense) {
+      stackFlowActions.push('DiningExpenseEditActivity', { householdId, expense: diningExpense });
+    }
+  }
+
+  function openAddMethodSheet() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 300);
+      }
+
+      return (
+        <StoreAddMethodSheet
+          open={isOpen}
+          onClose={closeSheet}
+          onGroceryDirectAdd={() => {
+            closeSheet();
+            openIngredientAdd();
+          }}
+          onGroceryReceiptAdd={() => {
+            closeSheet();
+            openPromptIngredientAdd();
+          }}
+          onDiningAdd={() => {
+            closeSheet();
+            openDiningExpenseAdd();
+          }}
+        />
+      );
     });
-  };
+  }
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-5">
@@ -85,48 +140,26 @@ export function StorePage({ householdId, userId }: StorePageProps) {
         </span>
       </section>
 
-      {/* 주차별 통계 */}
-      {ingredients.length > 0 && (
-        <WeeklyStats ingredients={ingredients} year={year} month={month} />
-      )}
+      {/* 종류 필터 — 스크롤 중에도 종류를 바꿀 수 있도록 상단에 붙인다 */}
+      <div className="sticky top-0 z-20 -mx-4 bg-white px-4 py-2">
+        <FoodExpenseKindFilter value={kind} onValueChange={setKind} />
+      </div>
 
-      {/* 장보기 리스트 */}
+      {/* 주차별 통계 */}
+      {expenses.length > 0 && <WeeklyStats expenses={expenses} year={year} month={month} />}
+
+      {/* 식비 리스트 */}
       {isLoading ? (
         <div className="flex justify-center py-12">
           <span className="text-sm text-gray-400">불러오는 중...</span>
         </div>
       ) : (
-        <IngredientList
-          householdId={householdId}
-          ingredients={ingredients}
-          onEdit={openIngredientEditSheet}
-        />
+        <FoodExpenseList householdId={householdId} expenses={expenses} onSelect={openExpenseEdit} />
       )}
 
       {/* FAB 추가 버튼 */}
       <Button
-        onClick={() => {
-          overlay.open(({ isOpen, close, unmount }) => {
-            function closeSheet() {
-              close();
-              window.setTimeout(unmount, 300);
-            }
-            return (
-              <StoreAddMethodSheet
-                open={isOpen}
-                onClose={closeSheet}
-                onDirectAdd={() => {
-                  closeSheet();
-                  openIngredientAdd();
-                }}
-                onPromptAdd={() => {
-                  closeSheet();
-                  openPromptIngredientAdd();
-                }}
-              />
-            );
-          });
-        }}
+        onClick={openAddMethodSheet}
         color="primary"
         className="fixed right-4 [bottom:calc(constant(safe-area-inset-bottom)+84px)] [bottom:calc(env(safe-area-inset-bottom)+84px)] z-40 size-12 rounded-full shadow-lg sm:right-[calc(50%-215px+16px)]"
         size="icon-lg"

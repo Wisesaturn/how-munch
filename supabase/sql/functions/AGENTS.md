@@ -17,6 +17,7 @@
 - `notification`
 - `category`
 - `search`
+- `food-expense` (뷰 포함)
 
 ## Update Rule
 

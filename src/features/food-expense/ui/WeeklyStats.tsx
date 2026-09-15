@@ -6,10 +6,12 @@ import { getDate, getDaysInMonth } from 'date-fns';
 
 import { Accordion } from '@/commons/ui';
 
-import { type Ingredient } from '@/entities/ingredient';
+import { type FoodExpense } from '@/entities/food-expense';
+
+import { sumFoodExpensePrice } from '../lib/foodExpense';
 
 interface WeeklyStatsProps {
-  ingredients: Ingredient[];
+  expenses: FoodExpense[];
   year: number;
   month: number;
 }
@@ -26,7 +28,7 @@ function getTotalWeeks(year: number, month: number): number {
   return Math.ceil(days / 7);
 }
 
-export function WeeklyStats({ ingredients, year, month }: WeeklyStatsProps) {
+export function WeeklyStats({ expenses, year, month }: WeeklyStatsProps) {
   const weeklyData = useMemo(() => {
     const totalWeeks = getTotalWeeks(year, month);
     const weeks = Array.from({ length: totalWeeks }, (_, i) => ({
@@ -34,16 +36,16 @@ export function WeeklyStats({ ingredients, year, month }: WeeklyStatsProps) {
       total: 0,
     }));
 
-    for (const item of ingredients) {
+    for (const item of expenses) {
       const w = getWeekOfMonth(item.date);
       const idx = Math.min(w, totalWeeks) - 1;
       weeks[idx].total += item.price;
     }
 
     return weeks;
-  }, [ingredients, year, month]);
+  }, [expenses, year, month]);
 
-  const totalSpending = ingredients.reduce((sum, item) => sum + item.price, 0);
+  const totalSpending = sumFoodExpensePrice(expenses);
 
   return (
     <Accordion type="single" collapsible variant="outlined">

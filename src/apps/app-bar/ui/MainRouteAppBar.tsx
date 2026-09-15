@@ -17,7 +17,7 @@ import { MainAppBar } from '@/modules/main-app-bar';
 
 function getMainTitle(pathname: string | null) {
   if (!pathname) return '';
-  if (pathname.startsWith('/store')) return '장보기';
+  if (pathname.startsWith('/store')) return '식비';
   if (pathname.startsWith('/fridge')) return '냉장고';
   if (pathname.startsWith('/meal')) return '식단';
   if (pathname.startsWith('/profile')) return '프로필';
@@ -76,11 +76,11 @@ export function MainRouteAppBar() {
                 variant="ghost"
                 size="icon-sm"
                 onClick={() =>
-                  stackFlowActions.push('IngredientSearchActivity', {
+                  stackFlowActions.push('FoodExpenseSearchActivity', {
                     householdId: profile.household_id!,
                   })
                 }
-                aria-label="장보기 검색"
+                aria-label="식비 검색"
               >
                 <Search className="size-5" />
               </Button>
