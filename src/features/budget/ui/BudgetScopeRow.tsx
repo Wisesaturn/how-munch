@@ -4,6 +4,8 @@ import { ProgressBar } from '@/commons/ui';
 
 import { getBudgetScopeLabel, type BudgetScope } from '@/entities/budget';
 
+import { BudgetScopeIcon } from './BudgetScopeIcon';
+
 /**
  * 예산 0원은 "0원으로 산다"는 명시적 목표다.
  * 0으로 나눌 수 없으므로, 한 푼이라도 썼으면 초과(101%)로 본다.
@@ -25,9 +27,15 @@ export function BudgetScopeRow({ scope, spent, amount }: BudgetScopeRowProps) {
 
   if (amount === null) {
     return (
-      <div className="flex items-center justify-between py-2">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className="text-xs text-gray-400">미설정 · {spent.toLocaleString()}원 사용</span>
+      <div className="flex items-center gap-3 py-4">
+        <BudgetScopeIcon scope={scope} />
+        <div className="flex min-w-0 flex-col">
+          <span className="text-base font-medium text-gray-800">{label}</span>
+          <span className="text-xs text-gray-400">미설정 예산</span>
+        </div>
+        <span className="ml-auto shrink-0 text-sm text-gray-400">
+          {spent.toLocaleString()}원 사용
+        </span>
       </div>
     );
   }
@@ -36,17 +44,18 @@ export function BudgetScopeRow({ scope, spent, amount }: BudgetScopeRowProps) {
   const exceeded = percentage > 100;
 
   return (
-    <div className="flex flex-col gap-1.5 py-2">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className="text-xs text-gray-500">
+    <div className="flex flex-col gap-2.5 py-4">
+      <div className="flex items-center gap-3">
+        <BudgetScopeIcon scope={scope} />
+        <span className="text-base font-medium text-gray-800">{label}</span>
+        <span className="ml-auto shrink-0 text-sm text-gray-500">
           {spent.toLocaleString()} / {amount.toLocaleString()}원
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        <ProgressBar value={spent} max={amount} className="flex-1" />
+      <div className="flex items-center gap-3">
+        <ProgressBar value={spent} max={amount} className="h-2.5 flex-1" />
         <span
-          className={`w-10 shrink-0 text-right text-xs font-semibold ${
+          className={`w-12 shrink-0 text-right text-sm font-bold ${
             exceeded ? 'text-red-500' : 'text-emerald-600'
           }`}
         >

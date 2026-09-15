@@ -21,7 +21,6 @@ import {
   toDiningExpense,
   toIngredient,
   useFoodExpensesQuery,
-  WeeklyStats,
 } from '@/features/food-expense';
 
 import { StoreAddMethodSheet } from './StoreAddMethodSheet';
@@ -35,8 +34,6 @@ export function StorePage({ householdId, userId }: StorePageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [kind, setKind] = useState<FoodExpenseFilterKind>('all');
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
   const yearMonth = toYearMonth(currentDate);
   const startDate = format(startOfMonth(currentDate), 'yyyy-MM-dd');
   const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
@@ -159,12 +156,9 @@ export function StorePage({ householdId, userId }: StorePageProps) {
       />
 
       {/* 종류 필터 — 스크롤 중에도 종류를 바꿀 수 있도록 상단에 붙인다 */}
-      <div className="sticky top-0 z-20 -mx-4 bg-white px-4 py-2">
+      <div className="sticky top-0 z-20 -mx-4 -mt-4 bg-white px-4 py-2">
         <FoodExpenseKindFilter value={kind} onValueChange={setKind} />
       </div>
-
-      {/* 주차별 통계 */}
-      {expenses.length > 0 && <WeeklyStats expenses={expenses} year={year} month={month} />}
 
       {/* 식비 리스트 */}
       {isLoading ? (

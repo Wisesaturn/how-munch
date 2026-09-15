@@ -5,7 +5,7 @@ import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { Button, EmptyState } from '@/commons/ui';
 
 import {
-  BUDGET_SCOPES,
+  BUDGET_ITEM_SCOPES,
   hasAnyBudget,
   toBudgetAmountMap,
   type BudgetAmountMap,
@@ -17,6 +17,7 @@ import { buildCumulativeSeries, getDayCount, sumSpentByScope } from '../lib/budg
 
 import { BudgetCumulativeChart } from './BudgetCumulativeChart';
 import { BudgetScopeRow } from './BudgetScopeRow';
+import { WeeklyStats } from './WeeklyStats';
 
 interface BudgetScreenProps {
   onClose: () => void;
@@ -41,6 +42,8 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
   );
   const previousSeries = buildCumulativeSeries(series, previousYearMonth);
   const monthLabel = formatMonthLabel(yearMonth);
+  // 전체 예산은 나머지 세 항목의 기준이라 목록에 섞지 않고 맨 위에서 단독으로 보여준다.
+  const totalRemaining = amounts.total === null ? null : amounts.total - spent.total;
 
   return (
     <AppScreen
@@ -61,6 +64,21 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
           </div>
         ) : (
           <>
+            {totalRemaining !== null && (
+              <section className="flex flex-col gap-0.5 px-1">
+                <span className="text-sm text-gray-500">{monthLabel} 예산</span>
+                <span
+                  className={`text-2xl font-bold ${
+                    totalRemaining < 0 ? 'text-red-500' : 'text-gray-900'
+                  }`}
+                >
+                  {totalRemaining < 0
+                    ? `${Math.abs(totalRemaining).toLocaleString()}원 초과`
+                    : `${totalRemaining.toLocaleString()}원 남음`}
+                </span>
+              </section>
+            )}
+
             <section className="rounded-xl border bg-white px-3 py-4">
               <BudgetCumulativeChart
                 currentSeries={currentSeries}
@@ -72,9 +90,11 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
               />
             </section>
 
+            <WeeklyStats series={series} yearMonth={yearMonth} />
+
             {hasAnyBudget(amounts) ? (
-              <section className="divide-y rounded-xl border bg-white px-4 py-1">
-                {BUDGET_SCOPES.map((scope) => (
+              <section className="divide-y rounded-xl border bg-white px-4 py-2">
+                {BUDGET_ITEM_SCOPES.map((scope) => (
                   <BudgetScopeRow
                     key={scope}
                     scope={scope}

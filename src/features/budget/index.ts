@@ -9,7 +9,13 @@ export {
   toYearMonth,
   type BudgetMonthPosition,
 } from './lib/budgetMonth';
-export { buildCumulativeSeries, getDayCount, sumSpentByScope } from './lib/budgetSeries';
+export {
+  buildCumulativeSeries,
+  getDayCount,
+  sumSpentByScope,
+  sumWeeklyTotals,
+} from './lib/budgetSeries';
 export { BudgetScreen } from './ui/BudgetScreen';
 export { BudgetEditScreen } from './ui/BudgetEditScreen';
 export { BudgetSummaryStrip } from './ui/BudgetSummaryStrip';
+export { WeeklyStats } from './ui/WeeklyStats';

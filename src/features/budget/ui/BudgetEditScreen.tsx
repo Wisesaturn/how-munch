@@ -7,7 +7,7 @@ import { useConditionalEffect } from 'react-simplikit';
 import { z } from 'zod';
 
 import { DOMAIN_ERROR_MESSAGE, ERROR_MSG } from '@/commons/lib';
-import { CTAButton, PriceInput, Switch, Toast } from '@/commons/ui';
+import { CTAButton, ProgressBar, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import {
@@ -19,17 +19,22 @@ import {
 } from '@/entities/budget';
 
 import { useUpsertBudgetsMutation } from '../api/mutations';
-import { useBudgetsQuery } from '../api/queries';
+import { useBudgetDailySeriesQuery, useBudgetsQuery } from '../api/queries';
 import { formatMonthLabel, getPreviousYearMonth } from '../lib/budgetMonth';
+import { sumSpentByScope } from '../lib/budgetSeries';
 
+import { BudgetAmountInput } from './BudgetAmountInput';
 import { BudgetCopyBottomSheet } from './BudgetCopyBottomSheet';
+import { BudgetScopeIcon } from './BudgetScopeIcon';
+import { BudgetScopeField } from './BudgetScopeField';
 
 /* -------------------------------------------------------------------------------------------------
  * Schema
  *
- * 입력 단계에서 막지 않는다. 전체 50만 → 장보기 40만 → 외식 20만 순으로 넣을 때
- * 입력 자체를 차단하면 전체부터 고치러 왕복해야 한다. 그래서 실시간 에러로만 알리고,
- * 저장 시점에 스키마가 다시 막는다. 서버 RPC도 같은 규칙을 재검증한다.
+ * null은 미설정(추적하지 않음), 0은 "0원으로 산다"는 목표다. 둘을 구분해서 저장한다.
+ * 합계 초과는 입력 단계에서 막지 않는다. 전체 50만을 넣고 항목을 채워 나가는 순서를 차단하면
+ * 전체부터 고치러 왕복해야 한다. 실시간 에러로만 알리고 저장 시점에 스키마가 다시 막으며,
+ * 서버 RPC도 같은 규칙을 재검증한다.
  * -----------------------------------------------------------------------------------------------*/
 
 const MAX_BUDGET_AMOUNT = 1_000_000_000;
@@ -37,31 +42,25 @@ const MAX_BUDGET_AMOUNT = 1_000_000_000;
 const amountSchema = z
   .number()
   .min(0, ERROR_MSG.RANGE.MIN({ fieldName: '예산', min: '0원' }))
-  .max(MAX_BUDGET_AMOUNT, ERROR_MSG.RANGE.MAX({ fieldName: '예산', max: '10억원' }));
+  .max(MAX_BUDGET_AMOUNT, ERROR_MSG.RANGE.MAX({ fieldName: '예산', max: '10억원' }))
+  .nullable();
 
 const budgetFormSchema = z
   .object({
-    totalEnabled: z.boolean(),
-    totalAmount: amountSchema,
-    groceryEnabled: z.boolean(),
-    groceryAmount: amountSchema,
-    restaurantEnabled: z.boolean(),
-    restaurantAmount: amountSchema,
-    deliveryEnabled: z.boolean(),
-    deliveryAmount: amountSchema,
+    total: amountSchema,
+    grocery: amountSchema,
+    restaurant: amountSchema,
+    delivery: amountSchema,
   })
   .superRefine((value, ctx) => {
-    if (!value.totalEnabled) return;
+    if (value.total === null) return;
 
-    const itemSum =
-      (value.groceryEnabled ? value.groceryAmount : 0) +
-      (value.restaurantEnabled ? value.restaurantAmount : 0) +
-      (value.deliveryEnabled ? value.deliveryAmount : 0);
+    const itemSum = (value.grocery ?? 0) + (value.restaurant ?? 0) + (value.delivery ?? 0);
 
-    if (itemSum > value.totalAmount) {
+    if (itemSum > value.total) {
       ctx.addIssue({
         code: 'custom',
-        path: ['totalAmount'],
+        path: ['total'],
         message: DOMAIN_ERROR_MESSAGE.BUD_001,
       });
     }
@@ -69,36 +68,17 @@ const budgetFormSchema = z
 
 type BudgetFormValues = z.infer<typeof budgetFormSchema>;
 
-const SCOPE_FIELDS = [
-  { scope: 'total', enabledName: 'totalEnabled', amountName: 'totalAmount' },
-  { scope: 'grocery', enabledName: 'groceryEnabled', amountName: 'groceryAmount' },
-  { scope: 'restaurant', enabledName: 'restaurantEnabled', amountName: 'restaurantAmount' },
-  { scope: 'delivery', enabledName: 'deliveryEnabled', amountName: 'deliveryAmount' },
-] as const satisfies readonly {
-  scope: BudgetScope;
-  enabledName: keyof BudgetFormValues;
-  amountName: keyof BudgetFormValues;
-}[];
+const ITEM_SCOPES = ['grocery', 'restaurant', 'delivery'] as const satisfies readonly Exclude<
+  BudgetScope,
+  'total'
+>[];
 
 function toFormValues(amounts: BudgetAmountMap): BudgetFormValues {
   return {
-    totalEnabled: amounts.total !== null,
-    totalAmount: amounts.total ?? 0,
-    groceryEnabled: amounts.grocery !== null,
-    groceryAmount: amounts.grocery ?? 0,
-    restaurantEnabled: amounts.restaurant !== null,
-    restaurantAmount: amounts.restaurant ?? 0,
-    deliveryEnabled: amounts.delivery !== null,
-    deliveryAmount: amounts.delivery ?? 0,
-  };
-}
-
-function toBudgetPayload(values: BudgetFormValues): Partial<BudgetAmountMap> {
-  return {
-    total: values.totalEnabled ? values.totalAmount : null,
-    grocery: values.groceryEnabled ? values.groceryAmount : null,
-    restaurant: values.restaurantEnabled ? values.restaurantAmount : null,
-    delivery: values.deliveryEnabled ? values.deliveryAmount : null,
+    total: amounts.total,
+    grocery: amounts.grocery,
+    restaurant: amounts.restaurant,
+    delivery: amounts.delivery,
   };
 }
 
@@ -120,11 +100,14 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
     householdId,
     previousYearMonth,
   );
+  // 같은 시리즈가 대상 월과 직전 월을 모두 담고 있어, 지난달 지출은 추가 요청 없이 뽑아 쓴다.
+  const { data: series = [] } = useBudgetDailySeriesQuery(householdId, yearMonth);
   const upsertMutation = useUpsertBudgetsMutation();
   const formId = `budget-edit-form-${yearMonth}`;
 
   const amounts = toBudgetAmountMap(budgets);
   const previousAmounts = toBudgetAmountMap(previousBudgets);
+  const lastMonthSpent = sumSpentByScope(series, previousYearMonth);
 
   const form = useForm({
     defaultValues: toFormValues(amounts),
@@ -134,7 +117,7 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
     },
     onSubmit: async ({ value }) => {
       upsertMutation.mutate(
-        { householdId, yearMonth, budgets: toBudgetPayload(value) },
+        { householdId, yearMonth, budgets: value },
         {
           onSuccess: () => {
             Toast.success('예산이 저장되었습니다');
@@ -150,7 +133,7 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
 
   function applyPreviousAmounts() {
     const next = toFormValues(previousAmounts);
-    for (const key of Object.keys(next) as (keyof BudgetFormValues)[]) {
+    for (const key of Object.keys(next) as BudgetScope[]) {
       form.setFieldValue(key, next[key]);
     }
   }
@@ -196,50 +179,82 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="flex flex-col gap-5"
+          className="flex flex-col gap-4"
         >
-          {SCOPE_FIELDS.map(({ scope, enabledName, amountName }) => (
-            <div key={scope} className="flex flex-col gap-2">
-              <form.Field name={enabledName}>
-                {(field) => (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-800">
-                      {getBudgetScopeLabel(scope)}
-                    </span>
-                    <Switch
-                      checked={Boolean(field.state.value)}
-                      onCheckedChange={(checked) => field.handleChange(checked)}
-                      aria-label={`${getBudgetScopeLabel(scope)} 예산 사용`}
+          {/* 월 예산 — 나머지 세 항목의 기준이라 따로 둔다 */}
+          <section className="flex flex-col gap-2 rounded-xl border bg-white p-4">
+            <form.Field name="total">
+              {(field) => (
+                <Form.Field field={field}>
+                  <Form.Label className="text-base text-gray-800">월 예산</Form.Label>
+                  <Form.Control>
+                    <BudgetAmountInput
+                      value={field.state.value}
+                      onValueChange={(next) => field.handleChange(next)}
+                      invalid={Boolean(field.state.meta.errors[0])}
                     />
+                  </Form.Control>
+                  <Form.Error />
+                </Form.Field>
+              )}
+            </form.Field>
+
+            <form.Subscribe selector={(state) => state.values}>
+              {(values) => {
+                const itemSum =
+                  (values.grocery ?? 0) + (values.restaurant ?? 0) + (values.delivery ?? 0);
+
+                if (values.total === null) {
+                  return (
+                    <p className="text-xs text-gray-400">
+                      월 예산을 정하면 항목별로 나눠 담을 수 있어요
+                    </p>
+                  );
+                }
+
+                const remaining = values.total - itemSum;
+
+                return (
+                  <div className="flex flex-col gap-1.5">
+                    <ProgressBar value={itemSum} max={values.total} />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">
+                        {itemSum.toLocaleString()} / {values.total.toLocaleString()}원
+                      </span>
+                      <span
+                        className={
+                          remaining < 0
+                            ? 'font-semibold text-red-500'
+                            : 'font-semibold text-gray-700'
+                        }
+                      >
+                        {remaining < 0
+                          ? `${Math.abs(remaining).toLocaleString()}원 초과`
+                          : `${remaining.toLocaleString()}원 남음`}
+                      </span>
+                    </div>
                   </div>
+                );
+              }}
+            </form.Subscribe>
+          </section>
+
+          {/* 항목별 예산 */}
+          <section className="divide-y rounded-xl border bg-white px-4">
+            {ITEM_SCOPES.map((scope) => (
+              <form.Field key={scope} name={scope}>
+                {(field) => (
+                  <BudgetScopeField
+                    icon={<BudgetScopeIcon scope={scope} />}
+                    label={getBudgetScopeLabel(scope)}
+                    lastMonthSpent={lastMonthSpent[scope]}
+                    value={field.state.value}
+                    onValueChange={(next) => field.handleChange(next)}
+                  />
                 )}
               </form.Field>
-
-              <form.Subscribe selector={(state) => Boolean(state.values[enabledName])}>
-                {(enabled) =>
-                  enabled ? (
-                    <form.Field name={amountName}>
-                      {(field) => (
-                        <Form.Field field={field}>
-                          <Form.Control>
-                            <PriceInput
-                              value={Number(field.state.value)}
-                              onChange={(next) => field.handleChange(next)}
-                            />
-                          </Form.Control>
-                          <Form.Error />
-                        </Form.Field>
-                      )}
-                    </form.Field>
-                  ) : (
-                    <p className="text-xs text-gray-400">
-                      미설정 — 이 항목은 예산을 추적하지 않아요
-                    </p>
-                  )
-                }
-              </form.Subscribe>
-            </div>
-          ))}
+            ))}
+          </section>
         </form>
       </div>
 
