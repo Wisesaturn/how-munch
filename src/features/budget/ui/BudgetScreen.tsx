@@ -49,17 +49,13 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
   const setScopes = BUDGET_ITEM_SCOPES.filter((scope) => amounts[scope] !== null);
   const unsetScopes = BUDGET_ITEM_SCOPES.filter((scope) => amounts[scope] === null);
   const unsetSpent = unsetScopes.reduce((sum, scope) => sum + spent[scope], 0);
+  const hasBudget = hasAnyBudget(amounts);
 
   return (
     <AppScreen
       className="pointer-events-auto"
       appBar={{
         title: `${monthLabel} 예산 현황`,
-        renderRight: () => (
-          <Button variant="ghost" size="sm" onClick={onOpenEdit}>
-            편집
-          </Button>
-        ),
       }}
     >
       <div className="flex flex-col gap-4 px-4 pt-4 pb-8">
@@ -98,7 +94,7 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
 
             <WeeklyStats series={series} yearMonth={yearMonth} />
 
-            {hasAnyBudget(amounts) ? (
+            {hasBudget ? (
               <section className="divide-y rounded-xl border bg-white px-4 py-2">
                 {setScopes.map((scope) => (
                   <BudgetScopeRow
@@ -124,6 +120,12 @@ export function BudgetScreen({ onOpenEdit, householdId, yearMonth }: BudgetScree
                   </Button>
                 </EmptyState.Content>
               </EmptyState.Root>
+            )}
+
+            {hasBudget && (
+              <Button variant="outline" color="mono" className="w-full" onClick={onOpenEdit}>
+                예산 수정하기
+              </Button>
             )}
           </>
         )}
