@@ -660,6 +660,7 @@ export interface Database {
           quiet_hours_end: string | null;
           fridge_item_added_enabled: boolean;
           meal_added_enabled: boolean;
+          dining_expense_added_enabled: boolean;
           budget_exceeded_enabled: boolean;
           weekly_expense_enabled: boolean;
           created_at: string;
@@ -674,6 +675,7 @@ export interface Database {
           quiet_hours_end?: string | null;
           fridge_item_added_enabled?: boolean;
           meal_added_enabled?: boolean;
+          dining_expense_added_enabled?: boolean;
           budget_exceeded_enabled?: boolean;
           weekly_expense_enabled?: boolean;
           created_at?: string;
@@ -688,6 +690,7 @@ export interface Database {
           quiet_hours_end?: string | null;
           fridge_item_added_enabled?: boolean;
           meal_added_enabled?: boolean;
+          dining_expense_added_enabled?: boolean;
           budget_exceeded_enabled?: boolean;
           weekly_expense_enabled?: boolean;
           created_at?: string;

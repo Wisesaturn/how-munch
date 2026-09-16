@@ -3,7 +3,7 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { sendNotification, setVapidDetails, type WebPushError } from 'npm:web-push';
 
-// 역할: 가구 이벤트(냉장고 추가, 식단 등록, 예산 초과) 발생 시 해당 가구 멤버에게 push 알림을 발송한다.
+// 역할: 가구 이벤트(냉장고 추가, 식단 등록, 외식/배달 등록, 예산 초과) 발생 시 해당 가구 멤버에게 push 알림을 발송한다.
 // 동작:
 // 1. 호출자 JWT 검증 (user 클라이언트로 getUser)
 // 2. 요청 바디에서 householdId, triggeredBy, type, title, body, payload 수신
@@ -13,11 +13,16 @@ import { sendNotification, setVapidDetails, type WebPushError } from 'npm:web-pu
 // 6. 만료 구독(404/410) → deactivate 처리
 // 7. 항상 200 반환 (fire-and-forget — 발송 실패가 메인 저장 흐름을 블로킹하지 않음)
 
-type NotificationType = 'fridge_item_added' | 'meal_added' | 'budget_exceeded';
+type NotificationType =
+  | 'fridge_item_added'
+  | 'meal_added'
+  | 'dining_expense_added'
+  | 'budget_exceeded';
 
 const PREFERENCE_KEY: Record<NotificationType, string> = {
   fridge_item_added: 'fridge_item_added_enabled',
   meal_added: 'meal_added_enabled',
+  dining_expense_added: 'dining_expense_added_enabled',
   budget_exceeded: 'budget_exceeded_enabled',
 };
 

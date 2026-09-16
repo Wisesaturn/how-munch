@@ -42,6 +42,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
   );
   const fridgeItemAddedEnabled = preferences?.fridge_item_added_enabled ?? false;
   const mealAddedEnabled = preferences?.meal_added_enabled ?? false;
+  const diningExpenseAddedEnabled = preferences?.dining_expense_added_enabled ?? false;
   const budgetExceededEnabled = preferences?.budget_exceeded_enabled ?? true;
   const weeklyExpenseEnabled = preferences?.weekly_expense_enabled ?? true;
 
@@ -54,6 +55,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
       quiet_hours_end: null,
       fridge_item_added_enabled: fridgeItemAddedEnabled,
       meal_added_enabled: mealAddedEnabled,
+      dining_expense_added_enabled: diningExpenseAddedEnabled,
       budget_exceeded_enabled: budgetExceededEnabled,
       weekly_expense_enabled: weeklyExpenseEnabled,
     };
@@ -79,6 +81,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
     key:
       | 'fridge_item_added_enabled'
       | 'meal_added_enabled'
+      | 'dining_expense_added_enabled'
       | 'budget_exceeded_enabled'
       | 'weekly_expense_enabled',
     value: boolean,
@@ -216,6 +219,16 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                 checked={mealAddedEnabled}
                 onCheckedChange={(checked) =>
                   saveActivityPreference('meal_added_enabled', Boolean(checked))
+                }
+                disabled={upsertPreferencesMutation.isPending}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-600">외식·배달 등록 알림</p>
+              <Switch
+                checked={diningExpenseAddedEnabled}
+                onCheckedChange={(checked) =>
+                  saveActivityPreference('dining_expense_added_enabled', Boolean(checked))
                 }
                 disabled={upsertPreferencesMutation.isPending}
               />

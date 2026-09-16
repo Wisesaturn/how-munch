@@ -12,6 +12,7 @@ export type NotificationType =
   | 'expiry_soon'
   | 'fridge_item_added'
   | 'meal_added'
+  | 'dining_expense_added'
   | 'budget_exceeded'
   | 'weekly_expense';
 export type NotificationStatus = NotificationRow['status'];
@@ -43,6 +44,20 @@ export interface MealAddedPayload {
   mealId: string;
   date: string;
   type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+}
+
+export interface DiningExpenseAddedPayload {
+  householdId: string;
+  createdBy: string;
+  createdByNickname: string;
+  diningExpenseId: string;
+  date: string;
+  kind: 'restaurant' | 'delivery';
+  /** 가게명 — 외식 기록의 최소 식별자 */
+  brand: string;
+  /** 먹은 것 — 선택 입력이라 비어 있을 수 있다 */
+  name: string | null;
+  price: number;
 }
 
 export interface BudgetExceededPayload {

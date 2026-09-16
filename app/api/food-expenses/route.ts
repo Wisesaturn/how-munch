@@ -1,10 +1,14 @@
 import { type NextRequest } from 'next/server';
 
+import { josa } from 'es-hangul';
+
 import { notifyBudgetExceeded, respondWithDbError, withAuth } from '@/apps/route';
 
 import { apiResponse } from '@/commons/lib/http/apiResponse';
+import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseholdNotification';
 import { type Database, type Page, type PageInfo } from '@/commons/model/types';
 
+import { DINING_EXPENSE_KIND_LABEL, type DiningExpenseKind } from '@/entities/dining-expense';
 import { type FoodExpense } from '@/entities/food-expense';
 
 type DiningExpenseRow = Database['public']['Tables']['dining_expenses']['Row'];
@@ -13,6 +17,31 @@ const DINING_KINDS = ['restaurant', 'delivery'] as const;
 const FILTER_KINDS = ['all', 'grocery', ...DINING_KINDS] as const;
 
 type FilterKind = (typeof FILTER_KINDS)[number];
+
+/**
+ * 외식/배달 등록 알림 문구를 만든다.
+ * 종류(식당/배달)는 제목이 들고, 본문은 무엇을 먹었는지만 읽히게 한다.
+ * 메뉴(name)는 선택 입력이라 없으면 가게명만으로 문장을 만든다.
+ */
+function buildDiningExpenseNotificationBody(params: {
+  nickname: string;
+  brand: string;
+  name: string | null;
+}): string {
+  const { nickname, brand, name } = params;
+
+  if (name) {
+    return `${nickname}님이 ${brand}에서 ${josa(name, '을/를')} 등록했어요`;
+  }
+
+  return `${nickname}님이 ${josa(brand, '을/를')} 등록했어요`;
+}
+
+/** 알림 제목 — 같은 활동이라도 식당과 배달은 구분해서 보여준다 */
+const DINING_EXPENSE_NOTIFICATION_TITLE: Record<DiningExpenseKind, string> = {
+  restaurant: `${DINING_EXPENSE_KIND_LABEL.restaurant} 등록`,
+  delivery: `${DINING_EXPENSE_KIND_LABEL.delivery} 등록`,
+};
 
 /** 검색이 훑는 컬럼. 외식비는 메뉴(name)가 선택 입력이라 가게명(brand)까지 봐야 찾을 수 있다. */
 const SEARCH_COLUMNS = ['name', 'brand'] as const;
@@ -179,6 +208,34 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     householdId: body.household_id,
     date: expenseDate,
   });
+
+  // 외식/배달 등록 알림 — 장보기·식단과 같은 가구 활동 알림이라 유발자를 뺀 가구원에게만 간다
+  void (async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('user_id', userId)
+      .single();
+    const nickname = profile?.nickname ?? '가구원';
+
+    dispatchHouseholdNotification({
+      accessToken: session.access_token,
+      householdId: body.household_id,
+      triggeredBy: userId,
+      type: 'dining_expense_added',
+      title: DINING_EXPENSE_NOTIFICATION_TITLE[body.kind as DiningExpenseKind],
+      body: buildDiningExpenseNotificationBody({
+        nickname,
+        brand: body.brand,
+        name: body.name || null,
+      }),
+    });
+  })();
 
   return apiResponse.CREATED(data);
 });
