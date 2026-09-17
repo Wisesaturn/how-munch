@@ -81,7 +81,7 @@ export function useFoodExpenseSearchInfiniteQuery(
 
 /**
  * @description 자동완성 후보 조회.
- * 목록과 달리 화면의 종류 필터를 타지 않는다. 배달만 보고 있어도 장보기 품목명을 추천해야 한다.
+ * 목록과 달리 화면의 종류 필터를 타지 않는다. 포장·배달만 보고 있어도 장보기 품목명을 추천해야 한다.
  */
 export function useFoodExpenseSuggestionsQuery(
   householdId: string | null,

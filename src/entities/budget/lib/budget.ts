@@ -10,7 +10,7 @@ const BUDGET_SCOPE_LABEL: Record<BudgetScope, string> = {
   total: '전체',
   grocery: '장보기',
   restaurant: '식당',
-  delivery: '배달',
+  delivery: '포장/배달',
 };
 
 /** 미설정 상태의 빈 예산 표 */
@@ -50,7 +50,7 @@ export function hasAnyBudget(amounts: BudgetAmountMap): boolean {
 }
 
 /**
- * @description 항목별(장보기/식당/배달) 예산 합계를 구한다. 미설정 scope는 0으로 센다.
+ * @description 항목별(장보기/식당/포장·배달) 예산 합계를 구한다. 미설정 scope는 0으로 센다.
  */
 export function sumItemBudgets(amounts: BudgetAmountMap): number {
   return BUDGET_ITEM_SCOPES.reduce((sum, scope) => sum + (amounts[scope] ?? 0), 0);

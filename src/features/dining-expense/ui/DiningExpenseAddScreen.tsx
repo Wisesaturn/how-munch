@@ -19,7 +19,7 @@ interface DiningExpenseAddScreenProps {
 }
 
 export function DiningExpenseAddScreen({ onClose, householdId }: DiningExpenseAddScreenProps) {
-  // 자동완성 후보는 선택한 종류로 스코프를 좁힌다. 배달 플랫폼이 식당 가게 후보로 섞이지 않는다.
+  // 자동완성 후보는 선택한 종류로 스코프를 좁힌다. 포장·배달 플랫폼이 식당 가게 후보로 섞이지 않는다.
   const [kind, setKind] = useState<DiningExpenseKind>('restaurant');
   const addMutation = useAddDiningExpenseMutation();
   const { data: brandNames } = useDiningExpenseSuggestionsQuery(householdId, 'brand', kind);

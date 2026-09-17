@@ -15,7 +15,7 @@ interface FoodExpenseKindFilterProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-/** 전체 / 장보기 / 식당 / 배달 세그먼트 필터 */
+/** 전체 / 장보기 / 식당 / 포장·배달 세그먼트 필터 */
 export function FoodExpenseKindFilter({
   value,
   onValueChange,

@@ -210,7 +210,7 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
     .update({
       ...patch,
       ...(kind === undefined ? {} : { kind }),
-      // 배달 → 식당으로 바꾸면 남아 있던 플랫폼 값이 유령으로 따라다니므로 여기서 지운다.
+      // 포장·배달 → 식당으로 바꾸면 남아 있던 플랫폼 값이 유령으로 따라다니므로 여기서 지운다.
       ...(kind === 'restaurant' ? { store: null } : {}),
     })
     .eq('id', id)

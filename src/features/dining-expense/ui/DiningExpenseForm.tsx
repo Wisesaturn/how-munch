@@ -57,7 +57,7 @@ interface DiningExpenseFormProps {
   defaultValues?: Partial<DiningExpenseFormValues>;
   /** 가게명 자동완성 후보 */
   brandNames?: string[];
-  /** 배달 플랫폼 자동완성 후보 */
+  /** 포장·배달 플랫폼 자동완성 후보 */
   storeNames?: string[];
   onSubmit: (values: DiningExpenseFormValues) => void;
   /** kind가 바뀔 때 자동완성 후보 스코프를 다시 잡기 위해 상위로 알린다 */
@@ -122,7 +122,7 @@ export function DiningExpenseForm({
         )}
       </form.Field>
 
-      {/* 식당 / 배달 */}
+      {/* 식당 / 포장·배달 */}
       <form.Field name="kind">
         {(field) => (
           <Form.Field field={field}>
@@ -192,7 +192,8 @@ export function DiningExpenseForm({
         )}
       </form.Field>
 
-      {/* 플랫폼 — 배달일 때만 노출한다. 식당에는 결제 채널 개념이 없다. */}
+      {/* 플랫폼 — 포장·배달일 때만 노출한다. 식당에는 결제 채널 개념이 없다.
+          직접 픽업한 포장처럼 채널이 없는 경우는 비워 둔다. */}
       <form.Subscribe selector={(state) => state.values.kind}>
         {(kind) =>
           kind === 'delivery' ? (
