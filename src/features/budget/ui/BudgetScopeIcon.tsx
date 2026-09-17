@@ -1,6 +1,6 @@
 'use client';
 
-import { Bike, ShoppingCart, UtensilsCrossed, Wallet } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, UtensilsCrossed, Wallet } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
 
@@ -10,7 +10,7 @@ const SCOPE_ICON = {
   total: Wallet,
   grocery: ShoppingCart,
   restaurant: UtensilsCrossed,
-  delivery: Bike,
+  delivery: ShoppingBag,
 } as const satisfies Record<BudgetScope, typeof Wallet>;
 
 interface BudgetScopeIconProps {

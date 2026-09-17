@@ -9,7 +9,7 @@ import { formatIngredientAmount } from '@/entities/ingredient';
 
 interface FoodExpenseItemProps {
   expense: FoodExpense;
-  /** 장보기 행의 카테고리 라벨 — 외식비는 kind 라벨(식당/배달)이 이 자리를 대신한다 */
+  /** 장보기 행의 카테고리 라벨 — 외식비는 kind 라벨(식당/포장·배달)이 이 자리를 대신한다 */
   categoryLabel?: string;
   categoryEmoji?: string;
   size?: 'sm' | 'md';
@@ -33,7 +33,7 @@ export function FoodExpenseItem({
   const title = expense.name || expense.brand || '';
   const subtitle = expense.name ? expense.brand : null;
 
-  // 카테고리 슬롯은 장보기면 재료 카테고리, 외식비면 식당/배달이 차지한다.
+  // 카테고리 슬롯은 장보기면 재료 카테고리, 외식비면 식당/포장·배달이 차지한다.
   const slotLabel = isDiningExpenseKind(expense.kind)
     ? DINING_EXPENSE_KIND_LABEL[expense.kind]
     : categoryLabel;

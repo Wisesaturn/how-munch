@@ -131,7 +131,7 @@ const segmentControlItemVariants = cva(
   {
     variants: {
       size: {
-        sm: 'px-3 text-xs',
+        sm: 'px-2 text-xs',
         md: 'px-3.5 text-sm',
         lg: 'px-4 text-base',
       },

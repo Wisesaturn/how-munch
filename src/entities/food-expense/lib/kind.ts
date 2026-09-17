@@ -6,7 +6,7 @@ import {
 
 import { type FoodExpenseFilterKind, type FoodExpenseKind } from '../model/types';
 
-/** 세그먼트 필터에 노출되는 순서 — 전체 / 장보기 / 식당 / 배달 */
+/** 세그먼트 필터에 노출되는 순서 — 전체 / 장보기 / 식당 / 포장·배달 */
 export const FOOD_EXPENSE_FILTER_KINDS: FoodExpenseFilterKind[] = [
   'all',
   'grocery',
