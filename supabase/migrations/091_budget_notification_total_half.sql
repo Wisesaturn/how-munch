@@ -1,16 +1,9 @@
--- 역할: 지출이 추가된 직후 해당 월의 전체 예산 사용 비율을 판정해 예산 알림 레코드를 만든다.
--- 동작:
---   1. 호출자가 해당 가구 구성원인지 검증한다(security definer라 RLS를 우회하기 때문).
---   2. 대상 월의 total 예산과 전체 지출 합계를 구한다. total 예산이 미설정이면 아무것도 하지 않는다.
---   3. 지출이 예산을 넘으면 100(초과), 예산의 절반 이상이면 50(절반 사용) 기준선으로 판정한다.
---      예산 0원은 "절반"이 의미 없으므로 100 판정만 한다.
---   4. budget_exceeded_enabled가 켜진 가구원마다 해당 기준선 알림을 insert한다.
---      50 알림은 이번 달 100 알림을 이미 받은 사용자에게는 남기지 않는다.
---   5. 새로 남긴 알림이 있으면 기준선(50 | 100)을, 없으면 0을 반환한다.
--- 비고: 항목별(grocery/restaurant/delivery) 예산은 알림 대상이 아니다.
---       dedupe_key로 월 × 기준선 × 사용자당 1회만 남아, 지출을 추가할 때마다 알림이 쏟아지지 않는다.
---       100 기준선은 기존 total scope 키를 그대로 써서 이미 받은 초과 알림이 다시 가지 않는다.
---       push는 route가 즉시 보내므로 push_sent_at을 채워 cron 재발송을 막는다.
+-- 예산 알림을 전체(total) 예산 기준 50% / 100% 두 기준선으로 바꾼다.
+--
+-- 기존에는 항목별(grocery/restaurant/delivery) 예산만 넘어도
+-- "이번 달 예산을 초과했어요!" 알림이 가서 전체 예산 초과로 오해할 수 있었다.
+-- 이제 항목별 예산은 알림 대상에서 빼고, 전체 예산의 절반 사용 알림을 추가한다.
+-- 반환값은 새로 남긴 기준선(50 | 100, 없으면 0)으로 바꿔 route가 push 문구를 고르게 한다.
 
 create or replace function public.create_budget_exceeded_notifications(
   p_household_id uuid,
@@ -143,3 +136,5 @@ begin
   return v_threshold;
 end;
 $$;
+
+select pg_notify('pgrst', 'reload schema');

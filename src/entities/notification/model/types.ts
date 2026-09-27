@@ -50,7 +50,8 @@ export interface BudgetExceededPayload {
   householdId: string;
   /** 'YYYY-MM' */
   yearMonth: string;
-  scope: 'total' | 'grocery' | 'restaurant' | 'delivery';
+  /** 전체 예산 대비 기준선 — 50: 절반 사용, 100: 초과 */
+  threshold: 50 | 100;
   budgetAmount: number;
   spentAmount: number;
 }
