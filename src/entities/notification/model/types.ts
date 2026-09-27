@@ -12,6 +12,7 @@ export type NotificationType =
   | 'expiry_soon'
   | 'fridge_item_added'
   | 'meal_added'
+  | 'dining_expense_added'
   | 'budget_exceeded'
   | 'weekly_expense';
 export type NotificationStatus = NotificationRow['status'];

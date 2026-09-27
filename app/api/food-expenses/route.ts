@@ -3,6 +3,7 @@ import { type NextRequest } from 'next/server';
 import { notifyBudgetExceeded, respondWithDbError, withAuth } from '@/apps/route';
 
 import { apiResponse } from '@/commons/lib/http/apiResponse';
+import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseholdNotification';
 import { type Database, type Page, type PageInfo } from '@/commons/model/types';
 
 import { type FoodExpense } from '@/entities/food-expense';
@@ -179,6 +180,30 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     householdId: body.household_id,
     date: expenseDate,
   });
+
+  // 가구원 활동 알림 — 등록한 본인을 제외한 가구원에게 push를 보낸다
+  void (async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('user_id', userId)
+      .single();
+    const nickname = profile?.nickname ?? '가구원';
+
+    dispatchHouseholdNotification({
+      accessToken: session.access_token,
+      householdId: body.household_id,
+      triggeredBy: userId,
+      type: 'dining_expense_added',
+      title: '외식비 등록',
+      body: `${nickname}님이 ${data.brand} 외식비를 등록했어요`,
+    });
+  })();
 
   return apiResponse.CREATED(data);
 });
