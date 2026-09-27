@@ -2,7 +2,7 @@ import { type DiningExpenseKind } from './types';
 
 /** 외식비 종류별 UI 라벨 */
 export const DINING_EXPENSE_KIND_LABEL: Record<DiningExpenseKind, string> = {
-  restaurant: '식당',
+  restaurant: '식당 & 카페',
   delivery: '포장/배달',
 };
 
