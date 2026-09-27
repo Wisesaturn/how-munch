@@ -238,7 +238,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
         <Card>
           <Card.Content className="space-y-3 py-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-600">예산 초과 알림</p>
+              <p className="text-sm font-medium text-gray-600">예산 알림</p>
               <Switch
                 checked={budgetExceededEnabled}
                 onCheckedChange={(checked) =>

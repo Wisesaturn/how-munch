@@ -3,9 +3,14 @@ import { dispatchHouseholdNotification } from '@/commons/lib/http/dispatchHouseh
 
 type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
+const BUDGET_NOTIFICATION_MESSAGE: Record<number, { title: string; body: string }> = {
+  50: { title: '예산 절반 사용', body: '이번 달 예산의 절반을 썼어요!' },
+  100: { title: '예산 초과', body: '이번 달 예산을 초과했어요!' },
+};
+
 /**
- * @description 지출 생성 직후 해당 월의 예산 초과 여부를 판정해 알림을 남기고 push를 발송한다.
- * RPC가 dedupe_key로 월 × scope × 사용자당 1회만 남기므로, 지출을 추가할 때마다 알림이 쏟아지지 않는다.
+ * @description 지출 생성 직후 해당 월의 전체 예산 사용 비율(50% / 100%)을 판정해 알림을 남기고 push를 발송한다.
+ * RPC가 dedupe_key로 월 × 기준선 × 사용자당 1회만 남기므로, 지출을 추가할 때마다 알림이 쏟아지지 않는다.
  * fire-and-forget이라 실패해도 지출 저장 흐름을 막지 않는다.
  */
 export async function notifyBudgetExceeded(params: {
@@ -18,16 +23,16 @@ export async function notifyBudgetExceeded(params: {
   const { supabase, userId, householdId, date } = params;
   const yearMonth = date.slice(0, 7);
 
-  const { data: insertedCount, error } = await supabase.rpc(
-    'create_budget_exceeded_notifications',
-    {
-      p_household_id: householdId,
-      p_year_month: yearMonth,
-    },
-  );
+  const { data: threshold, error } = await supabase.rpc('create_budget_exceeded_notifications', {
+    p_household_id: householdId,
+    p_year_month: yearMonth,
+  });
 
-  // 새로 남은 알림이 없으면(이미 보냈거나 초과 아님) push도 보내지 않는다.
-  if (error || !insertedCount) return;
+  // 새로 남은 알림이 없으면(이미 보냈거나 기준선 미달) push도 보내지 않는다.
+  if (error || !threshold) return;
+
+  const message = BUDGET_NOTIFICATION_MESSAGE[threshold];
+  if (!message) return;
 
   const {
     data: { session },
@@ -39,7 +44,7 @@ export async function notifyBudgetExceeded(params: {
     householdId,
     triggeredBy: userId,
     type: 'budget_exceeded',
-    title: '예산 초과',
-    body: '이번 달 예산을 초과했어요!',
+    title: message.title,
+    body: message.body,
   });
 }
