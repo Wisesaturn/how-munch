@@ -6,7 +6,7 @@ export function dispatchHouseholdNotification(params: {
   accessToken: string;
   householdId: string;
   triggeredBy: string;
-  type: 'fridge_item_added' | 'meal_added' | 'budget_exceeded';
+  type: 'fridge_item_added' | 'meal_added' | 'dining_expense_added' | 'budget_exceeded';
   title: string;
   body: string;
 }): void {
