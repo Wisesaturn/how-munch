@@ -9,7 +9,7 @@ export const BUDGET_ITEM_SCOPES: BudgetScope[] = ['grocery', 'restaurant', 'deli
 const BUDGET_SCOPE_LABEL: Record<BudgetScope, string> = {
   total: '전체',
   grocery: '장보기',
-  restaurant: '식당 & 카페',
+  restaurant: '식당/카페',
   delivery: '포장/배달',
 };
 

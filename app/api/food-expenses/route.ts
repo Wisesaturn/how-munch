@@ -1,5 +1,7 @@
 import { type NextRequest } from 'next/server';
 
+import { josa } from 'es-hangul';
+
 import { notifyBudgetExceeded, respondWithDbError, withAuth } from '@/apps/route';
 
 import { apiResponse } from '@/commons/lib/http/apiResponse';
@@ -141,6 +143,22 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 });
 
 /**
+ * 외식비 등록 알림 본문 — 포장/배달은 주문 문구로, 식당/카페는 외식비 등록 문구로 보낸다.
+ * 플랫폼(store)은 선택 입력이라 없으면 플랫폼 구절을 뺀다.
+ */
+function buildDiningExpenseNotificationBody(
+  nickname: string,
+  expense: Pick<DiningExpenseRow, 'kind' | 'brand' | 'store'>,
+): string {
+  if (expense.kind !== 'delivery') {
+    return `${nickname}님이 ${expense.brand} 외식비를 등록했어요`;
+  }
+
+  const platform = expense.store ? ` ${josa(expense.store, '으로/로')}` : '';
+  return `${nickname}님이 ${josa(expense.brand, '을/를')}${platform} 주문했어요`;
+}
+
+/**
  * POST /api/food-expenses — 외식비 추가.
  * 장보기는 냉장고 입고까지 묶여 /api/ingredients(RPC)를 그대로 쓴다.
  * 외식비는 냉장고·식단 연동이 없는 단일 테이블 CRUD라 여기서 직접 insert한다.
@@ -201,7 +219,7 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
       triggeredBy: userId,
       type: 'dining_expense_added',
       title: '외식비 등록',
-      body: `${nickname}님이 ${data.brand} 외식비를 등록했어요`,
+      body: buildDiningExpenseNotificationBody(nickname, data),
     });
   })();
 
