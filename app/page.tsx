@@ -1,16 +1,9 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-import { createClient } from '@/commons/api/supabase/server';
+import { useAuthRedirect } from '@/features/auth';
 
-export default async function HomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function HomePage() {
+  useAuthRedirect({ authenticatedPath: '/meal', unauthenticatedPath: '/login' });
 
-  if (user) {
-    redirect('/meal');
-  }
-
-  redirect('/login');
+  return null;
 }
