@@ -1,15 +1,21 @@
+import { IS_AIT_BUILD } from '../config';
+
 /**
  * @description 브라우저에서 Notification API를 지원하는지 확인합니다.
+ * 앱인토스(.ait) 빌드에서는 웹 푸시를 쓰지 않으므로 항상 false입니다.
  */
 export function isNotificationSupported() {
+  if (IS_AIT_BUILD) return false;
   if (typeof window === 'undefined') return false;
   return 'Notification' in window;
 }
 
 /**
  * @description 서비스 워커를 등록하고 Registration 객체를 반환합니다.
+ * 앱인토스(.ait) 빌드에서는 등록하지 않고 null을 반환합니다.
  */
 export async function registerNotificationServiceWorker() {
+  if (IS_AIT_BUILD) return null;
   if (typeof window === 'undefined') return null;
   if (!('serviceWorker' in navigator)) return null;
 
