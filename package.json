@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:ait": "node scripts/build-ait.mjs",
     "start": "next start",
     "test": "TEST_STRICT=0 bash ./scripts/test-ts.sh",
     "test:strict": "TEST_STRICT=1 bash ./scripts/test-ts.sh",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
+    "@apps-in-toss/web-framework": "3.8.0",
     "@ncdai/react-wheel-picker": "^1.2.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",

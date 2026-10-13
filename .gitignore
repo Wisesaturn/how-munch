@@ -52,3 +52,7 @@ docs
 
 # playwright mcp
 .playwright-mcp/
+
+# apps in toss
+*.ait
+.ait-stash/
