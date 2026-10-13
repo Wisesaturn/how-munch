@@ -2,7 +2,7 @@
  * 앱인토스(.ait) 번들 빌드
  *
  * 1. 정적 export에 넣을 수 없는 경로를 .ait-stash/로 잠시 옮긴다
- * 2. NEXT_PUBLIC_AIT_BUILD=1로 next build(output: 'export') → out/
+ * 2. NEXT_PUBLIC_BUILD_TARGET=ait로 next build(output: 'export') → out/
  * 3. ait build로 out/을 <appName>.ait로 묶는다
  * 4. 성공/실패와 관계없이 옮긴 경로를 되돌린다
  */
@@ -74,7 +74,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 let exitCode = 1;
 try {
   stashExcludedPaths();
-  exitCode = run('next', ['build'], { NEXT_PUBLIC_AIT_BUILD: '1' });
+  exitCode = run('next', ['build'], { NEXT_PUBLIC_BUILD_TARGET: 'ait' });
   if (exitCode === 0) {
     exitCode = run('ait', ['build']);
   }
