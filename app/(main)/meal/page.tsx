@@ -1,28 +1,17 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-import { createClient } from '@/commons/api/supabase/server';
+import { useCurrentHouseholdIdQuery } from '@/entities/household';
 
 import { MealPage } from '@/pages/meal';
 
-export default async function MealRoute() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+import MainLoading from '../loading';
 
-  if (!user) {
-    redirect('/login');
+export default function MealRoute() {
+  const { data: householdId, isPending } = useCurrentHouseholdIdQuery();
+
+  if (isPending) {
+    return <MainLoading />;
   }
-
-  await supabase.rpc('ensure_current_user_household_member');
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('household_id')
-    .eq('user_id', user.id)
-    .single();
-
-  const householdId = profile?.household_id;
 
   if (!householdId) {
     return (

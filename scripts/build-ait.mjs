@@ -25,7 +25,9 @@ const EXCLUDED_PATHS = [
   'app/auth',
   'proxy.ts',
   // 서버 컴포넌트에서 getUser/redirect를 하는 화면. 클라이언트 전환 후 제외 목록에서 뺀다
-  'app/(main)', // #65, #66
+  'app/(main)/fridge', // #66
+  'app/(main)/store', // #66
+  'app/(main)/profile', // #66
   'app/invite', // #66
 ];
 
