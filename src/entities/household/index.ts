@@ -6,3 +6,4 @@ export type {
   HouseholdMemberWithProfile,
 } from './model/types';
 export { householdKeys } from './api/queryKey';
+export { useCurrentHouseholdIdQuery } from './api/queries';

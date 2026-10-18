@@ -1,4 +1,4 @@
-export { apiClient } from './http/apiClient';
+export { apiClient, apiFetch } from './http/apiClient';
 export { type ApiResponse } from './http/apiTypes';
 export { cn } from './cn';
 export { createSafeContext } from './context';
