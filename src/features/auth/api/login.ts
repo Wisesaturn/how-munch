@@ -1,28 +1,21 @@
-'use server';
+'use client';
 
-import { redirect } from 'next/navigation';
-import { headers } from 'next/headers';
+import { createClient } from '@/commons/api/supabase/client';
 
-import { createClient } from '@/commons/api/supabase/server';
-
+/**
+ * 카카오 OAuth 로그인 화면으로 이동합니다.
+ * 브라우저 클라이언트가 PKCE code verifier를 쿠키에 저장하고, /auth/callback에서 세션으로 교환합니다.
+ */
 export async function loginWithKakao() {
-  const supabase = await createClient();
-  const requestHeaders = await headers();
-  const host =
-    requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? 'localhost:3000';
-  const protocol = requestHeaders.get('x-forwarded-proto') ?? 'http';
-  const origin = `${protocol}://${host}`;
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const supabase = createClient();
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: `${window.location.origin}/auth/callback`,
     },
   });
 
   if (error) {
     throw new Error(error.message);
   }
-
-  redirect(data.url);
 }
