@@ -7,7 +7,7 @@ import { overlay } from 'overlay-kit';
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
 import { useLoading } from '@/commons/model';
 import { Button, Card, ConfirmDialog, Select, Switch, Toast } from '@/commons/ui';
-import { cn } from '@/commons/lib';
+import { apiFetch, cn } from '@/commons/lib';
 
 import { useNotificationPreferencesQuery, useUpsertNotificationPreferencesMutation } from '../api';
 import {
@@ -160,7 +160,7 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
                 variant="outline"
                 size="sm"
                 onClick={async () => {
-                  const res = await fetch('/api/notification/test', { method: 'POST' });
+                  const res = await apiFetch('/api/notification/test', { method: 'POST' });
                   if (res.status === 204) {
                     Toast.success('테스트 알림을 발송했습니다');
                     return;

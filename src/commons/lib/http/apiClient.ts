@@ -1,11 +1,41 @@
 import qs from 'qs';
 
+import { createClient } from '../../api/supabase/client';
+import { API_BASE_URL } from '../../config/api';
+
 import { type ApiResponse } from './apiTypes';
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
   /** qs로 직렬화되는 query params. 중첩 객체/배열(repeat)/null 지원 */
   params?: Record<string, unknown>;
 };
+
+/**
+ * @description 브라우저 Supabase 세션의 access token. 세션이 없거나 서버에서 부르면 null
+ */
+async function getAccessToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+
+  const {
+    data: { session },
+  } = await createClient().auth.getSession();
+  return session?.access_token ?? null;
+}
+
+/**
+ * @description API 서버로 보내는 fetch. 응답 파싱 없이 Response를 그대로 돌려준다.
+ * path 앞에 API_BASE_URL을 붙이고, 세션이 있으면 `Authorization: Bearer` 헤더를 넣는다.
+ * 상태 코드로 분기해야 하는 호출(예: 204/404/410)은 apiClient 대신 이 함수를 쓴다
+ */
+export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const headers = new Headers(init?.headers);
+  if (!headers.has('Authorization')) {
+    const accessToken = await getAccessToken();
+    if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  return fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+}
 
 /**
  * @description fetch 기반 HTTP 요청 공통 함수.
@@ -19,9 +49,12 @@ async function request<T>(url: string, options?: RequestOptions & { body?: unkno
 
   const { params: _params, body, ...restOptions } = options ?? {};
 
-  const res = await fetch(`${url}${queryString}`, {
+  const headers = new Headers(restOptions.headers);
+  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+
+  const res = await apiFetch(`${url}${queryString}`, {
     ...restOptions,
-    headers: { 'Content-Type': 'application/json', ...restOptions.headers },
+    headers,
     ...(body !== undefined && { body: JSON.stringify(body) }),
   });
 

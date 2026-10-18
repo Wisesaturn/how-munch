@@ -3,6 +3,7 @@
  *
  * 1. 정적 export에 넣을 수 없는 경로를 .ait-stash/로 잠시 옮긴다
  * 2. NEXT_PUBLIC_BUILD_TARGET=ait로 next build(output: 'export') → out/
+ *    API는 NEXT_PUBLIC_API_BASE_URL(없으면 운영 Vercel 주소)로 원격 호출한다
  * 3. ait build로 out/을 <appName>.ait로 묶는다
  * 4. 성공/실패와 관계없이 옮긴 경로를 되돌린다
  */
@@ -13,6 +14,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const STASH_DIR = path.join(ROOT_DIR, '.ait-stash');
+
+/** .ait에서 부를 API 서버 기본값. 미리보기 배포 등 다른 서버는 NEXT_PUBLIC_API_BASE_URL로 바꾼다 */
+const DEFAULT_API_BASE_URL = 'https://how-munch.vercel.app';
 
 /** 정적 export에서 제외할 경로 (ROOT_DIR 기준) */
 const EXCLUDED_PATHS = [
@@ -74,7 +78,10 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 let exitCode = 1;
 try {
   stashExcludedPaths();
-  exitCode = run('next', ['build'], { NEXT_PUBLIC_BUILD_TARGET: 'ait' });
+  exitCode = run('next', ['build'], {
+    NEXT_PUBLIC_BUILD_TARGET: 'ait',
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL,
+  });
   if (exitCode === 0) {
     exitCode = run('ait', ['build']);
   }
