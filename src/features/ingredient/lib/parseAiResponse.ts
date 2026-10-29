@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, isAfter, isMatch, parse } from 'date-fns';
 
 import {
   isIngredientUnit,
@@ -21,6 +21,24 @@ export interface StagedItem {
   date: string;
   category_code: string;
   category_id: string;
+}
+
+const DATE_FORMAT = 'yyyy-MM-dd';
+
+/**
+ * @description AI가 돌려준 구매일을 검증해, 신뢰할 수 없으면 today로 대체한다.
+ * 형식(YYYY-MM-DD)만 맞고 실재하지 않는 날짜('2026-02-30', '0000-00-00')나,
+ * 연도가 없는 영수증에서 연도를 추측해 생긴 미래 날짜는 구매일이 될 수 없으므로 today로 보정한다.
+ * 날짜를 모르는 경우(빈 문자열·누락·비문자열)도 today로 기록한다.
+ */
+function resolvePurchaseDate(value: unknown, today: string): string {
+  if (typeof value !== 'string') return today;
+  const trimmed = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed) || !isMatch(trimmed, DATE_FORMAT)) return today;
+
+  const date = parse(trimmed, DATE_FORMAT, new Date());
+  const todayDate = parse(today, DATE_FORMAT, new Date());
+  return isAfter(date, todayDate) ? today : trimmed;
 }
 
 /**
@@ -108,14 +126,14 @@ function mergeDuplicates(items: StagedItem[]): StagedItem[] {
  * @description Claude AI 응답 텍스트를 파싱해 StagedItem 배열로 변환한다.
  * JSON 블록 추출 → 유효성 검사 → category_code를 category_id로 매핑 → product/spec/unit 조립 → 중복 항목 병합 순으로 처리한다.
  * AI가 돌려준 unit은 신뢰하지 않고 IngredientUnit으로 좁힌 뒤, 실패하면 'count'로 강등한다.
- * 날짜를 특정할 수 없는 항목은 today로 보정한다. 서버 실행 시 타임존이 어긋나지 않도록
+ * 날짜를 특정할 수 없거나 실재하지 않는·미래인 날짜는 today로 보정한다. 서버 실행 시 타임존이 어긋나지 않도록
  * 호출자(클라이언트 로컬 날짜)가 today를 주입할 수 있으며, 미주입 시 실행 환경의 오늘로 폴백한다.
  * 파싱 실패 시 사용자에게 보여줄 한국어 에러 메시지와 함께 throw한다.
  */
 export function parseAiResponse(
   text: string,
   categories: IngredientCategoryOption[],
-  today: string = format(new Date(), 'yyyy-MM-dd'),
+  today: string = format(new Date(), DATE_FORMAT),
 ): StagedItem[] {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch)
@@ -165,10 +183,7 @@ export function parseAiResponse(
         count,
         unit,
         store: typeof item['store'] === 'string' ? item['store'].trim() : '',
-        date:
-          typeof item['date'] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item['date'])
-            ? item['date']
-            : today,
+        date: resolvePurchaseDate(item['date'], today),
         category_code: code,
         category_id: categoryMap.get(code) ?? otherId,
       };
