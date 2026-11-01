@@ -10,6 +10,7 @@ import { DOMAIN_ERROR_MESSAGE, ERROR_MSG } from '@/commons/lib';
 import { CTAButton, ProgressBar, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import { PriceInput } from '@/entities/amount-calculator';
 import {
   getBudgetScopeLabel,
   hasAnyBudget,
@@ -23,7 +24,6 @@ import { useBudgetDailySeriesQuery, useBudgetsQuery } from '../api/queries';
 import { formatMonthLabel, getPreviousYearMonth } from '../lib/budgetMonth';
 import { sumSpentByScope } from '../lib/budgetSeries';
 
-import { BudgetAmountInput } from './BudgetAmountInput';
 import { BudgetCopyBottomSheet } from './BudgetCopyBottomSheet';
 import { BudgetScopeIcon } from './BudgetScopeIcon';
 import { BudgetScopeField } from './BudgetScopeField';
@@ -197,7 +197,9 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
                   <Form.Field field={field}>
                     <Form.Label className="text-base text-gray-800">월 예산</Form.Label>
                     <Form.Control>
-                      <BudgetAmountInput
+                      <PriceInput
+                        nullable
+                        title="월 예산"
                         value={field.state.value}
                         onValueChange={(next) => field.handleChange(next)}
                         invalid={Boolean(field.state.meta.errors[0])}

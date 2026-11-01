@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 
-import { BudgetAmountInput } from './BudgetAmountInput';
+import { PriceInput } from '@/entities/amount-calculator';
 
 interface BudgetScopeFieldProps {
   icon: ReactNode;
@@ -28,11 +28,12 @@ export function BudgetScopeField({
         <span className="text-base font-medium text-gray-800">{label}</span>
         <span className="text-xs text-gray-400">지난달 {lastMonthSpent.toLocaleString()}원</span>
       </div>
-      <BudgetAmountInput
+      <PriceInput
+        nullable
+        title={`${label} 예산`}
         className="ml-auto w-44 shrink-0"
         value={value}
         onValueChange={onValueChange}
-        aria-label={`${label} 예산`}
       />
     </div>
   );
