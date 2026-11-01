@@ -51,6 +51,46 @@ function SaveStateIcon({ state }: { state: SaveState }) {
   return null;
 }
 
+function formatWon(amount: number) {
+  return `${amount.toLocaleString('ko-KR')}원`;
+}
+
+interface ReceiptTotalSummaryProps {
+  selectedTotal: number;
+  receiptTotal: number | null;
+}
+
+/** 목록 아래에 영수증처럼 선택 합계와 영수증 합계를 비교해 보여준다 */
+function ReceiptTotalSummary({ selectedTotal, receiptTotal }: ReceiptTotalSummaryProps) {
+  const difference = receiptTotal === null ? 0 : receiptTotal - selectedTotal;
+
+  return (
+    <dl className="flex flex-col gap-1.5 border-t border-dashed border-gray-300 px-1 pt-3 text-sm">
+      <div className="flex items-center justify-between font-semibold text-gray-900">
+        <dt>선택 합계</dt>
+        <dd>{formatWon(selectedTotal)}</dd>
+      </div>
+      {receiptTotal !== null ? (
+        <>
+          <div className="flex items-center justify-between text-gray-600">
+            <dt>영수증 합계</dt>
+            <dd>{formatWon(receiptTotal)}</dd>
+          </div>
+          <div className="flex items-center justify-between text-gray-600">
+            <dt>차액</dt>
+            <dd>{formatWon(difference)}</dd>
+          </div>
+          {difference !== 0 ? (
+            <p className="text-xs text-gray-400">
+              미선택 항목, 비식품, 할인 등으로 다를 수 있어요.
+            </p>
+          ) : null}
+        </>
+      ) : null}
+    </dl>
+  );
+}
+
 export function PromptIngredientStagingScreen({
   onClose,
   onComplete,
@@ -58,8 +98,17 @@ export function PromptIngredientStagingScreen({
   userId,
   onEditItem,
 }: PromptIngredientStagingScreenProps) {
-  const { items, checkedIds, saveStates, toggleCheck, toggleAll, updateItem, setSaveState, reset } =
-    usePromptIngredientStore();
+  const {
+    items,
+    receiptTotal,
+    checkedIds,
+    saveStates,
+    toggleCheck,
+    toggleAll,
+    updateItem,
+    setSaveState,
+    reset,
+  } = usePromptIngredientStore();
   const addMutation = useAddIngredientMutation();
   const dispatchActivityMutation = useDispatchHouseholdActivityMutation();
   const { data: categories = [] } = useIngredientCategoriesQuery(householdId);
@@ -69,6 +118,7 @@ export function PromptIngredientStagingScreen({
     (s) => s === 'success' || s === 'error',
   ).length;
   const selectedItems = items.filter((i) => checkedIds.includes(i.id));
+  const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
   const allChecked = items.length > 0 && items.every((i) => checkedIds.includes(i.id));
 
   function resolveCategory(item: StagedItem) {
@@ -213,6 +263,8 @@ export function PromptIngredientStagingScreen({
             </div>
           );
         })}
+
+        <ReceiptTotalSummary selectedTotal={selectedTotal} receiptTotal={receiptTotal} />
       </div>
 
       <CTAButton

@@ -8,7 +8,7 @@ import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 
-import { buildReceiptPrompt, parseAiResponse } from '@/features/ingredient';
+import { buildReceiptPrompt, parseAiResponse, parseReceiptTotal } from '@/features/ingredient';
 
 /** Vision 응답이 수십 초까지 걸릴 수 있어 여유 있게 설정 */
 export const maxDuration = 60;
@@ -94,7 +94,7 @@ export const POST = withAuth(async (req: NextRequest) => {
 
   try {
     const items = parseAiResponse(text, categories, resolvedToday);
-    return apiResponse.OK({ items });
+    return apiResponse.OK({ items, receiptTotal: parseReceiptTotal(text) });
   } catch (err) {
     return apiResponse.BAD_REQUEST(
       'CMN_002',

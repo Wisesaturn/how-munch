@@ -63,7 +63,11 @@ export function useParseReceiptMutation() {
       mimeType: string;
       categories: IngredientCategoryOption[];
       today: string;
-    }) => apiClient.post<{ items: StagedItem[] }>('/api/ingredients/parse-receipt', input),
+    }) =>
+      apiClient.post<{ items: StagedItem[]; receiptTotal: number | null }>(
+        '/api/ingredients/parse-receipt',
+        input,
+      ),
   });
 }
 
