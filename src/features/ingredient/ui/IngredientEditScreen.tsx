@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { overlay } from 'overlay-kit';
 
@@ -8,8 +10,10 @@ import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui'
 import { type Ingredient } from '@/entities/ingredient';
 
 import { useDeleteIngredientMutation, useUpdateIngredientMutation } from '../api/mutations';
-import { useStoreNamesQuery } from '../api/queries';
+import { useIngredientBatchesQuery, useStoreNamesQuery } from '../api/queries';
+import { sumBatchQuantity } from '../lib/ingredientBatch';
 
+import { IngredientBatchQuantityFields } from './IngredientBatchQuantityFields';
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
 
 interface IngredientEditScreenProps {
@@ -30,7 +34,22 @@ export function IngredientEditScreen({
   const updateMutation = useUpdateIngredientMutation();
   const deleteMutation = useDeleteIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
+  const { data: batches = [], isPending: isBatchesPending } = useIngredientBatchesQuery(
+    ingredient.id,
+  );
+  const [editedQuantities, setEditedQuantities] = useState<Record<string, number>>({});
   const formId = `ingredient-edit-form-${ingredient.id}`;
+  const isMultiBatch = batches.length >= 2;
+  const batchRows = batches.map((batch) => ({
+    ...batch,
+    next_quantity: editedQuantities[batch.id] ?? Number(batch.initial_quantity),
+  }));
+  const lockedCount = isMultiBatch
+    ? sumBatchQuantity(
+        batchRows.map((batch) => ({ quantity: batch.next_quantity })),
+        ingredient.unit,
+      )
+    : undefined;
 
   function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message;
@@ -45,10 +64,17 @@ export function IngredientEditScreen({
         category_id: values.category_id,
         name: values.name,
         brand: values.brand || null,
-        count: values.count,
-        unit: values.unit,
         store: values.store || null,
         price: values.price,
+        // 배치가 여러 개면 수량은 배치별 등록 수량으로만 바꾼다
+        ...(isMultiBatch
+          ? {
+              batch_quantities: batchRows.map((batch) => ({
+                id: batch.id,
+                initial_quantity: batch.next_quantity,
+              })),
+            }
+          : { count: values.count, unit: values.unit }),
       },
       {
         onSuccess: () => {
@@ -119,10 +145,21 @@ export function IngredientEditScreen({
           onSubmit={handleSubmit}
           isSubmitting={updateMutation.isPending}
           isDeleting={deleteMutation.isPending}
-          disableUnitSelect={ingredient.has_meal_usage === true}
+          disableUnitSelect={ingredient.has_meal_usage === true || isMultiBatch}
+          lockedCount={lockedCount}
           onOpenProductNameSearch={onOpenProductNameSearch}
           onOpenBrandSearch={onOpenBrandSearch}
         />
+        {isMultiBatch ? (
+          <IngredientBatchQuantityFields
+            className="mt-4"
+            unit={ingredient.unit}
+            batches={batchRows}
+            onQuantityChange={(batchId, quantity) =>
+              setEditedQuantities((previous) => ({ ...previous, [batchId]: quantity }))
+            }
+          />
+        ) : null}
       </div>
       <CTAConfirmButton>
         <CTAConfirmButton.Left
@@ -139,7 +176,9 @@ export function IngredientEditScreen({
           form={formId}
           color="confirm"
           variant="filled"
-          disabled={Boolean(updateMutation.isPending || deleteMutation.isPending)}
+          disabled={Boolean(
+            updateMutation.isPending || deleteMutation.isPending || isBatchesPending,
+          )}
         >
           저장
         </CTAConfirmButton.Right>

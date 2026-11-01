@@ -10,7 +10,10 @@ import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
 import { mealKeys } from '@/entities/meal';
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 
-import { type IngredientBatchInput } from '../lib/ingredientBatch';
+import {
+  type IngredientBatchInput,
+  type IngredientBatchQuantityInput,
+} from '../lib/ingredientBatch';
 import { type StagedItem } from '../lib/parseAiResponse';
 
 type IngredientInsert = Database['public']['Tables']['ingredients']['Insert'];
@@ -42,7 +45,10 @@ export function useUpdateIngredientMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...updates }: IngredientUpdate & { id: string }) =>
+    mutationFn: ({
+      id,
+      ...updates
+    }: IngredientUpdate & { id: string; batch_quantities?: IngredientBatchQuantityInput[] }) =>
       apiClient.put<Ingredient>('/api/ingredients', { id, ...updates }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
