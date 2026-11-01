@@ -41,7 +41,7 @@ import {
 
 import { useCategoryExpiryDefaultsQuery } from '../api/queries';
 import { useAddFridgeItemMutation } from '../api/mutations';
-import { computeExpiryDate } from '../lib/expiry';
+import { computeExpiryDate, resolveUnknownPurchasedDate } from '../lib/expiry';
 
 interface FridgeItemAddScreenProps {
   onClose: () => void;
@@ -195,9 +195,7 @@ export function FridgeItemAddScreen({
           },
           batch: {
             quantity: value.quantity,
-            purchased_date: isPurchasedDateUnknown
-              ? format(today, 'yyyy-MM-dd')
-              : value.purchased_date,
+            purchased_date: value.purchased_date,
             expiry_date: value.expiry_date || null,
             memo: value.memo.trim() || null,
           },
@@ -449,7 +447,9 @@ export function FridgeItemAddScreen({
                     onCheckedChange={(checked) => {
                       setIsPurchasedDateUnknown(checked as boolean);
                       if (checked) {
-                        field.handleChange(format(today, 'yyyy-MM-dd'));
+                        field.handleChange(
+                          resolveUnknownPurchasedDate(form.state.values.expiry_date),
+                        );
                       }
                     }}
                   />
@@ -480,7 +480,14 @@ export function FridgeItemAddScreen({
                     value={parseDateValue(field.state.value)}
                     onChange={(date) => {
                       isExpiryDirtyRef.current = true;
-                      field.handleChange(date ? format(date, 'yyyy-MM-dd') : '');
+                      const nextExpiry = date ? format(date, 'yyyy-MM-dd') : '';
+                      if (isPurchasedDateUnknown) {
+                        form.setFieldValue(
+                          'purchased_date',
+                          resolveUnknownPurchasedDate(nextExpiry),
+                        );
+                      }
+                      field.handleChange(nextExpiry);
                     }}
                     placeholder="유통기한을 선택하세요"
                   />

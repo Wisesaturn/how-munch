@@ -18,6 +18,8 @@ import {
   type IngredientUnit,
 } from '@/entities/ingredient';
 
+import { resolveUnknownPurchasedDate } from '../lib/expiry';
+
 export interface FridgeBatchFormValues {
   quantity: number;
   expiry_date: string;
@@ -187,7 +189,7 @@ export function FridgeBatchForm({
                 onCheckedChange={(checked) => {
                   setIsPurchasedDateUnknown(checked as boolean);
                   if (checked) {
-                    field.handleChange(format(today, 'yyyy-MM-dd'));
+                    field.handleChange(resolveUnknownPurchasedDate(form.state.values.expiry_date));
                   }
                 }}
               />
@@ -216,7 +218,13 @@ export function FridgeBatchForm({
             <Form.Control>
               <DatePicker
                 value={parseDateValue(field.state.value)}
-                onChange={(date) => field.handleChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                onChange={(date) => {
+                  const nextExpiry = date ? format(date, 'yyyy-MM-dd') : '';
+                  if (isPurchasedDateUnknown) {
+                    form.setFieldValue('purchased_date', resolveUnknownPurchasedDate(nextExpiry));
+                  }
+                  field.handleChange(nextExpiry);
+                }}
                 placeholder="유통기한을 선택하세요"
               />
             </Form.Control>
