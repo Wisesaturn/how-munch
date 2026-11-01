@@ -1,11 +1,11 @@
 'use client';
 
 import { format, parseISO } from 'date-fns';
-import { Check, ChevronLeft, Loader2, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
 import { cn } from '@/commons/lib';
-import { Button, Checkbox, CTAButton } from '@/commons/ui';
+import { Checkbox, CTAButton } from '@/commons/ui';
 
 import { computeExpiryDate, useCategoryExpiryDefaultsQuery } from '@/entities/fridge-item';
 import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
@@ -211,18 +211,11 @@ export function PromptIngredientStagingScreen({
       appBar={{
         title: '추가할 항목 선택',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-              disabled={isSaving}
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            if (!isSaving) onClose();
+          },
         },
       }}
     >

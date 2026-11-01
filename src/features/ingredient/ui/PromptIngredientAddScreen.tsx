@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { format } from 'date-fns';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Camera, ChevronLeft, ImagePlus, Loader2, ReceiptText, Sparkles } from 'lucide-react';
+import { Camera, ImagePlus, Loader2, ReceiptText, Sparkles } from 'lucide-react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
 import { cn } from '@/commons/lib';
@@ -139,18 +139,11 @@ export function PromptIngredientAddScreen({
       appBar={{
         title: '영수증 업로드',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-              disabled={status === 'analyzing'}
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            if (status !== 'analyzing') onClose();
+          },
         },
       }}
     >

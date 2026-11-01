@@ -2,10 +2,10 @@
 
 import { format } from 'date-fns';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { ChevronLeft, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
-import { Activity, Button, DeleteConfirmBottomSheet, SwipeAction, Toast } from '@/commons/ui';
+import { Activity, DeleteConfirmBottomSheet, SwipeAction, Toast } from '@/commons/ui';
 
 import { type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { useIngredientCategory } from '@/entities/ingredient-category';
@@ -173,17 +173,11 @@ export function FridgeExpiryListScreen({ onClose, items }: FridgeExpiryListScree
       appBar={{
         title: '만료 재료',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            onClose();
+          },
         },
       }}
     >

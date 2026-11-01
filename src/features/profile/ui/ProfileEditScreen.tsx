@@ -4,12 +4,11 @@ import { useEffect } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { useForm } from '@tanstack/react-form';
-import { ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
-import { Button, CTAButton, Input, Toast } from '@/commons/ui';
+import { CTAButton, Input, Toast } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import { useProfileQuery } from '@/entities/profile';
@@ -87,17 +86,11 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
       appBar={{
         title: '프로필 수정',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            onClose();
+          },
         },
       }}
     >

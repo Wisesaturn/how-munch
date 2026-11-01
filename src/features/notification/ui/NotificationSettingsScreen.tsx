@@ -1,7 +1,7 @@
 'use client';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { ChevronLeft, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
@@ -98,17 +98,11 @@ export function NotificationSettingsScreen({ onClose }: NotificationSettingsScre
       appBar={{
         title: '알림 설정',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            onClose();
+          },
         },
       }}
     >

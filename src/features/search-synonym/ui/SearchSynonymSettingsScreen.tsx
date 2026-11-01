@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { ChevronLeft, RotateCcw, X } from 'lucide-react';
+import { RotateCcw, X } from 'lucide-react';
 
 import { Button, ConfirmDialog, EmptyState, Toast } from '@/commons/ui';
 
@@ -61,17 +61,11 @@ export function SearchSynonymSettingsScreen({ onClose }: SearchSynonymSettingsSc
       appBar={{
         title: '유사어 매칭',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            onClose();
+          },
         },
       }}
     >

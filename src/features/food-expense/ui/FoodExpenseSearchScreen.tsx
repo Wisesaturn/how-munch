@@ -6,12 +6,12 @@ import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { subDays, subMonths, format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { debounce, groupBy } from 'es-toolkit';
-import { ChevronLeft, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useConditionalEffect } from 'react-simplikit';
 import { useIntersectionObserver } from 'usehooks-ts';
 
 import { cn } from '@/commons/lib';
-import { Button, Chip, ChipRow, InputGroup } from '@/commons/ui';
+import { Chip, ChipRow, InputGroup } from '@/commons/ui';
 
 import { type FoodExpense, type FoodExpenseFilterKind } from '@/entities/food-expense';
 import { useIngredientCategory } from '@/entities/ingredient-category';
@@ -154,11 +154,11 @@ export function FoodExpenseSearchScreen({
           </InputGroup>
         ),
         backButton: {
-          render: () => (
-            <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="뒤로가기">
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            onClose();
+          },
         },
       }}
     >

@@ -1,10 +1,9 @@
 'use client';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { ChevronLeft } from 'lucide-react';
 
 import { useUserSuspenseQuery } from '@/commons/api/auth/queries';
-import { Button, Card, Switch } from '@/commons/ui';
+import { Card, Switch } from '@/commons/ui';
 
 import { useProfileQuery } from '@/entities/profile';
 
@@ -42,17 +41,11 @@ export function FridgeFilterSettingsScreen({ onClose }: FridgeFilterSettingsScre
       appBar={{
         title: '냉장고 필터 설정',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            onClose();
+          },
         },
       }}
     >

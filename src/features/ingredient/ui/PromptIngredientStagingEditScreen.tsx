@@ -1,9 +1,8 @@
 'use client';
 
-import { ChevronLeft } from 'lucide-react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Button, CTAButton, type OpenPriceCalculator } from '@/commons/ui';
+import { CTAButton, type OpenPriceCalculator } from '@/commons/ui';
 
 import { type StagedItem } from '../lib/parseAiResponse';
 import {
@@ -64,17 +63,11 @@ export function PromptIngredientStagingEditScreen({
       appBar={{
         title: '항목 수정',
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleClose}
-              aria-label="뒤로가기"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          onClick: (event) => {
+            event.preventDefault();
+            handleClose();
+          },
         },
       }}
     >

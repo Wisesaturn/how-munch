@@ -85,27 +85,19 @@ export function FooScreen({ onClose }: FooScreenProps) {
 
 ### 커스텀 뒤로가기 버튼
 
-기본 뒤로가기 대신 직접 핸들러를 연결할 때 사용한다.
+뒤로가기 버튼의 모양은 모든 화면에서 기본 아이콘으로 통일한다. `render`로 직접 그리지 않고, 닫기 전에 할 일이 있을 때만 `onClick`을 연결한다.
+기본 동작이 `pop`이므로 `event.preventDefault()`를 호출해야 두 번 닫히지 않는다.
 
 ```tsx
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/commons/ui';
-
 <AppScreen
   appBar={{
     title: '설정',
     backButton: {
-      render: () => (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={onClose}
-          aria-label="뒤로가기"
-        >
-          <ChevronLeft className="size-5" />
-        </Button>
-      ),
+      ariaLabel: '뒤로가기',
+      onClick: (event) => {
+        event.preventDefault();
+        onClose();
+      },
     },
   }}
 >
