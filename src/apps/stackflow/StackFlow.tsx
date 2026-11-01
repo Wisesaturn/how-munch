@@ -1,5 +1,7 @@
 'use client';
 
+import { useRef } from 'react';
+
 import { basicUIPlugin } from '@stackflow/plugin-basic-ui';
 import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
@@ -596,17 +598,24 @@ function AmountCalculatorActivity({
   };
 }) {
   const { pop } = useActions();
+  const hasLeftRef = useRef(false);
   // 새로고침으로 URL에서 복원되면 params가 문자열로 들어온다
   const value = params.value === undefined ? null : Number(params.value);
 
-  function handleConfirm(nextValue: number | null) {
-    resolvePendingAmountCalculatorCallback(nextValue);
+  // 닫히는 전환 중에도 화면이 살아 있어, 다시 입력되면 아래 폼까지 pop되지 않게 한 번만 처리한다
+  function leaveOnce(settlePendingCallback: () => void) {
+    if (hasLeftRef.current) return;
+    hasLeftRef.current = true;
+    settlePendingCallback();
     pop();
   }
 
+  function handleConfirm(nextValue: number | null) {
+    leaveOnce(() => resolvePendingAmountCalculatorCallback(nextValue));
+  }
+
   function handleClose() {
-    clearPendingAmountCalculatorCallback();
-    pop();
+    leaveOnce(clearPendingAmountCalculatorCallback);
   }
 
   return (
