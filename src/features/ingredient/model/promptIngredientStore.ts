@@ -6,9 +6,11 @@ export type SaveState = 'idle' | 'saving' | 'success' | 'error';
 
 interface PromptIngredientState {
   items: StagedItem[];
+  /** 영수증에 인쇄된 합계 (읽지 못했으면 null) */
+  receiptTotal: number | null;
   checkedIds: string[];
   saveStates: Record<string, SaveState>;
-  setItems: (items: StagedItem[]) => void;
+  setItems: (items: StagedItem[], receiptTotal?: number | null) => void;
   updateItem: (id: string, updates: Partial<StagedItem>) => void;
   toggleCheck: (id: string) => void;
   toggleAll: () => void;
@@ -18,16 +20,18 @@ interface PromptIngredientState {
 
 /**
  * @description AI 영수증 분석 결과를 스테이징 상태로 관리하는 전역 스토어.
- * 파싱된 StagedItem 목록, 체크 상태, 저장 진행 상태를 보관한다.
+ * 파싱된 StagedItem 목록, 영수증 합계, 체크 상태, 저장 진행 상태를 보관한다.
  */
 export const usePromptIngredientStore = create<PromptIngredientState>((set, get) => ({
   items: [],
+  receiptTotal: null,
   checkedIds: [],
   saveStates: {},
 
-  setItems(items) {
+  setItems(items, receiptTotal = null) {
     set({
       items,
+      receiptTotal,
       checkedIds: items.map((i) => i.id),
       saveStates: Object.fromEntries(items.map((i) => [i.id, 'idle'])),
     });
@@ -58,6 +62,6 @@ export const usePromptIngredientStore = create<PromptIngredientState>((set, get)
   },
 
   reset() {
-    set({ items: [], checkedIds: [], saveStates: {} });
+    set({ items: [], receiptTotal: null, checkedIds: [], saveStates: {} });
   },
 }));

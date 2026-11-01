@@ -1,14 +1,17 @@
 'use client';
 
+import { format, parseISO } from 'date-fns';
 import { Check, ChevronLeft, Loader2, X } from 'lucide-react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
 import { cn } from '@/commons/lib';
 import { Button, Checkbox, CTAButton } from '@/commons/ui';
 
+import { computeExpiryDate, useCategoryExpiryDefaultsQuery } from '@/entities/fridge-item';
 import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
 import { useAddIngredientMutation, useDispatchHouseholdActivityMutation } from '../api/mutations';
+import { buildIngredientBatchInputs } from '../lib/ingredientBatch';
 import { type StagedItem } from '../lib/parseAiResponse';
 import { setPendingPromptEditCallback } from '../model/promptIngredientEditStore';
 import { type SaveState, usePromptIngredientStore } from '../model/promptIngredientStore';
@@ -51,6 +54,72 @@ function SaveStateIcon({ state }: { state: SaveState }) {
   return null;
 }
 
+function formatExpiryDate(date: string) {
+  return format(parseISO(date), 'MM.dd');
+}
+
+/**
+ * @description 항목 목록에 보여줄 유통기한 요약 문구를 만든다.
+ * 나눈 항목은 배치 수와 날짜 범위를, 단일 배치는 유통기한만 표시한다.
+ */
+function resolveExpirySummary(item: StagedItem, defaultDays: number | undefined) {
+  const batches = item.batches ?? [];
+  if (batches.length > 0) {
+    const dates = batches
+      .map((batch) => batch.expiry_date)
+      .filter((date): date is string => Boolean(date))
+      .sort();
+    if (dates.length === 0) return `배치 ${batches.length}개`;
+    const first = formatExpiryDate(dates[0]);
+    const last = formatExpiryDate(dates[dates.length - 1]);
+    return `배치 ${batches.length}개 · ${first === last ? first : `${first} ~ ${last}`}`;
+  }
+
+  const expiry =
+    item.expiry_date === undefined ? computeExpiryDate(item.date, defaultDays) : item.expiry_date;
+  return expiry ? `유통기한 ${formatExpiryDate(expiry)}` : '유통기한 없음';
+}
+
+function formatWon(amount: number) {
+  return `${amount.toLocaleString('ko-KR')}원`;
+}
+
+interface ReceiptTotalSummaryProps {
+  selectedTotal: number;
+  receiptTotal: number | null;
+}
+
+/** 목록 아래에 영수증처럼 선택 합계와 영수증 합계를 비교해 보여준다 */
+function ReceiptTotalSummary({ selectedTotal, receiptTotal }: ReceiptTotalSummaryProps) {
+  const difference = receiptTotal === null ? 0 : receiptTotal - selectedTotal;
+
+  return (
+    <dl className="flex flex-col gap-1.5 border-t border-dashed border-gray-300 px-1 pt-3 text-sm">
+      <div className="flex items-center justify-between font-semibold text-gray-900">
+        <dt>선택 합계</dt>
+        <dd>{formatWon(selectedTotal)}</dd>
+      </div>
+      {receiptTotal !== null ? (
+        <>
+          <div className="flex items-center justify-between text-gray-600">
+            <dt>영수증 합계</dt>
+            <dd>{formatWon(receiptTotal)}</dd>
+          </div>
+          <div className="flex items-center justify-between text-gray-600">
+            <dt>차액</dt>
+            <dd>{formatWon(difference)}</dd>
+          </div>
+          {difference !== 0 ? (
+            <p className="text-xs text-gray-400">
+              미선택 항목, 비식품, 할인 등으로 다를 수 있어요.
+            </p>
+          ) : null}
+        </>
+      ) : null}
+    </dl>
+  );
+}
+
 export function PromptIngredientStagingScreen({
   onClose,
   onComplete,
@@ -58,17 +127,28 @@ export function PromptIngredientStagingScreen({
   userId,
   onEditItem,
 }: PromptIngredientStagingScreenProps) {
-  const { items, checkedIds, saveStates, toggleCheck, toggleAll, updateItem, setSaveState, reset } =
-    usePromptIngredientStore();
+  const {
+    items,
+    receiptTotal,
+    checkedIds,
+    saveStates,
+    toggleCheck,
+    toggleAll,
+    updateItem,
+    setSaveState,
+    reset,
+  } = usePromptIngredientStore();
   const addMutation = useAddIngredientMutation();
   const dispatchActivityMutation = useDispatchHouseholdActivityMutation();
   const { data: categories = [] } = useIngredientCategoriesQuery(householdId);
+  const { data: expiryDefaults } = useCategoryExpiryDefaultsQuery(householdId);
 
   const isSaving = Object.values(saveStates).some((s) => s === 'saving');
   const doneCount = Object.values(saveStates).filter(
     (s) => s === 'success' || s === 'error',
   ).length;
   const selectedItems = items.filter((i) => checkedIds.includes(i.id));
+  const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
   const allChecked = items.length > 0 && items.every((i) => checkedIds.includes(i.id));
 
   function resolveCategory(item: StagedItem) {
@@ -101,6 +181,7 @@ export function PromptIngredientStagingScreen({
           unit: item.unit,
           store: item.store || null,
           price: item.price,
+          batches: buildIngredientBatchInputs(item),
           skipNotification: true,
         })
         .then(() => {
@@ -209,10 +290,15 @@ export function PromptIngredientStagingScreen({
                   categoryEmoji={resolveCategory(item).emoji}
                   size="sm"
                 />
+                <span className="text-xs text-gray-500">
+                  {resolveExpirySummary(item, expiryDefaults?.[item.category_id])}
+                </span>
               </button>
             </div>
           );
         })}
+
+        <ReceiptTotalSummary selectedTotal={selectedTotal} receiptTotal={receiptTotal} />
       </div>
 
       <CTAButton

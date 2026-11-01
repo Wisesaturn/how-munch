@@ -1,5 +1,5 @@
 -- Function: public.soft_delete_fridge_item
--- Source: supabase/migrations/076_fix_meal_usage_guards_to_dish_ingredients.sql
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 냉장고 아이템을 소프트 삭제하며 연관 배치 정리를 수행합니다.
 -- 동작:
 -- 1. 권한을 검증하고, dish_ingredients 기준으로 식단 사용 여부를 확인합니다.
@@ -56,8 +56,7 @@ begin
     and deleted_at is null;
 
   update public.ingredients
-  set linked_fridge_item_id = null,
-      linked_fridge_batch_id = null
+  set linked_fridge_item_id = null
   where linked_fridge_item_id = p_fridge_item_id;
 
   perform public.refresh_fridge_item_total_count(p_fridge_item_id);

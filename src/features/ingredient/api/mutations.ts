@@ -10,6 +10,10 @@ import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
 import { mealKeys } from '@/entities/meal';
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 
+import {
+  type IngredientBatchInput,
+  type IngredientBatchQuantityInput,
+} from '../lib/ingredientBatch';
 import { type StagedItem } from '../lib/parseAiResponse';
 
 type IngredientInsert = Database['public']['Tables']['ingredients']['Insert'];
@@ -20,8 +24,9 @@ export function useAddIngredientMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: IngredientInsert & { skipNotification?: boolean }) =>
-      apiClient.post<Ingredient>('/api/ingredients', input),
+    mutationFn: (
+      input: IngredientInsert & { skipNotification?: boolean; batches?: IngredientBatchInput[] },
+    ) => apiClient.post<Ingredient>('/api/ingredients', input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       // 식비 탭은 통합 뷰를 읽으므로 장보기 변경도 함께 무효화해야 즉시 반영된다
@@ -40,7 +45,10 @@ export function useUpdateIngredientMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...updates }: IngredientUpdate & { id: string }) =>
+    mutationFn: ({
+      id,
+      ...updates
+    }: IngredientUpdate & { id: string; batch_quantities?: IngredientBatchQuantityInput[] }) =>
       apiClient.put<Ingredient>('/api/ingredients', { id, ...updates }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
@@ -63,7 +71,11 @@ export function useParseReceiptMutation() {
       mimeType: string;
       categories: IngredientCategoryOption[];
       today: string;
-    }) => apiClient.post<{ items: StagedItem[] }>('/api/ingredients/parse-receipt', input),
+    }) =>
+      apiClient.post<{ items: StagedItem[]; receiptTotal: number | null }>(
+        '/api/ingredients/parse-receipt',
+        input,
+      ),
   });
 }
 

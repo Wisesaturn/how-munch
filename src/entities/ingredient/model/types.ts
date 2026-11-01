@@ -26,7 +26,6 @@ export interface Ingredient {
   /** 연결된 냉장고 아이템 ID (동일 품목 병합 시 N:1 가능) */
   linked_fridge_item_id: string | null;
   /** 연결된 냉장고 배치 ID (장보기-재고 입고 1:1 추적용) */
-  linked_fridge_batch_id: string | null;
   /** 소프트 삭제 시각 */
   deleted_at: string | null;
   created_at: string;
@@ -34,7 +33,6 @@ export interface Ingredient {
   /**
    * 연결된 냉장고 재료/배치의 식단 사용 이력 유무.
    * linked_fridge_item_id 기준 dish_ingredients 존재 여부 또는
-   * linked_fridge_batch_id 기준 meal_batch_usages 존재 여부로 계산된다.
-   */
+   *   */
   has_meal_usage?: boolean;
 }

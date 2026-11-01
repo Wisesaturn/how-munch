@@ -101,13 +101,13 @@ export function PromptIngredientAddScreen({
     setStepIndex(0);
     setStatus('analyzing');
     try {
-      const { items } = await parseReceipt.mutateAsync({
+      const { items, receiptTotal } = await parseReceipt.mutateAsync({
         imageBase64: payload.base64,
         mimeType: payload.mimeType,
         categories,
         today: format(new Date(), 'yyyy-MM-dd'),
       });
-      setItems(items);
+      setItems(items, receiptTotal);
       onParsed(items);
       resetTimerRef.current = setTimeout(() => {
         setStatus('idle');

@@ -10,17 +10,6 @@ interface FridgePreferences {
   hide_depleted_fridge_items: boolean;
 }
 
-export interface CategoryExpiryDefaultRow {
-  category_id: string;
-  default_expiry_days: number;
-}
-
-/** categoryId → 기본 유효기간(일수) 맵 */
-export type CategoryExpiryDefaultsMap = Record<string, number>;
-
-// 가구 카테고리 기본 유효기간은 자주 바뀌지 않으므로 카테고리 목록과 동일하게 6시간 캐시한다.
-const CATEGORY_EXPIRY_DEFAULTS_STALE_TIME = 1000 * 60 * 60 * 6;
-
 /**
  * 냉장고 재고 전체 조회 (배치 포함)
  * 검색어는 유사어 그룹으로 확장해 서버에 반복 파라미터로 넘긴다.
@@ -72,22 +61,6 @@ export function useFridgePreferencesQuery(userId: string | null) {
   });
 }
 
-/** 가구 카테고리별 기본 유효기간 조회 (categoryId → 일수 맵으로 변환) */
-export function useCategoryExpiryDefaultsQuery(householdId: string | null) {
-  return useQuery({
-    queryKey: fridgeItemKeys.categoryExpiryDefaults(householdId ?? ''),
-    staleTime: CATEGORY_EXPIRY_DEFAULTS_STALE_TIME,
-    queryFn: householdId
-      ? () =>
-          apiClient.get<CategoryExpiryDefaultRow[]>('/api/fridge/category-expiry-defaults', {
-            householdId,
-          })
-      : skipToken,
-    select: (rows): CategoryExpiryDefaultsMap =>
-      Object.fromEntries(rows.map((row) => [row.category_id, row.default_expiry_days])),
-  });
-}
-
 /** 냉장고 브랜드 목록 조회 — 자동완성용 */
 export function useFridgeBrandNamesQuery(householdId: string | null) {
   return useQuery({
@@ -97,3 +70,9 @@ export function useFridgeBrandNamesQuery(householdId: string | null) {
       : skipToken,
   });
 }
+
+export {
+  useCategoryExpiryDefaultsQuery,
+  type CategoryExpiryDefaultRow,
+  type CategoryExpiryDefaultsMap,
+} from '@/entities/fridge-item';

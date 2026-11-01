@@ -1,5 +1,5 @@
 -- Function: public.update_fridge_batch_guarded
--- Source: supabase/migrations/093_add_fridge_batch_initial_quantity.sql
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 배치 수정 시 식단 사용량/출처 정책을 검증하는 guarded 업데이트입니다.
 -- 동작:
 -- 1. 활성 장보기 항목에 연결된 배치는 구매일을 장보기에서만 바꾸도록 막습니다.
@@ -49,8 +49,9 @@ begin
   if coalesce((p_updates->>'purchased_date')::date, v_purchased_date) <> v_purchased_date
     and exists (
       select 1
-      from public.ingredients i
-      where i.linked_fridge_batch_id = p_batch_id
+      from public.fridge_item_batches b
+      join public.ingredients i on i.id = b.ingredient_id
+      where b.id = p_batch_id
         and i.deleted_at is null
     ) then
     raise exception using

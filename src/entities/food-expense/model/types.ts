@@ -35,7 +35,6 @@ export interface FoodExpense {
   /** 장보기 전용 — 연결된 냉장고 아이템 ID */
   linked_fridge_item_id: string | null;
   /** 장보기 전용 — 연결된 냉장고 배치 ID */
-  linked_fridge_batch_id: string | null;
 
   /** 외식비 전용 — 메모 */
   memo: string | null;

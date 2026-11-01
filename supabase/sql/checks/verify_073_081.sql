@@ -224,7 +224,7 @@ begin
     p_unit         := 'count'
   );
   v_item_id  := v_ing.linked_fridge_item_id;
-  v_batch_id := v_ing.linked_fridge_batch_id;
+  select b.id into v_batch_id from public.fridge_item_batches b where b.ingredient_id = v_ing.id;
 
   v_meal_id := public.upsert_meal_with_usage(
     v_household_id, date '2099-01-01', 'dinner',
@@ -263,7 +263,7 @@ begin
     p_unit         := 'g'
   );
   v_item_id  := v_ing.linked_fridge_item_id;
-  v_batch_id := v_ing.linked_fridge_batch_id;
+  select b.id into v_batch_id from public.fridge_item_batches b where b.ingredient_id = v_ing.id;
 
   perform public.upsert_meal_with_usage(
     v_household_id, date '2099-01-02', 'lunch',

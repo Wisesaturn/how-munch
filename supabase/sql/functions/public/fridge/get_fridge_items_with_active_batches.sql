@@ -1,5 +1,5 @@
 -- Function: public.get_fridge_items_with_active_batches
--- Source: supabase/migrations/095_fix_fridge_list_without_preferences.sql
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 냉장고 목록 조회 시 활성 배치(수량 > 0) 기준으로 재고/사용량을 정합성 있게 반환합니다.
 -- 동작:
 -- 1. 요청 유저의 household 멤버십과 냉장고 숨김 설정(hide_depleted)을 확인합니다.
@@ -8,6 +8,8 @@
 --      확장해 넘기므로, '계란'으로 검색해도 '대란'이 이름에 든 재고가 함께 조회됩니다.
 -- 3. 활성 배치와 해당 배치 사용량(meal_batch_usages)만 묶어 JSON 형태로 반환합니다.
 -- 3-1. 배치마다 활성 장보기 항목 연결 여부(is_from_grocery)를 파생해 함께 반환합니다.
+-- 3-2. 잔여율 분모(remaining_initial_total)를 함께 반환합니다. 남은 재고가 있는 배치와,
+--      그 배치와 같은 장보기 항목에서 나온 소진 배치의 등록 수량 합계입니다.
 -- 4. 식단 사용 이력 유무(has_meal_usage)를 dish_ingredients 기준으로 함께 반환합니다.
 --    (g/kg 'used'처럼 meal_batch_usages 행이 없는 사용도 포함하기 위함)
 create or replace function public.get_fridge_items_with_active_batches(
@@ -113,7 +115,7 @@ begin
               exists (
                 select 1
                 from public.ingredients i
-                where i.linked_fridge_batch_id = ab.id
+                where i.id = ab.ingredient_id
                   and i.deleted_at is null
               )
             ) order by ab.purchased_date asc, ab.id asc)
@@ -126,7 +128,7 @@ begin
               exists (
                 select 1
                 from public.ingredients i
-                where i.linked_fridge_batch_id = vb.id
+                where i.id = vb.ingredient_id
                   and i.deleted_at is null
               )
             ) order by vb.purchased_date asc, vb.id asc)
@@ -144,6 +146,23 @@ begin
           where au.fridge_item_id = fi.id
         ),
         '[]'::jsonb
+      ),
+      'remaining_initial_total',
+      coalesce(
+        (
+          select sum(vb.initial_quantity)
+          from visible_batches vb
+          where vb.fridge_item_id = fi.id
+            and (
+              vb.quantity > 0
+              or exists (
+                select 1
+                from active_batches ab
+                where ab.ingredient_id = vb.ingredient_id
+              )
+            )
+        ),
+        0
       ),
       'has_meal_usage',
       exists (

@@ -6,6 +6,7 @@ import { CTAButton, Toast } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
+import { buildIngredientBatchInputs } from '../lib/ingredientBatch';
 
 import { IngredientForm, type IngredientFormValues } from './IngredientForm';
 
@@ -48,6 +49,7 @@ export function IngredientAddScreen({
         unit: values.unit,
         store: values.store || null,
         price: values.price,
+        batches: buildIngredientBatchInputs(values),
       },
       {
         onSuccess: () => {
@@ -71,6 +73,7 @@ export function IngredientAddScreen({
           storeNames={storeNames}
           onSubmit={handleSubmit}
           isSubmitting={addMutation.isPending}
+          enableBatchPlanning
           onOpenProductNameSearch={onOpenProductNameSearch}
           onOpenBrandSearch={onOpenBrandSearch}
         />

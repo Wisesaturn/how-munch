@@ -23,6 +23,7 @@ export {
 } from './model/promptIngredientEditStore';
 export { usePromptIngredientStore } from './model/promptIngredientStore';
 export { parseAiResponse, type StagedItem } from './lib/parseAiResponse';
+export { parseReceiptTotal } from './lib/parseReceiptTotal';
 export { PromptIngredientAddScreen } from './ui/PromptIngredientAddScreen';
 export { PromptIngredientStagingScreen } from './ui/PromptIngredientStagingScreen';
 export { PromptIngredientStagingEditScreen } from './ui/PromptIngredientStagingEditScreen';

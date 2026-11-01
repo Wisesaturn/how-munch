@@ -166,7 +166,6 @@ export interface Database {
           count: number;
           unit: 'count' | 'g' | 'kg' | 'ml' | 'l';
           linked_fridge_item_id: string | null;
-          linked_fridge_batch_id: string | null;
           deleted_at: string | null;
           created_at: string;
           updated_at: string;
@@ -184,7 +183,6 @@ export interface Database {
           count?: number;
           unit?: 'count' | 'g' | 'kg' | 'ml' | 'l';
           linked_fridge_item_id?: string | null;
-          linked_fridge_batch_id?: string | null;
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -202,7 +200,6 @@ export interface Database {
           count?: number;
           unit?: 'count' | 'g' | 'kg' | 'ml' | 'l';
           linked_fridge_item_id?: string | null;
-          linked_fridge_batch_id?: string | null;
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -365,6 +362,7 @@ export interface Database {
         Row: {
           id: string;
           fridge_item_id: string;
+          ingredient_id: string | null;
           quantity: number;
           initial_quantity: number;
           expiry_date: string | null;
@@ -378,6 +376,7 @@ export interface Database {
         Insert: {
           id?: string;
           fridge_item_id: string;
+          ingredient_id?: string | null;
           quantity: number;
           initial_quantity?: number;
           expiry_date?: string | null;
@@ -801,7 +800,6 @@ export interface Database {
           count: number | null;
           unit: 'count' | 'g' | 'kg' | 'ml' | 'l' | null;
           linked_fridge_item_id: string | null;
-          linked_fridge_batch_id: string | null;
           memo: string | null;
           created_at: string;
           updated_at: string;
@@ -837,6 +835,7 @@ export interface Database {
           p_count?: number;
           p_unit?: string;
           p_date?: string;
+          p_batches?: Json;
         };
         Returns: {
           id: string;
@@ -851,7 +850,6 @@ export interface Database {
           count: number;
           unit: 'count' | 'g' | 'kg' | 'ml' | 'l';
           linked_fridge_item_id: string | null;
-          linked_fridge_batch_id: string | null;
           deleted_at: string | null;
           created_at: string;
           updated_at: string;
@@ -1001,7 +999,6 @@ export interface Database {
           count: number;
           unit: 'count' | 'g' | 'kg' | 'ml' | 'l';
           linked_fridge_item_id: string | null;
-          linked_fridge_batch_id: string | null;
           deleted_at: string | null;
           created_at: string;
           updated_at: string;

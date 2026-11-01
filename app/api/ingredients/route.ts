@@ -67,41 +67,25 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
   const fridgeItemIds = [
     ...new Set(ingredients.map((i) => i.linked_fridge_item_id).filter((id): id is string => !!id)),
   ];
-  const fridgeBatchIds = [
-    ...new Set(ingredients.map((i) => i.linked_fridge_batch_id).filter((id): id is string => !!id)),
-  ];
 
   // 식단 사용 여부의 완전한 출처는 dish_ingredients다.
   // meal_batch_usages는 차감 수량 원장이라 g/kg 'used'처럼 차감이 없는 사용은 행이 남지 않는다.
-  const [usedByItemResult, usedByBatchResult] = await Promise.all([
-    fridgeItemIds.length
-      ? supabase
-          .from('dish_ingredients')
-          .select('fridge_item_id')
-          .in('fridge_item_id', fridgeItemIds)
-      : Promise.resolve({ data: [] as { fridge_item_id: string }[], error: null }),
-    fridgeBatchIds.length
-      ? supabase.from('dish_ingredients').select('batch_id').in('batch_id', fridgeBatchIds)
-      : Promise.resolve({ data: [] as { batch_id: string | null }[], error: null }),
-  ]);
+  const usedByItemResult = fridgeItemIds.length
+    ? await supabase
+        .from('dish_ingredients')
+        .select('fridge_item_id')
+        .in('fridge_item_id', fridgeItemIds)
+    : { data: [] as { fridge_item_id: string }[], error: null };
 
   // 조회에 실패하면 사용 중인 재료가 미사용으로 보여 삭제가 열리므로 에러를 삼키지 않는다
-  if (usedByItemResult.error || usedByBatchResult.error) return apiResponse.INTERNAL_ERROR();
+  if (usedByItemResult.error) return apiResponse.INTERNAL_ERROR();
 
   const usedFridgeItemIds = new Set((usedByItemResult.data ?? []).map((row) => row.fridge_item_id));
-  const usedFridgeBatchIds = new Set(
-    (usedByBatchResult.data ?? [])
-      .map((row) => row.batch_id)
-      .filter((id): id is string => id !== null),
-  );
 
   const contents = ingredients.map((ingredient) => ({
     ...ingredient,
     has_meal_usage:
-      (!!ingredient.linked_fridge_item_id &&
-        usedFridgeItemIds.has(ingredient.linked_fridge_item_id)) ||
-      (!!ingredient.linked_fridge_batch_id &&
-        usedFridgeBatchIds.has(ingredient.linked_fridge_batch_id)),
+      !!ingredient.linked_fridge_item_id && usedFridgeItemIds.has(ingredient.linked_fridge_item_id),
   }));
 
   const totalElements = count ?? 0;
@@ -140,6 +124,7 @@ export const POST = withAuth(async (req: NextRequest, { userId, supabase }) => {
     p_count: body.count ?? 1,
     p_unit: body.unit ?? 'count',
     p_date: body.date ?? new Date().toISOString().slice(0, 10),
+    p_batches: body.batches ?? null,
   });
 
   if (error) return respondWithDbError(error, 'POST /api/ingredients');

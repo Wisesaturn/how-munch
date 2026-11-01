@@ -16,6 +16,7 @@ export function buildReceiptPrompt(categories: IngredientCategoryOption[]): stri
 
 출력 형식:
 {
+  "receipt_total": 영수증에 인쇄된 최종 결제 금액(숫자, 없으면 null),
   "items": [
     {
       "brand": "브랜드명",
@@ -58,6 +59,7 @@ ${categoryList}
 - 애매하면 반드시 "count"를 선택하세요
 
 [나머지]
+- receipt_total은 영수증의 '합계'/'결제금액' 칸에 적힌 최종 금액입니다. 비식품과 할인을 포함한 실제 결제액이며, 품목 금액을 더해 계산하지 마세요. 인쇄된 합계를 찾을 수 없으면(장보기 목록 등) null
 - count는 영수증에 적힌 구매 수량(개수), 없으면 1
 - price는 해당 품목에 실제로 지출한 총 금액(영수증의 '금액'/합계 열). 개당 단가가 아니라 수량이 반영된 합산 금액을 사용. 예: 단가 15,000원짜리를 2개 사면 price는 30,000
 - date는 영수증에 적힌 구매 날짜 (YYYY-MM-DD). 영수증에서 날짜를 명확히 확인할 수 없으면 빈 문자열("")로 두고, 절대 임의로 날짜를 지어내지 마세요
