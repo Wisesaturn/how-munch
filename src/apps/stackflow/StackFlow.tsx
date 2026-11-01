@@ -5,6 +5,11 @@ import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
+import {
+  AmountCalculatorScreen,
+  clearPendingAmountCalculatorCallback,
+  resolvePendingAmountCalculatorCallback,
+} from '@/entities/amount-calculator';
 import { type DiningExpense } from '@/entities/dining-expense';
 import { type FoodExpense } from '@/entities/food-expense';
 import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
@@ -581,6 +586,40 @@ function DiningExpenseEditActivity({
   );
 }
 
+function AmountCalculatorActivity({
+  params,
+}: {
+  params: {
+    title: string;
+    value?: number;
+    nullable?: boolean;
+  };
+}) {
+  const { pop } = useActions();
+  // 새로고침으로 URL에서 복원되면 params가 문자열로 들어온다
+  const value = params.value === undefined ? null : Number(params.value);
+
+  function handleConfirm(nextValue: number | null) {
+    resolvePendingAmountCalculatorCallback(nextValue);
+    pop();
+  }
+
+  function handleClose() {
+    clearPendingAmountCalculatorCallback();
+    pop();
+  }
+
+  return (
+    <AmountCalculatorScreen
+      title={params.title}
+      value={Number.isFinite(value) ? value : null}
+      nullable={String(params.nullable) === 'true'}
+      onClose={handleClose}
+      onConfirm={handleConfirm}
+    />
+  );
+}
+
 function ProductNameSearchActivity({
   params,
 }: {
@@ -700,6 +739,7 @@ const appStackFlow = stackflow({
     ProfileSettingsActivity,
     SearchSynonymSettingsActivity,
     ProfileEditActivity,
+    AmountCalculatorActivity,
     ProductNameSearchActivity,
     FridgeItemSearchActivity,
     FridgeBatchSelectActivity,
@@ -732,6 +772,7 @@ const appStackFlow = stackflow({
         ProfileSettingsActivity: '/profile/settings',
         SearchSynonymSettingsActivity: '/search/synonym/settings',
         ProfileEditActivity: '/profile/edit',
+        AmountCalculatorActivity: '/amount/calculator',
         ProductNameSearchActivity: '/search/product-name',
         FridgeItemSearchActivity: '/search/fridge-item',
         FridgeBatchSelectActivity: '/search/fridge-batch',
