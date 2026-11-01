@@ -8,9 +8,10 @@ import { ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 
 import { cn, ERROR_MSG } from '@/commons/lib';
-import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
+import { Button, ComboBox, Counter, DatePicker, Input, Select } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import { PriceInput } from '@/entities/amount-calculator';
 import {
   convertIngredientAmount,
   isVolumeUnit,
@@ -497,7 +498,11 @@ export function IngredientForm({
           <Form.Field field={field}>
             <Form.Label required>가격</Form.Label>
             <Form.Control>
-              <PriceInput value={field.state.value} onChange={field.handleChange} />
+              <PriceInput
+                title="가격 입력"
+                value={field.state.value}
+                onValueChange={field.handleChange}
+              />
             </Form.Control>
             <Form.Error />
           </Form.Field>

@@ -29,7 +29,6 @@ export { InputGroup, type InputGroupAddonProps, type InputGroupButtonProps } fro
 export { Message, messageVariants, type MessageProps } from './Message';
 export { OTP } from './OTP';
 export { Popover } from './Popover';
-export { PriceInput, type PriceInputProps } from './PriceInput';
 export { ProgressBar } from './ProgressBar';
 export { ScrollArea } from './ScrollArea';
 export { SegmentControl } from './SegmentControl';

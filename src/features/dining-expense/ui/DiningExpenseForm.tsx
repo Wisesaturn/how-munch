@@ -5,9 +5,10 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { ComboBox, DatePicker, Input, PriceInput, SegmentControl, Textarea } from '@/commons/ui';
+import { ComboBox, DatePicker, Input, SegmentControl, Textarea } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
+import { PriceInput } from '@/entities/amount-calculator';
 import {
   DINING_EXPENSE_KIND_LABEL,
   isDiningExpenseKind,
@@ -228,7 +229,11 @@ export function DiningExpenseForm({
           <Form.Field field={field}>
             <Form.Label required>금액</Form.Label>
             <Form.Control>
-              <PriceInput value={field.state.value} onChange={field.handleChange} />
+              <PriceInput
+                title="금액 입력"
+                value={field.state.value}
+                onValueChange={field.handleChange}
+              />
             </Form.Control>
             <Form.Error />
           </Form.Field>
