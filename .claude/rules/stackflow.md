@@ -321,6 +321,7 @@ function ProductNameSearchActivity({ params }) {
 - `entities/amount-calculator`의 `AmountCalculatorOpenerProvider`가 인터페이스를 정의한다.
 - `src/apps/providers/StackFlowProvider.tsx`가 pending callback 등록과 `stackFlowActions.push`로 구현을 주입한다.
 - `PriceInput`은 `useAmountCalculatorOpener()`로 요청만 하고 Stackflow를 알지 못한다.
+- 여러 `features`가 함께 쓰는 Screen은 `features`끼리 import할 수 없으므로 `src/entities/{domain}/ui/`에 둘 수 있다 (예: `AmountCalculatorScreen`). 이때 public API는 해당 엔티티의 `index.ts`로 노출한다.
 - Activity params는 새로고침 시 URL에서 문자열로 복원되므로 Activity에서 타입을 다시 맞춘다.
 
 ---
