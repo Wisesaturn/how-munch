@@ -1,9 +1,8 @@
 'use client';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
-import { ChevronLeft } from 'lucide-react';
 
-import { Button, CTAPrimitive } from '@/commons/ui';
+import { CTAButton } from '@/commons/ui';
 
 import { useAmountCalculator } from '../model/useAmountCalculator';
 import { useCalculatorKeyboard } from '../model/useCalculatorKeyboard';
@@ -46,33 +45,31 @@ export function AmountCalculatorScreen({
   return (
     <AppScreen
       className="pointer-events-auto"
-      backgroundColor="#f3f4f6"
       appBar={{
         title,
         backButton: {
-          render: () => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="뒤로가기"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-          ),
+          ariaLabel: '뒤로가기',
+          // 기본 pop 대신 onClose로 닫아 대기 중인 콜백을 함께 정리한다
+          onClick: (event) => {
+            event.preventDefault();
+            onClose();
+          },
         },
       }}
     >
-      <div className="flex h-full flex-col overflow-y-auto">
+      <div className="flex h-full flex-col overflow-y-auto pb-28">
         <AmountCalculatorDisplay tokens={tokens} result={result} nullable={nullable} />
         <AmountCalculatorKeypad onKeyPress={pressKey} />
-        <div className="safe-area-padding-bottom shrink-0 px-3 pt-3 pb-3">
-          <CTAPrimitive type="button" disabled={!canConfirm} onClick={confirm}>
-            확인
-          </CTAPrimitive>
-        </div>
       </div>
+      <CTAButton
+        type="button"
+        color="confirm"
+        variant="filled"
+        disabled={!canConfirm}
+        onClick={confirm}
+      >
+        확인
+      </CTAButton>
     </AppScreen>
   );
 }

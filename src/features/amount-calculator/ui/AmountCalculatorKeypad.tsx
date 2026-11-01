@@ -14,8 +14,8 @@ const keyVariants = cva(
   {
     variants: {
       kind: {
-        number: 'bg-white text-2xl text-gray-900',
-        compactNumber: 'bg-white text-xl text-gray-900',
+        number: 'bg-gray-100 text-2xl text-gray-900',
+        compactNumber: 'bg-gray-100 text-xl text-gray-900',
         utility: 'bg-gray-200 text-lg font-semibold text-gray-900',
         operator: 'bg-emerald-100 text-3xl text-emerald-700',
         tallOperator: 'row-span-2 bg-emerald-100 text-3xl text-emerald-700',
@@ -104,7 +104,7 @@ export function AmountCalculatorKeypad({ onKeyPress }: AmountCalculatorKeypadPro
   return (
     <div
       data-slot="amount-calculator-keypad"
-      className="grid shrink-0 auto-rows-[3.75rem] grid-cols-4 gap-2 px-3"
+      className="grid shrink-0 auto-rows-[3.75rem] grid-cols-4 gap-2 px-4"
     >
       {KEYPAD_KEYS.map(({ id, label, ariaLabel, kind, key }) => (
         <motion.button

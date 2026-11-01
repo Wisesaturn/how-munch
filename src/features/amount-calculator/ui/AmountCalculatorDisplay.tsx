@@ -50,7 +50,7 @@ export function AmountCalculatorDisplay({
   return (
     <div
       data-slot="amount-calculator-display"
-      className="flex min-h-32 flex-1 flex-col justify-end gap-1 px-5 pt-2 pb-3 text-right"
+      className="flex min-h-32 flex-1 flex-col justify-end gap-1 px-4 pt-2 pb-3 text-right"
     >
       <div
         ref={expressionRef}
