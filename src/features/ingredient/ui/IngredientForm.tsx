@@ -8,7 +8,16 @@ import { ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 
 import { cn, ERROR_MSG } from '@/commons/lib';
-import { Button, ComboBox, Counter, DatePicker, Input, PriceInput, Select } from '@/commons/ui';
+import {
+  Button,
+  ComboBox,
+  Counter,
+  DatePicker,
+  Input,
+  PriceInput,
+  Select,
+  type OpenPriceCalculator,
+} from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import {
@@ -67,6 +76,8 @@ interface IngredientFormProps {
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
   /** 브랜드 검색 Screen 진입 핸들러 — 선택값은 form brand 필드에 반영된다 */
   onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
 }
 
 function createIngredientFormSchema(categoryIds: string[]) {
@@ -185,6 +196,7 @@ export function IngredientForm({
   householdId = null,
   onOpenProductNameSearch,
   onOpenBrandSearch,
+  onOpenAmountCalculator,
 }: IngredientFormProps) {
   const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
   const { data: expiryDefaults } = useCategoryExpiryDefaultsQuery(
@@ -497,7 +509,12 @@ export function IngredientForm({
           <Form.Field field={field}>
             <Form.Label required>가격</Form.Label>
             <Form.Control>
-              <PriceInput value={field.state.value} onChange={field.handleChange} />
+              <PriceInput
+                title="가격 입력"
+                value={field.state.value}
+                onValueChange={field.handleChange}
+                onOpenCalculator={onOpenAmountCalculator}
+              />
             </Form.Control>
             <Form.Error />
           </Form.Field>

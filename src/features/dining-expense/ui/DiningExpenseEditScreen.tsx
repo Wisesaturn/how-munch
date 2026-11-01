@@ -5,7 +5,12 @@ import { useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { overlay } from 'overlay-kit';
 
-import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
+import {
+  CTAConfirmButton,
+  DeleteConfirmBottomSheet,
+  Toast,
+  type OpenPriceCalculator,
+} from '@/commons/ui';
 
 import { type DiningExpense, type DiningExpenseKind } from '@/entities/dining-expense';
 
@@ -16,12 +21,15 @@ import { DiningExpenseForm, type DiningExpenseFormValues } from './DiningExpense
 
 interface DiningExpenseEditScreenProps {
   onClose: () => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
   householdId: string;
   expense: DiningExpense;
 }
 
 export function DiningExpenseEditScreen({
   onClose,
+  onOpenAmountCalculator,
   householdId,
   expense,
 }: DiningExpenseEditScreenProps) {
@@ -102,6 +110,7 @@ export function DiningExpenseEditScreen({
     <AppScreen className="pointer-events-auto" appBar={{ title: '외식비 수정' }}>
       <div className="px-4 pt-4 pb-28">
         <DiningExpenseForm
+          onOpenAmountCalculator={onOpenAmountCalculator}
           formId={formId}
           defaultValues={{
             date: expense.date,

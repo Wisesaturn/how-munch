@@ -5,7 +5,7 @@ import { respondWithDbError, withAuth } from '@/apps/route';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 import { type Json } from '@/commons/model/types';
 
-import { type Budget } from '@/entities/budget';
+import { isBudgetList } from '@/entities/budget';
 
 const YEAR_MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -30,7 +30,7 @@ export const GET = withAuth(async (req: NextRequest, { supabase }) => {
 
   if (error) return respondWithDbError(error, 'GET /api/budgets', 'badRequest');
 
-  return apiResponse.OK((data ?? []) as Budget[]);
+  return apiResponse.OK(data ?? []);
 });
 
 /**
@@ -53,5 +53,8 @@ export const PUT = withAuth(async (req: NextRequest, { supabase }) => {
 
   if (error) return respondWithDbError(error, 'PUT /api/budgets', 'badRequest');
 
-  return apiResponse.OK(data as unknown as Budget[]);
+  // RPC 반환 타입이 Json이라 응답 형태를 확인한 뒤 내보낸다
+  if (!isBudgetList(data)) return apiResponse.INTERNAL_ERROR();
+
+  return apiResponse.OK(data);
 });

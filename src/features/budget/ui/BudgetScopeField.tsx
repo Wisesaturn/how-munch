@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 
-import { BudgetAmountInput } from './BudgetAmountInput';
+import { PriceInput, type OpenPriceCalculator } from '@/commons/ui';
 
 interface BudgetScopeFieldProps {
   icon: ReactNode;
@@ -11,6 +11,7 @@ interface BudgetScopeFieldProps {
   lastMonthSpent: number;
   value: number | null;
   onValueChange: (value: number | null) => void;
+  onOpenCalculator: OpenPriceCalculator;
 }
 
 /** 예산 편집 화면의 카테고리 한 줄 */
@@ -20,6 +21,7 @@ export function BudgetScopeField({
   lastMonthSpent,
   value,
   onValueChange,
+  onOpenCalculator,
 }: BudgetScopeFieldProps) {
   return (
     <div className="flex items-center gap-3 py-4">
@@ -28,11 +30,13 @@ export function BudgetScopeField({
         <span className="text-base font-medium text-gray-800">{label}</span>
         <span className="text-xs text-gray-400">지난달 {lastMonthSpent.toLocaleString()}원</span>
       </div>
-      <BudgetAmountInput
+      <PriceInput
+        nullable
+        title={`${label} 예산`}
         className="ml-auto w-44 shrink-0"
         value={value}
         onValueChange={onValueChange}
-        aria-label={`${label} 예산`}
+        onOpenCalculator={onOpenCalculator}
       />
     </div>
   );

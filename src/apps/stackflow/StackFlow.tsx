@@ -1,9 +1,13 @@
 'use client';
 
+import { useRef } from 'react';
+
 import { basicUIPlugin } from '@stackflow/plugin-basic-ui';
 import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
+
+import { type OpenPriceCalculator } from '@/commons/ui';
 
 import { type DiningExpense } from '@/entities/dining-expense';
 import { type FoodExpense } from '@/entities/food-expense';
@@ -11,6 +15,14 @@ import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type Meal, type MealType } from '@/entities/meal';
 
+import {
+  AmountCalculatorScreen,
+  clearPendingAmountCalculatorCallback,
+  parseCalculatorAmount,
+  parseCalculatorNullable,
+  resolvePendingAmountCalculatorCallback,
+  setPendingAmountCalculatorCallback,
+} from '@/features/amount-calculator';
 import { BudgetEditScreen, BudgetScreen } from '@/features/budget';
 import { DiningExpenseAddScreen, DiningExpenseEditScreen } from '@/features/dining-expense';
 import { FoodExpenseSearchScreen, toDiningExpense, toIngredient } from '@/features/food-expense';
@@ -53,6 +65,21 @@ import { NotificationScreen, NotificationSettingsScreen } from '@/features/notif
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
 import { SearchSynonymSettingsScreen } from '@/features/search-synonym';
 
+/** 금액 칸이 쓸 계산기 열기 함수 — 콜백을 등록한 뒤 계산기 Activity를 연다 */
+function useOpenAmountCalculator(): OpenPriceCalculator {
+  const { push } = useActions();
+
+  return function openAmountCalculator({ title, value, nullable, onConfirm }) {
+    setPendingAmountCalculatorCallback(onConfirm);
+    push('AmountCalculatorActivity', {
+      title,
+      // history-sync가 params를 URL로 직렬화하므로 없는 값은 키째 뺀다
+      ...(value === null ? {} : { value }),
+      ...(nullable ? { nullable } : {}),
+    });
+  };
+}
+
 function IdleActivity() {
   const activity = useActivity();
 
@@ -94,8 +121,11 @@ function IngredientAddActivity({
     });
   }
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <IngredientAddScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       householdId={params.householdId}
       userId={params.userId}
@@ -281,8 +311,11 @@ function IngredientEditActivity({
     });
   }
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <IngredientEditScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       householdId={params.householdId}
       ingredient={params.ingredient}
@@ -458,8 +491,11 @@ function PromptIngredientStagingEditActivity({
     });
   }
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <PromptIngredientStagingEditScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       item={params.item}
       householdId={params.householdId}
@@ -545,8 +581,15 @@ function BudgetEditActivity({
 }) {
   const { pop } = useActions();
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
-    <BudgetEditScreen onClose={pop} householdId={params.householdId} yearMonth={params.yearMonth} />
+    <BudgetEditScreen
+      onClose={pop}
+      onOpenAmountCalculator={openAmountCalculator}
+      householdId={params.householdId}
+      yearMonth={params.yearMonth}
+    />
   );
 }
 
@@ -559,7 +602,15 @@ function DiningExpenseAddActivity({
 }) {
   const { pop } = useActions();
 
-  return <DiningExpenseAddScreen onClose={pop} householdId={params.householdId} />;
+  const openAmountCalculator = useOpenAmountCalculator();
+
+  return (
+    <DiningExpenseAddScreen
+      onClose={pop}
+      onOpenAmountCalculator={openAmountCalculator}
+      householdId={params.householdId}
+    />
+  );
 }
 
 function DiningExpenseEditActivity({
@@ -572,11 +623,54 @@ function DiningExpenseEditActivity({
 }) {
   const { pop } = useActions();
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <DiningExpenseEditScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       householdId={params.householdId}
       expense={params.expense}
+    />
+  );
+}
+
+function AmountCalculatorActivity({
+  params,
+}: {
+  params: {
+    title: string;
+    // 새로고침으로 URL에서 복원되면 문자열로 들어온다
+    value?: number | string;
+    nullable?: boolean | string;
+  };
+}) {
+  const { pop } = useActions();
+  const hasLeftRef = useRef(false);
+
+  // 닫히는 전환 중에도 화면이 살아 있어, 다시 입력되면 아래 폼까지 pop되지 않게 한 번만 처리한다
+  function leaveOnce(settlePendingCallback: () => void) {
+    if (hasLeftRef.current) return;
+    hasLeftRef.current = true;
+    settlePendingCallback();
+    pop();
+  }
+
+  function handleConfirm(nextValue: number | null) {
+    leaveOnce(() => resolvePendingAmountCalculatorCallback(nextValue));
+  }
+
+  function handleClose() {
+    leaveOnce(clearPendingAmountCalculatorCallback);
+  }
+
+  return (
+    <AmountCalculatorScreen
+      title={params.title}
+      value={parseCalculatorAmount(params.value)}
+      nullable={parseCalculatorNullable(params.nullable)}
+      onClose={handleClose}
+      onConfirm={handleConfirm}
     />
   );
 }
@@ -700,6 +794,7 @@ const appStackFlow = stackflow({
     ProfileSettingsActivity,
     SearchSynonymSettingsActivity,
     ProfileEditActivity,
+    AmountCalculatorActivity,
     ProductNameSearchActivity,
     FridgeItemSearchActivity,
     FridgeBatchSelectActivity,
@@ -732,6 +827,7 @@ const appStackFlow = stackflow({
         ProfileSettingsActivity: '/profile/settings',
         SearchSynonymSettingsActivity: '/search/synonym/settings',
         ProfileEditActivity: '/profile/edit',
+        AmountCalculatorActivity: '/amount/calculator',
         ProductNameSearchActivity: '/search/product-name',
         FridgeItemSearchActivity: '/search/fridge-item',
         FridgeBatchSelectActivity: '/search/fridge-batch',

@@ -1,98 +1,103 @@
+'use client';
+
 import * as React from 'react';
 
-import { useControlledState } from 'react-simplikit';
+import { Calculator } from 'lucide-react';
 
-import { InputGroup } from './InputGroup';
+import { cn } from '../lib';
 
 /* -------------------------------------------------------------------------------------------------
- * Helpers
+ * Types
  * -----------------------------------------------------------------------------------------------*/
-function sanitizeDigits(value: string) {
-  return value.replace(/\D/g, '');
+interface PriceCalculatorRequest {
+  /** 계산기 화면 제목 */
+  title: string;
+  /** 현재 금액. null이면 빈 상태로 연다 */
+  value: number | null;
+  /** 금액을 비운 채 확인할 수 있는지 여부 */
+  nullable: boolean;
+  onConfirm: (value: number | null) => void;
 }
 
-function normalizePrice(value: number, min: number) {
-  if (!Number.isFinite(value)) return min;
-  return Math.max(min, Math.trunc(value));
+/** 계산기 화면을 여는 함수 — 화면 전환 방식은 Activity에서 정해 주입한다 */
+type OpenPriceCalculator = (request: PriceCalculatorRequest) => void;
+
+interface PriceInputBaseProps extends Omit<
+  React.ComponentProps<'button'>,
+  'value' | 'type' | 'onClick' | 'children' | 'title'
+> {
+  /** 계산기 화면 제목 */
+  title?: string;
+  invalid?: boolean;
+  onOpenCalculator: OpenPriceCalculator;
 }
 
-function formatPrice(value: number) {
-  return value.toLocaleString('ko-KR');
+interface RequiredPriceInputProps extends PriceInputBaseProps {
+  nullable?: false;
+  value: number;
+  onValueChange: (value: number) => void;
 }
+
+interface NullablePriceInputProps extends PriceInputBaseProps {
+  /** 빈칸(미설정)과 0을 구분해야 할 때 사용한다 */
+  nullable: true;
+  value: number | null;
+  onValueChange: (value: number | null) => void;
+}
+
+type PriceInputProps = RequiredPriceInputProps | NullablePriceInputProps;
 
 /* -------------------------------------------------------------------------------------------------
  * PriceInput
  * -----------------------------------------------------------------------------------------------*/
-interface PriceInputProps extends Omit<React.ComponentProps<typeof InputGroup.Input>, 'onChange'> {
-  value?: number;
-  defaultValue?: number;
-  min?: number;
-  onChange?: (value: number) => void;
-  onValueChange?: (value: number) => void;
-}
-
-function PriceInput({
-  value,
-  defaultValue = 0,
-  min = 0,
-  onChange,
-  onValueChange,
-  className,
-  ...props
-}: PriceInputProps) {
-  const [currentValue, setCurrentValue] = useControlledState<number>({
+/** 금액 칸 — 누르면 계산기 화면을 열고, 확인한 금액을 값으로 받는다 */
+function PriceInput(props: PriceInputProps) {
+  const {
+    title = '금액 입력',
     value,
-    defaultValue: normalizePrice(defaultValue, min),
-    onChange: (nextValue) => {
-      onChange?.(nextValue);
-      onValueChange?.(nextValue);
-    },
-  });
+    nullable = false,
+    onValueChange: _onValueChange,
+    onOpenCalculator,
+    invalid,
+    className,
+    ...buttonProps
+  } = props;
 
-  const [inputText, setInputText] = React.useState(formatPrice(currentValue));
-
-  React.useEffect(
-    function syncFormattedPriceFromValue() {
-      setInputText(formatPrice(currentValue));
-    },
-    [currentValue],
-  );
-
-  function changePrice(event: React.ChangeEvent<HTMLInputElement>) {
-    const digits = sanitizeDigits(event.target.value);
-
-    if (!digits) {
-      setInputText('');
-      setCurrentValue(min);
+  function applyConfirmedValue(next: number | null) {
+    if (props.nullable === true) {
+      props.onValueChange(next);
       return;
     }
-
-    const parsedValue = Number.parseInt(digits, 10);
-    const normalizedValue = normalizePrice(parsedValue, min);
-
-    setCurrentValue(normalizedValue);
-    setInputText(formatPrice(normalizedValue));
+    if (next !== null) props.onValueChange(next);
   }
 
-  function restoreFormattedPriceOnBlur() {
-    setInputText(formatPrice(currentValue));
-  }
+  const amountText = value === null ? '미설정' : `${value.toLocaleString('ko-KR')}원`;
 
   return (
-    <InputGroup className={className}>
-      <InputGroup.Input
-        value={inputText}
-        inputMode="numeric"
-        pattern="[0-9,]*"
-        onChange={changePrice}
-        onBlur={restoreFormattedPriceOnBlur}
-        {...props}
-      />
-      <InputGroup.Addon align="inline-end">
-        <InputGroup.Text className="px-2 text-sm font-medium text-gray-500">원</InputGroup.Text>
-      </InputGroup.Addon>
-    </InputGroup>
+    <button
+      type="button"
+      data-slot="price-input"
+      aria-label={`${title}, 현재 ${amountText}, 계산기 열기`}
+      data-invalid={invalid}
+      className={cn(
+        'flex h-10 w-full min-w-0 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-left text-sm shadow-xs',
+        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none',
+        'data-[invalid=true]:border-red-500',
+        'disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400',
+        className,
+      )}
+      onClick={() => onOpenCalculator({ title, value, nullable, onConfirm: applyConfirmedValue })}
+      {...buttonProps}
+    >
+      <span
+        className={cn('min-w-0 flex-1 truncate tabular-nums', value === null && 'text-gray-400')}
+      >
+        {value === null ? '미설정' : value.toLocaleString('ko-KR')}
+      </span>
+      {value === null ? null : <span className="font-medium text-gray-500">원</span>}
+      <Calculator className="size-4 shrink-0 text-gray-400" aria-hidden />
+    </button>
   );
 }
 
-export { PriceInput, type PriceInputProps };
+export { PriceInput, type OpenPriceCalculator, type PriceCalculatorRequest, type PriceInputProps };

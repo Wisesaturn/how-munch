@@ -5,7 +5,15 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 
 import { ERROR_MSG } from '@/commons/lib';
-import { ComboBox, DatePicker, Input, PriceInput, SegmentControl, Textarea } from '@/commons/ui';
+import {
+  ComboBox,
+  DatePicker,
+  Input,
+  PriceInput,
+  SegmentControl,
+  Textarea,
+  type OpenPriceCalculator,
+} from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
 import {
@@ -62,6 +70,8 @@ interface DiningExpenseFormProps {
   onSubmit: (values: DiningExpenseFormValues) => void;
   /** kind가 바뀔 때 자동완성 후보 스코프를 다시 잡기 위해 상위로 알린다 */
   onKindChange?: (kind: DiningExpenseKind) => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
 }
 
 export function DiningExpenseForm({
@@ -71,6 +81,7 @@ export function DiningExpenseForm({
   storeNames = [],
   onSubmit,
   onKindChange,
+  onOpenAmountCalculator,
 }: DiningExpenseFormProps) {
   const today = new Date();
   const form = useForm({
@@ -228,7 +239,12 @@ export function DiningExpenseForm({
           <Form.Field field={field}>
             <Form.Label required>금액</Form.Label>
             <Form.Control>
-              <PriceInput value={field.state.value} onChange={field.handleChange} />
+              <PriceInput
+                title="금액 입력"
+                value={field.state.value}
+                onValueChange={field.handleChange}
+                onOpenCalculator={onOpenAmountCalculator}
+              />
             </Form.Control>
             <Form.Error />
           </Form.Field>

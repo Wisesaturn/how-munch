@@ -3,7 +3,7 @@
 import { ChevronLeft } from 'lucide-react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { Button, CTAButton } from '@/commons/ui';
+import { Button, CTAButton, type OpenPriceCalculator } from '@/commons/ui';
 
 import { type StagedItem } from '../lib/parseAiResponse';
 import {
@@ -22,6 +22,8 @@ interface PromptIngredientStagingEditScreenProps {
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
   /** 브랜드 검색 Screen 진입 핸들러 — 선택값은 form brand 필드에 반영된다 */
   onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
 }
 
 export function PromptIngredientStagingEditScreen({
@@ -30,6 +32,7 @@ export function PromptIngredientStagingEditScreen({
   householdId,
   onOpenProductNameSearch,
   onOpenBrandSearch,
+  onOpenAmountCalculator,
 }: PromptIngredientStagingEditScreenProps) {
   const { data: storeNames } = useStoreNamesQuery(householdId);
   const formId = `ai-staging-edit-form-${item.id}`;
@@ -96,6 +99,7 @@ export function PromptIngredientStagingEditScreen({
           enableBatchPlanning
           onOpenProductNameSearch={onOpenProductNameSearch}
           onOpenBrandSearch={onOpenBrandSearch}
+          onOpenAmountCalculator={onOpenAmountCalculator}
         />
       </div>
       <CTAButton type="submit" form={formId} color="confirm" variant="filled" hideOnScroll>
