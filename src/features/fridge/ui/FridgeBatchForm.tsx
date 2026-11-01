@@ -36,11 +36,19 @@ interface FridgeBatchFormProps {
   isPending?: boolean;
   isDeleting?: boolean;
   submitLabel?: string;
+  /** 생략하면 단위별 최소 수량을 쓴다 */
   quantityMin?: number;
+  quantityMax?: number;
   quantityUnitLabel?: string;
   quantityUnit?: IngredientUnit;
-  disableQuantityEdit?: boolean;
+  quantityHint?: string;
+  /** 지정하면 읽기 전용 등록 수량을 함께 보여주고 수량 칸은 현재 수량이 된다 */
+  initialQuantityLabel?: string;
+  /** 지정하면 구매일을 읽기 전용으로 두고 안내 문구를 보여준다 */
+  purchasedDateLockedHint?: string;
 }
+
+const MAX_BATCH_QUANTITY = 1_000_000;
 
 function parseDateValue(value: string) {
   if (!value) return undefined;
@@ -50,28 +58,28 @@ function parseDateValue(value: string) {
 
 function createFridgeBatchSchema(
   quantityMin: number,
+  quantityMax: number,
   quantityUnit: IngredientUnit,
-  disableQuantityEdit: boolean,
+  quantityFieldName: string,
 ) {
-  const minQuantity = Math.max(quantityMin, resolveAmountMin(quantityUnit));
   const quantitySchema = z
-    .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }) })
+    .number({ message: ERROR_MSG.FORMAT.INVALID({ fieldName: quantityFieldName }) })
     .refine((value) => Number.isFinite(value), {
-      message: ERROR_MSG.FORMAT.INVALID({ fieldName: '수량' }),
+      message: ERROR_MSG.FORMAT.INVALID({ fieldName: quantityFieldName }),
+    })
+    .min(quantityMin, {
+      message: ERROR_MSG.RANGE.MIN({ fieldName: quantityFieldName, min: quantityMin }),
+    })
+    .max(quantityMax, {
+      message: ERROR_MSG.RANGE.MAX({
+        fieldName: quantityFieldName,
+        max: quantityMax === MAX_BATCH_QUANTITY ? '100만' : quantityMax,
+      }),
     });
-  const validatedQuantitySchema = disableQuantityEdit
-    ? quantitySchema
-    : quantitySchema
-        .min(minQuantity, {
-          message: ERROR_MSG.RANGE.MIN({ fieldName: '수량', min: minQuantity }),
-        })
-        .max(1_000_000, {
-          message: ERROR_MSG.RANGE.MAX({ fieldName: '수량', max: '100만' }),
-        });
 
   return z
     .object({
-      quantity: validatedQuantitySchema,
+      quantity: quantitySchema,
       expiry_date: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), {
         message: ERROR_MSG.FORMAT.INVALID({ fieldName: '유통기한' }),
       }),
@@ -88,7 +96,6 @@ function createFridgeBatchSchema(
       }),
     })
     .superRefine((value, ctx) => {
-      if (disableQuantityEdit) return;
       if (!validateAmountPrecisionByUnit(value.quantity, quantityUnit)) {
         ctx.addIssue({
           code: 'custom',
@@ -112,15 +119,24 @@ export function FridgeBatchForm({
   isPending,
   isDeleting,
   submitLabel = '저장',
-  quantityMin = 0,
+  quantityMin,
+  quantityMax = MAX_BATCH_QUANTITY,
   quantityUnitLabel,
   quantityUnit = 'count',
-  disableQuantityEdit = false,
+  quantityHint,
+  initialQuantityLabel,
+  purchasedDateLockedHint,
 }: FridgeBatchFormProps) {
   const [isPurchasedDateUnknown, setIsPurchasedDateUnknown] = useState(false);
   const today = new Date();
-  const batchSchema = createFridgeBatchSchema(quantityMin, quantityUnit, disableQuantityEdit);
-  const quantityInputMin = Math.max(quantityMin, resolveAmountMin(quantityUnit));
+  const quantityInputMin = quantityMin ?? resolveAmountMin(quantityUnit);
+  const quantityFieldName = initialQuantityLabel ? '현재 수량' : '수량';
+  const batchSchema = createFridgeBatchSchema(
+    quantityInputMin,
+    quantityMax,
+    quantityUnit,
+    quantityFieldName,
+  );
   const quantityInputStep = resolveAmountStep(quantityUnit);
 
   const form = useForm({
@@ -151,29 +167,33 @@ export function FridgeBatchForm({
       }}
       className="flex flex-col gap-3"
     >
+      {initialQuantityLabel ? (
+        <div className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2.5 text-sm">
+          <span className="font-medium text-gray-500">등록 수량</span>
+          <span className="font-semibold text-gray-700">{initialQuantityLabel}</span>
+        </div>
+      ) : null}
+
       <form.Field name="quantity">
         {(field) => (
           <Form.Field field={field}>
             <Form.Label required>
-              수량{quantityUnitLabel ? ` (${quantityUnitLabel})` : ''}
+              {quantityFieldName}
+              {quantityUnitLabel ? ` (${quantityUnitLabel})` : ''}
             </Form.Label>
             <Form.Control>
               <Counter
                 value={field.state.value}
                 min={quantityInputMin}
+                max={quantityMax}
                 step={quantityInputStep}
-                disabled={disableQuantityEdit}
                 onValueChange={(nextValue) =>
                   field.handleChange(normalizeAmountByUnit(nextValue, quantityUnit))
                 }
                 invalid={Boolean(field.state.meta.errors[0])}
               />
             </Form.Control>
-            {disableQuantityEdit ? (
-              <p className="text-xs text-gray-500">
-                장보기에서 등록한 재고는 장보기에서만 수량을 변경할 수 있습니다.
-              </p>
-            ) : null}
+            {quantityHint ? <p className="text-xs text-gray-500">{quantityHint}</p> : null}
             <Form.Error />
           </Form.Field>
         )}
@@ -183,22 +203,26 @@ export function FridgeBatchForm({
         {(field) => (
           <Form.Field field={field}>
             <Form.Label required>구매일</Form.Label>
-            <div className="mb-1 flex items-center gap-2 text-xs text-gray-600">
-              <Checkbox
-                checked={isPurchasedDateUnknown}
-                onCheckedChange={(checked) => {
-                  setIsPurchasedDateUnknown(checked as boolean);
-                  if (checked) {
-                    field.handleChange(resolveUnknownPurchasedDate(form.state.values.expiry_date));
-                  }
-                }}
-              />
-              구매일 모름
-            </div>
+            {purchasedDateLockedHint ? null : (
+              <div className="mb-1 flex items-center gap-2 text-xs text-gray-600">
+                <Checkbox
+                  checked={isPurchasedDateUnknown}
+                  onCheckedChange={(checked) => {
+                    setIsPurchasedDateUnknown(checked as boolean);
+                    if (checked) {
+                      field.handleChange(
+                        resolveUnknownPurchasedDate(form.state.values.expiry_date),
+                      );
+                    }
+                  }}
+                />
+                구매일 모름
+              </div>
+            )}
             <Form.Control>
               <DatePicker
                 value={parseDateValue(field.state.value)}
-                disabled={isPurchasedDateUnknown}
+                disabled={isPurchasedDateUnknown || Boolean(purchasedDateLockedHint)}
                 maxDate={today}
                 onChange={(date) =>
                   field.handleChange(date ? format(date, 'yyyy-MM-dd') : field.state.value)
@@ -206,6 +230,9 @@ export function FridgeBatchForm({
                 placeholder="구매일을 선택하세요"
               />
             </Form.Control>
+            {purchasedDateLockedHint ? (
+              <p className="text-xs text-gray-500">{purchasedDateLockedHint}</p>
+            ) : null}
             <Form.Error />
           </Form.Field>
         )}

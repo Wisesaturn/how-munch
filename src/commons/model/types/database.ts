@@ -366,6 +366,7 @@ export interface Database {
           id: string;
           fridge_item_id: string;
           quantity: number;
+          initial_quantity: number;
           expiry_date: string | null;
           purchased_date: string;
           memo: string | null;
@@ -378,6 +379,7 @@ export interface Database {
           id?: string;
           fridge_item_id: string;
           quantity: number;
+          initial_quantity?: number;
           expiry_date?: string | null;
           purchased_date?: string;
           memo?: string | null;
@@ -390,6 +392,7 @@ export interface Database {
           id?: string;
           fridge_item_id?: string;
           quantity?: number;
+          initial_quantity?: number;
           expiry_date?: string | null;
           purchased_date?: string;
           memo?: string | null;
@@ -1038,6 +1041,7 @@ export interface Database {
           id: string;
           fridge_item_id: string;
           quantity: number;
+          initial_quantity: number;
           expiry_date: string | null;
           purchased_date: string;
           memo: string | null;

@@ -1,12 +1,17 @@
 'use client';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
+import { josa } from 'es-hangul';
 import { overlay } from 'overlay-kit';
 
 import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
 
 import { type FridgeItemBatch } from '@/entities/fridge-item';
-import { type IngredientUnit } from '@/entities/ingredient';
+import {
+  formatIngredientAmount,
+  normalizeAmountByUnit,
+  type IngredientUnit,
+} from '@/entities/ingredient';
 
 import {
   useDeleteBatchMutation,
@@ -21,16 +26,10 @@ interface FridgeBatchEditScreenProps {
   onClose: () => void;
   batch: FridgeItemBatch;
   unit: IngredientUnit;
-  fromStore: boolean;
 }
 
 /** 냉장고 배치 수정 화면 */
-export function FridgeBatchEditScreen({
-  onClose,
-  batch,
-  unit,
-  fromStore,
-}: FridgeBatchEditScreenProps) {
+export function FridgeBatchEditScreen({ onClose, batch, unit }: FridgeBatchEditScreenProps) {
   const mutation = useUpdateBatchMutation();
   const deleteMutation = useDeleteBatchMutation();
   const discardMutation = useDiscardBatchMutation();
@@ -38,7 +37,10 @@ export function FridgeBatchEditScreen({
   const usedAmount = batchUsage?.usedAmount ?? 0;
   const isInMeal = batchUsage?.hasUsage ?? false;
   const formId = `fridge-batch-edit-form-${batch.id}`;
-  const totalQuantity = Number(batch.quantity) + usedAmount;
+  const isFromGrocery = batch.is_from_grocery === true;
+  const initialQuantity = Number(batch.initial_quantity);
+  // kg/l는 소수 연산 오차로 상한이 0.2가 아닌 0.19999... 가 되지 않도록 정규화한다.
+  const quantityMax = normalizeAmountByUnit(initialQuantity - usedAmount, unit);
   const quantityUnitLabel = unit === 'count' ? '개' : unit;
 
   function getErrorMessage(error: unknown) {
@@ -51,9 +53,9 @@ export function FridgeBatchEditScreen({
       {
         id: batch.id,
         expiry_date: values.expiry_date || null,
-        purchased_date: values.purchased_date,
+        purchased_date: isFromGrocery ? undefined : values.purchased_date,
         memo: values.memo || null,
-        quantity: fromStore ? undefined : values.quantity,
+        current_quantity: values.quantity,
       },
       {
         onSuccess: () => {
@@ -147,15 +149,26 @@ export function FridgeBatchEditScreen({
           id={batch.id}
           formId={formId}
           defaultValues={{
-            quantity: totalQuantity,
+            quantity: Number(batch.quantity),
             expiry_date: batch.expiry_date ?? '',
             purchased_date: batch.purchased_date,
             memo: batch.memo ?? '',
           }}
-          quantityMin={usedAmount}
+          quantityMin={0}
+          quantityMax={quantityMax}
           quantityUnitLabel={quantityUnitLabel}
           quantityUnit={unit}
-          disableQuantityEdit={fromStore}
+          quantityHint={
+            usedAmount > 0
+              ? `식단에서 사용한 ${josa(formatIngredientAmount(usedAmount, unit, true), '은/는')} 현재 수량에 포함되지 않습니다.`
+              : undefined
+          }
+          initialQuantityLabel={formatIngredientAmount(initialQuantity, unit, true)}
+          purchasedDateLockedHint={
+            isFromGrocery
+              ? '장보기에서 등록한 재고의 구매일과 등록 수량은 장보기에서 변경할 수 있습니다.'
+              : undefined
+          }
           onSubmit={handleSubmit}
           isPending={mutation.isPending}
           isDeleting={deleteMutation.isPending}

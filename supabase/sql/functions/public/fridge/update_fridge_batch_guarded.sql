@@ -1,9 +1,11 @@
 -- Function: public.update_fridge_batch_guarded
--- Source: supabase/migrations/034_add_domain_error_codes_for_update_ingredient_rpc.sql
+-- Source: supabase/migrations/093_add_fridge_batch_initial_quantity.sql
 -- 역할: 배치 수정 시 식단 사용량/출처 정책을 검증하는 guarded 업데이트입니다.
 -- 동작:
--- 1. 장보기 연동 배치 수량 직접 수정 금지 규칙을 검증합니다.
--- 2. 사용 중 수량 하한을 지킨 뒤 변경값을 반영합니다.
+-- 1. 활성 장보기 항목에 연결된 배치는 구매일을 장보기에서만 바꾸도록 막습니다.
+-- 2. current_quantity(현재 수량)가 0 ~ 등록 수량 - 식단 사용량 범위인지 검증합니다.
+--    quantity 키는 이전 클라이언트 계약(현재 수량 + 식단 사용량)으로 해석합니다.
+-- 3. 검증을 통과한 변경값을 반영합니다.
 create or replace function public.update_fridge_batch_guarded(
   p_batch_id uuid,
   p_updates jsonb default '{}'::jsonb
@@ -15,13 +17,14 @@ set search_path = public
 as $$
 declare
   v_household_id uuid;
-  v_from_grocery boolean;
+  v_initial_quantity numeric;
+  v_purchased_date date;
   v_used_amount numeric := 0;
-  v_requested_total_quantity numeric;
+  v_requested_current_quantity numeric;
   v_result public.fridge_item_batches%rowtype;
 begin
-  select f.household_id, f.from_grocery
-    into v_household_id, v_from_grocery
+  select f.household_id, b.initial_quantity, b.purchased_date
+    into v_household_id, v_initial_quantity, v_purchased_date
   from public.fridge_item_batches b
   join public.fridge_items f on f.id = b.fridge_item_id
   where b.id = p_batch_id
@@ -43,40 +46,47 @@ begin
       hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
-  if p_updates ? 'quantity' then
-    if v_from_grocery then
-      raise exception using
-        errcode = 'F0002',
-        message = '장보기에서 등록한 재고는 장보기에서만 수량을 변경할 수 있습니다.',
-        hint = 'FRIDGE_QUANTITY_MANAGED_IN_GROCERY';
-    end if;
+  if coalesce((p_updates->>'purchased_date')::date, v_purchased_date) <> v_purchased_date
+    and exists (
+      select 1
+      from public.ingredients i
+      where i.linked_fridge_batch_id = p_batch_id
+        and i.deleted_at is null
+    ) then
+    raise exception using
+      errcode = 'F0009',
+      message = '장보기에서 등록한 재고의 구매일은 장보기에서만 변경할 수 있습니다.',
+      hint = 'FRIDGE_PURCHASED_DATE_MANAGED_IN_GROCERY';
+  end if;
 
-    v_requested_total_quantity := (p_updates->>'quantity')::numeric;
-    if v_requested_total_quantity is null then
+  if p_updates ? 'current_quantity' or p_updates ? 'quantity' then
+    select coalesce(sum(mbu.amount), 0)
+      into v_used_amount
+    from public.meal_batch_usages mbu
+    where mbu.batch_id = p_batch_id;
+
+    v_requested_current_quantity := case
+      when p_updates ? 'current_quantity' then (p_updates->>'current_quantity')::numeric
+      else (p_updates->>'quantity')::numeric - v_used_amount
+    end;
+
+    if v_requested_current_quantity is null or v_requested_current_quantity < 0 then
       raise exception using
         errcode = 'F0006',
         message = '유효하지 않은 수량입니다.',
         hint = 'FRIDGE_INVALID_QUANTITY';
     end if;
 
-    select coalesce(sum(mbu.amount), 0)
-      into v_used_amount
-    from public.meal_batch_usages mbu
-    where mbu.batch_id = p_batch_id;
-
-    if v_requested_total_quantity < v_used_amount then
+    if v_requested_current_quantity + v_used_amount > v_initial_quantity then
       raise exception using
-        errcode = 'F0003',
-        message = '식단에서 사용 중인 수량보다 작게 설정할 수 없습니다.',
-        hint = 'FRIDGE_QUANTITY_BELOW_MEAL_USAGE';
+        errcode = 'F0008',
+        message = '현재 수량은 등록 수량에서 식단 사용량을 뺀 값보다 클 수 없습니다.',
+        hint = 'FRIDGE_QUANTITY_ABOVE_INITIAL';
     end if;
   end if;
 
   update public.fridge_item_batches b
-  set quantity = case
-        when p_updates ? 'quantity' then v_requested_total_quantity - v_used_amount
-        else b.quantity
-      end,
+  set quantity = coalesce(v_requested_current_quantity, b.quantity),
       purchased_date = case
         when p_updates ? 'purchased_date' then coalesce((p_updates->>'purchased_date')::date, b.purchased_date)
         else b.purchased_date

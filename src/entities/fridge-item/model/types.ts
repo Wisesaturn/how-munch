@@ -34,8 +34,12 @@ export interface FridgeItem {
 export interface FridgeItemBatch {
   id: string;
   fridge_item_id: string;
-  /** 수량 */
+  /** 현재 수량 (식단 사용량 제외) */
   quantity: number;
+  /** 등록 수량 — 장보기 재고는 장보기 수량을 따르고, 직접 등록 재고는 생성 후 고정 */
+  initial_quantity: number;
+  /** 활성 장보기 항목에 연결된 배치인지 여부 (냉장고 목록 조회에서만 채워짐) */
+  is_from_grocery?: boolean;
   /** 유통기한 (null이면 미입력) */
   expiry_date: string | null;
   /** 구매일 */

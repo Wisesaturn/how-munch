@@ -226,19 +226,11 @@ function FridgeBatchEditActivity({
   params: {
     batch: FridgeItemBatch;
     unit: IngredientUnit;
-    fromStore: boolean;
   };
 }) {
   const { pop } = useActions();
 
-  return (
-    <FridgeBatchEditScreen
-      onClose={pop}
-      batch={params.batch}
-      unit={params.unit}
-      fromStore={params.fromStore}
-    />
-  );
+  return <FridgeBatchEditScreen onClose={pop} batch={params.batch} unit={params.unit} />;
 }
 
 function FridgeFilterSettingsActivity() {

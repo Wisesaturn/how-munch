@@ -1,5 +1,6 @@
 'use client';
 
+import { sumBy } from 'es-toolkit';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 
@@ -23,13 +24,10 @@ interface FridgeItemCardProps {
   onAddBatch: (item: FridgeItemWithBatches) => void;
 }
 
-function getRemainingRate(availableCount: number, usedCount: number) {
-  const safeAvailable = Number(availableCount);
-  const safeUsed = Number(usedCount);
-  if (!Number.isFinite(safeAvailable) || !Number.isFinite(safeUsed)) return 0;
-  const total = safeAvailable + safeUsed;
-  if (total <= 0) return 0;
-  return Math.max(0, Math.min(100, Math.round((safeAvailable / total) * 100)));
+function getRemainingRate(currentCount: number, initialCount: number) {
+  if (!Number.isFinite(currentCount) || !Number.isFinite(initialCount)) return 0;
+  if (initialCount <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((currentCount / initialCount) * 100)));
 }
 
 /** 냉장고 아이템 카드 — SwipeAction으로 퀵 액션 노출, 탭으로 배치 목록 시트 진입 */
@@ -45,26 +43,16 @@ export function FridgeItemCard({
   const activeBatches = item.fridge_item_batches.filter(
     (b) => !b.deleted_at && Number(b.quantity) > 0,
   );
-  const activeBatchIds = new Set(activeBatches.map((b) => b.id));
 
-  // 완전히 소진된(quantity=0) 옛 배치의 사용 이력은 잔여율 계산에서 제외한다.
-  // 그렇지 않으면 같은 재료를 재등록해도 예전 소진량이 분모에 남아 100%가 되지 않는다.
-  const usedAmountByBatchId = new Map<string, number>();
-  for (const usage of item.meal_batch_usages ?? []) {
-    if (!activeBatchIds.has(usage.batch_id)) continue;
-    const prev = usedAmountByBatchId.get(usage.batch_id) ?? 0;
-    usedAmountByBatchId.set(usage.batch_id, prev + Number(usage.amount));
-  }
-
-  const totalUsedCount = Array.from(usedAmountByBatchId.values()).reduce((sum, amount) => {
-    const safe = Number(amount);
-    return Number.isFinite(safe) ? sum + safe : sum;
-  }, 0);
+  // 완전히 소진된(quantity=0) 옛 배치는 잔여율 계산에서 제외한다.
+  // 그렇지 않으면 같은 재료를 재등록해도 예전 등록량이 분모에 남아 100%가 되지 않는다.
+  const activeCurrentCount = sumBy(activeBatches, (b) => Number(b.quantity));
+  const activeInitialCount = sumBy(activeBatches, (b) => Number(b.initial_quantity));
 
   const isOutOfStock = Number(item.total_count) <= 0;
   const remainingRate =
     item.unit === 'count' && !isOutOfStock
-      ? getRemainingRate(item.total_count, totalUsedCount)
+      ? getRemainingRate(activeCurrentCount, activeInitialCount)
       : null;
   const hasExpiredBatch = activeBatches.some(
     (b) => b.expiry_date && getDaysUntilExpiry(b.expiry_date) < 0,
