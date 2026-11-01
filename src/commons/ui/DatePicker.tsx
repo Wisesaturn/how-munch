@@ -169,7 +169,7 @@ function DatePicker({
         aria-expanded={open}
         aria-controls={sheetContentId}
         className={cn(
-          'w-full justify-between border-gray-300 text-left font-normal text-gray-900',
+          'w-full justify-between border-gray-300 text-left text-base font-normal text-gray-900',
           !selectedDate && 'text-gray-400',
           triggerClassName,
         )}
@@ -197,7 +197,7 @@ function DatePicker({
               </Button>
               <div className="grid flex-1 grid-cols-2 gap-2">
                 <Select value={String(getYear(displayMonth))} onValueChange={changeYear}>
-                  <Select.Trigger className="h-10 justify-center text-sm [&>span]:w-full [&>span]:text-center">
+                  <Select.Trigger className="h-10 justify-center [&>span]:w-full [&>span]:text-center">
                     <Select.Value />
                   </Select.Trigger>
                   <Select.Content>
@@ -212,7 +212,7 @@ function DatePicker({
                   value={String(getMonth(displayMonth) + 1)}
                   onValueChange={changeMonthFromSelect}
                 >
-                  <Select.Trigger className="h-10 justify-center text-sm [&>span]:w-full [&>span]:text-center">
+                  <Select.Trigger className="h-10 justify-center [&>span]:w-full [&>span]:text-center">
                     <Select.Value />
                   </Select.Trigger>
                   <Select.Content>

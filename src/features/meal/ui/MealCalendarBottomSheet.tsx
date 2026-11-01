@@ -102,7 +102,7 @@ export function MealCalendarBottomSheet({
             </Button>
             <div className="grid flex-1 grid-cols-2 gap-2">
               <Select value={String(getYear(displayMonth))} onValueChange={changeYear}>
-                <Select.Trigger className="h-10 justify-center text-sm [&>span]:w-full [&>span]:text-center">
+                <Select.Trigger className="h-10 justify-center [&>span]:w-full [&>span]:text-center">
                   <Select.Value />
                 </Select.Trigger>
                 <Select.Content>
@@ -117,7 +117,7 @@ export function MealCalendarBottomSheet({
                 value={String(getMonth(displayMonth) + 1)}
                 onValueChange={changeMonthFromSelect}
               >
-                <Select.Trigger className="h-10 justify-center text-sm [&>span]:w-full [&>span]:text-center">
+                <Select.Trigger className="h-10 justify-center [&>span]:w-full [&>span]:text-center">
                   <Select.Value />
                 </Select.Trigger>
                 <Select.Content>

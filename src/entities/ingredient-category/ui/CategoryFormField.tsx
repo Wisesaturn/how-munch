@@ -47,7 +47,7 @@ function CategoryFormField({ field, options, disabled = false }: CategoryFormFie
             color="mono"
             onClick={openCategorySheet}
             disabled={disabled || options.length === 0}
-            className="h-10 w-full justify-start"
+            className="h-10 w-full justify-start px-4 text-base font-normal"
           >
             {selectedCategory ? (
               <span className="inline-flex items-center gap-1.5">

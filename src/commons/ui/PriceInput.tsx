@@ -80,7 +80,7 @@ function PriceInput(props: PriceInputProps) {
       aria-label={`${title}, 현재 ${amountText}, 계산기 열기`}
       data-invalid={invalid}
       className={cn(
-        'flex h-10 w-full min-w-0 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-left text-sm shadow-xs',
+        'flex h-10 w-full min-w-0 items-center gap-2 rounded-md border border-gray-300 bg-white px-4 text-left text-base shadow-xs',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none',
         'data-[invalid=true]:border-red-500',
         'disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400',
