@@ -91,12 +91,8 @@ export function FridgePage({ householdId }: FridgePageProps) {
     ));
   };
 
-  const openFridgeBatchEditSheet = (
-    batch: FridgeItemBatch,
-    unit: IngredientUnit,
-    fromStore: boolean,
-  ) => {
-    stackFlowActions.push('FridgeBatchEditActivity', { batch, unit, fromStore });
+  const openFridgeBatchEditSheet = (batch: FridgeItemBatch, unit: IngredientUnit) => {
+    stackFlowActions.push('FridgeBatchEditActivity', { batch, unit });
   };
 
   const openFridgeBatchListSheet = (item: FridgeItemWithBatches) => {
@@ -117,10 +113,7 @@ export function FridgePage({ householdId }: FridgePageProps) {
           }}
           onEditBatch={(batch) => {
             closeSheet();
-            window.setTimeout(
-              () => openFridgeBatchEditSheet(batch, item.unit, item.from_grocery),
-              250,
-            );
+            window.setTimeout(() => openFridgeBatchEditSheet(batch, item.unit), 250);
           }}
         />
       );

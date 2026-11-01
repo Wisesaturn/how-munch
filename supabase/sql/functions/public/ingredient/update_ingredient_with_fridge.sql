@@ -1,5 +1,5 @@
 -- Function: public.update_ingredient_with_fridge
--- Source: supabase/migrations/081_fix_review_findings.sql
+-- Source: supabase/migrations/093_add_fridge_batch_initial_quantity.sql
 -- 역할: 장보기 항목 수정 시 연결 냉장고 재고를 정합성 있게 동기화합니다.
 -- 동작:
 -- 1. ingredient를 갱신하고, 식단이 참조 중이면 단위 변경을 막습니다.
@@ -7,6 +7,7 @@
 -- 3. 정체성이 그대로면 (0) 기존 품목을 그대로 씁니다.
 -- 4. 병합 대상이 있으면 (A) 병합, 없고 단독 소유면 (B) 제자리 이름 변경, 공유 중이면 (C) 분리합니다.
 -- 5. 연결 배치를 목표 품목으로 옮기고, 비게 된 옛 품목은 식단 참조를 재연결한 뒤 소프트 삭제합니다.
+-- 6. 장보기 수량이 바뀐 경우에만 등록 수량을 갱신하고 현재 수량에 변경분을 반영합니다.
 create or replace function public.update_ingredient_with_fridge(
   p_ingredient_id uuid,
   p_updates jsonb default '{}'::jsonb
@@ -24,6 +25,7 @@ declare
   v_target_fridge_item_id uuid;
   v_batch_id uuid;
   v_used_amount numeric := 0;
+  v_previous_count numeric;
   v_brand_norm text;
   v_is_exclusive boolean := false;
 begin
@@ -44,6 +46,7 @@ begin
   v_household_id := v_ingredient.household_id;
   v_previous_fridge_item_id := v_ingredient.linked_fridge_item_id;
   v_previous_batch_id := v_ingredient.linked_fridge_batch_id;
+  v_previous_count := v_ingredient.count;
 
   if not public.is_household_member(v_household_id) then
     raise exception using
@@ -258,7 +261,7 @@ begin
       from public.meal_batch_usages mbu
       where mbu.batch_id = v_batch_id;
 
-      if v_ingredient.count < v_used_amount then
+      if v_ingredient.count <> v_previous_count and v_ingredient.count < v_used_amount then
         raise exception using
           errcode = 'F0003',
           message = '식단에서 사용 중인 수량보다 작게 설정할 수 없습니다.',
@@ -269,7 +272,18 @@ begin
       -- sync_dish_ingredients_on_batch_move 트리거가 식단 재료 참조를 함께 따라가게 한다.
       update public.fridge_item_batches
       set fridge_item_id = v_target_fridge_item_id,
-          quantity = v_ingredient.count - v_used_amount,
+          -- 가격·날짜만 고친 경우 직접 맞춘 현재 수량을 덮어쓰지 않는다.
+          quantity = case
+            when v_ingredient.count = v_previous_count then quantity
+            else least(
+              greatest(quantity + v_ingredient.count - v_previous_count, 0),
+              v_ingredient.count - v_used_amount
+            )
+          end,
+          initial_quantity = case
+            when v_ingredient.count = v_previous_count then initial_quantity
+            else v_ingredient.count
+          end,
           purchased_date = v_ingredient.date,
           updated_at = now()
       where id = v_batch_id;
