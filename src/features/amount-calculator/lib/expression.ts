@@ -1,4 +1,13 @@
-export type ExpressionOperator = '+' | '−' | '×' | '÷';
+const EXPRESSION_OPERATORS = ['+', '−', '×', '÷'] as const;
+
+export type ExpressionOperator = (typeof EXPRESSION_OPERATORS)[number];
+
+/**
+ * @description 문자열이 수식 연산자인지 확인합니다.
+ */
+export function isExpressionOperator(value: string): value is ExpressionOperator {
+  return EXPRESSION_OPERATORS.some((operator) => operator === value);
+}
 
 export interface ExpressionNumberToken {
   type: 'number';

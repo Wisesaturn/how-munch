@@ -18,6 +18,8 @@ import { type Meal, type MealType } from '@/entities/meal';
 import {
   AmountCalculatorScreen,
   clearPendingAmountCalculatorCallback,
+  parseCalculatorAmount,
+  parseCalculatorNullable,
   resolvePendingAmountCalculatorCallback,
   setPendingAmountCalculatorCallback,
 } from '@/features/amount-calculator';
@@ -638,14 +640,13 @@ function AmountCalculatorActivity({
 }: {
   params: {
     title: string;
-    value?: number;
-    nullable?: boolean;
+    // 새로고침으로 URL에서 복원되면 문자열로 들어온다
+    value?: number | string;
+    nullable?: boolean | string;
   };
 }) {
   const { pop } = useActions();
   const hasLeftRef = useRef(false);
-  // 새로고침으로 URL에서 복원되면 params가 문자열로 들어온다
-  const value = params.value === undefined ? null : Number(params.value);
 
   // 닫히는 전환 중에도 화면이 살아 있어, 다시 입력되면 아래 폼까지 pop되지 않게 한 번만 처리한다
   function leaveOnce(settlePendingCallback: () => void) {
@@ -666,8 +667,8 @@ function AmountCalculatorActivity({
   return (
     <AmountCalculatorScreen
       title={params.title}
-      value={Number.isFinite(value) ? value : null}
-      nullable={String(params.nullable) === 'true'}
+      value={parseCalculatorAmount(params.value)}
+      nullable={parseCalculatorNullable(params.nullable)}
       onClose={handleClose}
       onConfirm={handleConfirm}
     />

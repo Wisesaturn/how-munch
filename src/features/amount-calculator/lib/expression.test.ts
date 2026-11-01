@@ -4,15 +4,13 @@ import assert from 'node:assert/strict';
 import {
   evaluateExpression,
   formatExpression,
-  type ExpressionOperator,
+  isExpressionOperator,
   type ExpressionToken,
 } from './expression';
 
 function parse(text: string): ExpressionToken[] {
   return text.split(' ').map((part) => {
-    if (['+', '−', '×', '÷'].includes(part)) {
-      return { type: 'operator', operator: part as ExpressionOperator };
-    }
+    if (isExpressionOperator(part)) return { type: 'operator', operator: part };
     return { type: 'number', digits: part.replace(/[,%]/g, ''), percent: part.endsWith('%') };
   });
 }

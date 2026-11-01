@@ -5,6 +5,7 @@ export {
   EMPTY_BUDGET_AMOUNTS,
   getBudgetScopeLabel,
   hasAnyBudget,
+  isBudgetList,
   sumItemBudgets,
   toBudgetAmountMap,
 } from './lib/budget';
