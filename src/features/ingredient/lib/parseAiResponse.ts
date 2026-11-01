@@ -10,6 +10,8 @@ import {
 } from '@/entities/ingredient';
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 
+import { type IngredientBatchDraft } from './ingredientBatch';
+
 export interface StagedItem {
   id: string;
   name: string;
@@ -21,6 +23,10 @@ export interface StagedItem {
   date: string;
   category_code: string;
   category_id: string;
+  /** undefined면 카테고리 기본 유효기간을 따르고, null이면 유통기한 없이 저장한다 */
+  expiry_date?: string | null;
+  /** 배치를 나눈 경우의 배치별 계획 (나누지 않으면 비어 있음) */
+  batches?: IngredientBatchDraft[];
 }
 
 const DATE_FORMAT = 'yyyy-MM-dd';

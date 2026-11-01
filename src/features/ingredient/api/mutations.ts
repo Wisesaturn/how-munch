@@ -10,6 +10,7 @@ import { ingredientKeys, type Ingredient } from '@/entities/ingredient';
 import { mealKeys } from '@/entities/meal';
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
 
+import { type IngredientBatchInput } from '../lib/ingredientBatch';
 import { type StagedItem } from '../lib/parseAiResponse';
 
 type IngredientInsert = Database['public']['Tables']['ingredients']['Insert'];
@@ -20,8 +21,9 @@ export function useAddIngredientMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: IngredientInsert & { skipNotification?: boolean }) =>
-      apiClient.post<Ingredient>('/api/ingredients', input),
+    mutationFn: (
+      input: IngredientInsert & { skipNotification?: boolean; batches?: IngredientBatchInput[] },
+    ) => apiClient.post<Ingredient>('/api/ingredients', input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
       // 식비 탭은 통합 뷰를 읽으므로 장보기 변경도 함께 무효화해야 즉시 반영된다

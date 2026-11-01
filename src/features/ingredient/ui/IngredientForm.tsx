@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { useForm } from '@tanstack/react-form';
+import { useForm, useStore } from '@tanstack/react-form';
 import { format } from 'date-fns';
 import { ChevronRight } from 'lucide-react';
 import { z } from 'zod';
@@ -21,11 +21,16 @@ import {
   validateAmountPrecisionByUnit,
   type IngredientUnit,
 } from '@/entities/ingredient';
+import { computeExpiryDate, useCategoryExpiryDefaultsQuery } from '@/entities/fridge-item';
 import {
   CategoryFormField,
   resolveDefaultCategoryId,
   useIngredientCategoriesQuery,
 } from '@/entities/ingredient-category';
+
+import { type IngredientBatchDraft, sumBatchQuantity } from '../lib/ingredientBatch';
+
+import { IngredientBatchPlanField } from './IngredientBatchPlanField';
 
 export interface IngredientFormValues {
   date: string;
@@ -36,6 +41,10 @@ export interface IngredientFormValues {
   unit: IngredientUnit;
   store: string;
   price: number;
+  /** undefined면 카테고리 기본 유효기간을 따르고, null이면 유통기한 없이 저장한다 */
+  expiry_date?: string | null;
+  /** 배치를 나눈 경우의 배치별 계획 (나누지 않으면 비어 있음) */
+  batches: IngredientBatchDraft[];
 }
 
 interface IngredientFormProps {
@@ -49,6 +58,10 @@ interface IngredientFormProps {
   isDeleting?: boolean;
   submitLabel?: string;
   disableUnitSelect?: boolean;
+  /** 지정하면 수량을 고칠 수 없고 이 값을 표시한다 (배치가 여러 개인 내역 수정) */
+  lockedCount?: number;
+  /** 등록 화면에서 유통기한 입력과 배치 나누기를 켠다 */
+  enableBatchPlanning?: boolean;
   householdId?: string | null;
   /** 품목명 검색 Screen 진입 핸들러 — 선택값은 form name 필드에 반영된다 */
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
@@ -79,9 +92,46 @@ function createIngredientFormSchema(categoryIds: string[]) {
         .number()
         .min(100, ERROR_MSG.RANGE.MIN({ fieldName: '가격', min: '100원' }))
         .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '가격', max: '1억원' })),
+      expiry_date: z.string().nullable().optional(),
+      batches: z.array(
+        z.object({
+          id: z.string(),
+          quantity: z.number(),
+          expiry_date: z.string().nullable(),
+        }),
+      ),
     })
     .superRefine((value, ctx) => {
       const minCount = resolveAmountMin(value.unit);
+
+      if (value.expiry_date && value.expiry_date < value.date) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['expiry_date'],
+          message: ERROR_MSG.DATE.ON_OR_AFTER({ fieldName: '유통기한', baseName: '구매일' }),
+        });
+      }
+
+      if (value.batches.some((batch) => batch.expiry_date && batch.expiry_date < value.date)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['batches'],
+          message: ERROR_MSG.DATE.ON_OR_AFTER({ fieldName: '유통기한', baseName: '구매일' }),
+        });
+      }
+
+      if (
+        value.batches.some(
+          (batch) =>
+            batch.quantity < minCount || !validateAmountPrecisionByUnit(batch.quantity, value.unit),
+        )
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['batches'],
+          message: ERROR_MSG.RANGE.MIN({ fieldName: '배치 수량', min: minCount }),
+        });
+      }
 
       if (value.count < minCount) {
         ctx.addIssue({
@@ -104,6 +154,15 @@ function createIngredientFormSchema(categoryIds: string[]) {
     });
 }
 
+function getFirstErrorMessage(errors: unknown[]) {
+  const error = errors[0];
+  if (typeof error === 'string') return error;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    return String(error.message);
+  }
+  return undefined;
+}
+
 function parseDateValue(value: string) {
   if (!value) return undefined;
   const date = new Date(value);
@@ -121,11 +180,16 @@ export function IngredientForm({
   isDeleting,
   submitLabel,
   disableUnitSelect = false,
+  lockedCount,
+  enableBatchPlanning = false,
   householdId = null,
   onOpenProductNameSearch,
   onOpenBrandSearch,
 }: IngredientFormProps) {
   const { data: categoryOptions = [] } = useIngredientCategoriesQuery(householdId);
+  const { data: expiryDefaults } = useCategoryExpiryDefaultsQuery(
+    enableBatchPlanning ? householdId : null,
+  );
   const categoryIds = useMemo(
     () => categoryOptions.map((category) => category.id),
     [categoryOptions],
@@ -151,7 +215,9 @@ export function IngredientForm({
       unit: initialUnit,
       store: defaultValues?.store ?? '',
       price: defaultValues?.price ?? 100,
-    },
+      expiry_date: defaultValues?.expiry_date,
+      batches: defaultValues?.batches ?? [],
+    } as IngredientFormValues,
     validators: {
       onSubmit: ingredientFormSchema,
       onChange: ingredientFormSchema,
@@ -160,6 +226,21 @@ export function IngredientForm({
       onSubmit(value);
     },
   });
+
+  const planValues = useStore(form.store, (state) => ({
+    date: state.values.date,
+    category_id: state.values.category_id,
+    count: state.values.count,
+    expiry_date: state.values.expiry_date,
+    batches: state.values.batches,
+  }));
+  const isSplit = planValues.batches.length > 0;
+  // 사용자가 고치지 않은 유통기한은 값을 저장하지 않고 구매일·카테고리에서 매번 계산한다.
+  const resolvedExpiry =
+    planValues.expiry_date === undefined
+      ? computeExpiryDate(planValues.date, expiryDefaults?.[planValues.category_id])
+      : planValues.expiry_date;
+  const isUnitLocked = disableUnitSelect || isSplit;
 
   const isEditMode = Boolean(id);
   const countStep = resolveAmountStep(selectedUnit);
@@ -282,7 +363,8 @@ export function IngredientForm({
                 <Form.Control>
                   <Counter
                     key={`ingredient-count-${selectedUnit}`}
-                    value={field.state.value}
+                    value={lockedCount ?? field.state.value}
+                    disabled={lockedCount !== undefined || isSplit}
                     min={countMin}
                     step={countStep}
                     onValueChange={(nextValue) =>
@@ -300,7 +382,7 @@ export function IngredientForm({
                 <Form.Label required>단위</Form.Label>
                 <Select
                   value={field.state.value}
-                  disabled={disableUnitSelect}
+                  disabled={isUnitLocked}
                   onValueChange={(value) => {
                     const nextUnit = value as IngredientUnit;
                     const currentUnit = field.state.value;
@@ -352,7 +434,39 @@ export function IngredientForm({
             </Form.Field>
           )}
         </form.Field>
+        {isSplit ? (
+          <p className="text-xs text-gray-500">단위를 바꾸려면 나누기를 취소해 주세요.</p>
+        ) : null}
       </div>
+
+      {/* 유통기한 · 배치 나누기 */}
+      {enableBatchPlanning ? (
+        <form.Field name="expiry_date">
+          {(expiryField) => (
+            <form.Field name="batches">
+              {(field) => (
+                <Form.Field field={field}>
+                  <IngredientBatchPlanField
+                    unit={selectedUnit}
+                    count={planValues.count}
+                    expiryDate={resolvedExpiry}
+                    expiryError={getFirstErrorMessage(expiryField.state.meta.errors)}
+                    batches={field.state.value}
+                    onExpiryChange={(expiry) => expiryField.handleChange(expiry)}
+                    onBatchesChange={(batches) => {
+                      field.handleChange(batches);
+                      if (batches.length > 0) {
+                        form.setFieldValue('count', sumBatchQuantity(batches, selectedUnit));
+                      }
+                    }}
+                  />
+                  <Form.Error />
+                </Form.Field>
+              )}
+            </form.Field>
+          )}
+        </form.Field>
+      ) : null}
 
       {/* 구매처 */}
       <form.Field name="store">

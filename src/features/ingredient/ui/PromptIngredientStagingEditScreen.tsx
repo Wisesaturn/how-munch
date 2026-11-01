@@ -44,6 +44,8 @@ export function PromptIngredientStagingEditScreen({
       store: values.store,
       date: values.date,
       category_id: values.category_id,
+      expiry_date: values.expiry_date,
+      batches: values.batches,
     });
     onClose();
   }
@@ -86,9 +88,12 @@ export function PromptIngredientStagingEditScreen({
             unit: item.unit,
             store: item.store,
             price: item.price,
+            expiry_date: item.expiry_date,
+            batches: item.batches,
           }}
           storeNames={storeNames}
           onSubmit={handleSubmit}
+          enableBatchPlanning
           onOpenProductNameSearch={onOpenProductNameSearch}
           onOpenBrandSearch={onOpenBrandSearch}
         />
