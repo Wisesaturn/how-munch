@@ -1,5 +1,5 @@
 -- Function: public.get_fridge_items_with_active_batches
--- Source: supabase/migrations/093_add_fridge_batch_initial_quantity.sql
+-- Source: supabase/migrations/095_fix_fridge_list_without_preferences.sql
 -- 역할: 냉장고 목록 조회 시 활성 배치(수량 > 0) 기준으로 재고/사용량을 정합성 있게 반환합니다.
 -- 동작:
 -- 1. 요청 유저의 household 멤버십과 냉장고 숨김 설정(hide_depleted)을 확인합니다.
@@ -46,6 +46,9 @@ begin
     into v_hide_depleted
   from public.fridge_preferences fp
   where fp.user_id = v_user_id;
+
+  -- 설정 행이 없으면 select into가 변수를 null로 덮어써 모든 품목이 필터에서 걸러진다.
+  v_hide_depleted := coalesce(v_hide_depleted, false);
 
   return query
   with active_batches as (
