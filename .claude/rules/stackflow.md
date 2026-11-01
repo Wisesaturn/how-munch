@@ -314,6 +314,17 @@ function ProductNameSearchActivity({ params }) {
 
 ---
 
+## 하위 레이어에서 Activity 열기 (opener 주입)
+
+폼 필드처럼 여러 화면에서 쓰는 컴포넌트가 Activity를 열어야 하면, 하위 레이어가 `apps`를 import하지 않도록 여는 방법을 Context로 주입한다.
+
+- `entities/amount-calculator`의 `AmountCalculatorOpenerProvider`가 인터페이스를 정의한다.
+- `src/apps/providers/StackFlowProvider.tsx`가 pending callback 등록과 `stackFlowActions.push`로 구현을 주입한다.
+- `PriceInput`은 `useAmountCalculatorOpener()`로 요청만 하고 Stackflow를 알지 못한다.
+- Activity params는 새로고침 시 URL에서 문자열로 복원되므로 Activity에서 타입을 다시 맞춘다.
+
+---
+
 ## 새 Activity 추가 체크리스트
 
 1. - [ ] `src/features/{domain}/ui/{Feature}Screen.tsx` 생성
