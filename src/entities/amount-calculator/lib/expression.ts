@@ -34,10 +34,16 @@ interface ExpressionTerm {
   isPlainPercent: boolean;
 }
 
+/**
+ * @description 숫자 토큰을 계산에 쓸 값으로 변환합니다. %가 붙으면 100으로 나눕니다.
+ */
 function resolveOperand(token: ExpressionNumberToken) {
   return Number(token.digits) / (token.percent ? 100 : 1);
 }
 
+/**
+ * @description 수식 끝에 남은 연산자를 제외한 토큰을 돌려줍니다.
+ */
 function stripTrailingOperator(tokens: ExpressionToken[]) {
   return tokens[tokens.length - 1]?.type === 'operator' ? tokens.slice(0, -1) : tokens;
 }

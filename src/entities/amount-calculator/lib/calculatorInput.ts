@@ -16,10 +16,16 @@ export interface CalculatorInput {
 /** 숫자 하나의 최대 자리수 */
 const MAX_DIGITS = 12;
 
+/**
+ * @description 숫자 문자열 맨 앞의 불필요한 0을 제거합니다. 0만 있으면 한 자리를 남깁니다.
+ */
 function stripLeadingZeros(digits: string) {
   return digits.replace(/^0+(?=\d)/, '');
 }
 
+/**
+ * @description 숫자를 입력합니다. 기존 금액이 채워진 직후면 새로 입력하고, 아니면 마지막 숫자에 이어 붙입니다.
+ */
 function appendDigits(input: CalculatorInput, digits: string): CalculatorInput {
   const tokens = input.isReplaceable ? [] : input.tokens;
   const last = tokens[tokens.length - 1];
@@ -43,6 +49,9 @@ function appendDigits(input: CalculatorInput, digits: string): CalculatorInput {
   };
 }
 
+/**
+ * @description 연산자를 입력합니다. 숫자가 없으면 무시하고, 마지막이 연산자면 교체합니다.
+ */
 function applyOperator(input: CalculatorInput, operator: ExpressionOperator): CalculatorInput {
   const { tokens } = input;
   const last = tokens[tokens.length - 1];
@@ -52,6 +61,9 @@ function applyOperator(input: CalculatorInput, operator: ExpressionOperator): Ca
   return { tokens: [...base, { type: 'operator', operator }], isReplaceable: false };
 }
 
+/**
+ * @description 마지막 숫자에 %를 붙입니다. 숫자가 없거나 이미 %가 있으면 무시합니다.
+ */
 function applyPercent(input: CalculatorInput): CalculatorInput {
   const { tokens } = input;
   const last = tokens[tokens.length - 1];
@@ -60,6 +72,9 @@ function applyPercent(input: CalculatorInput): CalculatorInput {
   return { tokens: [...tokens.slice(0, -1), { ...last, percent: true }], isReplaceable: false };
 }
 
+/**
+ * @description 마지막 입력 하나를 지웁니다. 연산자, %, 숫자 한 자리 순으로 해당하는 것을 지웁니다.
+ */
 function deleteLast(input: CalculatorInput): CalculatorInput {
   const { tokens } = input;
   const last = tokens[tokens.length - 1];

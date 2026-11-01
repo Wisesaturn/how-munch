@@ -12,6 +12,9 @@ const KEYBOARD_OPERATORS: Record<string, ExpressionOperator> = {
   '/': '÷',
 };
 
+/**
+ * @description 키보드 입력을 계산기 키로 변환합니다. 계산기 키가 아니면 null을 돌려줍니다.
+ */
 function resolveCalculatorKey(key: string): CalculatorKey | null {
   if (/^\d$/.test(key)) return { type: 'digits', digits: key };
   if (KEYBOARD_OPERATORS[key]) return { type: 'operator', operator: KEYBOARD_OPERATORS[key] };
