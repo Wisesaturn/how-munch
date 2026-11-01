@@ -34,11 +34,11 @@ export function IngredientBatchQuantityFields({
 }: IngredientBatchQuantityFieldsProps) {
   return (
     <section className={cn('flex flex-col gap-3 rounded-lg border p-3', className)}>
-      <p className="text-sm font-medium text-gray-700">배치별 등록 수량</p>
+      <p className="text-sm font-medium text-gray-700">재고 묶음별 등록 수량</p>
       {batches.map((batch, index) => (
         <div key={batch.id} className="flex items-center justify-between gap-3 border-t pt-3">
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm text-gray-700">배치 {index + 1}</span>
+            <span className="text-sm text-gray-700">재고 묶음 {index + 1}</span>
             <span className="text-xs text-gray-400">
               {batch.expiry_date
                 ? `유통기한 ${format(parseISO(batch.expiry_date), 'MM.dd')}`

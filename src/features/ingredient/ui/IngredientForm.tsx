@@ -69,7 +69,7 @@ interface IngredientFormProps {
   disableUnitSelect?: boolean;
   /** 지정하면 수량을 고칠 수 없고 이 값을 표시한다 (배치가 여러 개인 내역 수정) */
   lockedCount?: number;
-  /** 등록 화면에서 유통기한 입력과 배치 나누기를 켠다 */
+  /** 등록 화면에서 유통기한 입력과 재고 묶음 나누기를 켠다 */
   enableBatchPlanning?: boolean;
   householdId?: string | null;
   /** 품목명 검색 Screen 진입 핸들러 — 선택값은 form name 필드에 반영된다 */
@@ -140,7 +140,7 @@ function createIngredientFormSchema(categoryIds: string[]) {
         ctx.addIssue({
           code: 'custom',
           path: ['batches'],
-          message: ERROR_MSG.RANGE.MIN({ fieldName: '배치 수량', min: minCount }),
+          message: ERROR_MSG.RANGE.MIN({ fieldName: '재고 묶음 수량', min: minCount }),
         });
       }
 
@@ -451,7 +451,7 @@ export function IngredientForm({
         ) : null}
       </div>
 
-      {/* 유통기한 · 배치 나누기 */}
+      {/* 유통기한 · 재고 묶음 나누기 */}
       {enableBatchPlanning ? (
         <form.Field name="expiry_date">
           {(expiryField) => (

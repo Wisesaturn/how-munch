@@ -69,10 +69,10 @@ function resolveExpirySummary(item: StagedItem, defaultDays: number | undefined)
       .map((batch) => batch.expiry_date)
       .filter((date): date is string => Boolean(date))
       .sort();
-    if (dates.length === 0) return `배치 ${batches.length}개`;
+    if (dates.length === 0) return `재고 묶음 ${batches.length}개`;
     const first = formatExpiryDate(dates[0]);
     const last = formatExpiryDate(dates[dates.length - 1]);
-    return `배치 ${batches.length}개 · ${first === last ? first : `${first} ~ ${last}`}`;
+    return `재고 묶음 ${batches.length}개 · ${first === last ? first : `${first} ~ ${last}`}`;
   }
 
   const expiry =

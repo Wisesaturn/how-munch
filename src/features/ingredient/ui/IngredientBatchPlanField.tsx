@@ -56,7 +56,7 @@ interface IngredientBatchPlanFieldProps {
   onBatchesChange: (batches: IngredientBatchDraft[]) => void;
 }
 
-/** 등록 화면의 유통기한 입력과 배치 나누기 */
+/** 등록 화면의 유통기한 입력과 재고 묶음 나누기 */
 export function IngredientBatchPlanField({
   unit,
   count,
@@ -88,7 +88,7 @@ export function IngredientBatchPlanField({
             )
           }
         >
-          배치 나누기
+          재고 묶음 나누기
         </Button>
         {!canSplit ? (
           <p className="text-xs text-gray-500">수량이 2개 이상이어야 나눌 수 있어요.</p>
@@ -132,14 +132,14 @@ export function IngredientBatchPlanField({
       {batches.map((batch, index) => (
         <div key={batch.id} className="flex flex-col gap-2 border-t pt-3">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-gray-700">배치 {index + 1}</span>
+            <span className="text-sm font-medium text-gray-700">재고 묶음 {index + 1}</span>
             <Counter
               className="w-40"
               size="sm"
               value={batch.quantity}
               min={quantityMin}
               step={quantityStep}
-              aria-label={`배치 ${index + 1} 수량`}
+              aria-label={`재고 묶음 ${index + 1} 수량`}
               onValueChange={(quantity) =>
                 updateBatch(batch.id, { quantity: normalizeAmountByUnit(quantity, unit) })
               }

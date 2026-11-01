@@ -58,7 +58,7 @@ export function resolveMaxBatchParts(total: number, unit: IngredientUnit) {
 }
 
 /**
- * @description [배치 나누기]를 눌렀을 때의 기본 배치 수를 정한다.
+ * @description [재고 묶음 나누기]를 눌렀을 때의 기본 배치 수를 정한다.
  * 적은 개수는 1개씩 나누는 경우가 가장 흔하므로 수량만큼, 그 외에는 2개로 시작한다.
  */
 export function resolveDefaultBatchParts(total: number, unit: IngredientUnit) {
