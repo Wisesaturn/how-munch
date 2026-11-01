@@ -77,21 +77,25 @@ export function IngredientBatchPlanField({
         <Form.Label>유통기한</Form.Label>
         <ExpiryDateInput value={expiryDate} onValueChange={onExpiryChange} />
         {expiryError ? <p className="text-destructive text-xs">{expiryError}</p> : null}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!canSplit}
-          onClick={() =>
-            onBatchesChange(
-              createBatchDrafts(count, resolveDefaultBatchParts(count, unit), unit, [], expiryDate),
-            )
-          }
-        >
-          재고 묶음 나누기
-        </Button>
-        {!canSplit ? (
-          <p className="text-xs text-gray-500">수량이 2개 이상이어야 나눌 수 있어요.</p>
+        {canSplit ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              onBatchesChange(
+                createBatchDrafts(
+                  count,
+                  resolveDefaultBatchParts(count, unit),
+                  unit,
+                  [],
+                  expiryDate,
+                ),
+              )
+            }
+          >
+            재고 묶음 나누기
+          </Button>
         ) : null}
       </div>
     );
