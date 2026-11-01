@@ -2,7 +2,7 @@
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { CTAButton, Toast } from '@/commons/ui';
+import { CTAButton, Toast, type OpenPriceCalculator } from '@/commons/ui';
 
 import { useAddIngredientMutation } from '../api/mutations';
 import { useStoreNamesQuery } from '../api/queries';
@@ -18,6 +18,8 @@ interface IngredientAddScreenProps {
   defaultName?: string;
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
   onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
 }
 
 export function IngredientAddScreen({
@@ -27,6 +29,7 @@ export function IngredientAddScreen({
   defaultName,
   onOpenProductNameSearch,
   onOpenBrandSearch,
+  onOpenAmountCalculator,
 }: IngredientAddScreenProps) {
   const addMutation = useAddIngredientMutation();
   const { data: storeNames } = useStoreNamesQuery(householdId);
@@ -76,6 +79,7 @@ export function IngredientAddScreen({
           enableBatchPlanning
           onOpenProductNameSearch={onOpenProductNameSearch}
           onOpenBrandSearch={onOpenBrandSearch}
+          onOpenAmountCalculator={onOpenAmountCalculator}
         />
       </div>
       <CTAButton

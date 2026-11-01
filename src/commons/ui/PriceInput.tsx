@@ -1,20 +1,35 @@
 'use client';
 
-import { type ComponentProps } from 'react';
+import * as React from 'react';
 
 import { Calculator } from 'lucide-react';
 
-import { cn } from '@/commons/lib';
+import { cn } from '../lib';
 
-import { useAmountCalculatorOpener } from '../model/amountCalculatorOpener';
+/* -------------------------------------------------------------------------------------------------
+ * Types
+ * -----------------------------------------------------------------------------------------------*/
+interface PriceCalculatorRequest {
+  /** 계산기 화면 제목 */
+  title: string;
+  /** 현재 금액. null이면 빈 상태로 연다 */
+  value: number | null;
+  /** 금액을 비운 채 확인할 수 있는지 여부 */
+  nullable: boolean;
+  onConfirm: (value: number | null) => void;
+}
+
+/** 계산기 화면을 여는 함수 — 화면 전환 방식은 Activity에서 정해 주입한다 */
+type OpenPriceCalculator = (request: PriceCalculatorRequest) => void;
 
 interface PriceInputBaseProps extends Omit<
-  ComponentProps<'button'>,
+  React.ComponentProps<'button'>,
   'value' | 'type' | 'onClick' | 'children' | 'title'
 > {
   /** 계산기 화면 제목 */
   title?: string;
   invalid?: boolean;
+  onOpenCalculator: OpenPriceCalculator;
 }
 
 interface RequiredPriceInputProps extends PriceInputBaseProps {
@@ -30,20 +45,23 @@ interface NullablePriceInputProps extends PriceInputBaseProps {
   onValueChange: (value: number | null) => void;
 }
 
-export type PriceInputProps = RequiredPriceInputProps | NullablePriceInputProps;
+type PriceInputProps = RequiredPriceInputProps | NullablePriceInputProps;
 
+/* -------------------------------------------------------------------------------------------------
+ * PriceInput
+ * -----------------------------------------------------------------------------------------------*/
 /** 금액 칸 — 누르면 계산기 화면을 열고, 확인한 금액을 값으로 받는다 */
-export function PriceInput(props: PriceInputProps) {
+function PriceInput(props: PriceInputProps) {
   const {
     title = '금액 입력',
     value,
     nullable = false,
     onValueChange: _onValueChange,
+    onOpenCalculator,
     invalid,
     className,
     ...buttonProps
   } = props;
-  const { openAmountCalculator } = useAmountCalculatorOpener('PriceInput');
 
   function applyConfirmedValue(next: number | null) {
     if (props.nullable === true) {
@@ -68,9 +86,7 @@ export function PriceInput(props: PriceInputProps) {
         'disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400',
         className,
       )}
-      onClick={() =>
-        openAmountCalculator({ title, value, nullable, onConfirm: applyConfirmedValue })
-      }
+      onClick={() => onOpenCalculator({ title, value, nullable, onConfirm: applyConfirmedValue })}
       {...buttonProps}
     >
       <span
@@ -83,3 +99,5 @@ export function PriceInput(props: PriceInputProps) {
     </button>
   );
 }
+
+export { PriceInput, type OpenPriceCalculator, type PriceCalculatorRequest, type PriceInputProps };

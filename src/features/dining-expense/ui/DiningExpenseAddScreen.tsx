@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { CTAButton, Toast } from '@/commons/ui';
+import { CTAButton, Toast, type OpenPriceCalculator } from '@/commons/ui';
 
 import { type DiningExpenseKind } from '@/entities/dining-expense';
 
@@ -15,10 +15,16 @@ import { DiningExpenseForm, type DiningExpenseFormValues } from './DiningExpense
 
 interface DiningExpenseAddScreenProps {
   onClose: () => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
   householdId: string;
 }
 
-export function DiningExpenseAddScreen({ onClose, householdId }: DiningExpenseAddScreenProps) {
+export function DiningExpenseAddScreen({
+  onClose,
+  onOpenAmountCalculator,
+  householdId,
+}: DiningExpenseAddScreenProps) {
   // 자동완성 후보는 선택한 종류로 스코프를 좁힌다. 포장·배달 플랫폼이 식당 가게 후보로 섞이지 않는다.
   const [kind, setKind] = useState<DiningExpenseKind>('restaurant');
   const addMutation = useAddDiningExpenseMutation();
@@ -59,6 +65,7 @@ export function DiningExpenseAddScreen({ onClose, householdId }: DiningExpenseAd
     <AppScreen className="pointer-events-auto" appBar={{ title: '외식비 입력' }}>
       <div className="px-4 pt-4 pb-28">
         <DiningExpenseForm
+          onOpenAmountCalculator={onOpenAmountCalculator}
           formId={formId}
           brandNames={brandNames}
           storeNames={storeNames}

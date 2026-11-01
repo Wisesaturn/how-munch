@@ -7,10 +7,9 @@ import { useConditionalEffect } from 'react-simplikit';
 import { z } from 'zod';
 
 import { DOMAIN_ERROR_MESSAGE, ERROR_MSG } from '@/commons/lib';
-import { CTAButton, ProgressBar, Toast } from '@/commons/ui';
+import { CTAButton, PriceInput, ProgressBar, Toast, type OpenPriceCalculator } from '@/commons/ui';
 import { Form } from '@/commons/ui/Form';
 
-import { PriceInput } from '@/entities/amount-calculator';
 import {
   getBudgetScopeLabel,
   hasAnyBudget,
@@ -88,12 +87,19 @@ function toFormValues(amounts: BudgetAmountMap): BudgetFormValues {
 
 interface BudgetEditScreenProps {
   onClose: () => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
   householdId: string;
   /** 'YYYY-MM' */
   yearMonth: string;
 }
 
-export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEditScreenProps) {
+export function BudgetEditScreen({
+  onClose,
+  onOpenAmountCalculator,
+  householdId,
+  yearMonth,
+}: BudgetEditScreenProps) {
   const previousYearMonth = getPreviousYearMonth(yearMonth);
   const { data: budgets = [], isSuccess } = useBudgetsQuery(householdId, yearMonth);
   const { data: previousBudgets = [], isSuccess: isPreviousLoaded } = useBudgetsQuery(
@@ -200,6 +206,7 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
                       <PriceInput
                         nullable
                         title="월 예산"
+                        onOpenCalculator={onOpenAmountCalculator}
                         value={field.state.value}
                         onValueChange={(next) => field.handleChange(next)}
                         invalid={Boolean(field.state.meta.errors[0])}
@@ -256,6 +263,7 @@ export function BudgetEditScreen({ onClose, householdId, yearMonth }: BudgetEdit
                 <form.Field key={scope} name={scope}>
                   {(field) => (
                     <BudgetScopeField
+                      onOpenCalculator={onOpenAmountCalculator}
                       icon={<BudgetScopeIcon scope={scope} />}
                       label={getBudgetScopeLabel(scope)}
                       lastMonthSpent={lastMonthSpent[scope]}

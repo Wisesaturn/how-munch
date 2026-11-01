@@ -7,17 +7,20 @@ import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
-import {
-  AmountCalculatorScreen,
-  clearPendingAmountCalculatorCallback,
-  resolvePendingAmountCalculatorCallback,
-} from '@/entities/amount-calculator';
+import { type OpenPriceCalculator } from '@/commons/ui';
+
 import { type DiningExpense } from '@/entities/dining-expense';
 import { type FoodExpense } from '@/entities/food-expense';
 import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type Meal, type MealType } from '@/entities/meal';
 
+import {
+  AmountCalculatorScreen,
+  clearPendingAmountCalculatorCallback,
+  resolvePendingAmountCalculatorCallback,
+  setPendingAmountCalculatorCallback,
+} from '@/features/amount-calculator';
 import { BudgetEditScreen, BudgetScreen } from '@/features/budget';
 import { DiningExpenseAddScreen, DiningExpenseEditScreen } from '@/features/dining-expense';
 import { FoodExpenseSearchScreen, toDiningExpense, toIngredient } from '@/features/food-expense';
@@ -60,6 +63,21 @@ import { NotificationScreen, NotificationSettingsScreen } from '@/features/notif
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
 import { SearchSynonymSettingsScreen } from '@/features/search-synonym';
 
+/** 금액 칸이 쓸 계산기 열기 함수 — 콜백을 등록한 뒤 계산기 Activity를 연다 */
+function useOpenAmountCalculator(): OpenPriceCalculator {
+  const { push } = useActions();
+
+  return function openAmountCalculator({ title, value, nullable, onConfirm }) {
+    setPendingAmountCalculatorCallback(onConfirm);
+    push('AmountCalculatorActivity', {
+      title,
+      // history-sync가 params를 URL로 직렬화하므로 없는 값은 키째 뺀다
+      ...(value === null ? {} : { value }),
+      ...(nullable ? { nullable } : {}),
+    });
+  };
+}
+
 function IdleActivity() {
   const activity = useActivity();
 
@@ -101,8 +119,11 @@ function IngredientAddActivity({
     });
   }
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <IngredientAddScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       householdId={params.householdId}
       userId={params.userId}
@@ -288,8 +309,11 @@ function IngredientEditActivity({
     });
   }
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <IngredientEditScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       householdId={params.householdId}
       ingredient={params.ingredient}
@@ -465,8 +489,11 @@ function PromptIngredientStagingEditActivity({
     });
   }
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <PromptIngredientStagingEditScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       item={params.item}
       householdId={params.householdId}
@@ -552,8 +579,15 @@ function BudgetEditActivity({
 }) {
   const { pop } = useActions();
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
-    <BudgetEditScreen onClose={pop} householdId={params.householdId} yearMonth={params.yearMonth} />
+    <BudgetEditScreen
+      onClose={pop}
+      onOpenAmountCalculator={openAmountCalculator}
+      householdId={params.householdId}
+      yearMonth={params.yearMonth}
+    />
   );
 }
 
@@ -566,7 +600,15 @@ function DiningExpenseAddActivity({
 }) {
   const { pop } = useActions();
 
-  return <DiningExpenseAddScreen onClose={pop} householdId={params.householdId} />;
+  const openAmountCalculator = useOpenAmountCalculator();
+
+  return (
+    <DiningExpenseAddScreen
+      onClose={pop}
+      onOpenAmountCalculator={openAmountCalculator}
+      householdId={params.householdId}
+    />
+  );
 }
 
 function DiningExpenseEditActivity({
@@ -579,8 +621,11 @@ function DiningExpenseEditActivity({
 }) {
   const { pop } = useActions();
 
+  const openAmountCalculator = useOpenAmountCalculator();
+
   return (
     <DiningExpenseEditScreen
+      onOpenAmountCalculator={openAmountCalculator}
       onClose={pop}
       householdId={params.householdId}
       expense={params.expense}

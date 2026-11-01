@@ -5,7 +5,12 @@ import { useState } from 'react';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 import { overlay } from 'overlay-kit';
 
-import { CTAConfirmButton, DeleteConfirmBottomSheet, Toast } from '@/commons/ui';
+import {
+  CTAConfirmButton,
+  DeleteConfirmBottomSheet,
+  Toast,
+  type OpenPriceCalculator,
+} from '@/commons/ui';
 
 import { type Ingredient } from '@/entities/ingredient';
 
@@ -22,6 +27,8 @@ interface IngredientEditScreenProps {
   householdId: string;
   onOpenProductNameSearch?: (currentName: string, onSelect: (name: string) => void) => void;
   onOpenBrandSearch?: (currentBrand: string, onSelect: (brand: string) => void) => void;
+  /** 계산기 화면 열기 핸들러 (Activity에서 주입) */
+  onOpenAmountCalculator: OpenPriceCalculator;
 }
 
 export function IngredientEditScreen({
@@ -30,6 +37,7 @@ export function IngredientEditScreen({
   householdId,
   onOpenProductNameSearch,
   onOpenBrandSearch,
+  onOpenAmountCalculator,
 }: IngredientEditScreenProps) {
   const updateMutation = useUpdateIngredientMutation();
   const deleteMutation = useDeleteIngredientMutation();
@@ -149,6 +157,7 @@ export function IngredientEditScreen({
           lockedCount={lockedCount}
           onOpenProductNameSearch={onOpenProductNameSearch}
           onOpenBrandSearch={onOpenBrandSearch}
+          onOpenAmountCalculator={onOpenAmountCalculator}
         />
         {isMultiBatch ? (
           <IngredientBatchQuantityFields
