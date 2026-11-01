@@ -104,7 +104,7 @@ function createIngredientFormSchema(categoryIds: string[]) {
     .superRefine((value, ctx) => {
       const minCount = resolveAmountMin(value.unit);
 
-      if (value.expiry_date && value.expiry_date < value.date) {
+      if (value.batches.length === 0 && value.expiry_date && value.expiry_date < value.date) {
         ctx.addIssue({
           code: 'custom',
           path: ['expiry_date'],
