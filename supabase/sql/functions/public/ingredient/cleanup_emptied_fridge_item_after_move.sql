@@ -1,5 +1,5 @@
 -- Function: public.cleanup_emptied_fridge_item_after_move
--- Source: supabase/migrations/077_rename_grocery_item_in_place_when_exclusive.sql
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 배치가 모두 빠져나가 비게 된 옛 냉장고 품목을 정리합니다.
 -- 동작:
 -- 1. 이전 품목이 없거나 목표 품목과 같으면 아무것도 하지 않습니다.
@@ -38,7 +38,6 @@ begin
 
   update public.ingredients
   set linked_fridge_item_id = null,
-      linked_fridge_batch_id = null,
       updated_at = now()
   where linked_fridge_item_id = p_previous_fridge_item_id;
 

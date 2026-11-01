@@ -1,3 +1,4 @@
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 장보기(ingredients)와 외식비(dining_expenses)를 하나의 식비 내역으로 노출하는 통합 조회 뷰.
 -- 동작:
 --   1. ingredients에서 deleted_at is null 행을 kind='grocery' 리터럴과 함께 선택한다.
@@ -23,7 +24,6 @@ select
   i.count,
   i.unit,
   i.linked_fridge_item_id,
-  i.linked_fridge_batch_id,
   null::text as memo,
   i.created_at,
   i.updated_at
@@ -44,7 +44,6 @@ select
   null::numeric as count,
   null::text as unit,
   null::uuid as linked_fridge_item_id,
-  null::uuid as linked_fridge_batch_id,
   d.memo,
   d.created_at,
   d.updated_at

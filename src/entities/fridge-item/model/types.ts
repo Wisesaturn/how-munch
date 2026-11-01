@@ -34,6 +34,8 @@ export interface FridgeItem {
 export interface FridgeItemBatch {
   id: string;
   fridge_item_id: string;
+  /** 이 배치를 만든 장보기 항목 (직접 등록 재고는 null) */
+  ingredient_id?: string | null;
   /** 현재 수량 (식단 사용량 제외) */
   quantity: number;
   /** 등록 수량 — 장보기 재고는 장보기 수량을 따르고, 직접 등록 재고는 생성 후 고정 */
@@ -65,6 +67,10 @@ export interface MealBatchUsage {
 export interface FridgeItemWithBatches extends FridgeItem {
   fridge_item_batches: FridgeItemBatch[];
   meal_batch_usages?: MealBatchUsage[];
+  /**
+   * 잔여율 분모 — 남은 재고가 있는 배치와, 같은 장보기 항목에서 나온 소진 배치의 등록 수량 합계
+   */
+  remaining_initial_total?: number;
   /**
    * 식단 사용 이력 유무 (dish_ingredients 기준)
    * g/kg 'used'처럼 meal_batch_usages 행이 없는 사용까지 포함한다.

@@ -1,5 +1,5 @@
 -- Function: public.soft_delete_ingredient
--- Source: supabase/migrations/076_fix_meal_usage_guards_to_dish_ingredients.sql
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 장보기 항목을 소프트 삭제합니다.
 -- 동작:
 -- 1. 권한/대상 존재를 검증합니다.
@@ -14,11 +14,10 @@ as $$
 declare
   v_household_id uuid;
   v_linked_fridge_item_id uuid;
-  v_linked_fridge_batch_id uuid;
   v_is_used_in_meal boolean := false;
 begin
-  select household_id, linked_fridge_item_id, linked_fridge_batch_id
-    into v_household_id, v_linked_fridge_item_id, v_linked_fridge_batch_id
+  select household_id, linked_fridge_item_id
+    into v_household_id, v_linked_fridge_item_id
   from public.ingredients
   where id = p_ingredient_id
     and deleted_at is null;
@@ -37,9 +36,18 @@ begin
       hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
-  if v_linked_fridge_batch_id is not null then
+  if exists (
+    select 1
+    from public.fridge_item_batches b
+    where b.ingredient_id = p_ingredient_id
+      and b.deleted_at is null
+  ) then
     select exists (
-      select 1 from public.dish_ingredients di where di.batch_id = v_linked_fridge_batch_id
+      select 1
+      from public.dish_ingredients di
+      join public.fridge_item_batches b on b.id = di.batch_id
+      where b.ingredient_id = p_ingredient_id
+        and b.deleted_at is null
     )
     into v_is_used_in_meal;
   elsif v_linked_fridge_item_id is not null then

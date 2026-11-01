@@ -46,8 +46,11 @@ export function FridgeItemCard({
 
   // 완전히 소진된(quantity=0) 옛 배치는 잔여율 계산에서 제외한다.
   // 그렇지 않으면 같은 재료를 재등록해도 예전 등록량이 분모에 남아 100%가 되지 않는다.
+  // 다만 함께 산 배치 중 일부만 소진됐다면 서버가 계산한 분모(remaining_initial_total)에 포함된다.
   const activeCurrentCount = sumBy(activeBatches, (b) => Number(b.quantity));
-  const activeInitialCount = sumBy(activeBatches, (b) => Number(b.initial_quantity));
+  const activeInitialCount = Number(
+    item.remaining_initial_total ?? sumBy(activeBatches, (b) => Number(b.initial_quantity)),
+  );
 
   const isOutOfStock = Number(item.total_count) <= 0;
   const remainingRate =

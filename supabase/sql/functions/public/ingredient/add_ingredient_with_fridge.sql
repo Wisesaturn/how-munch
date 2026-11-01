@@ -1,11 +1,12 @@
 -- Function: public.add_ingredient_with_fridge
--- Source: supabase/migrations/038_drop_legacy_category_columns_and_use_category_id.sql
---         supabase/migrations/070_add_fridge_category_expiry_defaults.sql (카테고리 기본 유효기간 반영)
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 장보기 항목 생성과 냉장고 아이템/배치 연결을 한 트랜잭션으로 처리합니다.
 -- 동작:
 -- 1. ingredient를 생성하고 category_id를 정규화합니다.
 -- 2. 카테고리 기본 유효기간이 설정돼 있으면 구매일 + 기본일수로 배치 expiry_date를 채웁니다.
 -- 3. 동일 품목 fridge_item을 재사용하거나 없으면 생성한 뒤 batch를 추가합니다.
+-- 4. p_batches를 받으면 수량 합계를 검증하고 항목별로 배치를 만듭니다.
+--    배치의 expiry_date 키가 있으면 그 값(null 포함)을 쓰고, 없으면 카테고리 기본값을 씁니다.
 create or replace function public.add_ingredient_with_fridge(
   p_household_id uuid,
   p_name text,
@@ -15,7 +16,8 @@ create or replace function public.add_ingredient_with_fridge(
   p_category_id uuid default null,
   p_count numeric default 1,
   p_unit text default 'count',
-  p_date date default current_date
+  p_date date default current_date,
+  p_batches jsonb default null
 )
 returns public.ingredients
 language plpgsql
@@ -26,7 +28,8 @@ declare
   v_user_id uuid := auth.uid();
   v_ingredient public.ingredients%rowtype;
   v_fridge_item_id uuid;
-  v_batch_id uuid;
+  v_batches jsonb := nullif(p_batches, 'null'::jsonb);
+  v_batch jsonb;
   v_category_id uuid;
   v_expiry_days integer;
   v_expiry_date date;
@@ -43,6 +46,25 @@ begin
       errcode = 'A0002',
       message = '권한이 없습니다.',
       hint = 'COMMON_PERMISSION_DENIED';
+  end if;
+
+  if v_batches is not null and (
+    jsonb_typeof(v_batches) <> 'array'
+    or jsonb_array_length(v_batches) = 0
+    or exists (
+      select 1
+      from jsonb_array_elements(v_batches) e
+      where coalesce((e->>'quantity')::numeric, 0) <= 0
+    )
+    or (
+      select sum((e->>'quantity')::numeric)
+      from jsonb_array_elements(v_batches) e
+    ) <> coalesce(p_count, 1)
+  ) then
+    raise exception using
+      errcode = 'I0007',
+      message = '배치 수량의 합계가 항목 수량과 일치하지 않습니다.',
+      hint = 'INGREDIENT_BATCH_QUANTITY_MISMATCH';
   end if;
 
   v_category_id := public.normalize_ingredient_category_id(p_household_id, p_category_id);
@@ -139,25 +161,35 @@ begin
     returning id into v_fridge_item_id;
   end if;
 
-  insert into public.fridge_item_batches (
-    fridge_item_id,
-    quantity,
-    purchased_date,
-    expiry_date,
-    memo
-  )
-  values (
-    v_fridge_item_id,
-    v_ingredient.count,
-    v_ingredient.date,
-    v_expiry_date,
-    null
-  )
-  returning id into v_batch_id;
+  for v_batch in
+    select e
+    from jsonb_array_elements(
+      coalesce(v_batches, jsonb_build_array(jsonb_build_object('quantity', v_ingredient.count)))
+    ) e
+  loop
+    insert into public.fridge_item_batches (
+      fridge_item_id,
+      ingredient_id,
+      quantity,
+      purchased_date,
+      expiry_date,
+      memo
+    )
+    values (
+      v_fridge_item_id,
+      v_ingredient.id,
+      (v_batch->>'quantity')::numeric,
+      v_ingredient.date,
+      case
+        when v_batch ? 'expiry_date' then (v_batch->>'expiry_date')::date
+        else v_expiry_date
+      end,
+      null
+    );
+  end loop;
 
   update public.ingredients
   set linked_fridge_item_id = v_fridge_item_id,
-      linked_fridge_batch_id = v_batch_id,
       updated_at = now()
   where id = v_ingredient.id
   returning * into v_ingredient;

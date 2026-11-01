@@ -1,5 +1,5 @@
 -- Function: public.update_ingredient_with_fridge
--- Source: supabase/migrations/094_fix_batch_quantity_on_ingredient_unit_change.sql
+-- Source: supabase/migrations/096_link_fridge_batches_to_ingredient.sql
 -- 역할: 장보기 항목 수정 시 연결 냉장고 재고를 정합성 있게 동기화합니다.
 -- 동작:
 -- 1. ingredient를 갱신하고, 식단이 참조 중이면 단위 변경을 막습니다.
@@ -9,6 +9,8 @@
 -- 5. 연결 배치를 목표 품목으로 옮기고, 비게 된 옛 품목은 식단 참조를 재연결한 뒤 소프트 삭제합니다.
 -- 6. 장보기 수량이나 단위가 바뀐 경우에만 등록 수량을 갱신하고 현재 수량에 변경분을 반영합니다.
 --    g↔kg, ml↔l 변경은 새 단위로 환산해 계산하고, 환산할 수 없는 단위 변경은 현재 수량을 초기화합니다.
+-- 7. 배치가 2개 이상이면 수량·단위를 직접 바꿀 수 없고, batch_quantities로 배치별 등록 수량만 고칩니다.
+--    장보기 수량은 활성 배치의 등록 수량 합계가 됩니다.
 create or replace function public.update_ingredient_with_fridge(
   p_ingredient_id uuid,
   p_updates jsonb default '{}'::jsonb
@@ -37,6 +39,12 @@ declare
   v_next_quantity numeric;
   v_brand_norm text;
   v_is_exclusive boolean := false;
+  v_updates jsonb := p_updates - 'batch_quantities';
+  v_requested_quantities jsonb := coalesce(p_updates->'batch_quantities', '[]'::jsonb);
+  v_active_batch_count integer := 0;
+  v_next_count numeric;
+  v_batch record;
+  v_next_initial_quantity numeric;
 begin
   select *
     into v_ingredient
@@ -54,7 +62,6 @@ begin
 
   v_household_id := v_ingredient.household_id;
   v_previous_fridge_item_id := v_ingredient.linked_fridge_item_id;
-  v_previous_batch_id := v_ingredient.linked_fridge_batch_id;
   v_previous_count := v_ingredient.count;
   v_previous_unit := v_ingredient.unit;
 
@@ -65,37 +72,97 @@ begin
       hint = 'COMMON_PERMISSION_DENIED';
   end if;
 
+  perform 1
+  from public.fridge_item_batches b
+  where b.ingredient_id = p_ingredient_id
+    and b.deleted_at is null
+  for update;
+
+  select count(*), (array_agg(b.id))[1]
+    into v_active_batch_count, v_previous_batch_id
+  from public.fridge_item_batches b
+  where b.ingredient_id = p_ingredient_id
+    and b.deleted_at is null;
+
+  -- 배치가 여럿이면 장보기 수량 하나를 어느 배치에 반영할지 정할 수 없다.
+  -- 수량은 batch_quantities로만 받고, 합계를 장보기 수량으로 저장한다.
+  if v_active_batch_count >= 2 then
+    if (p_updates ? 'unit' and (p_updates->>'unit') is distinct from v_previous_unit)
+      or (
+        not p_updates ? 'batch_quantities'
+        and p_updates ? 'count'
+        and (p_updates->>'count')::numeric is distinct from v_previous_count
+      ) then
+      raise exception using
+        errcode = 'I0008',
+        message = '배치가 여러 개인 항목은 배치별로 수량을 수정해 주세요.',
+        hint = 'INGREDIENT_QUANTITY_LOCKED_BY_BATCHES';
+    end if;
+
+    if exists (
+      select 1
+      from jsonb_array_elements(v_requested_quantities) e
+      where not exists (
+        select 1
+        from public.fridge_item_batches b
+        where b.id = (e->>'id')::uuid
+          and b.ingredient_id = p_ingredient_id
+          and b.deleted_at is null
+      )
+    ) then
+      raise exception using
+        errcode = 'F0005',
+        message = '재고 배치를 찾을 수 없습니다.',
+        hint = 'FRIDGE_BATCH_NOT_FOUND';
+    end if;
+
+    select sum(coalesce(
+      (
+        select (e->>'initial_quantity')::numeric
+        from jsonb_array_elements(v_requested_quantities) e
+        where (e->>'id')::uuid = b.id
+      ),
+      b.initial_quantity
+    ))
+      into v_next_count
+    from public.fridge_item_batches b
+    where b.ingredient_id = p_ingredient_id
+      and b.deleted_at is null;
+
+    v_updates := v_updates || jsonb_build_object('count', v_next_count);
+  end if;
+
   update public.ingredients i
   set name = case
-        when p_updates ? 'name' then coalesce(nullif(trim(p_updates->>'name'), ''), i.name)
+        when v_updates ? 'name' then coalesce(nullif(trim(v_updates->>'name'), ''), i.name)
         else i.name
       end,
       price = case
-        when p_updates ? 'price' then coalesce((p_updates->>'price')::integer, i.price)
+        when v_updates ? 'price' then coalesce((v_updates->>'price')::integer, i.price)
         else i.price
       end,
       store = case
-        when p_updates ? 'store' then (p_updates->>'store')::text
+        when v_updates ? 'store' then (v_updates->>'store')::text
         else i.store
       end,
       brand = case
-        when p_updates ? 'brand' then (p_updates->>'brand')::text
+        when v_updates ? 'brand' then (v_updates->>'brand')::text
         else i.brand
       end,
       category_id = case
-        when p_updates ? 'category_id' then public.normalize_ingredient_category_id(i.household_id, nullif(trim(p_updates->>'category_id'), '')::uuid)
+        when v_updates ? 'category_id' then public.normalize_ingredient_category_id(i.household_id, nullif(trim(v_updates->>'category_id'), '')::uuid)
         else i.category_id
       end,
       count = case
-        when p_updates ? 'count' then coalesce((p_updates->>'count')::numeric, i.count)
+        when v_updates ? 'count' then coalesce((v_updates->>'count')::numeric, i.count)
         else i.count
       end,
       unit = case
-        when p_updates ? 'unit' then coalesce(nullif(trim(p_updates->>'unit'), ''), i.unit)
+        when v_updates ? 'unit' then coalesce(nullif(trim(v_updates->>'unit'), ''), i.unit)
         else i.unit
       end,
       date = case
-        when p_updates ? 'date' then coalesce((p_updates->>'date')::date, i.date)
+        when v_updates ? 'date' then coalesce((v_updates->>'date')::date, i.date)
         else i.date
       end,
       updated_at = now()
@@ -192,10 +259,11 @@ begin
           and i2.deleted_at is null
           and (
             i2.linked_fridge_item_id = v_previous_fridge_item_id
-            or i2.linked_fridge_batch_id in (
-              select b.id
+            or exists (
+              select 1
               from public.fridge_item_batches b
               where b.fridge_item_id = v_previous_fridge_item_id
+                and b.ingredient_id = i2.id
             )
           )
       )
@@ -204,7 +272,7 @@ begin
         from public.fridge_item_batches b
         where b.fridge_item_id = v_previous_fridge_item_id
           and b.deleted_at is null
-          and b.id is distinct from v_previous_batch_id
+          and b.ingredient_id is distinct from v_ingredient.id
       )
       and not exists (
         select 1
@@ -255,6 +323,72 @@ begin
       true
     )
     returning id into v_target_fridge_item_id;
+  end if;
+
+  if v_active_batch_count >= 2 then
+    for v_batch in
+      select b.id, b.quantity, b.initial_quantity
+      from public.fridge_item_batches b
+      where b.ingredient_id = p_ingredient_id
+        and b.deleted_at is null
+    loop
+      select coalesce(sum(mbu.amount), 0)
+        into v_used_amount
+      from public.meal_batch_usages mbu
+      where mbu.batch_id = v_batch.id;
+
+      v_next_initial_quantity := coalesce(
+        (
+          select (e->>'initial_quantity')::numeric
+          from jsonb_array_elements(v_requested_quantities) e
+          where (e->>'id')::uuid = v_batch.id
+        ),
+        v_batch.initial_quantity
+      );
+
+      if v_next_initial_quantity <= 0 then
+        raise exception using
+          errcode = 'F0006',
+          message = '유효하지 않은 수량입니다.',
+          hint = 'FRIDGE_INVALID_QUANTITY';
+      end if;
+
+      if v_next_initial_quantity < v_used_amount then
+        raise exception using
+          errcode = 'F0003',
+          message = '식단에서 사용 중인 수량보다 작게 설정할 수 없습니다.',
+          hint = 'FRIDGE_QUANTITY_BELOW_MEAL_USAGE';
+      end if;
+
+      update public.fridge_item_batches
+      set fridge_item_id = v_target_fridge_item_id,
+          quantity = least(
+            greatest(v_batch.quantity + v_next_initial_quantity - v_batch.initial_quantity, 0),
+            v_next_initial_quantity - v_used_amount
+          ),
+          initial_quantity = v_next_initial_quantity,
+          purchased_date = v_ingredient.date,
+          updated_at = now()
+      where id = v_batch.id;
+
+      update public.meal_batch_usages
+      set fridge_item_id = v_target_fridge_item_id
+      where batch_id = v_batch.id
+        and fridge_item_id is distinct from v_target_fridge_item_id;
+    end loop;
+
+    update public.ingredients
+    set linked_fridge_item_id = v_target_fridge_item_id,
+        updated_at = now()
+    where id = v_ingredient.id
+    returning * into v_ingredient;
+
+    perform public.cleanup_emptied_fridge_item_after_move(
+      v_previous_fridge_item_id,
+      v_target_fridge_item_id
+    );
+
+    return v_ingredient;
   end if;
 
   if v_previous_batch_id is not null then
@@ -328,7 +462,6 @@ begin
 
       update public.ingredients
       set linked_fridge_item_id = v_target_fridge_item_id,
-          linked_fridge_batch_id = v_batch_id,
           updated_at = now()
       where id = v_ingredient.id
       returning * into v_ingredient;
@@ -344,6 +477,7 @@ begin
 
   insert into public.fridge_item_batches (
     fridge_item_id,
+    ingredient_id,
     quantity,
     purchased_date,
     expiry_date,
@@ -351,6 +485,7 @@ begin
   )
   values (
     v_target_fridge_item_id,
+    v_ingredient.id,
     v_ingredient.count,
     v_ingredient.date,
     null,
@@ -360,7 +495,6 @@ begin
 
   update public.ingredients
   set linked_fridge_item_id = v_target_fridge_item_id,
-      linked_fridge_batch_id = v_batch_id,
       updated_at = now()
   where id = v_ingredient.id
   returning * into v_ingredient;

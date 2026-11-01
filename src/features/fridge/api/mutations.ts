@@ -4,6 +4,8 @@ import { apiClient } from '@/commons/lib';
 import { Toast } from '@/commons/ui';
 
 import { fridgeItemKeys, type FridgeItem, type FridgeItemBatch } from '@/entities/fridge-item';
+import { foodExpenseKeys } from '@/entities/food-expense';
+import { ingredientKeys } from '@/entities/ingredient';
 import { mealKeys } from '@/entities/meal';
 
 import { type CategoryExpiryDefaultRow } from './queries';
@@ -112,6 +114,9 @@ export function useDeleteBatchMutation() {
     mutationFn: (id: string) => apiClient.delete(`/api/fridge/batches?id=${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fridgeItemKeys.all });
+      // 배치를 지우면 연결된 장보기 항목의 수량이 다시 계산된다
+      queryClient.invalidateQueries({ queryKey: ingredientKeys.all });
+      queryClient.invalidateQueries({ queryKey: foodExpenseKeys.all });
       queryClient.invalidateQueries({ queryKey: mealKeys.fridgeItemsAll });
     },
   });

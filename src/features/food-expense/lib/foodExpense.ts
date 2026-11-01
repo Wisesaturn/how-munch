@@ -23,7 +23,6 @@ export function toIngredient(expense: FoodExpense): Ingredient | null {
     count: expense.count ?? 1,
     unit: (expense.unit ?? 'count') as IngredientUnit,
     linked_fridge_item_id: expense.linked_fridge_item_id,
-    linked_fridge_batch_id: expense.linked_fridge_batch_id,
     deleted_at: null,
     created_at: expense.created_at,
     updated_at: expense.updated_at,
