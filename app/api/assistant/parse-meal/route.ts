@@ -2,7 +2,7 @@ import { type NextRequest } from 'next/server';
 
 import Anthropic from '@anthropic-ai/sdk';
 
-import { withAuth } from '@/apps/route';
+import { type AuthContext, withAuth } from '@/apps/route';
 
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 
@@ -10,6 +10,7 @@ import {
   buildParseMealPrompt,
   extractJsonObject,
   resolveParsedMeal,
+  type VoiceCategory,
   type VoiceFridgeItem,
 } from '@/features/voice-meal-entry';
 
@@ -74,8 +75,10 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
       })),
   }));
 
+  const categories = await fetchCategories(supabase, householdId);
+
   const anthropic = new Anthropic({ apiKey });
-  const system = buildParseMealPrompt(items, today, now);
+  const system = buildParseMealPrompt(items, today, now, categories);
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     let answer: string;
@@ -98,7 +101,9 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
     }
 
     try {
-      return apiResponse.OK(resolveParsedMeal(extractJsonObject(answer), items, { today, now }));
+      return apiResponse.OK(
+        resolveParsedMeal(extractJsonObject(answer), items, { today, now, categories }),
+      );
     } catch (err) {
       console.error(`[parse-meal] 응답 JSON 해석 실패 (${attempt}/${MAX_ATTEMPTS})`, err);
     }
@@ -106,3 +111,22 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
 
   return apiResponse.INTERNAL_ERROR('말한 내용을 정리하지 못했어요.');
 });
+
+/** 장보기 분류 목록 — 분류 목록 경로와 같이 전역 분류에 가구 분류를 code 기준으로 덮어쓴다 */
+async function fetchCategories(
+  supabase: AuthContext['supabase'],
+  householdId: string,
+): Promise<VoiceCategory[]> {
+  const { data } = await supabase
+    .from('ingredient_categories')
+    .select('id, code, name, household_id')
+    .or(`household_id.is.null,household_id.eq.${householdId}`)
+    .order('sort_order', { ascending: true });
+
+  const byCode = new Map<string, VoiceCategory>();
+  for (const row of data ?? []) {
+    if (byCode.has(row.code) && row.household_id !== householdId) continue;
+    byCode.set(row.code, { id: row.id, code: row.code, label: row.name });
+  }
+  return [...byCode.values()];
+}

@@ -18,3 +18,12 @@ export {
   type VoiceMealType,
   type VoiceUnit,
 } from './parseMeal';
+export {
+  collectPurchaseLinks,
+  resolvePurchases,
+  resolveStockUpdates,
+  type ParsedPurchase,
+  type PurchaseLink,
+  type StockUpdate,
+  type VoiceCategory,
+} from './parseExtras';

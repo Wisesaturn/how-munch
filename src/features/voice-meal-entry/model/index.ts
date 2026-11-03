@@ -1,3 +1,4 @@
+export { attachPurchaseLinks, saveVoicePurchase, saveVoiceStockUpdate } from './saveVoiceRecord';
 export {
   fetchExistingMeal,
   saveVoiceExpense,

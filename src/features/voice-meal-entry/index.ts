@@ -7,3 +7,4 @@ export {
   type ParsedMealResult,
   type VoiceFridgeItem,
 } from './lib';
+export { type VoiceCategory } from './lib';

@@ -1,3 +1,13 @@
+import {
+  collectPurchaseLinks,
+  type ParsedPurchase,
+  type PurchaseLink,
+  resolvePurchases,
+  resolveStockUpdates,
+  type StockUpdate,
+  type VoiceCategory,
+} from './parseExtras';
+
 /** 식단 끼니. entities/meal의 MealType과 같은 값 */
 export type VoiceMealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type VoiceUnit = 'count' | 'g' | 'kg' | 'ml' | 'l';
@@ -20,6 +30,9 @@ interface RawParsedMeal {
   dishes?: unknown;
   unmatched?: unknown;
   expense?: unknown;
+  purchases?: unknown;
+  purchase_store?: unknown;
+  stock_updates?: unknown;
   summary?: unknown;
 }
 
@@ -72,9 +85,19 @@ export interface ParsedMealResult {
   unmatched: Array<{ spoken: string; reason: string }>;
   stock: StockPreview[];
   expense: ParsedExpense | null;
+  /** 장보기(산 것). 저장하면 장보기 내역과 냉장고 입고가 함께 생긴다 */
+  purchases: ParsedPurchase[];
+  /** 장보기 가게 이름. 말하지 않았으면 빈 글 */
+  purchaseStore: string;
+  /** 이번에 산 재료를 바로 메뉴에 쓴 것 */
+  purchaseLinks: PurchaseLink[];
+  /** 식단과 상관없이 재고만 바꾸는 것(버림, 남은 수량) */
+  stockUpdates: StockUpdate[];
   summary: string;
   /** 정리에 쓴 냉장고 품목. 결과 화면에서 재료를 고치면 재고 미리보기를 다시 계산한다 */
   fridgeItems: VoiceFridgeItem[];
+  /** 장보기 분류 목록. 결과 화면에서 분류를 고를 때 쓴다 */
+  categories: VoiceCategory[];
 }
 
 /** 재고 미리보기 계산에 필요한 메뉴 모양 */
@@ -99,19 +122,30 @@ const NO_STOCK = '남은 구매분이 없어요';
  * @description 말한 글을 식단, 재료, 식비로 나누라는 시스템 프롬프트를 만든다.
  * 냉장고 품목은 id, 이름, 브랜드, 단위만 넘기고 구매분 선택과 재고 계산은 서버가 한다.
  */
-export function buildParseMealPrompt(items: VoiceFridgeItem[], today: string, now: string): string {
+export function buildParseMealPrompt(
+  items: VoiceFridgeItem[],
+  today: string,
+  now: string,
+  categories: VoiceCategory[] = [],
+): string {
   const itemLines = items
     .map(
       (item) => `- ${item.id} | ${item.name}${item.brand ? ` (${item.brand})` : ''} | ${item.unit}`,
     )
     .join('\n');
 
-  return `너는 가계부 앱의 식단 기록 도우미다. 사용자가 먹거나 쓴 것을 말한 한국어 문장을 읽고 아래 JSON 하나만 답한다. 설명, 코드 블록 표시는 쓰지 않는다.
+  const categoryLine = categories
+    .map((category) => `${category.code}(${category.label})`)
+    .join(', ');
+
+  return `너는 가계부 앱의 기록 도우미다. 사용자가 먹은 것, 산 것, 버린 것을 말한 한국어 문장을 읽고 아래 JSON 하나만 답한다. 설명, 코드 블록 표시는 쓰지 않는다.
 
 오늘 날짜: ${today}, 지금 시각: ${now}
 
 냉장고 품목 (id | 이름 (브랜드) | 단위):
 ${itemLines || '(없음)'}
+
+장보기 분류 코드: ${categoryLine || '(없음)'}
 
 JSON 모양:
 {
@@ -121,12 +155,15 @@ JSON 모양:
     {
       "name": "메뉴 이름",
       "ingredients": [
-        { "fridge_item_id": "위 목록의 id 또는 null", "spoken": "사용자가 말한 재료 표현", "amount": 숫자 또는 null, "depleted": true 또는 false }
+        { "fridge_item_id": "위 목록의 id 또는 null", "purchase_index": "이번에 산 품목을 바로 썼으면 purchases 순서(0부터), 아니면 null", "spoken": "사용자가 말한 재료 표현", "amount": 숫자 또는 null, "depleted": true 또는 false }
       ]
     }
   ],
   "unmatched": [{ "spoken": "목록에서 찾지 못한 재료 표현" }],
   "expense": { "price": 정수, "kind": "restaurant" | "delivery", "brand": "가게 이름 또는 null", "store": "배달 플랫폼 또는 null", "menu": "메뉴 이름 또는 null" } | null,
+  "purchases": [{ "name": "산 품목 이름", "brand": "브랜드 또는 null", "fridge_item_id": "냉장고 목록에 같은 품목이 있으면 그 id, 없으면 null", "category_code": "장보기 분류 코드", "unit": "count" | "g" | "kg" | "ml" | "l", "count": 숫자, "price": 정수 또는 null }],
+  "purchase_store": "장 본 가게 이름 또는 null",
+  "stock_updates": [{ "fridge_item_id": "위 목록의 id", "action": "discard" | "set_remaining", "remaining": 숫자 또는 null, "spoken": "사용자가 말한 표현" }],
   "summary": "정리한 내용을 해요체 한 문장으로"
 }
 
@@ -140,6 +177,11 @@ JSON 모양:
 - 외식, 배달 음식처럼 냉장고 재료가 없는 메뉴는 ingredients를 빈 배열로 둔다.
 - expense: 금액을 말했을 때만 만든다. 만 오천 원 → 15000. "시켰어", "배달", "배민", "쿠팡이츠", "요기요"가 있으면 delivery, 아니면 restaurant. store는 배달 플랫폼 이름(배민이면 "배달의민족"). 가게 이름을 말하지 않았으면 brand는 null.
 - 금액을 말하지 않았으면 expense는 null.
+- purchases: "샀어", "장 봤어", "마트에서" 처럼 산 것만 넣는다. 장보기 금액은 expense에 넣지 않는다(expense는 외식, 배달만).
+- purchases의 unit과 count: 통째로 세는 물건은 "count"와 개수(두 개 → 2, 한 판 → 1). 고기처럼 무게로 산 것은 "g"나 "kg"와 그 양(삼겹살 500그램 → g, 500). 애매하면 "count".
+- purchases의 price: 품목별 금액. 여러 개를 사고 합계만 말했으면 첫 품목에 합계를 넣고 나머지는 0. 말하지 않았으면 null.
+- 산 재료로 바로 요리해 먹었으면 그 메뉴 재료에 purchase_index를 쓰고 fridge_item_id는 null로 둔다.
+- stock_updates: 먹은 메뉴와 상관없이 재고만 바뀐 말. "버렸어", "상해서 버렸어", "(메뉴 없이) 다 먹었어" → discard. "계란 3개 남았어"처럼 남은 양을 말하면 set_remaining과 remaining. 목록에 있는 품목만 넣는다.
 - summary: 사용자가 한 일을 "~했어요"로 끝나는 해요체 한 문장, 40자 안으로 쓴다. 날짜는 오늘, 어제처럼 쓰고 배달 플랫폼은 expense.store에 쓴 이름을 그대로 쓴다. 짐작이나 감정은 넣지 않는다.`;
 }
 
@@ -202,7 +244,7 @@ function pickBatch(item: VoiceFridgeItem) {
 export function resolveParsedMeal(
   raw: RawParsedMeal,
   items: VoiceFridgeItem[],
-  { today, now }: { today: string; now: string },
+  { today, now, categories = [] }: { today: string; now: string; categories?: VoiceCategory[] },
 ): ParsedMealResult {
   const itemById = new Map(items.map((item) => [item.id, item]));
   const date = isDate(raw.date) ? raw.date : today;
@@ -234,6 +276,8 @@ export function resolveParsedMeal(
       if (typeof rawIngredient !== 'object' || rawIngredient === null) continue;
       const record = rawIngredient as Record<string, unknown>;
       const spoken = asText(record.spoken);
+      // 이번에 산 재료는 장보기를 저장한 뒤 잇는다(purchaseLinks)
+      if (record.purchase_index !== null && record.purchase_index !== undefined) continue;
       const item = itemById.get(asText(record.fridge_item_id));
       if (!item) {
         addUnmatched(spoken, NOT_IN_FRIDGE);
@@ -297,6 +341,10 @@ export function resolveParsedMeal(
   }
 
   const expense = resolveExpense(raw.expense, dishes, date);
+  const purchases = resolvePurchases(raw.purchases, items, categories);
+  const purchaseLinks = collectPurchaseLinks(raw.dishes, purchases);
+  const { updates: stockUpdates, skipped } = resolveStockUpdates(raw.stock_updates, items);
+  skipped.forEach((entry) => addUnmatched(entry.spoken, entry.reason));
   const hasIngredients = dishes.some((dish) => dish.ingredients.length > 0);
   const mealKind = getMealKind(hasIngredients, expense !== null);
 
@@ -308,8 +356,13 @@ export function resolveParsedMeal(
     unmatched,
     stock: buildStockPreview(dishes, itemById),
     expense,
+    purchases,
+    purchaseStore: asText(raw.purchase_store).slice(0, 30),
+    purchaseLinks,
+    stockUpdates,
     summary: asText(raw.summary),
     fridgeItems: items,
+    categories,
   };
 }
 

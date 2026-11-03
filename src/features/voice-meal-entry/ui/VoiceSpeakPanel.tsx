@@ -28,7 +28,7 @@ const FAILURE_MESSAGE: Record<TranscriptionFailure, string> = {
 const ORGANIZING_STEPS = [
   '말한 내용을 읽고 있어요',
   '냉장고 재료와 맞춰 보고 있어요',
-  '식단과 식비로 나누고 있어요',
+  '식단, 장보기, 식비로 나누고 있어요',
 ];
 const ORGANIZING_STEP_MS = 1600;
 
