@@ -3,6 +3,7 @@ export {
   saveVoiceExpense,
   saveVoiceMeal,
   toDraftDishes,
+  toSavableDishes,
   type VoiceDraftDish,
 } from './saveVoiceMeal';
 export { useMicrophoneLevel } from './useMicrophoneLevel';

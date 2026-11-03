@@ -19,7 +19,6 @@ import { useFridgeItemsForMealQuery } from '../api/queries';
 import {
   appendDish,
   createFridgeBatchInfoById,
-  type EditorDish,
   type FridgeBatchSelectOption,
   type FridgeItemSearchOption,
 } from '../lib';
@@ -39,8 +38,6 @@ interface MealEditorScreenProps {
   date: string;
   type: MealType;
   meal: Meal | null;
-  /** 말로 기록하기에서 넘어온 메뉴 — 기존 메뉴 뒤에 붙여 연다 */
-  draftDishes?: EditorDish[];
   /** 재료 검색 Screen 진입 핸들러 — 선택된 fridge_item_id가 그대로 반영된다 */
   onOpenFridgeItemSearch?: (
     items: FridgeItemSearchOption[],
@@ -78,7 +75,6 @@ export function MealEditorScreen({
   date,
   type,
   meal,
-  draftDishes,
   onOpenFridgeItemSearch,
   onOpenFridgeBatchSelect,
 }: MealEditorScreenProps) {
@@ -88,9 +84,7 @@ export function MealEditorScreen({
   const isEditMode = meal !== null;
   const formattedDate = format(parseISO(date), 'M월 d일', { locale: ko });
   const appBarTitle = `${formattedDate} ${MEAL_LABEL_BY_TYPE[type]} 식단`;
-  const initialDishes = draftDishes?.length
-    ? [...(meal ? toEditorDishes(meal) : []), ...draftDishes]
-    : toEditorDishes(meal);
+  const initialDishes = toEditorDishes(meal);
   const selectedFridgeItemIds = [
     ...new Set(
       initialDishes.flatMap((dish) =>

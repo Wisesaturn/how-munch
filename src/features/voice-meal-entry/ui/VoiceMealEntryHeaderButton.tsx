@@ -14,7 +14,7 @@ interface VoiceMealEntryHeaderButtonProps {
   onParsed: (result: ParsedMealResult) => void;
 }
 
-/** 식단 탭 헤더 오른쪽의 마이크 — 누르면 말로 기록하기 시트가 열린다 */
+/** 식단 탭 헤더 오른쪽의 마이크 — 누르면 음성 기록 시트가 열린다 */
 export function VoiceMealEntryHeaderButton({
   householdId,
   onParsed,
@@ -24,7 +24,7 @@ export function VoiceMealEntryHeaderButton({
       variant="ghost"
       size="icon-sm"
       onClick={() => openVoiceMealEntrySheet({ householdId, onParsed })}
-      aria-label="말로 기록하기"
+      aria-label="음성 기록"
       aria-haspopup="dialog"
       // 보이는 크기는 다른 헤더 아이콘과 맞추고, 누르는 영역만 44px로 넓힌다
       className="relative after:absolute after:-inset-1 after:content-['']"

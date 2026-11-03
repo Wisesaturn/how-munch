@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
@@ -8,15 +8,16 @@ import { ko } from 'date-fns/locale';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
 import { cn } from '@/commons/lib';
-import { Button, CTAConfirmButton, Input, SegmentControl, Switch, Toast } from '@/commons/ui';
+import { CTAConfirmButton, Input, SegmentControl, Switch, Toast } from '@/commons/ui';
 
 import { budgetKeys } from '@/entities/budget';
 import { diningExpenseKeys } from '@/entities/dining-expense';
 import { foodExpenseKeys } from '@/entities/food-expense';
 import { fridgeItemKeys } from '@/entities/fridge-item';
-import { type Meal, mealKeys, type MealType } from '@/entities/meal';
+import { mealKeys, type MealType } from '@/entities/meal';
 
 import {
+  buildStockPreview,
   type ParsedExpense,
   type ParsedMealResult,
   type StockPreview,
@@ -24,10 +25,10 @@ import {
   type VoiceUnit,
 } from '../lib';
 import {
-  fetchExistingMeal,
   saveVoiceExpense,
   saveVoiceMeal,
   toDraftDishes,
+  toSavableDishes,
   type VoiceDraftDish,
 } from '../model';
 
@@ -56,8 +57,7 @@ const MESSAGE = {
   noStock: '빠지는 재료가 없어요',
   noExpense: '금액을 말하면 식비도 함께 기록돼요',
   outMenu: '재료가 없는 메뉴는 식단 탭에 남지 않아요. 식비에 메뉴 이름을 남겨 둘게요',
-  noIngredient:
-    '냉장고 재료를 연결하지 못해 식단에는 남지 않아요. 편집 화면에서 재료를 골라 주세요',
+  noIngredient: '냉장고 재료를 연결하지 못해 식단에는 남지 않아요. 아래에서 재료를 골라 주세요',
   brandRequired: '가게 이름을 적으면 식비를 기록할 수 있어요',
   expenseFailed: '식단은 기록했지만 식비는 기록하지 못했어요. 식비만 다시 저장해 주세요',
   mealFailed: '식단을 기록하지 못했어요. 잠시 뒤 다시 저장해 주세요',
@@ -67,18 +67,17 @@ const MESSAGE = {
  * VoiceMealReview
  * -----------------------------------------------------------------------------------------------*/
 
-export interface OpenMealEditorInput {
-  date: string;
-  type: MealType;
-  meal: Meal | null;
-  draftDishes: VoiceDraftDish[];
-}
+/** 결과 화면에 넣을 식단 메뉴 편집기. 식단 편집 화면과 같은 메뉴 카드를 apps 층에서 넘겨준다 */
+export type RenderDishesEditor = (props: {
+  dishes: VoiceDraftDish[];
+  onDishesChange: (dishes: VoiceDraftDish[]) => void;
+}) => ReactNode;
 
 interface VoiceMealResultScreenProps {
   householdId: string;
   result: ParsedMealResult;
   onClose: () => void;
-  onOpenEditor: (input: OpenMealEditorInput) => void;
+  renderDishesEditor: RenderDishesEditor;
 }
 
 /**
@@ -89,7 +88,7 @@ export function VoiceMealResultScreen({
   householdId,
   result: initialResult,
   onClose,
-  onOpenEditor,
+  renderDishesEditor,
 }: VoiceMealResultScreenProps) {
   const [result, setResult] = useState(initialResult);
   /** 다시 말해 결과가 바뀌면 고친 값도 처음부터 다시 잡는다 */
@@ -106,14 +105,14 @@ export function VoiceMealResultScreen({
   }
 
   return (
-    <AppScreen className="pointer-events-auto" appBar={{ title: '말로 기록하기' }}>
+    <AppScreen className="pointer-events-auto" appBar={{ title: '음성 기록' }}>
       <VoiceMealReview
         key={revision}
         householdId={householdId}
         result={result}
         onSaved={onClose}
         onSpeakAgain={speakAgain}
-        onOpenEditor={onOpenEditor}
+        renderDishesEditor={renderDishesEditor}
       />
     </AppScreen>
   );
@@ -124,7 +123,7 @@ interface VoiceMealReviewProps {
   result: ParsedMealResult;
   onSaved: () => void;
   onSpeakAgain: () => void;
-  onOpenEditor: (input: OpenMealEditorInput) => void;
+  renderDishesEditor: RenderDishesEditor;
 }
 
 function VoiceMealReview({
@@ -132,14 +131,19 @@ function VoiceMealReview({
   result,
   onSaved,
   onSpeakAgain,
-  onOpenEditor,
+  renderDishesEditor,
 }: VoiceMealReviewProps) {
   const queryClient = useQueryClient();
-  const draftDishes = toDraftDishes(result.dishes);
-  const hasMeal = draftDishes.length > 0;
+  const [dishes, setDishes] = useState<VoiceDraftDish[]>(() => toDraftDishes(result.dishes));
+  const savableDishes = toSavableDishes(dishes);
+  const hasMeal = savableDishes.length > 0;
+  const stock = buildStockPreview(
+    savableDishes,
+    new Map(result.fridgeItems.map((item) => [item.id, item])),
+  );
 
   const [type, setType] = useState<MealType>(result.type);
-  const [isMealOn, setIsMealOn] = useState(hasMeal);
+  const [isMealOn, setIsMealOn] = useState(() => toDraftDishes(result.dishes).length > 0);
   const [isMealSaved, setIsMealSaved] = useState(false);
   const [expense, setExpense] = useState<ParsedExpense | null>(result.expense);
   const [isExpenseOn, setIsExpenseOn] = useState(result.expense !== null);
@@ -181,7 +185,7 @@ function VoiceMealReview({
 
     if (willSaveMeal) {
       try {
-        await saveVoiceMeal({ householdId, date: result.date, type, dishes: draftDishes });
+        await saveVoiceMeal({ householdId, date: result.date, type, dishes: savableDishes });
         savedMeal = true;
         setIsMealSaved(true);
       } catch (error) {
@@ -214,15 +218,6 @@ function VoiceMealReview({
     onSaved();
   }
 
-  async function openEditor() {
-    try {
-      const meal = await fetchExistingMeal(householdId, result.date, type);
-      onOpenEditor({ date: result.date, type, meal, draftDishes });
-    } catch {
-      Toast.error('편집 화면을 열지 못했어요. 잠시 뒤 다시 눌러 주세요');
-    }
-  }
-
   return (
     <>
       <div className="flex flex-col gap-5 px-4 pt-5 pb-28">
@@ -240,9 +235,7 @@ function VoiceMealReview({
         <div className="rounded-2xl border border-gray-200 bg-white px-4">
           <ReviewSection
             title="식단"
-            toggle={
-              hasMeal && !isMealSaved ? { checked: isMealOn, onChange: setIsMealOn } : undefined
-            }
+            toggle={!isMealSaved ? { checked: isMealOn, onChange: setIsMealOn } : undefined}
           >
             <dl>
               <ReceiptRow label="날짜" value={dateLabel} />
@@ -259,36 +252,16 @@ function VoiceMealReview({
               ))}
             </SegmentControl>
             {isMealSaved && <p className="text-[15px] text-emerald-700">식단은 기록했어요</p>}
-            {draftDishes.length > 0 && (
-              <dl className="flex flex-col gap-1.5">
-                {result.dishes
-                  .filter((dish) => dish.ingredients.length > 0)
-                  .map((dish) => (
-                    <ReceiptRow
-                      key={dish.name}
-                      label={dish.name}
-                      value={dish.ingredients.map(formatIngredient).join(', ')}
-                    />
-                  ))}
-              </dl>
+            {!isMealSaved && (
+              <div className={cn(!isMealOn && 'pointer-events-none opacity-50')}>
+                {renderDishesEditor({ dishes, onDishesChange: setDishes })}
+              </div>
             )}
             {outDishes.length > 0 && (
               <p className="text-[15px] leading-relaxed break-keep text-gray-500">
                 {outDishes.map((dish) => dish.name).join(', ')}:{' '}
                 {expense ? MESSAGE.outMenu : MESSAGE.noIngredient}
               </p>
-            )}
-            {hasMeal && !isMealSaved && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="self-start"
-                onClick={() => void openEditor()}
-                disabled={isSaving}
-              >
-                편집 화면에서 고치기
-              </Button>
             )}
             {result.unmatched.length > 0 && (
               <p className="text-[15px] leading-relaxed break-keep text-amber-700">
@@ -299,7 +272,7 @@ function VoiceMealReview({
           </ReviewSection>
 
           <ReviewSection title="냉장고에서 빠지는 재료">
-            {result.stock.length === 0 ? (
+            {stock.length === 0 ? (
               <p className="text-[15px] text-gray-500">{MESSAGE.noStock}</p>
             ) : (
               <dl className="flex flex-col gap-1.5">
@@ -476,11 +449,6 @@ function LabeledInput({ label, children }: { label: string; children: React.Reac
 /* -------------------------------------------------------------------------------------------------
  * Format
  * -----------------------------------------------------------------------------------------------*/
-
-function formatIngredient(ingredient: ParsedMealResult['dishes'][number]['ingredients'][number]) {
-  if (ingredient.unit === 'count') return `${ingredient.name} ${ingredient.amount}개`;
-  return `${ingredient.name} ${ingredient.usage_status === 'depleted' ? '다 씀' : '씀'}`;
-}
 
 function formatStock(stock: StockPreview) {
   const unit = UNIT_LABEL[stock.unit];

@@ -73,6 +73,15 @@ export interface ParsedMealResult {
   stock: StockPreview[];
   expense: ParsedExpense | null;
   summary: string;
+  /** 정리에 쓴 냉장고 품목. 결과 화면에서 재료를 고치면 재고 미리보기를 다시 계산한다 */
+  fridgeItems: VoiceFridgeItem[];
+}
+
+/** 재고 미리보기 계산에 필요한 메뉴 모양 */
+export interface StockPreviewDish {
+  ingredients: Array<
+    Pick<ParsedIngredient, 'fridge_item_id' | 'batch_id' | 'amount' | 'usage_status'>
+  >;
 }
 
 const MEAL_TYPES: VoiceMealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -300,6 +309,7 @@ export function resolveParsedMeal(
     stock: buildStockPreview(dishes, itemById),
     expense,
     summary: asText(raw.summary),
+    fridgeItems: items,
   };
 }
 
@@ -332,7 +342,7 @@ function resolveExpense(
 
 /** @description 식단을 저장하면 구매분마다 수량이 어떻게 바뀌는지 미리 계산한다. 저장 RPC와 같은 규칙이다 */
 export function buildStockPreview(
-  dishes: ParsedDish[],
+  dishes: StockPreviewDish[],
   itemById: Map<string, VoiceFridgeItem>,
 ): StockPreview[] {
   const byBatch = new Map<string, StockPreview>();

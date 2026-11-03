@@ -12,6 +12,7 @@ export {
   type ParsedIngredient,
   type ParsedMealResult,
   type StockPreview,
+  type StockPreviewDish,
   type VoiceExpenseKind,
   type VoiceFridgeItem,
   type VoiceMealType,

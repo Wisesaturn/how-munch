@@ -12,8 +12,20 @@ export interface VoiceDraftDish {
     batch_id: string;
     amount: number;
     usage_status: 'used' | 'depleted';
-    unit: ParsedDish['ingredients'][number]['unit'];
+    unit?: ParsedDish['ingredients'][number]['unit'];
   }>;
+}
+
+/** @description 결과 화면에서 고친 메뉴 중 저장할 수 있는 것만 남긴다. 재료를 고르지 않은 줄과 재료 없는 메뉴는 뺀다 */
+export function toSavableDishes(dishes: VoiceDraftDish[]): VoiceDraftDish[] {
+  return dishes
+    .map((dish) => ({
+      name: dish.name.trim(),
+      ingredients: dish.ingredients.filter(
+        (ingredient) => ingredient.fridge_item_id && ingredient.batch_id,
+      ),
+    }))
+    .filter((dish) => dish.ingredients.length > 0);
 }
 
 /** @description 정리 결과의 메뉴 중 냉장고 재료가 있는 것만 저장 모양으로 바꾼다. 재료 없는 메뉴는 식단 저장 규칙을 통과하지 못한다 */
@@ -52,13 +64,13 @@ function toSavedDishes(meal: Meal | null): VoiceDraftDish[] {
     .map((dish) => ({
       name: dish.name,
       ingredients: (dish.ingredients ?? [])
-        .filter((ingredient) => ingredient.fridge_items && !ingredient.is_orphaned)
+        .filter((ingredient) => ingredient.fridge_items !== null && !ingredient.is_orphaned)
         .map((ingredient) => ({
           fridge_item_id: ingredient.fridge_item_id,
           batch_id: ingredient.batch_id ?? '',
           amount: Number(ingredient.amount ?? 0),
           usage_status: ingredient.usage_status ?? 'used',
-          unit: ingredient.fridge_items!.unit,
+          unit: ingredient.fridge_items?.unit,
         })),
     }));
 }

@@ -24,7 +24,7 @@ interface OpenVoiceMealEntrySheetInput {
 }
 
 /**
- * @description 말로 기록하기 시트를 연다. 열 때마다 새로 만들어 앞서 말한 글은 남지 않는다.
+ * @description 음성 기록 시트를 연다. 열 때마다 새로 만들어 앞서 말한 글은 남지 않는다.
  * 식단 헤더와 결과 화면의 "다시 말하기"가 같은 시트를 쓴다.
  */
 export function openVoiceMealEntrySheet({ householdId, onParsed }: OpenVoiceMealEntrySheetInput) {
@@ -91,7 +91,7 @@ function VoiceMealEntrySheet({ open, onClose, householdId, onParsed }: VoiceMeal
 
   return (
     <BottomSheet open={open} onClose={close}>
-      <BottomSheet.Header heading="말로 기록하기" className="sr-only" />
+      <BottomSheet.Header heading="음성 기록" className="sr-only" />
       <BottomSheet.Content className="pt-1 pb-8">
         <VoiceSpeakPanel
           text={text}

@@ -50,6 +50,7 @@ import {
 } from '@/features/ingredient';
 import {
   MealEditorScreen,
+  MealDishesEditor,
   FridgeItemSearchScreen,
   FridgeBatchSelectScreen,
   setPendingFridgeItemCallback,
@@ -60,7 +61,6 @@ import {
   clearPendingFridgeBatchCallback,
   type FridgeItemSearchOption,
   type FridgeBatchSelectOption,
-  type MealEditorDraftDish,
 } from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
@@ -335,8 +335,6 @@ function MealEditorActivity({
     date: string;
     type: MealType;
     meal: Meal | null;
-    /** 말로 기록하기에서 넘어온 메뉴. 기존 메뉴 뒤에 붙여 연다 */
-    draftDishes?: MealEditorDraftDish[];
   };
 }) {
   const { pop, push } = useActions();
@@ -371,7 +369,6 @@ function MealEditorActivity({
       date={params.date}
       type={params.type}
       meal={params.meal}
-      draftDishes={params.draftDishes}
       onOpenFridgeItemSearch={openFridgeItemSearch}
       onOpenFridgeBatchSelect={openFridgeBatchSelect}
     />
@@ -598,7 +595,7 @@ function BudgetEditActivity({
   );
 }
 
-/** 말로 기록하기 결과 확인 — 저장하면 닫히고, "편집 화면에서 고치기"는 이 화면을 편집 화면으로 바꾼다 */
+/** 음성 기록 결과 확인 — 식단 메뉴는 식단 편집 화면과 같은 메뉴 카드로 고치고, 저장하면 닫힌다 */
 function VoiceMealResultActivity({
   params,
 }: {
@@ -607,22 +604,39 @@ function VoiceMealResultActivity({
     result: ParsedMealResult;
   };
 }) {
-  const { pop, replace } = useActions();
+  const { pop, push } = useActions();
+
+  function openFridgeItemSearch(
+    items: FridgeItemSearchOption[],
+    onSelectId: (fridgeItemId: string) => void,
+  ) {
+    setPendingFridgeItemCallback(onSelectId);
+    push('FridgeItemSearchActivity', { fieldLabel: '재료', items });
+  }
+
+  function openFridgeBatchSelect(
+    batches: FridgeBatchSelectOption[],
+    unit: IngredientUnit,
+    onSelectBatchId: (batchId: string) => void,
+  ) {
+    setPendingFridgeBatchCallback(onSelectBatchId);
+    push('FridgeBatchSelectActivity', { batches, unit });
+  }
 
   return (
     <VoiceMealResultScreen
       householdId={params.householdId}
       result={params.result}
       onClose={pop}
-      onOpenEditor={({ date, type, meal, draftDishes }) =>
-        replace('MealEditorActivity', {
-          householdId: params.householdId,
-          date,
-          type,
-          meal,
-          draftDishes,
-        })
-      }
+      renderDishesEditor={({ dishes, onDishesChange }) => (
+        <MealDishesEditor
+          householdId={params.householdId}
+          dishes={dishes}
+          onDishesChange={onDishesChange}
+          onOpenFridgeItemSearch={openFridgeItemSearch}
+          onOpenFridgeBatchSelect={openFridgeBatchSelect}
+        />
+      )}
     />
   );
 }
