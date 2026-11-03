@@ -74,6 +74,8 @@ export interface ParsedExpense {
   store: string;
   price: number;
   date: string;
+  /** 편집 화면에서 적은 메모 */
+  memo?: string;
 }
 
 export interface ParsedMealResult {

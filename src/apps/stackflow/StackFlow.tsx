@@ -7,6 +7,13 @@ import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { useActions, useActivity, stackflow } from '@stackflow/react';
 
+import {
+  resolvePendingVoiceDishesCallback,
+  resolvePendingVoiceExpenseCallback,
+  setPendingVoiceDishesCallback,
+  setPendingVoiceExpenseCallback,
+} from '@/apps/stackflow/voiceDraftCallbacks';
+
 import { type OpenPriceCalculator } from '@/commons/ui';
 
 import { type DiningExpense } from '@/entities/dining-expense';
@@ -14,6 +21,7 @@ import { type FoodExpense } from '@/entities/food-expense';
 import { type Ingredient, type IngredientUnit } from '@/entities/ingredient';
 import { type FridgeItemBatch, type FridgeItemWithBatches } from '@/entities/fridge-item';
 import { type Meal, type MealType } from '@/entities/meal';
+import { useIngredientCategoriesQuery } from '@/entities/ingredient-category';
 
 import {
   AmountCalculatorScreen,
@@ -24,8 +32,17 @@ import {
   setPendingAmountCalculatorCallback,
 } from '@/features/amount-calculator';
 import { BudgetEditScreen, BudgetScreen } from '@/features/budget';
-import { DiningExpenseAddScreen, DiningExpenseEditScreen } from '@/features/dining-expense';
-import { FoodExpenseSearchScreen, toDiningExpense, toIngredient } from '@/features/food-expense';
+import {
+  DiningExpenseAddScreen,
+  DiningExpenseDraftScreen,
+  DiningExpenseEditScreen,
+} from '@/features/dining-expense';
+import {
+  FoodExpenseItem,
+  FoodExpenseSearchScreen,
+  toDiningExpense,
+  toIngredient,
+} from '@/features/food-expense';
 import {
   FridgeBatchEditScreen,
   FridgeExpiryListScreen,
@@ -42,15 +59,18 @@ import {
   clearPendingProductNameCallback,
   IngredientAddScreen,
   IngredientEditScreen,
+  IngredientItem,
   ProductNameSearchScreen,
   resolvePendingProductNameCallback,
   setPendingProductNameCallback,
+  setPendingPromptEditCallback,
   type StagedItem,
   useIngredientBrandNamesQuery,
 } from '@/features/ingredient';
 import {
   MealEditorScreen,
-  MealDishesEditor,
+  MealDraftCard,
+  MealDraftEditorScreen,
   FridgeItemSearchScreen,
   FridgeBatchSelectScreen,
   setPendingFridgeItemCallback,
@@ -65,7 +85,13 @@ import {
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
 import { SearchSynonymSettingsScreen } from '@/features/search-synonym';
-import { type ParsedMealResult, VoiceMealResultScreen } from '@/features/voice-meal-entry';
+import {
+  type ParsedExpense,
+  type ParsedMealResult,
+  type ParsedPurchase,
+  VoiceMealResultScreen,
+  type VoiceResultAdapters,
+} from '@/features/voice-meal-entry';
 
 /** 금액 칸이 쓸 계산기 열기 함수 — 콜백을 등록한 뒤 계산기 Activity를 연다 */
 function useOpenAmountCalculator(): OpenPriceCalculator {
@@ -595,13 +621,161 @@ function BudgetEditActivity({
   );
 }
 
-/** 음성 기록 결과 확인 — 식단 메뉴는 식단 편집 화면과 같은 메뉴 카드로 고치고, 저장하면 닫힌다 */
+/** 장보기 한 줄을 영수증 항목 편집 화면이 받는 모양으로 바꾼다 */
+function toStagedItem(purchase: ParsedPurchase, date: string): StagedItem {
+  return {
+    id: 'voice-purchase',
+    name: purchase.name,
+    brand: purchase.brand,
+    price: purchase.price,
+    count: purchase.count,
+    unit: purchase.unit,
+    store: purchase.store ?? '',
+    date,
+    category_code: '',
+    category_id: purchase.category_id,
+    expiry_date: purchase.expiry_date,
+    batches: purchase.batches,
+  };
+}
+
+/** 외식비를 식비 내역 줄(FoodExpenseItem)이 받는 모양으로 바꾼다 */
+function toFoodExpense(expense: ParsedExpense, householdId: string): FoodExpense {
+  return {
+    id: 'voice-expense',
+    household_id: householdId,
+    user_id: null,
+    kind: expense.kind,
+    date: expense.date,
+    name: expense.name || null,
+    brand: expense.brand || null,
+    store: expense.store || null,
+    price: expense.price,
+    category_id: null,
+    count: null,
+    unit: null,
+    linked_fridge_item_id: null,
+    memo: expense.memo ?? null,
+    created_at: '',
+    updated_at: '',
+  };
+}
+
+/**
+ * 음성 기록 결과 확인 — 식단은 식단 탭 끼니 카드, 장보기는 영수증 추가 목록 줄, 외식비는 식비 내역 줄로 보여 주고
+ * 누르면 각각 식단 수정, 영수증 항목 편집, 외식비 입력과 같은 화면을 연다. 고친 값은 결과 화면으로 돌아온다.
+ */
 function VoiceMealResultActivity({
   params,
 }: {
   params: {
     householdId: string;
     result: ParsedMealResult;
+  };
+}) {
+  const { pop, push } = useActions();
+  const { data: categories = [] } = useIngredientCategoriesQuery(params.householdId);
+
+  const adapters: VoiceResultAdapters = {
+    renderMealCard: ({ title, dishes, onPress }) => (
+      <MealDraftCard
+        householdId={params.householdId}
+        title={title}
+        dishes={dishes}
+        onPress={onPress}
+      />
+    ),
+    renderPurchaseItem: ({ purchase }) => {
+      const category = categories.find((candidate) => candidate.id === purchase.category_id);
+      return (
+        <IngredientItem
+          name={purchase.name}
+          brand={purchase.brand}
+          price={purchase.price}
+          count={purchase.count}
+          unit={purchase.unit}
+          store={purchase.store ?? ''}
+          categoryLabel={category?.label ?? '기타'}
+          categoryEmoji={category?.emoji}
+          size="sm"
+        />
+      );
+    },
+    renderExpenseItem: ({ expense }) => (
+      <FoodExpenseItem expense={toFoodExpense(expense, params.householdId)} size="sm" />
+    ),
+    editDishes: ({ title, dishes, onDone }) => {
+      setPendingVoiceDishesCallback(onDone);
+      push('VoiceMealDraftEditorActivity', { householdId: params.householdId, title, dishes });
+    },
+    editPurchase: ({ purchase, date, onDone }) => {
+      setPendingPromptEditCallback((updates) =>
+        onDone({
+          ...purchase,
+          name: updates.name ?? purchase.name,
+          brand: updates.brand ?? purchase.brand,
+          price: updates.price ?? purchase.price,
+          count: updates.count ?? purchase.count,
+          unit: updates.unit ?? purchase.unit,
+          store: updates.store ?? purchase.store,
+          category_id: updates.category_id ?? purchase.category_id,
+          expiry_date: 'expiry_date' in updates ? updates.expiry_date : purchase.expiry_date,
+          batches: updates.batches ?? purchase.batches,
+        }),
+      );
+      push('PromptIngredientStagingEditActivity', {
+        householdId: params.householdId,
+        userId: '',
+        item: toStagedItem(purchase, date),
+        suggestions: [],
+      });
+    },
+    editExpense: ({ expense, onDone }) => {
+      setPendingVoiceExpenseCallback((values) =>
+        onDone({
+          ...expense,
+          kind: values.kind,
+          brand: values.brand,
+          name: values.name,
+          store: values.kind === 'delivery' ? values.store : '',
+          price: values.price,
+          date: values.date,
+          memo: values.memo,
+        }),
+      );
+      push('VoiceDiningExpenseDraftActivity', {
+        householdId: params.householdId,
+        expense: {
+          date: expense.date,
+          kind: expense.kind,
+          brand: expense.brand,
+          name: expense.name,
+          store: expense.store,
+          price: expense.price,
+          memo: expense.memo ?? '',
+        },
+      });
+    },
+  };
+
+  return (
+    <VoiceMealResultScreen
+      householdId={params.householdId}
+      result={params.result}
+      onClose={pop}
+      adapters={adapters}
+    />
+  );
+}
+
+/** 음성 기록 결과의 식단을 식단 수정 화면과 같은 메뉴 카드로 고친다 */
+function VoiceMealDraftEditorActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    title: string;
+    dishes: Parameters<typeof resolvePendingVoiceDishesCallback>[0];
   };
 }) {
   const { pop, push } = useActions();
@@ -624,19 +798,37 @@ function VoiceMealResultActivity({
   }
 
   return (
-    <VoiceMealResultScreen
+    <MealDraftEditorScreen
       householdId={params.householdId}
-      result={params.result}
+      title={params.title}
+      dishes={params.dishes}
       onClose={pop}
-      renderDishesEditor={({ dishes, onDishesChange }) => (
-        <MealDishesEditor
-          householdId={params.householdId}
-          dishes={dishes}
-          onDishesChange={onDishesChange}
-          onOpenFridgeItemSearch={openFridgeItemSearch}
-          onOpenFridgeBatchSelect={openFridgeBatchSelect}
-        />
-      )}
+      onDone={resolvePendingVoiceDishesCallback}
+      onOpenFridgeItemSearch={openFridgeItemSearch}
+      onOpenFridgeBatchSelect={openFridgeBatchSelect}
+    />
+  );
+}
+
+/** 음성 기록 결과의 외식비를 외식비 입력 화면과 같은 폼으로 고친다 */
+function VoiceDiningExpenseDraftActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    expense: Parameters<typeof resolvePendingVoiceExpenseCallback>[0];
+  };
+}) {
+  const { pop } = useActions();
+  const openAmountCalculator = useOpenAmountCalculator();
+
+  return (
+    <DiningExpenseDraftScreen
+      householdId={params.householdId}
+      defaultValues={params.expense}
+      onClose={pop}
+      onDone={resolvePendingVoiceExpenseCallback}
+      onOpenAmountCalculator={openAmountCalculator}
     />
   );
 }
@@ -838,6 +1030,8 @@ const appStackFlow = stackflow({
     FridgeExpiryListActivity,
     MealEditorActivity,
     VoiceMealResultActivity,
+    VoiceMealDraftEditorActivity,
+    VoiceDiningExpenseDraftActivity,
     NotificationActivity,
     NotificationSettingsActivity,
     ProfileSettingsActivity,
@@ -872,6 +1066,8 @@ const appStackFlow = stackflow({
         FridgeExpiryListActivity: '/fridge/expiry',
         MealEditorActivity: '/meal/editor',
         VoiceMealResultActivity: '/meal/voice-result',
+        VoiceMealDraftEditorActivity: '/meal/voice-result/meal',
+        VoiceDiningExpenseDraftActivity: '/meal/voice-result/dining-expense',
         NotificationActivity: '/notifications',
         NotificationSettingsActivity: '/notifications/settings',
         ProfileSettingsActivity: '/profile/settings',

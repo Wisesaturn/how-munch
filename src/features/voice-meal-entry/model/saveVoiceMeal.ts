@@ -104,5 +104,6 @@ export async function saveVoiceExpense(householdId: string, expense: ParsedExpen
     store: expense.kind === 'delivery' ? expense.store.trim() || null : null,
     price: expense.price,
     date: expense.date,
+    memo: expense.memo?.trim() || null,
   });
 }

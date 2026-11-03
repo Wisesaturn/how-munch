@@ -18,6 +18,12 @@ export interface ParsedPurchase {
   price: number;
   /** 냉장고에 같은 품목이 있으면 그 id. 저장하면 이 품목의 새 구매분으로 들어간다 */
   fridge_item_id: string | null;
+  /** 품목별 가게. 없으면 장보기 가게(purchaseStore)를 쓴다 */
+  store?: string;
+  /** 편집 화면에서 정한 유통기한. undefined면 분류 기본값, null이면 유통기한 없음 */
+  expiry_date?: string | null;
+  /** 편집 화면에서 나눈 재고 묶음 */
+  batches?: Array<{ id: string; quantity: number; expiry_date: string | null }>;
 }
 
 /** 같은 문장에서 산 재료를 바로 메뉴에 쓴 것. 장보기를 저장한 뒤 새 구매분으로 잇는다 */

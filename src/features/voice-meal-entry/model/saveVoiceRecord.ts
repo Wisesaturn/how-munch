@@ -37,10 +37,20 @@ export async function saveVoicePurchase(input: {
     brand: purchase.brand.trim() || null,
     count: purchase.count,
     unit: purchase.unit,
-    store: input.store.trim() || null,
+    store: (purchase.store ?? input.store).trim() || null,
     price: purchase.price,
+    batches: toBatchInputs(purchase),
   });
   return saved?.linked_fridge_item_id ?? null;
+}
+
+/** 장보기 추가 경로의 batches 값 — 영수증 추가 화면과 같은 규칙이다 */
+function toBatchInputs(purchase: ParsedPurchase) {
+  if (purchase.batches && purchase.batches.length > 0) {
+    return purchase.batches.map(({ quantity, expiry_date }) => ({ quantity, expiry_date }));
+  }
+  if (purchase.expiry_date === undefined) return undefined;
+  return [{ quantity: purchase.count, expiry_date: purchase.expiry_date }];
 }
 
 /** @description 재고만 바꾸는 말을 저장한다. 버림은 품목 전체를 0으로, 남은 수량은 구매분마다 고친다 */
