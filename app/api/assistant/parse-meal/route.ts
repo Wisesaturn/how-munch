@@ -1,9 +1,10 @@
 import { type NextRequest } from 'next/server';
 
-import Anthropic from '@anthropic-ai/sdk';
+import type Anthropic from '@anthropic-ai/sdk';
 
 import { type AuthContext, withAuth } from '@/apps/route';
 
+import { createAnthropic } from '@/commons/lib/anthropic';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import {
@@ -77,7 +78,7 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
 
   const categories = await fetchCategories(supabase, householdId);
 
-  const anthropic = new Anthropic({ apiKey });
+  const anthropic = createAnthropic(apiKey);
   const system = buildParseMealPrompt(items, today, now, categories);
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
