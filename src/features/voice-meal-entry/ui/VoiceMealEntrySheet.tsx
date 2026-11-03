@@ -14,6 +14,10 @@ import { useRealtimeTranscription } from '../model';
 import { VoiceSpeakPanel } from './VoiceSpeakPanel';
 
 const PARSE_FAILED = '말한 내용을 정리하지 못했어요. 마이크를 눌러 다시 말씀해주세요';
+/** 말이 끊긴 뒤 이만큼 조용하면 다 말한 것으로 보고 정리한다 */
+const SILENCE_TO_FINISH_MS = 3000;
+/** 열고 나서 이만큼 아무 말이 없으면 듣기를 멈춘다 */
+const SILENCE_TO_GIVE_UP_MS = 8000;
 /** 시트가 내려가는 움직임이 끝난 뒤 지운다 */
 const UNMOUNT_DELAY_MS = 300;
 
@@ -55,7 +59,7 @@ interface VoiceMealEntrySheetProps {
   onParsed: (result: ParsedMealResult) => void;
 }
 
-/** 열리면 바로 듣기 시작하고, 다 말한 뒤 마이크를 다시 눌러 끄면 정리 API를 부른다 */
+/** 열리면 바로 듣기 시작하고, 다 말한 뒤 마이크를 다시 눌러 끄거나 3초 동안 말이 없으면 정리 API를 부른다 */
 function VoiceMealEntrySheet({ open, onClose, householdId, onParsed }: VoiceMealEntrySheetProps) {
   const [text, setText] = useState('');
   const transcription = useRealtimeTranscription({ onTranscriptChange: setText });
@@ -74,6 +78,25 @@ function VoiceMealEntrySheet({ open, onClose, householdId, onParsed }: VoiceMeal
     transcription.stop();
     onClose();
   }
+
+  // 듣는 동안 받아쓴 글이 바뀔 때마다 시계를 다시 맞춘다. 말한 뒤 3초 조용하면 끄고 정리하고,
+  // 아무 말도 없이 8초가 지나면 듣기만 멈춘다(받아쓰기 쪽이 "인식하지 못했어요"를 띄운다)
+  const hasSpoken = text.trim().length > 0;
+  useEffect(
+    function finishOnSilence() {
+      if (transcription.status !== 'listening') return;
+      const timer = window.setTimeout(
+        () => {
+          transcription.stop();
+          if (hasSpoken) organize();
+        },
+        hasSpoken ? SILENCE_TO_FINISH_MS : SILENCE_TO_GIVE_UP_MS,
+      );
+      return () => window.clearTimeout(timer);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 글과 듣기 상태가 바뀔 때만 다시 맞춘다
+    [text, transcription.status],
+  );
 
   function organize() {
     if (!text.trim() || parseMeal.isPending) return;

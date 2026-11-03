@@ -365,7 +365,7 @@ function VoiceStatus(props: VoiceStatusProps) {
 
 function getStatusMessage({ isConnecting, isListening, hasText }: VoiceStatusProps) {
   if (isConnecting) return '마이크를 켜는 중이에요';
-  if (isListening) return '듣고 있어요. 다 말하면 마이크를 다시 눌러 주세요';
+  if (isListening) return '듣고 있어요. 말씀해주세요.';
   if (hasText) return '마이크를 누르면 이어서 말할 수 있어요';
   return '마이크를 누르고 말씀해주세요';
 }
