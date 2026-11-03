@@ -13,6 +13,7 @@ import { Alert, Button } from '@/commons/ui';
 import { useProfileQuery } from '@/entities/profile';
 
 import { useUnreadNotificationsCountQuery } from '@/features/notification';
+import { useVoiceRecordStore, VoiceMealEntryHeaderButton } from '@/features/voice-meal-entry';
 
 import { MainAppBar } from '@/modules/main-app-bar';
 
@@ -34,7 +35,7 @@ export function MainRouteAppBar() {
   const isMeal = pathname?.startsWith('/meal') ?? false;
   const { data: user } = useUserSuspenseQuery();
   const { data: unreadCount = 0 } = useUnreadNotificationsCountQuery(user.id);
-  const { data: profile } = useProfileQuery(isStore ? user.id : null);
+  const { data: profile } = useProfileQuery(isStore || isMeal ? user.id : null);
 
   if (!title) return null;
 
@@ -114,14 +115,28 @@ export function MainRouteAppBar() {
         title={title}
         className="mx-0"
         right={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => stackFlowActions.push('NotificationActivity', {})}
-            aria-label="알림 열기"
-          >
-            <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
-          </Button>
+          <div className="flex items-center gap-1">
+            {profile?.household_id && (
+              <VoiceMealEntryHeaderButton
+                householdId={profile.household_id}
+                onParsed={(result) => {
+                  // 결과는 params(URL)로 넘기면 깨지므로 스토어에 두고 화면만 연다
+                  useVoiceRecordStore.getState().start(result);
+                  stackFlowActions.push('VoiceMealResultActivity', {
+                    householdId: profile.household_id!,
+                  });
+                }}
+              />
+            )}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => stackFlowActions.push('NotificationActivity', {})}
+              aria-label="알림 열기"
+            >
+              <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
+            </Button>
+          </div>
         }
       />
     );

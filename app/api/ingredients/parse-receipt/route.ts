@@ -1,9 +1,10 @@
 import { type NextRequest } from 'next/server';
 
-import Anthropic from '@anthropic-ai/sdk';
+import type Anthropic from '@anthropic-ai/sdk';
 
 import { withAuth } from '@/apps/route';
 
+import { createAnthropic } from '@/commons/lib/anthropic';
 import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import { type IngredientCategoryOption } from '@/entities/ingredient-category';
@@ -52,7 +53,7 @@ export const POST = withAuth(async (req: NextRequest) => {
     return apiResponse.BAD_REQUEST('CMN_002', '카테고리 정보가 필요합니다.');
   }
 
-  const anthropic = new Anthropic({ apiKey });
+  const anthropic = createAnthropic(apiKey);
 
   let text: string;
   try {
