@@ -60,6 +60,7 @@ import {
   clearPendingFridgeBatchCallback,
   type FridgeItemSearchOption,
   type FridgeBatchSelectOption,
+  type MealEditorDraftDish,
 } from '@/features/meal';
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
@@ -333,6 +334,8 @@ function MealEditorActivity({
     date: string;
     type: MealType;
     meal: Meal | null;
+    /** 말로 기록하기에서 넘어온 메뉴. 기존 메뉴 뒤에 붙여 연다 */
+    draftDishes?: MealEditorDraftDish[];
   };
 }) {
   const { pop, push } = useActions();
@@ -367,6 +370,7 @@ function MealEditorActivity({
       date={params.date}
       type={params.type}
       meal={params.meal}
+      draftDishes={params.draftDishes}
       onOpenFridgeItemSearch={openFridgeItemSearch}
       onOpenFridgeBatchSelect={openFridgeBatchSelect}
     />

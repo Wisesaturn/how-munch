@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useRef } from 'react';
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 import { Mic, MicOff, X } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
 
-import { type TranscriptionFailure, useMicrophoneLevel, useRealtimeTranscription } from '../model';
+import {
+  type TranscriptionFailure,
+  useMicrophoneLevel,
+  type useRealtimeTranscription,
+} from '../model';
 
 /* -------------------------------------------------------------------------------------------------
  * Constants
@@ -26,63 +30,26 @@ const BAR_COUNT = 5;
 const BAR_REST_SCALE = 0.14;
 
 /* -------------------------------------------------------------------------------------------------
- * VoiceMealEntryOverlay
+ * VoiceSpeakPanel
  * -----------------------------------------------------------------------------------------------*/
 
-interface VoiceMealEntryOverlayProps {
-  open: boolean;
+interface VoiceSpeakPanelProps {
+  text: string;
+  onTextChange: (text: string) => void;
+  transcription: ReturnType<typeof useRealtimeTranscription>;
   onClose: () => void;
-  /** 닫히는 움직임이 끝난 뒤 부른다 */
-  onExited: () => void;
 }
 
 /**
- * 화면을 어둡게 덮고 아래에서 말하기 영역을 올린다.
- * 열리면 바로 듣기 시작하고, 말하는 동안 받아쓴 글이 채워지며 마이크 양옆 게이지가 말소리 세기에 맞춰 움직인다.
+ * 말하기 시트 안쪽 — 안내, 받아쓴 글, 큰 마이크와 양옆 음량 게이지.
+ * 게이지는 마이크 입력 세기에 맞춰 움직이고, 권한이 없으면 꺼진 마이크와 글로 적는 길을 안내한다.
  */
-export function VoiceMealEntryOverlay({ open, onClose, onExited }: VoiceMealEntryOverlayProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  return (
-    <AnimatePresence onExitComplete={onExited}>
-      {open && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <motion.div
-            aria-hidden
-            className="absolute inset-0 bg-gray-950/45 backdrop-blur-[3px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
-          />
-          <motion.div
-            className="relative mx-auto w-full max-w-[480px]"
-            initial={prefersReducedMotion ? { opacity: 0 } : { y: '100%' }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { y: 0 }}
-            exit={prefersReducedMotion ? { opacity: 0 } : { y: '100%' }}
-            transition={
-              prefersReducedMotion
-                ? { duration: 0.15 }
-                : { type: 'spring', stiffness: 420, damping: 38, mass: 0.9 }
-            }
-          >
-            <VoicePanel onClose={onClose} />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-/* -------------------------------------------------------------------------------------------------
- * VoicePanel
- * -----------------------------------------------------------------------------------------------*/
-
-function VoicePanel({ onClose }: { onClose: () => void }) {
-  const headingId = useId();
-  const [text, setText] = useState('');
-  const transcription = useRealtimeTranscription({ onTranscriptChange: setText });
+export function VoiceSpeakPanel({
+  text,
+  onTextChange,
+  transcription,
+  onClose,
+}: VoiceSpeakPanelProps) {
   const prefersReducedMotion = useReducedMotion();
 
   const isListening = transcription.status === 'listening';
@@ -112,32 +79,6 @@ function VoicePanel({ onClose }: { onClose: () => void }) {
     },
   });
 
-  // 열리자마자 듣기 시작한다. 개발 모드에서 effect가 두 번 돌아도 한 번만 연결한다
-  const hasAutoStartedRef = useRef(false);
-  useEffect(function startListeningOnOpen() {
-    if (hasAutoStartedRef.current || !transcription.isSupported) return;
-    hasAutoStartedRef.current = true;
-    void transcription.start('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 처음 열릴 때 한 번만
-  }, []);
-
-  function close() {
-    transcription.stop();
-    onClose();
-  }
-
-  const closeRef = useRef(close);
-  useEffect(function keepLatestClose() {
-    closeRef.current = close;
-  });
-  useEffect(function closeOnEscape() {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') closeRef.current();
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   function toggleMicrophone() {
     if (transcription.status === 'idle') {
       void transcription.start(text);
@@ -147,27 +88,19 @@ function VoicePanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <section
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={headingId}
-      className="rounded-t-[28px] bg-white px-6 pt-3 pb-[max(28px,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(15,23,42,0.18)]"
-    >
+    <div className="flex flex-col">
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={close}
+          onClick={onClose}
           aria-label="닫기"
-          className="-mr-2 flex size-11 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 active:bg-gray-100"
+          className="-mt-2 -mr-2 flex size-11 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 active:bg-gray-100"
         >
           <X className="size-6" aria-hidden />
         </button>
       </div>
 
-      <h2
-        id={headingId}
-        className="text-center text-[22px] leading-8 font-semibold break-keep text-gray-900"
-      >
+      <h2 className="text-center text-[22px] leading-8 font-semibold break-keep text-gray-900">
         소비한 재료를 말해주세요
       </h2>
       <VoiceStatus
@@ -179,7 +112,7 @@ function VoicePanel({ onClose }: { onClose: () => void }) {
 
       <textarea
         value={text}
-        onChange={(event) => setText(event.target.value)}
+        onChange={(event) => onTextChange(event.target.value)}
         readOnly={isListening || isConnecting}
         placeholder="예: 양파 반 개랑 돼지고기 200g 썼어"
         aria-label="소비한 재료"
@@ -222,7 +155,7 @@ function VoicePanel({ onClose }: { onClose: () => void }) {
         </div>
         <EqualizerBars side="right" barRefs={barRefs} isActive={isListening} />
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -302,6 +235,6 @@ function getStatusMessage({
 }: Omit<VoiceStatusProps, 'failure'>) {
   if (isConnecting) return '마이크를 켜는 중이에요';
   if (isListening) return '듣고 있어요';
-  if (hasText) return '더 말하려면 마이크를 눌러 주세요';
+  if (hasText) return '다 말했으면 정리하기를 눌러 주세요';
   return '마이크를 누르고 말해 주세요';
 }

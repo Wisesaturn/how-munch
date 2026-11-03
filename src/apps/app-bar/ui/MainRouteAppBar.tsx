@@ -35,7 +35,7 @@ export function MainRouteAppBar() {
   const isMeal = pathname?.startsWith('/meal') ?? false;
   const { data: user } = useUserSuspenseQuery();
   const { data: unreadCount = 0 } = useUnreadNotificationsCountQuery(user.id);
-  const { data: profile } = useProfileQuery(isStore ? user.id : null);
+  const { data: profile } = useProfileQuery(isStore || isMeal ? user.id : null);
 
   if (!title) return null;
 
@@ -116,7 +116,20 @@ export function MainRouteAppBar() {
         className="mx-0"
         right={
           <div className="flex items-center gap-1">
-            <VoiceMealEntryHeaderButton />
+            {profile?.household_id && (
+              <VoiceMealEntryHeaderButton
+                householdId={profile.household_id}
+                onOpenEditor={({ date, type, meal, draftDishes }) =>
+                  stackFlowActions.push('MealEditorActivity', {
+                    householdId: profile.household_id!,
+                    date,
+                    type,
+                    meal,
+                    draftDishes,
+                  })
+                }
+              />
+            )}
             <Button
               variant="ghost"
               size="icon-sm"

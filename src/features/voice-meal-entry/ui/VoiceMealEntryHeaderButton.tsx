@@ -5,21 +5,43 @@ import { overlay } from 'overlay-kit';
 
 import { Button } from '@/commons/ui';
 
-import { VoiceMealEntryOverlay } from './VoiceMealEntryOverlay';
+import { VoiceMealEntrySheet } from './VoiceMealEntrySheet';
+import { type OpenMealEditorInput } from './VoiceMealReview';
 
-/** 식단 탭 헤더 오른쪽의 마이크 — 누르면 화면을 덮는 말하기 영역이 열린다 */
-export function VoiceMealEntryHeaderButton() {
-  function openOverlay() {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <VoiceMealEntryOverlay open={isOpen} onClose={close} onExited={unmount} />
-    ));
+interface VoiceMealEntryHeaderButtonProps {
+  householdId: string;
+  /** "편집 화면에서 고치기" — 정리한 메뉴를 채운 식단 편집 화면을 연다 */
+  onOpenEditor: (input: OpenMealEditorInput) => void;
+}
+
+/** 식단 탭 헤더 오른쪽의 마이크 — 누르면 말로 기록하기 시트가 열린다 */
+export function VoiceMealEntryHeaderButton({
+  householdId,
+  onOpenEditor,
+}: VoiceMealEntryHeaderButtonProps) {
+  function openSheet() {
+    overlay.open(({ isOpen, close, unmount }) => {
+      function closeSheet() {
+        close();
+        window.setTimeout(unmount, 300);
+      }
+
+      return (
+        <VoiceMealEntrySheet
+          open={isOpen}
+          onClose={closeSheet}
+          householdId={householdId}
+          onOpenEditor={onOpenEditor}
+        />
+      );
+    });
   }
 
   return (
     <Button
       variant="ghost"
       size="icon-sm"
-      onClick={openOverlay}
+      onClick={openSheet}
       aria-label="말로 기록하기"
       aria-haspopup="dialog"
       // 보이는 크기는 다른 헤더 아이콘과 맞추고, 누르는 영역만 44px로 넓힌다

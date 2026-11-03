@@ -16,7 +16,11 @@ export { MealEditorScreen } from './ui/MealEditorScreen';
 export { FridgeItemSearchScreen } from './ui/FridgeItemSearchScreen';
 export { FridgeBatchSelectScreen } from './ui/FridgeBatchSelectScreen';
 
-export type { FridgeBatchSelectOption, FridgeItemSearchOption } from './lib';
+export type {
+  EditorDish as MealEditorDraftDish,
+  FridgeBatchSelectOption,
+  FridgeItemSearchOption,
+} from './lib';
 export {
   setPendingFridgeItemCallback,
   resolvePendingFridgeItemCallback,
