@@ -9,6 +9,7 @@ import { stackFlowActions } from '@/apps/stackflow/StackFlow';
 import { type Meal, type MealType } from '@/entities/meal';
 
 import { MealCardList, MealDateStrip } from '@/features/meal';
+import { VoiceMealEntryButton } from '@/features/voice-meal-entry';
 
 interface MealPageProps {
   householdId: string;
@@ -30,6 +31,7 @@ export function MealPage({ householdId }: MealPageProps) {
         selectedDate={selectedDate}
         onSelectedDateChange={setSelectedDate}
       />
+      <VoiceMealEntryButton />
       <MealCardList
         householdId={householdId}
         selectedDate={selectedDate}
