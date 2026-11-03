@@ -1,3 +1,4 @@
+export { useMicrophoneLevel } from './useMicrophoneLevel';
 export {
   useRealtimeTranscription,
   type TranscriptionFailure,

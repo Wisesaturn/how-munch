@@ -1,1 +1,1 @@
-export { VoiceMealEntryButton } from './ui/VoiceMealEntryButton';
+export { VoiceMealEntryHeaderButton } from './ui/VoiceMealEntryHeaderButton';

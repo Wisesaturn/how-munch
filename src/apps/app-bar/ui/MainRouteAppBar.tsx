@@ -13,6 +13,7 @@ import { Alert, Button } from '@/commons/ui';
 import { useProfileQuery } from '@/entities/profile';
 
 import { useUnreadNotificationsCountQuery } from '@/features/notification';
+import { VoiceMealEntryHeaderButton } from '@/features/voice-meal-entry';
 
 import { MainAppBar } from '@/modules/main-app-bar';
 
@@ -114,14 +115,17 @@ export function MainRouteAppBar() {
         title={title}
         className="mx-0"
         right={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => stackFlowActions.push('NotificationActivity', {})}
-            aria-label="알림 열기"
-          >
-            <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
-          </Button>
+          <div className="flex items-center gap-1">
+            <VoiceMealEntryHeaderButton />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => stackFlowActions.push('NotificationActivity', {})}
+              aria-label="알림 열기"
+            >
+              <Alert hasUnread={unreadCount > 0} unreadCount={unreadCount} />
+            </Button>
+          </div>
         }
       />
     );
