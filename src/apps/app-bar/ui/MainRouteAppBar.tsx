@@ -119,13 +119,10 @@ export function MainRouteAppBar() {
             {profile?.household_id && (
               <VoiceMealEntryHeaderButton
                 householdId={profile.household_id}
-                onOpenEditor={({ date, type, meal, draftDishes }) =>
-                  stackFlowActions.push('MealEditorActivity', {
+                onParsed={(result) =>
+                  stackFlowActions.push('VoiceMealResultActivity', {
                     householdId: profile.household_id!,
-                    date,
-                    type,
-                    meal,
-                    draftDishes,
+                    result,
                   })
                 }
               />

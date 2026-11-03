@@ -65,6 +65,7 @@ import {
 import { NotificationScreen, NotificationSettingsScreen } from '@/features/notification';
 import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
 import { SearchSynonymSettingsScreen } from '@/features/search-synonym';
+import { type ParsedMealResult, VoiceMealResultScreen } from '@/features/voice-meal-entry';
 
 /** 금액 칸이 쓸 계산기 열기 함수 — 콜백을 등록한 뒤 계산기 Activity를 연다 */
 function useOpenAmountCalculator(): OpenPriceCalculator {
@@ -597,6 +598,35 @@ function BudgetEditActivity({
   );
 }
 
+/** 말로 기록하기 결과 확인 — 저장하면 닫히고, "편집 화면에서 고치기"는 이 화면을 편집 화면으로 바꾼다 */
+function VoiceMealResultActivity({
+  params,
+}: {
+  params: {
+    householdId: string;
+    result: ParsedMealResult;
+  };
+}) {
+  const { pop, replace } = useActions();
+
+  return (
+    <VoiceMealResultScreen
+      householdId={params.householdId}
+      result={params.result}
+      onClose={pop}
+      onOpenEditor={({ date, type, meal, draftDishes }) =>
+        replace('MealEditorActivity', {
+          householdId: params.householdId,
+          date,
+          type,
+          meal,
+          draftDishes,
+        })
+      }
+    />
+  );
+}
+
 function DiningExpenseAddActivity({
   params,
 }: {
@@ -793,6 +823,7 @@ const appStackFlow = stackflow({
     FridgeFilterSettingsActivity,
     FridgeExpiryListActivity,
     MealEditorActivity,
+    VoiceMealResultActivity,
     NotificationActivity,
     NotificationSettingsActivity,
     ProfileSettingsActivity,
@@ -826,6 +857,7 @@ const appStackFlow = stackflow({
         FridgeFilterSettingsActivity: '/fridge/filter/settings',
         FridgeExpiryListActivity: '/fridge/expiry',
         MealEditorActivity: '/meal/editor',
+        VoiceMealResultActivity: '/meal/voice-result',
         NotificationActivity: '/notifications',
         NotificationSettingsActivity: '/notifications/settings',
         ProfileSettingsActivity: '/profile/settings',

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { format } from 'date-fns';
+import { overlay } from 'overlay-kit';
 
 import { BottomSheet, Button } from '@/commons/ui';
 
@@ -10,35 +11,57 @@ import { useParseMealMutation } from '../api/mutations';
 import { type ParsedMealResult } from '../lib';
 import { useRealtimeTranscription } from '../model';
 
-import { type OpenMealEditorInput, VoiceMealReview } from './VoiceMealReview';
 import { VoiceSpeakPanel } from './VoiceSpeakPanel';
 
 const PARSE_FAILED =
   '말한 내용을 정리하지 못했어요. 잠시 뒤 다시 시도하거나 글을 고쳐서 다시 정리해 주세요';
+/** 시트가 내려가는 움직임이 끝난 뒤 지운다 */
+const UNMOUNT_DELAY_MS = 300;
+
+interface OpenVoiceMealEntrySheetInput {
+  householdId: string;
+  /** 정리가 끝나면 시트를 닫고 결과를 넘긴다 */
+  onParsed: (result: ParsedMealResult) => void;
+}
+
+/**
+ * @description 말로 기록하기 시트를 연다. 열 때마다 새로 만들어 앞서 말한 글은 남지 않는다.
+ * 식단 헤더와 결과 화면의 "다시 말하기"가 같은 시트를 쓴다.
+ */
+export function openVoiceMealEntrySheet({ householdId, onParsed }: OpenVoiceMealEntrySheetInput) {
+  overlay.open(({ isOpen, close, unmount }) => {
+    function closeSheet() {
+      close();
+      window.setTimeout(unmount, UNMOUNT_DELAY_MS);
+    }
+
+    return (
+      <VoiceMealEntrySheet
+        open={isOpen}
+        onClose={closeSheet}
+        householdId={householdId}
+        onParsed={(result) => {
+          closeSheet();
+          onParsed(result);
+        }}
+      />
+    );
+  });
+}
 
 interface VoiceMealEntrySheetProps {
   open: boolean;
   onClose: () => void;
   householdId: string;
-  onOpenEditor: (input: OpenMealEditorInput) => void;
+  onParsed: (result: ParsedMealResult) => void;
 }
 
-/**
- * 말로 기록하기 시트. 열리면 바로 듣기 시작하고, "정리하기"를 누르면 같은 시트가 결과 확인으로 바뀐다.
- * 받아쓴 글은 "다시 말하기"로 돌아와도 남아 있다.
- */
-export function VoiceMealEntrySheet({
-  open,
-  onClose,
-  householdId,
-  onOpenEditor,
-}: VoiceMealEntrySheetProps) {
+/** 열리면 바로 듣기 시작하고, "정리하기"를 누르면 듣기를 멈추고 정리 API를 부른다 */
+function VoiceMealEntrySheet({ open, onClose, householdId, onParsed }: VoiceMealEntrySheetProps) {
   const [text, setText] = useState('');
-  const [result, setResult] = useState<ParsedMealResult | null>(null);
   const transcription = useRealtimeTranscription({ onTranscriptChange: setText });
   const parseMeal = useParseMealMutation();
 
-  const isListening = transcription.status === 'listening';
   const isConnecting = transcription.status === 'connecting';
 
   // 열리자마자 듣기 시작한다. 개발 모드에서 effect가 두 번 돌아도 한 번만 연결한다
@@ -65,61 +88,39 @@ export function VoiceMealEntrySheet({
         today: format(now, 'yyyy-MM-dd'),
         now: format(now, 'HH:mm'),
       },
-      { onSuccess: setResult },
+      { onSuccess: onParsed },
     );
   }
 
   return (
     <BottomSheet open={open} onClose={close}>
       <BottomSheet.Header heading="말로 기록하기" className="sr-only" />
-      {result ? (
-        <VoiceMealReview
-          householdId={householdId}
-          result={result}
-          onSaved={close}
-          onSpeakAgain={() => setResult(null)}
-          onOpenEditor={(input) => {
-            close();
-            onOpenEditor(input);
-          }}
+      <BottomSheet.Content className="pt-1 pb-6">
+        <VoiceSpeakPanel
+          text={text}
+          onTextChange={setText}
+          transcription={transcription}
+          isOrganizing={parseMeal.isPending}
+          onClose={close}
         />
-      ) : (
-        <>
-          <BottomSheet.Content className="pt-1 pb-6">
-            <VoiceSpeakPanel
-              text={text}
-              onTextChange={setText}
-              transcription={transcription}
-              onClose={close}
-            />
-          </BottomSheet.Content>
-          <BottomSheet.Footer>
-            {parseMeal.isPending && (
-              <p aria-live="polite" className="text-center text-[15px] break-keep text-gray-600">
-                말한 내용을 식단, 재고, 식비로 나누는 중이에요
-              </p>
-            )}
-            {parseMeal.isError && (
-              <p role="alert" className="text-center text-[15px] break-keep text-red-600">
-                {PARSE_FAILED}
-              </p>
-            )}
-            <Button
-              type="button"
-              color="primary"
-              size="lg"
-              className="w-full text-base"
-              onClick={organize}
-              disabled={!text.trim() || isConnecting || parseMeal.isPending}
-            >
-              {parseMeal.isPending ? '정리하는 중이에요' : '정리하기'}
-            </Button>
-            {isListening && (
-              <span className="sr-only">정리하기를 누르면 듣기를 멈추고 정리해요</span>
-            )}
-          </BottomSheet.Footer>
-        </>
-      )}
+      </BottomSheet.Content>
+      <BottomSheet.Footer>
+        {parseMeal.isError && (
+          <p role="alert" className="text-center text-[15px] break-keep text-red-600">
+            {PARSE_FAILED}
+          </p>
+        )}
+        <Button
+          type="button"
+          color="primary"
+          size="lg"
+          className="w-full text-base"
+          onClick={organize}
+          disabled={!text.trim() || isConnecting || parseMeal.isPending}
+        >
+          {parseMeal.isPending ? '정리하는 중이에요' : '정리하기'}
+        </Button>
+      </BottomSheet.Footer>
     </BottomSheet>
   );
 }

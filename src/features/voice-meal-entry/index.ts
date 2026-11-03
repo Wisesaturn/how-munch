@@ -1,5 +1,5 @@
 export { VoiceMealEntryHeaderButton } from './ui/VoiceMealEntryHeaderButton';
-export { type OpenMealEditorInput } from './ui/VoiceMealReview';
+export { type OpenMealEditorInput, VoiceMealResultScreen } from './ui/VoiceMealResultScreen';
 export {
   buildParseMealPrompt,
   extractJsonObject,

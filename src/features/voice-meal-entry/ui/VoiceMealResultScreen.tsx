@@ -5,9 +5,10 @@ import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { AppScreen } from '@stackflow/plugin-basic-ui';
 
 import { cn } from '@/commons/lib';
-import { BottomSheet, Button, Input, SegmentControl, Switch, Toast } from '@/commons/ui';
+import { Button, CTAConfirmButton, Input, SegmentControl, Switch, Toast } from '@/commons/ui';
 
 import { budgetKeys } from '@/entities/budget';
 import { diningExpenseKeys } from '@/entities/dining-expense';
@@ -29,6 +30,8 @@ import {
   toDraftDishes,
   type VoiceDraftDish,
 } from '../model';
+
+import { openVoiceMealEntrySheet } from './VoiceMealEntrySheet';
 
 /* -------------------------------------------------------------------------------------------------
  * Constants
@@ -71,6 +74,51 @@ export interface OpenMealEditorInput {
   draftDishes: VoiceDraftDish[];
 }
 
+interface VoiceMealResultScreenProps {
+  householdId: string;
+  result: ParsedMealResult;
+  onClose: () => void;
+  onOpenEditor: (input: OpenMealEditorInput) => void;
+}
+
+/**
+ * 정리 결과 화면 "이렇게 기록할까요?" — 식단, 냉장고에서 빠지는 재료, 식비를 확인하고 고친 뒤 저장한다.
+ * "다시 말하기"는 이 화면 위에 말하기 시트를 새로 열고, 정리가 끝나면 결과를 새것으로 바꾼다.
+ */
+export function VoiceMealResultScreen({
+  householdId,
+  result: initialResult,
+  onClose,
+  onOpenEditor,
+}: VoiceMealResultScreenProps) {
+  const [result, setResult] = useState(initialResult);
+  /** 다시 말해 결과가 바뀌면 고친 값도 처음부터 다시 잡는다 */
+  const [revision, setRevision] = useState(0);
+
+  function speakAgain() {
+    openVoiceMealEntrySheet({
+      householdId,
+      onParsed: (nextResult) => {
+        setResult(nextResult);
+        setRevision((current) => current + 1);
+      },
+    });
+  }
+
+  return (
+    <AppScreen className="pointer-events-auto" appBar={{ title: '말로 기록하기' }}>
+      <VoiceMealReview
+        key={revision}
+        householdId={householdId}
+        result={result}
+        onSaved={onClose}
+        onSpeakAgain={speakAgain}
+        onOpenEditor={onOpenEditor}
+      />
+    </AppScreen>
+  );
+}
+
 interface VoiceMealReviewProps {
   householdId: string;
   result: ParsedMealResult;
@@ -79,8 +127,7 @@ interface VoiceMealReviewProps {
   onOpenEditor: (input: OpenMealEditorInput) => void;
 }
 
-/** 정리 결과 "이렇게 기록할까요?" — 식단, 냉장고에서 빠지는 재료, 식비를 확인하고 고친 뒤 저장한다 */
-export function VoiceMealReview({
+function VoiceMealReview({
   householdId,
   result,
   onSaved,
@@ -178,7 +225,7 @@ export function VoiceMealReview({
 
   return (
     <>
-      <BottomSheet.Content className="flex flex-col gap-4 pt-1">
+      <div className="flex flex-col gap-4 px-4 pt-4 pb-28">
         <div>
           <h2 className="text-center text-[22px] leading-8 font-semibold break-keep text-gray-900">
             이렇게 기록할까요?
@@ -228,6 +275,18 @@ export function VoiceMealReview({
               {outDishes.map((dish) => dish.name).join(', ')}:{' '}
               {expense ? MESSAGE.outMenu : MESSAGE.noIngredient}
             </p>
+          )}
+          {hasMeal && !isMealSaved && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="self-start"
+              onClick={() => void openEditor()}
+              disabled={isSaving}
+            >
+              편집 화면에서 고치기
+            </Button>
           )}
           {result.unmatched.length > 0 && (
             <p className="text-[15px] leading-relaxed break-keep text-amber-700">
@@ -327,14 +386,22 @@ export function VoiceMealReview({
             <p className="text-[15px] text-gray-500">{MESSAGE.noExpense}</p>
           )}
         </ReviewSection>
-      </BottomSheet.Content>
+      </div>
 
-      <BottomSheet.Footer>
-        <Button
+      <CTAConfirmButton>
+        <CTAConfirmButton.Left
           type="button"
-          color="primary"
-          size="lg"
-          className="w-full text-base"
+          color="cancel"
+          variant="subtle"
+          onClick={onSpeakAgain}
+          disabled={isSaving}
+        >
+          다시 말하기
+        </CTAConfirmButton.Left>
+        <CTAConfirmButton.Right
+          type="button"
+          color="confirm"
+          variant="filled"
           onClick={() => void save()}
           disabled={
             isSaving ||
@@ -342,33 +409,9 @@ export function VoiceMealReview({
             (willSaveExpense && expense.price <= 0)
           }
         >
-          {isSaving ? '저장하는 중이에요' : '저장'}
-        </Button>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="flex-1 text-base"
-            onClick={onSpeakAgain}
-            disabled={isSaving}
-          >
-            다시 말하기
-          </Button>
-          {hasMeal && !isMealSaved && (
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="flex-1 text-base"
-              onClick={() => void openEditor()}
-              disabled={isSaving}
-            >
-              편집 화면에서 고치기
-            </Button>
-          )}
-        </div>
-      </BottomSheet.Footer>
+          {isSaving ? '저장하는 중' : '저장'}
+        </CTAConfirmButton.Right>
+      </CTAConfirmButton>
     </>
   );
 }
