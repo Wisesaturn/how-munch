@@ -13,7 +13,7 @@ import { Alert, Button } from '@/commons/ui';
 import { useProfileQuery } from '@/entities/profile';
 
 import { useUnreadNotificationsCountQuery } from '@/features/notification';
-import { VoiceMealEntryHeaderButton } from '@/features/voice-meal-entry';
+import { useVoiceRecordStore, VoiceMealEntryHeaderButton } from '@/features/voice-meal-entry';
 
 import { MainAppBar } from '@/modules/main-app-bar';
 
@@ -119,12 +119,13 @@ export function MainRouteAppBar() {
             {profile?.household_id && (
               <VoiceMealEntryHeaderButton
                 householdId={profile.household_id}
-                onParsed={(result) =>
+                onParsed={(result) => {
+                  // 결과는 params(URL)로 넘기면 깨지므로 스토어에 두고 화면만 연다
+                  useVoiceRecordStore.getState().start(result);
                   stackFlowActions.push('VoiceMealResultActivity', {
                     householdId: profile.household_id!,
-                    result,
-                  })
-                }
+                  });
+                }}
               />
             )}
             <Button

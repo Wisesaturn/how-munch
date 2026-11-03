@@ -87,7 +87,6 @@ import { ProfileEditScreen, ProfileSettingsScreen } from '@/features/profile';
 import { SearchSynonymSettingsScreen } from '@/features/search-synonym';
 import {
   type ParsedExpense,
-  type ParsedMealResult,
   type ParsedPurchase,
   VoiceMealResultScreen,
   type VoiceResultAdapters,
@@ -670,7 +669,6 @@ function VoiceMealResultActivity({
 }: {
   params: {
     householdId: string;
-    result: ParsedMealResult;
   };
 }) {
   const { pop, push } = useActions();
@@ -759,12 +757,7 @@ function VoiceMealResultActivity({
   };
 
   return (
-    <VoiceMealResultScreen
-      householdId={params.householdId}
-      result={params.result}
-      onClose={pop}
-      adapters={adapters}
-    />
+    <VoiceMealResultScreen householdId={params.householdId} onClose={pop} adapters={adapters} />
   );
 }
 

@@ -11,3 +11,4 @@ export {
   type VoiceFridgeItem,
 } from './lib';
 export { type VoiceCategory } from './lib';
+export { useVoiceRecordStore } from './model';

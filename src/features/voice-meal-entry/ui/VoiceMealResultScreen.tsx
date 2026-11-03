@@ -27,12 +27,12 @@ import {
   type VoiceUnit,
 } from '../lib';
 import {
+  useVoiceRecordStore,
   attachPurchaseLinks,
   saveVoiceExpense,
   saveVoiceMeal,
   saveVoicePurchase,
   saveVoiceStockUpdate,
-  toDraftDishes,
   toSavableDishes,
   type VoiceDraftDish,
 } from '../model';
@@ -100,7 +100,6 @@ export interface VoiceResultAdapters {
 
 interface VoiceMealResultScreenProps {
   householdId: string;
-  result: ParsedMealResult;
   onClose: () => void;
   adapters: VoiceResultAdapters;
 }
@@ -108,37 +107,41 @@ interface VoiceMealResultScreenProps {
 /**
  * 음성 기록 결과 화면 "이렇게 기록할까요?" — 식단, 장보기, 냉장고 정리, 외식비를 목록 항목으로 보여 주고,
  * 항목을 누르면 기존 편집 화면에서 고친다. "다시 말하기"는 말하기 시트를 새로 열고 결과를 새것으로 바꾼다.
+ * 정리 결과와 고친 값은 useVoiceRecordStore에 있다(Activity params에 두면 history-sync가 객체를 깨뜨린다).
  */
 export function VoiceMealResultScreen({
   householdId,
-  result: initialResult,
   onClose,
   adapters,
 }: VoiceMealResultScreenProps) {
-  const [result, setResult] = useState(initialResult);
-  /** 다시 말해 결과가 바뀌면 고친 값도 처음부터 다시 잡는다 */
-  const [revision, setRevision] = useState(0);
+  const result = useVoiceRecordStore((state) => state.result);
+  const start = useVoiceRecordStore((state) => state.start);
+  const reset = useVoiceRecordStore((state) => state.reset);
 
   function speakAgain() {
-    openVoiceMealEntrySheet({
-      householdId,
-      onParsed: (nextResult) => {
-        setResult(nextResult);
-        setRevision((current) => current + 1);
-      },
-    });
+    openVoiceMealEntrySheet({ householdId, onParsed: start });
+  }
+
+  function close() {
+    onClose();
+    reset();
   }
 
   return (
     <AppScreen className="pointer-events-auto" appBar={{ title: '음성 기록' }}>
-      <VoiceMealReview
-        key={revision}
-        householdId={householdId}
-        result={result}
-        onSaved={onClose}
-        onSpeakAgain={speakAgain}
-        adapters={adapters}
-      />
+      {result ? (
+        <VoiceMealReview
+          householdId={householdId}
+          result={result}
+          onSaved={close}
+          onSpeakAgain={speakAgain}
+          adapters={adapters}
+        />
+      ) : (
+        <p className="px-4 pt-6 text-[15px] break-keep text-gray-500">
+          기록할 내용이 없어요. 식단 탭의 마이크를 눌러 다시 말씀해주세요
+        </p>
+      )}
     </AppScreen>
   );
 }
@@ -166,12 +169,22 @@ function VoiceMealReview({
   const itemById = new Map(result.fridgeItems.map((item) => [item.id, item]));
   const dateLabel = format(parseISO(result.date), 'M월 d일', { locale: ko });
 
-  // 식단
-  const [type, setType] = useState<MealType>(result.type);
-  const [dishes, setDishes] = useState<VoiceDraftDish[]>(() => toDraftDishes(result.dishes));
-  const [isMealOn, setIsMealOn] = useState(
-    () => toDraftDishes(result.dishes).length > 0 || result.purchaseLinks.length > 0,
-  );
+  const {
+    type,
+    dishes,
+    purchases,
+    expense,
+    isMealOn,
+    isPurchaseOn,
+    isStockOn,
+    isExpenseOn,
+    update,
+  } = useVoiceRecordStore();
+  const setType = (next: MealType) => update({ type: next });
+  const setIsMealOn = (next: boolean) => update({ isMealOn: next });
+  const setIsPurchaseOn = (next: boolean) => update({ isPurchaseOn: next });
+  const setIsStockOn = (next: boolean) => update({ isStockOn: next });
+  const setIsExpenseOn = (next: boolean) => update({ isExpenseOn: next });
   const [isMealSaved, setIsMealSaved] = useState(false);
   const savableDishes = toSavableDishes(dishes);
   const stock = buildStockPreview(savableDishes, itemById);
@@ -180,26 +193,13 @@ function VoiceMealReview({
     (dish) => dish.ingredients.length === 0 && !linkedDishNames.has(dish.name),
   );
 
-  // 장보기
-  const [purchases, setPurchases] = useState<ParsedPurchase[]>(() =>
-    result.purchases.map((purchase) => ({
-      ...purchase,
-      store: purchase.store ?? result.purchaseStore,
-    })),
-  );
-  const [isPurchaseOn, setIsPurchaseOn] = useState(result.purchases.length > 0);
   const [isPurchaseSaved, setIsPurchaseSaved] = useState(false);
   const willSavePurchases = isPurchaseOn && !isPurchaseSaved && purchases.length > 0;
   const willLinkPurchases = isPurchaseOn && result.purchaseLinks.length > 0;
 
-  // 냉장고 정리
-  const [isStockOn, setIsStockOn] = useState(result.stockUpdates.length > 0);
   const [isStockSaved, setIsStockSaved] = useState(false);
   const willSaveStock = isStockOn && !isStockSaved && result.stockUpdates.length > 0;
 
-  // 외식비
-  const [expense, setExpense] = useState<ParsedExpense | null>(result.expense);
-  const [isExpenseOn, setIsExpenseOn] = useState(result.expense !== null);
   const [expenseError, setExpenseError] = useState<string | null>(null);
   const willSaveExpense = expense !== null && isExpenseOn;
   const isBrandMissing = willSaveExpense && !expense.brand.trim();
@@ -213,10 +213,7 @@ function VoiceMealReview({
     adapters.editDishes({
       title: `${dateLabel} ${MEAL_TYPE_LABEL[type]} 식단`,
       dishes,
-      onDone: (nextDishes) => {
-        setDishes(nextDishes);
-        setIsMealOn(true);
-      },
+      onDone: (nextDishes) => update({ dishes: nextDishes, isMealOn: true }),
     });
   }
 
@@ -225,11 +222,13 @@ function VoiceMealReview({
       purchase: purchases[index],
       date: result.date,
       onDone: (nextPurchase) =>
-        setPurchases((current) =>
-          current.map((purchase, purchaseIndex) =>
-            purchaseIndex === index ? nextPurchase : purchase,
-          ),
-        ),
+        update({
+          purchases: useVoiceRecordStore
+            .getState()
+            .purchases.map((purchase, purchaseIndex) =>
+              purchaseIndex === index ? nextPurchase : purchase,
+            ),
+        }),
     });
   }
 
@@ -238,7 +237,7 @@ function VoiceMealReview({
     adapters.editExpense({
       expense,
       onDone: (nextExpense) => {
-        setExpense(nextExpense);
+        update({ expense: nextExpense });
         setExpenseError(null);
       },
     });
