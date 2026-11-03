@@ -225,167 +225,177 @@ function VoiceMealReview({
 
   return (
     <>
-      <div className="flex flex-col gap-4 px-4 pt-4 pb-28">
+      <div className="flex flex-col gap-5 px-4 pt-5 pb-28">
         <div>
-          <h2 className="text-center text-[22px] leading-8 font-semibold break-keep text-gray-900">
+          <h2 className="text-[22px] leading-8 font-semibold break-keep text-gray-900">
             이렇게 기록할까요?
           </h2>
           {result.summary && (
-            <p className="mt-1 text-center text-[15px] leading-relaxed break-keep text-gray-500">
+            <p className="mt-1 text-[15px] leading-relaxed break-keep text-gray-500">
               {result.summary}
             </p>
           )}
         </div>
 
-        <ReviewSection
-          title="식단"
-          toggle={
-            hasMeal && !isMealSaved ? { checked: isMealOn, onChange: setIsMealOn } : undefined
-          }
-        >
-          <p className="text-[15px] font-medium text-gray-900">{dateLabel}</p>
-          <SegmentControl
-            value={type}
-            onValueChange={(next) => setType(next as MealType)}
-            aria-label="끼니"
+        <div className="rounded-2xl border border-gray-200 bg-white px-4">
+          <ReviewSection
+            title="식단"
+            toggle={
+              hasMeal && !isMealSaved ? { checked: isMealOn, onChange: setIsMealOn } : undefined
+            }
           >
-            {MEAL_TYPES.map((mealType) => (
-              <SegmentControl.Item key={mealType} value={mealType}>
-                {MEAL_TYPE_LABEL[mealType]}
-              </SegmentControl.Item>
-            ))}
-          </SegmentControl>
-          {isMealSaved && <p className="text-[15px] text-emerald-700">식단은 기록했어요</p>}
-          {draftDishes.length > 0 && (
-            <ul className="flex flex-col gap-2">
-              {result.dishes
-                .filter((dish) => dish.ingredients.length > 0)
-                .map((dish) => (
-                  <li key={dish.name}>
-                    <p className="text-[15px] font-semibold text-gray-900">{dish.name}</p>
-                    <p className="text-[15px] break-keep text-gray-600">
-                      {dish.ingredients.map(formatIngredient).join(', ')}
-                    </p>
-                  </li>
-                ))}
-            </ul>
-          )}
-          {outDishes.length > 0 && (
-            <p className="text-[15px] leading-relaxed break-keep text-gray-500">
-              {outDishes.map((dish) => dish.name).join(', ')}:{' '}
-              {expense ? MESSAGE.outMenu : MESSAGE.noIngredient}
-            </p>
-          )}
-          {hasMeal && !isMealSaved && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="self-start"
-              onClick={() => void openEditor()}
-              disabled={isSaving}
+            <dl>
+              <ReceiptRow label="날짜" value={dateLabel} />
+            </dl>
+            <SegmentControl
+              value={type}
+              onValueChange={(next) => setType(next as MealType)}
+              aria-label="끼니"
             >
-              편집 화면에서 고치기
-            </Button>
-          )}
-          {result.unmatched.length > 0 && (
-            <p className="text-[15px] leading-relaxed break-keep text-amber-700">
-              냉장고에서 찾지 못한 재료: {result.unmatched.map((entry) => entry.spoken).join(', ')}
-            </p>
-          )}
-        </ReviewSection>
-
-        <ReviewSection title="냉장고에서 빠지는 재료">
-          {result.stock.length === 0 ? (
-            <p className="text-[15px] text-gray-500">{MESSAGE.noStock}</p>
-          ) : (
-            <ul className="flex flex-col gap-1">
-              {result.stock.map((stock) => (
-                <li key={stock.batch_id} className="text-[15px] text-gray-900">
-                  {formatStock(stock)}
-                </li>
+              {MEAL_TYPES.map((mealType) => (
+                <SegmentControl.Item key={mealType} value={mealType}>
+                  {MEAL_TYPE_LABEL[mealType]}
+                </SegmentControl.Item>
               ))}
-            </ul>
-          )}
-        </ReviewSection>
-
-        <ReviewSection
-          title="식비"
-          toggle={expense ? { checked: isExpenseOn, onChange: setIsExpenseOn } : undefined}
-        >
-          {expense ? (
-            <div className={cn('flex flex-col gap-3', !isExpenseOn && 'opacity-50')}>
-              <SegmentControl
-                value={expense.kind}
-                onValueChange={(next) =>
-                  updateExpense({
-                    kind: next as VoiceExpenseKind,
-                    store: next === 'delivery' ? expense.store : '',
-                  })
-                }
-                aria-label="식비 종류"
+            </SegmentControl>
+            {isMealSaved && <p className="text-[15px] text-emerald-700">식단은 기록했어요</p>}
+            {draftDishes.length > 0 && (
+              <dl className="flex flex-col gap-1.5">
+                {result.dishes
+                  .filter((dish) => dish.ingredients.length > 0)
+                  .map((dish) => (
+                    <ReceiptRow
+                      key={dish.name}
+                      label={dish.name}
+                      value={dish.ingredients.map(formatIngredient).join(', ')}
+                    />
+                  ))}
+              </dl>
+            )}
+            {outDishes.length > 0 && (
+              <p className="text-[15px] leading-relaxed break-keep text-gray-500">
+                {outDishes.map((dish) => dish.name).join(', ')}:{' '}
+                {expense ? MESSAGE.outMenu : MESSAGE.noIngredient}
+              </p>
+            )}
+            {hasMeal && !isMealSaved && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="self-start"
+                onClick={() => void openEditor()}
+                disabled={isSaving}
               >
-                {(Object.keys(KIND_LABEL) as VoiceExpenseKind[]).map((kind) => (
-                  <SegmentControl.Item key={kind} value={kind}>
-                    {KIND_LABEL[kind]}
-                  </SegmentControl.Item>
+                편집 화면에서 고치기
+              </Button>
+            )}
+            {result.unmatched.length > 0 && (
+              <p className="text-[15px] leading-relaxed break-keep text-amber-700">
+                냉장고에서 찾지 못한 재료:{' '}
+                {result.unmatched.map((entry) => entry.spoken).join(', ')}
+              </p>
+            )}
+          </ReviewSection>
+
+          <ReviewSection title="냉장고에서 빠지는 재료">
+            {result.stock.length === 0 ? (
+              <p className="text-[15px] text-gray-500">{MESSAGE.noStock}</p>
+            ) : (
+              <dl className="flex flex-col gap-1.5">
+                {result.stock.map((stock) => (
+                  <ReceiptRow key={stock.batch_id} label={stock.name} value={formatStock(stock)} />
                 ))}
-              </SegmentControl>
-              <LabeledInput label="금액">
-                <Input
-                  inputMode="numeric"
-                  value={expense.price.toLocaleString('ko-KR')}
-                  onChange={(event) =>
-                    updateExpense({ price: Number(event.target.value.replace(/\D/g, '')) || 0 })
+              </dl>
+            )}
+          </ReviewSection>
+
+          <ReviewSection
+            title="식비"
+            toggle={expense ? { checked: isExpenseOn, onChange: setIsExpenseOn } : undefined}
+          >
+            {expense ? (
+              <div className={cn('flex flex-col gap-3', !isExpenseOn && 'opacity-50')}>
+                <SegmentControl
+                  value={expense.kind}
+                  onValueChange={(next) =>
+                    updateExpense({
+                      kind: next as VoiceExpenseKind,
+                      store: next === 'delivery' ? expense.store : '',
+                    })
                   }
-                  disabled={!isExpenseOn}
-                />
-              </LabeledInput>
-              <LabeledInput label="가게 이름">
-                <Input
-                  ref={brandInputRef}
-                  value={expense.brand}
-                  maxLength={30}
-                  placeholder="예: 김밥천국"
-                  onChange={(event) => updateExpense({ brand: event.target.value })}
-                  aria-invalid={isBrandMissing}
-                  disabled={!isExpenseOn}
-                />
-              </LabeledInput>
-              {isBrandMissing && (
-                <p role="alert" className="text-[15px] break-keep text-red-600">
-                  {MESSAGE.brandRequired}
-                </p>
-              )}
-              <LabeledInput label="메뉴">
-                <Input
-                  value={expense.name}
-                  maxLength={20}
-                  onChange={(event) => updateExpense({ name: event.target.value })}
-                  disabled={!isExpenseOn}
-                />
-              </LabeledInput>
-              {expense.kind === 'delivery' && (
-                <LabeledInput label="배달 플랫폼">
+                  aria-label="식비 종류"
+                >
+                  {(Object.keys(KIND_LABEL) as VoiceExpenseKind[]).map((kind) => (
+                    <SegmentControl.Item key={kind} value={kind}>
+                      {KIND_LABEL[kind]}
+                    </SegmentControl.Item>
+                  ))}
+                </SegmentControl>
+                <LabeledInput label="금액">
                   <Input
-                    value={expense.store}
-                    maxLength={20}
-                    placeholder="예: 배달의민족"
-                    onChange={(event) => updateExpense({ store: event.target.value })}
+                    inputMode="numeric"
+                    value={expense.price.toLocaleString('ko-KR')}
+                    onChange={(event) =>
+                      updateExpense({ price: Number(event.target.value.replace(/\D/g, '')) || 0 })
+                    }
                     disabled={!isExpenseOn}
                   />
                 </LabeledInput>
-              )}
-              {expenseError && (
-                <p role="alert" className="text-[15px] break-keep text-red-600">
-                  {expenseError}
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-[15px] text-gray-500">{MESSAGE.noExpense}</p>
+                <LabeledInput label="가게 이름">
+                  <Input
+                    ref={brandInputRef}
+                    value={expense.brand}
+                    maxLength={30}
+                    placeholder="예: 김밥천국"
+                    onChange={(event) => updateExpense({ brand: event.target.value })}
+                    aria-invalid={isBrandMissing}
+                    disabled={!isExpenseOn}
+                  />
+                </LabeledInput>
+                {isBrandMissing && (
+                  <p role="alert" className="text-[15px] break-keep text-red-600">
+                    {MESSAGE.brandRequired}
+                  </p>
+                )}
+                <LabeledInput label="메뉴">
+                  <Input
+                    value={expense.name}
+                    maxLength={20}
+                    onChange={(event) => updateExpense({ name: event.target.value })}
+                    disabled={!isExpenseOn}
+                  />
+                </LabeledInput>
+                {expense.kind === 'delivery' && (
+                  <LabeledInput label="배달 플랫폼">
+                    <Input
+                      value={expense.store}
+                      maxLength={20}
+                      placeholder="예: 배달의민족"
+                      onChange={(event) => updateExpense({ store: event.target.value })}
+                      disabled={!isExpenseOn}
+                    />
+                  </LabeledInput>
+                )}
+                {expenseError && (
+                  <p role="alert" className="text-[15px] break-keep text-red-600">
+                    {expenseError}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[15px] text-gray-500">{MESSAGE.noExpense}</p>
+            )}
+          </ReviewSection>
+          {willSaveExpense && (
+            <dl className="border-t border-dashed border-gray-300 py-4">
+              <div className="flex items-center justify-between text-[17px] font-semibold text-gray-900">
+                <dt>식비 합계</dt>
+                <dd>{expense.price.toLocaleString('ko-KR')}원</dd>
+              </div>
+            </dl>
           )}
-        </ReviewSection>
+        </div>
       </div>
 
       <CTAConfirmButton>
@@ -428,7 +438,7 @@ interface ReviewSectionProps {
 
 function ReviewSection({ title, toggle, children }: ReviewSectionProps) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl bg-gray-50 p-4">
+    <section className="flex flex-col gap-3 border-t border-dashed border-gray-300 py-4 first:border-t-0">
       <div className="flex min-h-7 items-center justify-between">
         <h3 className="text-[15px] font-semibold text-gray-900">{title}</h3>
         {toggle && (
@@ -441,6 +451,16 @@ function ReviewSection({ title, toggle, children }: ReviewSectionProps) {
       </div>
       {children}
     </section>
+  );
+}
+
+/** 영수증 한 줄 — 이름은 왼쪽, 값은 오른쪽 */
+function ReceiptRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 text-[15px]">
+      <dt className="shrink-0 text-gray-600">{label}</dt>
+      <dd className="text-right break-keep text-gray-900">{value}</dd>
+    </div>
   );
 }
 
@@ -465,8 +485,8 @@ function formatIngredient(ingredient: ParsedMealResult['dishes'][number]['ingred
 function formatStock(stock: StockPreview) {
   const unit = UNIT_LABEL[stock.unit];
   const before = `${stock.before.toLocaleString('ko-KR')}${unit}`;
-  if (stock.mode === 'use') return `${stock.name} ${before} 그대로 (썼다고만 남겨요)`;
-  return `${stock.name} ${before} → ${stock.after.toLocaleString('ko-KR')}${unit}`;
+  if (stock.mode === 'use') return `${before} 그대로 (썼다고만 남겨요)`;
+  return `${before} → ${stock.after.toLocaleString('ko-KR')}${unit}`;
 }
 
 function buildDoneMessage({

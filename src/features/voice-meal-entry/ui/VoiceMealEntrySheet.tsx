@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { overlay } from 'overlay-kit';
 
-import { BottomSheet, Button } from '@/commons/ui';
+import { BottomSheet } from '@/commons/ui';
 
 import { useParseMealMutation } from '../api/mutations';
 import { type ParsedMealResult } from '../lib';
@@ -13,8 +13,7 @@ import { useRealtimeTranscription } from '../model';
 
 import { VoiceSpeakPanel } from './VoiceSpeakPanel';
 
-const PARSE_FAILED =
-  '말한 내용을 정리하지 못했어요. 잠시 뒤 다시 시도하거나 글을 고쳐서 다시 정리해 주세요';
+const PARSE_FAILED = '말한 내용을 정리하지 못했어요. 마이크를 눌러 다시 말씀해주세요';
 /** 시트가 내려가는 움직임이 끝난 뒤 지운다 */
 const UNMOUNT_DELAY_MS = 300;
 
@@ -56,13 +55,11 @@ interface VoiceMealEntrySheetProps {
   onParsed: (result: ParsedMealResult) => void;
 }
 
-/** 열리면 바로 듣기 시작하고, "정리하기"를 누르면 듣기를 멈추고 정리 API를 부른다 */
+/** 열리면 바로 듣기 시작하고, 다 말한 뒤 마이크를 다시 눌러 끄면 정리 API를 부른다 */
 function VoiceMealEntrySheet({ open, onClose, householdId, onParsed }: VoiceMealEntrySheetProps) {
   const [text, setText] = useState('');
   const transcription = useRealtimeTranscription({ onTranscriptChange: setText });
   const parseMeal = useParseMealMutation();
-
-  const isConnecting = transcription.status === 'connecting';
 
   // 열리자마자 듣기 시작한다. 개발 모드에서 effect가 두 번 돌아도 한 번만 연결한다
   const hasAutoStartedRef = useRef(false);
@@ -79,7 +76,7 @@ function VoiceMealEntrySheet({ open, onClose, householdId, onParsed }: VoiceMeal
   }
 
   function organize() {
-    transcription.stop();
+    if (!text.trim() || parseMeal.isPending) return;
     const now = new Date();
     parseMeal.mutate(
       {
@@ -95,32 +92,16 @@ function VoiceMealEntrySheet({ open, onClose, householdId, onParsed }: VoiceMeal
   return (
     <BottomSheet open={open} onClose={close}>
       <BottomSheet.Header heading="말로 기록하기" className="sr-only" />
-      <BottomSheet.Content className="pt-1 pb-6">
+      <BottomSheet.Content className="pt-1 pb-8">
         <VoiceSpeakPanel
           text={text}
-          onTextChange={setText}
           transcription={transcription}
           isOrganizing={parseMeal.isPending}
+          organizeError={parseMeal.isError && transcription.status === 'idle' ? PARSE_FAILED : null}
+          onStopListening={organize}
           onClose={close}
         />
       </BottomSheet.Content>
-      <BottomSheet.Footer>
-        {parseMeal.isError && (
-          <p role="alert" className="text-center text-[15px] break-keep text-red-600">
-            {PARSE_FAILED}
-          </p>
-        )}
-        <Button
-          type="button"
-          color="primary"
-          size="lg"
-          className="w-full text-base"
-          onClick={organize}
-          disabled={!text.trim() || isConnecting || parseMeal.isPending}
-        >
-          {parseMeal.isPending ? '정리하는 중이에요' : '정리하기'}
-        </Button>
-      </BottomSheet.Footer>
     </BottomSheet>
   );
 }

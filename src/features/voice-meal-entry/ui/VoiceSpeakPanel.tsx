@@ -1,12 +1,11 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Keyboard, Mic, MicOff, X } from 'lucide-react';
+import { Loader2, Mic, MicOff, X } from 'lucide-react';
 
 import { cn } from '@/commons/lib';
-import { Textarea } from '@/commons/ui';
 
 import {
   type TranscriptionFailure,
@@ -19,11 +18,19 @@ import {
  * -----------------------------------------------------------------------------------------------*/
 
 const FAILURE_MESSAGE: Record<TranscriptionFailure, string> = {
-  'permission-denied': '마이크 권한이 없어 말로는 기록할 수 없어요. 글로 적어 주세요',
-  unavailable: '이 기기에서는 마이크를 쓸 수 없어요. 글로 적어 주세요',
-  'no-speech': '말소리를 듣지 못했어요. 마이크를 눌러 다시 말해 주세요',
+  'permission-denied': '마이크 권한이 없어 말로 기록할 수 없어요. 설정에서 마이크를 허용해 주세요',
+  unavailable: '이 기기에서는 마이크를 쓸 수 없어요',
+  'no-speech': '음성을 인식하지 못했어요. 다시 말씀해주세요',
   'connection-failed': '음성 인식에 연결하지 못했어요. 잠시 뒤 마이크를 다시 눌러 주세요',
 };
+
+/** 정리하는 동안 돌아가며 보여 주는 문구. 영수증 분석 안내와 같은 방식이다 */
+const ORGANIZING_STEPS = [
+  '말한 내용을 읽고 있어요',
+  '냉장고 재료와 맞춰 보고 있어요',
+  '식단과 식비로 나누고 있어요',
+];
+const ORGANIZING_STEP_MS = 1600;
 
 /** 마이크 한쪽에 놓는 게이지 막대 수. 양옆에 같은 수를 거울처럼 둔다 */
 const BAR_COUNT = 5;
@@ -38,23 +45,27 @@ const SPRING = { type: 'spring', stiffness: 380, damping: 30, mass: 0.8 } as con
 
 interface VoiceSpeakPanelProps {
   text: string;
-  onTextChange: (text: string) => void;
   transcription: ReturnType<typeof useRealtimeTranscription>;
-  /** 정리 API를 부르는 중. 게이지가 물결로 바뀐다 */
+  /** 정리 API를 부르는 중. 게이지가 물결로 바뀌고 정리 안내가 돈다 */
   isOrganizing: boolean;
+  /** 정리에 실패했을 때 보일 문구 */
+  organizeError: string | null;
+  /** 듣는 중에 마이크를 다시 눌러 끄면 부른다. 받아쓴 글이 있으면 정리를 시작한다 */
+  onStopListening: () => void;
   onClose: () => void;
 }
 
 /**
  * 말하기 시트 안쪽 — 안내, 받아쓴 글, 큰 마이크와 양옆 음량 게이지.
  * 받아쓴 글은 단어가 들어올 때마다 부드럽게 나타나고, 게이지는 마이크 입력 세기에 맞춰 움직인다.
- * 권한이 없거나 직접 고치고 싶으면 글 입력칸으로 바꿔 적을 수 있다.
+ * 다 말하고 마이크를 다시 눌러 끄면 바로 정리를 시작한다.
  */
 export function VoiceSpeakPanel({
   text,
-  onTextChange,
   transcription,
   isOrganizing,
+  organizeError,
+  onStopListening,
   onClose,
 }: VoiceSpeakPanelProps) {
   const prefersReducedMotion = useReducedMotion();
@@ -63,8 +74,6 @@ export function VoiceSpeakPanel({
   const isConnecting = transcription.status === 'connecting';
   const failure = transcription.failure ?? (transcription.isSupported ? null : 'unavailable');
   const isMicrophoneBlocked = failure === 'permission-denied' || failure === 'unavailable';
-  const [isTyping, setIsTyping] = useState(false);
-  const showTextInput = isTyping || isMicrophoneBlocked;
 
   const barRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const glowRef = useRef<HTMLSpanElement>(null);
@@ -90,16 +99,11 @@ export function VoiceSpeakPanel({
 
   function toggleMicrophone() {
     if (transcription.status === 'idle') {
-      setIsTyping(false);
       void transcription.start(text);
       return;
     }
     transcription.stop();
-  }
-
-  function startTyping() {
-    transcription.stop();
-    setIsTyping(true);
+    onStopListening();
   }
 
   return (
@@ -118,28 +122,19 @@ export function VoiceSpeakPanel({
       <h2 className="w-full text-[22px] leading-8 font-semibold break-keep text-gray-900">
         소비한 재료를 말해주세요
       </h2>
-      <VoiceStatus
-        failure={failure}
-        isConnecting={isConnecting}
-        isListening={isListening}
-        isOrganizing={isOrganizing}
-        hasText={text.trim().length > 0}
-      />
+      {isOrganizing ? (
+        <OrganizingInfo />
+      ) : (
+        <VoiceStatus
+          failure={organizeError ?? (failure ? FAILURE_MESSAGE[failure] : null)}
+          isConnecting={isConnecting}
+          isListening={isListening}
+          hasText={text.trim().length > 0}
+        />
+      )}
 
       <div className="mt-5 flex min-h-24 w-full items-start justify-center">
-        {showTextInput ? (
-          <Textarea
-            value={text}
-            onChange={(event) => onTextChange(event.target.value)}
-            placeholder="예: 양파 반 개랑 돼지고기 200g 썼어"
-            aria-label="소비한 재료"
-            rows={3}
-            autoFocus={isTyping}
-            className="w-full text-left text-[17px] leading-7 break-keep"
-          />
-        ) : (
-          <LiveTranscript text={text} />
-        )}
+        <LiveTranscript text={text} />
       </div>
 
       <div className="mt-4 flex w-full items-center justify-center gap-5">
@@ -190,18 +185,6 @@ export function VoiceSpeakPanel({
           isWaving={isOrganizing}
         />
       </div>
-
-      {!showTextInput && (
-        <button
-          type="button"
-          onClick={startTyping}
-          disabled={isOrganizing}
-          className="mt-3 flex h-11 items-center gap-1.5 rounded-full px-4 text-[15px] text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-100 disabled:opacity-50"
-        >
-          <Keyboard className="size-5" aria-hidden />
-          글로 적기
-        </button>
-      )}
     </div>
   );
 }
@@ -296,22 +279,64 @@ function EqualizerBars({ side, barRefs, isActive, isWaving }: EqualizerBarsProps
 }
 
 /* -------------------------------------------------------------------------------------------------
+ * OrganizingInfo
+ * -----------------------------------------------------------------------------------------------*/
+
+/** 정리하는 동안의 안내 — 영수증 분석 중 안내와 같은 Spinner + 돌아가는 문구 */
+function OrganizingInfo() {
+  const prefersReducedMotion = useReducedMotion();
+  const [stepIndex, setStepIndex] = useState(0);
+
+  useEffect(
+    function rotateSteps() {
+      if (prefersReducedMotion) return;
+      const id = setInterval(
+        () => setStepIndex((index) => (index + 1) % ORGANIZING_STEPS.length),
+        ORGANIZING_STEP_MS,
+      );
+      return () => clearInterval(id);
+    },
+    [prefersReducedMotion],
+  );
+
+  return (
+    <div
+      aria-live="polite"
+      className="mt-2 flex min-h-7 items-center justify-center gap-2 text-[15px] font-medium text-emerald-700"
+    >
+      <Loader2 className="size-4 animate-spin" aria-hidden />
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={stepIndex}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
+        >
+          {ORGANIZING_STEPS[stepIndex]}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
  * VoiceStatus
  * -----------------------------------------------------------------------------------------------*/
 
 interface VoiceStatusProps {
-  failure: TranscriptionFailure | null;
+  /** 보일 오류 문구. 없으면 상태 문구를 보인다 */
+  failure: string | null;
   isConnecting: boolean;
   isListening: boolean;
-  isOrganizing: boolean;
   hasText: boolean;
 }
 
 /** 상태 문구가 바뀔 때 위아래로 살짝 밀리며 바뀐다 */
 function VoiceStatus(props: VoiceStatusProps) {
   const prefersReducedMotion = useReducedMotion();
-  const isFailure = props.failure !== null && !props.isOrganizing;
-  const message = isFailure ? FAILURE_MESSAGE[props.failure!] : getStatusMessage(props);
+  const isFailure = props.failure !== null;
+  const message = props.failure ?? getStatusMessage(props);
 
   return (
     <div className="mt-2 flex min-h-7 w-full items-start justify-center overflow-hidden">
@@ -338,10 +363,9 @@ function VoiceStatus(props: VoiceStatusProps) {
   );
 }
 
-function getStatusMessage({ isConnecting, isListening, isOrganizing, hasText }: VoiceStatusProps) {
-  if (isOrganizing) return '말한 내용을 식단, 재고, 식비로 나누는 중이에요';
+function getStatusMessage({ isConnecting, isListening, hasText }: VoiceStatusProps) {
   if (isConnecting) return '마이크를 켜는 중이에요';
-  if (isListening) return '듣고 있어요';
-  if (hasText) return '다 말했으면 정리하기를 눌러 주세요';
-  return '마이크를 누르고 말해 주세요';
+  if (isListening) return '듣고 있어요. 다 말하면 마이크를 다시 눌러 주세요';
+  if (hasText) return '마이크를 누르면 이어서 말할 수 있어요';
+  return '마이크를 누르고 말씀해주세요';
 }
