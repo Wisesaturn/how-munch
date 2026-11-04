@@ -13,4 +13,4 @@ export {
   type TranscriptionFailure,
   type TranscriptionStatus,
 } from './useRealtimeTranscription';
-export { useVoiceRecordStore } from './voiceRecordStore';
+export { type SynonymOffer, useVoiceRecordStore } from './voiceRecordStore';

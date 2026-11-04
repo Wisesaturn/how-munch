@@ -28,10 +28,10 @@ export function toSavableDishes(dishes: VoiceDraftDish[]): VoiceDraftDish[] {
     .filter((dish) => dish.ingredients.length > 0);
 }
 
-/** @description 정리 결과의 메뉴 중 냉장고 재료가 있는 것만 저장 모양으로 바꾼다. 재료 없는 메뉴는 식단 저장 규칙을 통과하지 못한다 */
+/** @description 정리 결과의 메뉴를 결과 화면에서 고칠 모양으로 바꾼다. 재료를 고를 수 있게 재료 없는 메뉴도 남기고, 외식 메뉴만 뺀다 */
 export function toDraftDishes(dishes: ParsedDish[]): VoiceDraftDish[] {
   return dishes
-    .filter((dish) => dish.ingredients.length > 0)
+    .filter((dish) => !dish.isOut)
     .map((dish) => ({
       name: dish.name,
       ingredients: dish.ingredients.map(
