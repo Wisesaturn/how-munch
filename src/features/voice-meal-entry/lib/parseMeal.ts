@@ -507,14 +507,14 @@ export function resolveParsedMeal(
   };
 }
 
-/** 말 하나를 냉장고에서 검색해 재고가 있는 품목을 돌려준다. 좁혀진 품목을 앞에 두고 나머지 후보를 잇는다 */
+/** @description 말 하나를 냉장고에서 검색해 재고가 있는 품목을 돌려준다. 좁혀진 품목을 앞에 두고 나머지 후보를 잇는다 */
 function searchStockedItemIds(term: string, matchItem: VoiceItemMatcher): string[] {
   const { best, isWhole, candidates } = matchItem(term);
   if (term.length < MIN_SUGGESTION_TERM_LENGTH && !isWhole) return [];
   return (best ? [best, ...candidates] : candidates).filter(hasStock).map((item) => item.id);
 }
 
-/** 메뉴 이름의 검색 결과를 먼저 쓰고, 재고가 있는 품목이 없을 때만 Claude가 제안한 재료를 검색한다 */
+/** @description 메뉴 이름의 검색 결과를 먼저 쓰고, 재고가 있는 품목이 없을 때만 Claude가 제안한 재료를 검색한다 */
 function suggestItems(
   dishName: string,
   rawSuggestions: unknown,
