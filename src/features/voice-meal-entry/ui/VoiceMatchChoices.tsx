@@ -71,7 +71,7 @@ interface VoiceDishChoicesProps {
 
 /**
  * 메뉴마다 사용자가 정해야 할 재료를 보여 준다. 후보가 여러 건이면 고르고, 못 찾았거나 재고가 없으면 직접 찾는다.
- * 메뉴만 말했으면 냉장고에 있는 흔한 재료를 미선택으로 추천하고, 누른 것만 차감한다.
+ * 메뉴만 말했으면 메뉴 이름으로 찾은 품목을(없으면 Claude가 제안한 재료로 찾은 품목을) 미선택으로 보여 주고, 누른 것만 차감한다.
  * 말한 표현과 이름이 다른 자동 연결은 맞는지 알아볼 수 있게 함께 보여 준다.
  */
 export function VoiceDishChoices({
@@ -88,11 +88,11 @@ export function VoiceDishChoices({
     removeIngredient,
   } = useVoiceRecordStore();
   const items = result.fridgeItems;
-  const searchOptions = items.map((item) => ({
+  const searchOptions = items.filter(hasStock).map((item) => ({
     id: item.id,
     name: item.name,
     brand: item.brand,
-    depleted: !hasStock(item),
+    depleted: false,
   }));
 
   function warnPick(picked: { available: number | null; isEmpty: boolean }) {
@@ -123,6 +123,14 @@ export function VoiceDishChoices({
           );
         const isEmpty = dish.ingredients.length === 0 && !linkedDishNames.has(dish.name);
         const needsChoice = pendings.length > 0 || isEmpty || autoLinks.length > 0;
+        const searchForDish = () =>
+          onSearchFridgeItem({
+            items: searchOptions,
+            onSelect: (itemId) => {
+              const item = items.find((candidate) => candidate.id === itemId);
+              if (item) warnPick(addIngredient(dish.name, itemId, item.name));
+            },
+          });
         if (!needsChoice && !suggestion) return null;
 
         return (
@@ -191,21 +199,14 @@ export function VoiceDishChoices({
                     );
                   })}
                 </div>
-                <SearchButton
-                  onPress={() =>
-                    onSearchFridgeItem({
-                      items: searchOptions,
-                      onSelect: (itemId) => {
-                        const item = items.find((candidate) => candidate.id === itemId);
-                        if (item) warnPick(addIngredient(dish.name, itemId, item.name));
-                      },
-                    })
-                  }
-                />
+                <SearchButton onPress={searchForDish} />
               </div>
             )}
 
             {isEmpty && <p className="text-[15px] break-keep text-gray-500">{MESSAGE.emptyDish}</p>}
+            {isEmpty && pendings.length === 0 && !suggestion && (
+              <SearchButton onPress={searchForDish} />
+            )}
           </div>
         );
       })}
@@ -215,7 +216,7 @@ export function VoiceDishChoices({
 
 function SearchButton({ onPress }: { onPress: () => void }) {
   return (
-    <Button type="button" variant="outline" size="sm" className="self-start" onClick={onPress}>
+    <Button type="button" variant="outline" size="sm" className="w-full" onClick={onPress}>
       <Search className="size-4" /> 다른 재료 찾기
     </Button>
   );

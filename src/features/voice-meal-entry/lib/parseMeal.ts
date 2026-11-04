@@ -83,7 +83,7 @@ export interface PendingIngredient {
   reason: 'ambiguous' | 'none' | 'no_stock';
 }
 
-/** 메뉴만 말했을 때 냉장고에 있는 흔한 재료. 사용자가 누른 것만 차감한다 */
+/** 메뉴만 말했을 때 메뉴 이름으로 찾은 품목. 없으면 Claude가 제안한 재료로 찾은 품목. 사용자가 누른 것만 차감한다 */
 export interface DishSuggestion {
   dish_name: string;
   item_ids: string[];
@@ -161,6 +161,8 @@ const NAME_MAX = 20;
 const BRAND_MAX = 30;
 const PRICE_MAX = 100_000_000;
 const SUGGESTION_MAX = 6;
+/** 이보다 짧은 말은 품목 이름이 같을 때만 추천한다. '국'이 '국간장'에 걸리는 것을 막는다 */
+const MIN_SUGGESTION_TERM_LENGTH = 2;
 
 /* -------------------------------------------------------------------------------------------------
  * Prompt
@@ -370,7 +372,7 @@ export function mergeIngredientRows<
 /**
  * @description Claude 응답을 검사해 카드에 보일 결과로 바꾼다.
  * 말한 재료는 `matchItem`으로 찾는다. 하나로 좁혀지면 구매분별 줄로 나누고, 그렇지 않으면 사용자가 고를 항목으로 남긴다.
- * 메뉴만 말했으면 Claude가 제안한 재료 중 냉장고에 재고가 있는 것을 추천으로 돌려준다. 추천은 차감하지 않는다.
+ * 메뉴만 말했으면 메뉴 이름으로 냉장고를 찾아 재고가 있는 품목을 추천으로 돌려준다. 찾지 못했을 때만 Claude가 제안한 재료로 찾는다. 추천은 차감하지 않는다.
  */
 export function resolveParsedMeal(
   raw: RawParsedMeal,
@@ -463,7 +465,7 @@ export function resolveParsedMeal(
       return purchaseIndex !== null && purchaseIndex !== undefined;
     });
     if (ingredients.length === 0 && !hasPending && !hasPurchaseLink) {
-      const itemIds = suggestItems(dishRecord.suggested_ingredients, matchItem);
+      const itemIds = suggestItems(name, dishRecord.suggested_ingredients, matchItem);
       if (itemIds.length > 0) suggestions.push({ dish_name: name, item_ids: itemIds });
     }
 
@@ -505,15 +507,25 @@ export function resolveParsedMeal(
   };
 }
 
-/** Claude가 제안한 재료 중 재고가 있는 품목만 추린다. 후보가 여럿이면 모두 보여 사용자가 고르게 한다 */
-function suggestItems(rawSuggestions: unknown, matchItem: VoiceItemMatcher): string[] {
-  if (!Array.isArray(rawSuggestions)) return [];
-  const itemIds = rawSuggestions.flatMap((suggestion: unknown) => {
-    const term = asText(suggestion);
-    if (!term) return [];
-    const { best, candidates } = matchItem(term);
-    return (best ? [best] : candidates).filter(hasStock).map((item) => item.id);
-  });
+/** @description 말 하나를 냉장고에서 검색해 재고가 있는 품목을 돌려준다. 좁혀진 품목을 앞에 두고 나머지 후보를 잇는다 */
+function searchStockedItemIds(term: string, matchItem: VoiceItemMatcher): string[] {
+  const { best, isWhole, candidates } = matchItem(term);
+  if (term.length < MIN_SUGGESTION_TERM_LENGTH && !isWhole) return [];
+  return (best ? [best, ...candidates] : candidates).filter(hasStock).map((item) => item.id);
+}
+
+/** @description 메뉴 이름의 검색 결과를 먼저 쓰고, 재고가 있는 품목이 없을 때만 Claude가 제안한 재료를 검색한다 */
+function suggestItems(
+  dishName: string,
+  rawSuggestions: unknown,
+  matchItem: VoiceItemMatcher,
+): string[] {
+  const found = searchStockedItemIds(dishName, matchItem);
+  const suggested = Array.isArray(rawSuggestions) ? rawSuggestions.map(asText) : [];
+  const itemIds =
+    found.length > 0
+      ? found
+      : suggested.flatMap((term) => (term ? searchStockedItemIds(term, matchItem) : []));
   return [...new Set(itemIds)].slice(0, SUGGESTION_MAX);
 }
 

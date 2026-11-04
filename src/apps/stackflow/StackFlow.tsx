@@ -782,7 +782,11 @@ function VoiceMealDraftEditorActivity({
     onSelectId: (fridgeItemId: string) => void,
   ) {
     setPendingFridgeItemCallback(onSelectId);
-    push('FridgeItemSearchActivity', { fieldLabel: '재료', items });
+    // 음성 기록은 재고에서 고르므로 소진 품목은 보이지 않는다
+    push('FridgeItemSearchActivity', {
+      fieldLabel: '재료',
+      items: items.filter((item) => !item.depleted),
+    });
   }
 
   function openFridgeBatchSelect(
