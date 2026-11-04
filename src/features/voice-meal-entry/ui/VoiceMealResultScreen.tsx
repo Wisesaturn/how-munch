@@ -5,6 +5,7 @@ import { type ReactNode, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { josa } from 'es-hangul';
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
 import { cn } from '@/commons/lib';
@@ -19,6 +20,7 @@ import { mealKeys, type MealType } from '@/entities/meal';
 
 import {
   buildStockPreview,
+  syncPurchaseLink,
   type ParsedExpense,
   type ParsedMealResult,
   type ParsedPurchase,
@@ -174,8 +176,10 @@ function VoiceMealReview({
     purchases,
     expense,
     pendingIngredients,
+    purchaseLinks,
     stockUpdates,
     pendingStockUpdates,
+    changeDishes,
     pickStockItem,
     pickPurchaseItem,
     isMealOn,
@@ -191,7 +195,14 @@ function VoiceMealReview({
   const setIsExpenseOn = (next: boolean) => update({ isExpenseOn: next });
   const savableDishes = toSavableDishes(dishes);
   const stock = buildStockPreview(savableDishes, itemById);
-  const linkedDishNames = new Set(result.purchaseLinks.map((link) => link.dish_name));
+  /** 저장할 메뉴 연결. 품목을 고르지 않은 장보기는 빼고, 고친 장보기 값에 수량을 맞춘다 */
+  const savablePurchaseLinks = isPurchaseOn
+    ? purchaseLinks.flatMap((link) => {
+        const purchase = purchases[link.purchase_index];
+        return purchase && !purchase.candidate_ids ? [syncPurchaseLink(link, purchase)] : [];
+      })
+    : [];
+  const linkedDishNames = new Set(savablePurchaseLinks.map((link) => link.dish_name));
   const outDishes = result.dishes.filter((dish) => dish.isOut);
   const dishNames = new Set(dishes.map((dish) => dish.name));
   const openPendingIngredients = pendingIngredients.filter((pending) =>
@@ -212,10 +223,7 @@ function VoiceMealReview({
 
   const savablePurchaseCount = purchases.length - unpickedPurchases.length;
   const willSavePurchases = isPurchaseOn && savablePurchaseCount > 0;
-  const savablePurchaseLinks = result.purchaseLinks.filter(
-    (link) => purchases[link.purchase_index] && !purchases[link.purchase_index].candidate_ids,
-  );
-  const willLinkPurchases = isPurchaseOn && savablePurchaseLinks.length > 0;
+  const willLinkPurchases = savablePurchaseLinks.length > 0;
 
   const willSaveStock = isStockOn && stockUpdates.length > 0;
 
@@ -233,7 +241,7 @@ function VoiceMealReview({
     adapters.editDishes({
       title: `${dateLabel} ${MEAL_TYPE_LABEL[type]} 식단`,
       dishes,
-      onDone: (nextDishes) => update({ dishes: nextDishes, isMealOn: true }),
+      onDone: changeDishes,
     });
   }
 
@@ -293,7 +301,7 @@ function VoiceMealReview({
         purchaseStore: result.purchaseStore,
         dishes: isMealOn ? savableDishes : null,
         purchases: isPurchaseOn ? purchases : null,
-        purchaseLinks: result.purchaseLinks,
+        purchaseLinks: savablePurchaseLinks,
         stockUpdates: isStockOn ? stockUpdates : null,
         expense: willSaveExpense ? expense : null,
       });
@@ -310,7 +318,7 @@ function VoiceMealReview({
       willSaveMeal && `${dateLabel} ${MEAL_TYPE_LABEL[type]} 식단`,
       willSaveExpense && `외식비 ${expense.price.toLocaleString('ko-KR')}원`,
     ].filter(Boolean);
-    Toast.success(`${done.join(', ')}을 기록했어요`);
+    Toast.success(`${josa(done.join(', '), '을/를')} 기록했어요`);
     setIsSaving(false);
     onSaved();
   }
@@ -380,7 +388,7 @@ function VoiceMealReview({
                 key={shortage.name}
                 className="text-[15px] leading-relaxed break-keep text-amber-700"
               >
-                {shortage.name}은 {shortage.available.toLocaleString('ko-KR')}
+                {josa(shortage.name, '은/는')} {shortage.available.toLocaleString('ko-KR')}
                 {UNIT_LABEL[shortage.unit]}만 남아 있어요
               </p>
             ))}
@@ -404,7 +412,7 @@ function VoiceMealReview({
                   </ListItemButton>
                   {purchase.candidate_ids && (
                     <CandidateChips
-                      label={`'${purchase.name}'은 어떤 품목에 넣을까요?`}
+                      label={`${josa(purchase.name, '은/는')} 어떤 품목에 넣을까요?`}
                       itemIds={purchase.candidate_ids}
                       items={result.fridgeItems}
                       onPick={(itemId) => pickPurchaseItem(index, itemId)}
@@ -474,7 +482,7 @@ function VoiceMealReview({
               {pendingStockUpdates.map((pending) => (
                 <CandidateChips
                   key={pending.id}
-                  label={`'${pending.spoken}'은 어떤 품목인가요?`}
+                  label={`${josa(pending.spoken, '은/는')} 어떤 품목인가요?`}
                   itemIds={pending.candidate_ids}
                   items={result.fridgeItems}
                   onPick={(itemId) => pickStock(pending.id, itemId)}

@@ -1,5 +1,6 @@
 'use client';
 
+import { josa } from 'es-hangul';
 import { Search } from 'lucide-react';
 
 import { Button, Chip, Toast } from '@/commons/ui';
@@ -78,8 +79,14 @@ export function VoiceDishChoices({
   linkedDishNames,
   onSearchFridgeItem,
 }: VoiceDishChoicesProps) {
-  const { dishes, pendingIngredients, pickIngredient, addIngredient, removeIngredient } =
-    useVoiceRecordStore();
+  const {
+    dishes,
+    pendingIngredients,
+    suggestions,
+    pickIngredient,
+    addIngredient,
+    removeIngredient,
+  } = useVoiceRecordStore();
   const items = result.fridgeItems;
   const searchOptions = items.map((item) => ({
     id: item.id,
@@ -97,11 +104,12 @@ export function VoiceDishChoices({
 
   return (
     <div className="flex flex-col gap-3">
-      {dishes.map((dish) => {
+      {dishes.map((dish, dishIndex) => {
+        // 이름이 같은 메뉴는 고를 항목을 한 번만 보여 준다
+        if (dishes.findIndex((candidate) => candidate.name === dish.name) !== dishIndex)
+          return null;
         const pendings = pendingIngredients.filter((pending) => pending.dish_name === dish.name);
-        const suggestion = result.suggestions.find(
-          (candidate) => candidate.dish_name === dish.name,
-        );
+        const suggestion = suggestions.find((candidate) => candidate.dish_name === dish.name);
         const pickedIds = new Set(dish.ingredients.map((row) => row.fridge_item_id));
         const autoLinks = (
           result.dishes.find((parsed) => parsed.name === dish.name)?.ingredients ?? []
@@ -142,7 +150,7 @@ export function VoiceDishChoices({
                 return (
                   <div key={pending.id} className="flex flex-col gap-2">
                     <CandidateChips
-                      label={`'${pending.spoken}' ${MESSAGE.ambiguous}`}
+                      label={`${josa(pending.spoken, '은/는')} ${MESSAGE.ambiguous}`}
                       itemIds={pending.candidate_ids}
                       items={items}
                       onPick={(itemId) => warnPick(pickIngredient(pending.id, itemId))}
@@ -246,7 +254,8 @@ export function SynonymOfferBanner() {
   return (
     <div className="flex flex-col gap-2 rounded-lg border px-3 py-3">
       <p className="text-[15px] break-keep text-gray-900">
-        &apos;{baseTerm}&apos;을 &apos;{itemName}&apos;으로 기억할까요? 다음부터 바로 찾을 수 있어요
+        {josa(baseTerm, '을/를')} {josa(itemName, '으로/로')} 기억할까요? 다음부터 바로 찾을 수
+        있어요
       </p>
       <div className="flex gap-2">
         <Button

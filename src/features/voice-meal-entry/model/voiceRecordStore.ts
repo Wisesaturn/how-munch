@@ -5,13 +5,16 @@ import { type MealType } from '@/entities/meal';
 import {
   allocateIngredient,
   applyPurchaseItem,
+  mapDishNames,
   mergeIngredientRows,
   toStockUpdate,
+  type DishSuggestion,
   type ParsedExpense,
   type ParsedMealResult,
   type ParsedPurchase,
   type PendingIngredient,
   type PendingStockUpdate,
+  type PurchaseLink,
   type StockUpdate,
   type VoiceFridgeItem,
 } from '../lib';
@@ -38,6 +41,8 @@ interface VoiceRecordState {
   purchases: ParsedPurchase[];
   expense: ParsedExpense | null;
   pendingIngredients: PendingIngredient[];
+  suggestions: DishSuggestion[];
+  purchaseLinks: PurchaseLink[];
   stockUpdates: StockUpdate[];
   pendingStockUpdates: PendingStockUpdate[];
   synonymOffer: SynonymOffer | null;
@@ -48,6 +53,8 @@ interface VoiceRecordState {
   /** 새 정리 결과로 결과 화면 상태를 처음부터 다시 잡는다 */
   start: (result: ParsedMealResult) => void;
   update: (patch: Partial<VoiceRecordValues>) => void;
+  /** 편집한 메뉴로 바꾼다. 고를 재료, 추천, 메뉴 연결도 바뀐 이름을 따라가고 지운 메뉴의 것은 없앤다 */
+  changeDishes: (nextDishes: VoiceDraftDish[]) => void;
   /** 고를 항목의 재료를 품목으로 정해 메뉴에 넣는다 */
   pickIngredient: (pendingId: string, itemId: string) => PickResult;
   /** 메뉴에 품목 재료를 더하거나 뺀다. 추천 재료와 직접 찾은 재료가 쓴다 */
@@ -66,6 +73,7 @@ type VoiceRecordValues = Omit<
   | 'start'
   | 'update'
   | 'reset'
+  | 'changeDishes'
   | 'pickIngredient'
   | 'addIngredient'
   | 'removeIngredient'
@@ -80,6 +88,8 @@ const EMPTY = {
   purchases: [],
   expense: null,
   pendingIngredients: [],
+  suggestions: [],
+  purchaseLinks: [],
   stockUpdates: [],
   pendingStockUpdates: [],
   synonymOffer: null,
@@ -110,6 +120,8 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set, get) => ({
       })),
       expense: result.expense,
       pendingIngredients: result.pendingIngredients,
+      suggestions: result.suggestions,
+      purchaseLinks: result.purchaseLinks,
       stockUpdates: result.stockUpdates,
       pendingStockUpdates: result.pendingStockUpdates,
       synonymOffer: null,
@@ -122,6 +134,40 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set, get) => ({
 
   update(patch) {
     set(patch);
+  },
+
+  changeDishes(nextDishes) {
+    const { dishes, pendingIngredients, suggestions, purchaseLinks } = get();
+    const names = mapDishNames(dishes, nextDishes);
+    function renamed<T>(
+      entries: T[],
+      getName: (entry: T) => string,
+      rename: (entry: T, name: string) => T,
+    ) {
+      return entries.flatMap((entry) => {
+        const name = names.get(getName(entry));
+        return name ? [rename(entry, name)] : [];
+      });
+    }
+    set({
+      dishes: nextDishes,
+      isMealOn: true,
+      pendingIngredients: renamed(
+        pendingIngredients,
+        (pending) => pending.dish_name,
+        (pending, dish_name) => ({ ...pending, dish_name }),
+      ),
+      suggestions: renamed(
+        suggestions,
+        (suggestion) => suggestion.dish_name,
+        (suggestion, dish_name) => ({ ...suggestion, dish_name }),
+      ),
+      purchaseLinks: renamed(
+        purchaseLinks,
+        (link) => link.dish_name,
+        (link, dish_name) => ({ ...link, dish_name }),
+      ),
+    });
   },
 
   pickIngredient(pendingId, itemId) {
@@ -159,9 +205,11 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set, get) => ({
   },
 
   removeIngredient(dishName, itemId) {
+    const { dishes } = get();
+    const dishIndex = dishes.findIndex((dish) => dish.name === dishName);
     set({
-      dishes: get().dishes.map((dish) =>
-        dish.name === dishName
+      dishes: dishes.map((dish, index) =>
+        index === dishIndex
           ? {
               ...dish,
               ingredients: dish.ingredients.filter(
@@ -234,9 +282,11 @@ function addToDish(
     usage_status,
     unit,
   }));
+  // 이름이 같은 메뉴가 둘이어도 한 번만 넣는다. 양쪽에 넣으면 저장할 때 두 배로 차감된다
+  const dishIndex = dishes.findIndex((dish) => dish.name === dishName);
   return {
-    dishes: dishes.map((dish) =>
-      dish.name === dishName
+    dishes: dishes.map((dish, index) =>
+      index === dishIndex
         ? { ...dish, ingredients: mergeIngredientRows(dish.ingredients, draftRows) }
         : dish,
     ),
