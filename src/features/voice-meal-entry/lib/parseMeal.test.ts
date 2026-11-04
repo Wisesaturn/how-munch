@@ -9,6 +9,7 @@ import {
   allocateIngredient,
   extractJsonObject,
   guessMealType,
+  mapDishNames,
   resolveParsedMeal,
   type VoiceFridgeItem,
 } from './parseMeal';
@@ -169,6 +170,26 @@ describe('resolveParsedMeal', () => {
     assert.equal(result.stock[0].mode, 'deplete');
   });
 
+  it('같은 메뉴에서 같은 표현을 두 번 말해도 고를 항목 id가 겹치지 않는다', () => {
+    const result = resolveParsedMeal(
+      {
+        dishes: [
+          {
+            name: '시리얼',
+            ingredients: [
+              { spoken: '우유', amount: 1 },
+              { spoken: '우유', amount: 2 },
+            ],
+          },
+        ],
+      },
+      ITEMS,
+      CONTEXT,
+    );
+    const ids = result.pendingIngredients.map((pending) => pending.id);
+    assert.equal(new Set(ids).size, 2);
+  });
+
   it('무게 단위를 썼다고만 말하면 오래된 구매분 하나에 남긴다', () => {
     const result = resolveParsedMeal(
       { dishes: [{ name: '제육볶음', ingredients: [{ spoken: '돼지고기' }] }] },
@@ -189,7 +210,7 @@ describe('resolveParsedMeal', () => {
     assert.equal(result.dishes[0].ingredients.length, 0);
     assert.deepEqual(result.pendingIngredients, [
       {
-        id: '시리얼:우유',
+        id: '시리얼:우유:0',
         dish_name: '시리얼',
         spoken: '우유',
         amount: 1,
@@ -297,6 +318,22 @@ describe('resolveParsedMeal', () => {
   it('끼니가 없으면 지금 시각으로 짐작한다', () => {
     assert.equal(resolveParsedMeal({}, ITEMS, CONTEXT).type, 'lunch');
     assert.equal(resolveParsedMeal({}, ITEMS, { ...CONTEXT, now: '08:00' }).type, 'breakfast');
+  });
+});
+
+describe('mapDishNames', () => {
+  it('유지한 이름과 같은 자리의 바뀐 이름을 잇는다', () => {
+    const names = mapDishNames(
+      [{ name: '찌개' }, { name: '볶음' }],
+      [{ name: '된장찌개' }, { name: '볶음' }],
+    );
+    assert.equal(names.get('찌개'), '된장찌개');
+    assert.equal(names.get('볶음'), '볶음');
+  });
+
+  it('메뉴 수가 줄면 없어진 이름을 지운 것으로 본다', () => {
+    const names = mapDishNames([{ name: '찌개' }, { name: '볶음' }], [{ name: '볶음' }]);
+    assert.equal(names.get('찌개'), null);
   });
 });
 

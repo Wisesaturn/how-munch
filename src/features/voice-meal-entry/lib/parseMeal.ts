@@ -333,6 +333,23 @@ export function allocateIngredient(
   return { rows, available: !depleted && wanted > total ? total : null };
 }
 
+/**
+ * @description 메뉴 편집 전후를 비교해 옛 메뉴 이름이 어떤 이름이 됐는지 돌려준다. 지워진 메뉴는 null이다.
+ * 메뉴 수가 같으면 같은 자리의 메뉴를 이름만 바뀐 것으로 본다.
+ */
+export function mapDishNames(
+  previous: Array<{ name: string }>,
+  next: Array<{ name: string }>,
+): Map<string, string | null> {
+  const nextNames = new Set(next.map((dish) => dish.name));
+  return new Map(
+    previous.map((dish, index) => {
+      if (nextNames.has(dish.name)) return [dish.name, dish.name];
+      return [dish.name, previous.length === next.length ? next[index].name : null];
+    }),
+  );
+}
+
 /** @description 같은 구매분을 가리키는 줄을 메뉴 안에서 하나로 합친다 */
 export function mergeIngredientRows<
   T extends { batch_id: string; amount: number; usage_status: 'used' | 'depleted' },
@@ -405,7 +422,7 @@ export function resolveParsedMeal(
       const match = matchItem(spoken);
       const stockedCandidates = match.candidates.filter(hasStock);
       const pending = {
-        id: `${name}:${spoken}`,
+        id: `${name}:${spoken}:${pendingIngredients.length}`,
         dish_name: name,
         spoken,
         amount,

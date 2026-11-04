@@ -10,6 +10,7 @@ import {
   collectPurchaseLinks,
   resolvePurchases,
   resolveStockUpdates,
+  syncPurchaseLink,
   toStockUpdate,
 } from './parseExtras';
 import { type VoiceFridgeItem } from './parseMeal';
@@ -59,7 +60,16 @@ const matchItem = (term: string) =>
 describe('resolvePurchases', () => {
   it('이름 전체가 같은 품목이 있으면 이름, 브랜드, 단위, 분류를 품목에 맞춘다', () => {
     const [purchase] = resolvePurchases(
-      [{ name: '계란', brand: '농협', category_code: 'meat', unit: 'kg', count: 2, price: 8000 }],
+      [
+        {
+          name: '계란',
+          brand: '농협',
+          category_code: 'meat',
+          unit: 'count',
+          count: 2,
+          price: 8000,
+        },
+      ],
       (term) => matchItem(term === '농협계란' ? '계란' : term),
       CATEGORIES,
     );
@@ -105,9 +115,41 @@ describe('resolvePurchases', () => {
     assert.equal(purchase.price, 0);
   });
 
+  it('이름이 같아도 단위를 환산할 수 없으면 새 품목으로 둔다', () => {
+    const [purchase] = resolvePurchases(
+      [{ name: '우유', unit: 'count', count: 2 }],
+      () => ({ best: ITEMS[1], isWhole: true, candidates: [ITEMS[1]] }),
+      CATEGORIES,
+    );
+    assert.equal(purchase.fridge_item_id, null);
+    assert.equal(purchase.unit, 'count');
+    assert.equal(purchase.count, 2);
+    assert.equal(purchase.candidate_ids, undefined);
+  });
+
+  it('환산할 수 없는 품목은 후보에서 뺀다', () => {
+    const [purchase] = resolvePurchases(
+      [{ name: '우유', unit: 'count', count: 1 }],
+      () => ({ best: null, isWhole: false, candidates: [ITEMS[1], ITEMS[2]] }),
+      CATEGORIES,
+    );
+    assert.deepEqual(purchase.candidate_ids, ['berry-milk']);
+  });
+
+  it('kg로 샀으면 g 품목 단위로 환산한다', () => {
+    const pork: VoiceFridgeItem = { ...ITEMS[0], id: 'pork', name: '삼겹살', unit: 'g' };
+    const [purchase] = resolvePurchases(
+      [{ name: '삼겹살', unit: 'kg', count: 1.5 }],
+      () => ({ best: pork, isWhole: true, candidates: [pork] }),
+      CATEGORIES,
+    );
+    assert.equal(purchase.unit, 'g');
+    assert.equal(purchase.count, 1500);
+  });
+
   it('후보에서 고른 품목에 장보기를 맞춘다', () => {
     const [purchase] = resolvePurchases(
-      [{ name: '우유', category_code: 'etc', unit: 'count', count: 1 }],
+      [{ name: '우유', category_code: 'etc', unit: 'l', count: 1 }],
       () => ({ best: null, isWhole: false, candidates: [ITEMS[1], ITEMS[2]] }),
       CATEGORIES,
     );
@@ -115,6 +157,7 @@ describe('resolvePurchases', () => {
     assert.equal(picked.fridge_item_id, 'milk');
     assert.equal(picked.brand, '서울우유');
     assert.equal(picked.unit, 'ml');
+    assert.equal(picked.count, 1000);
     assert.equal(picked.candidate_ids, undefined);
   });
 });
@@ -133,6 +176,48 @@ describe('collectPurchaseLinks', () => {
     assert.deepEqual(links, [
       { dish_name: '볶음', purchase_index: 0, amount: 2, usage_status: 'used' },
     ]);
+  });
+});
+
+describe('collectPurchaseLinks purchase_index', () => {
+  const purchases = resolvePurchases(
+    [{ name: '양파', unit: 'count', count: 2 }],
+    matchItem,
+    CATEGORIES,
+  );
+
+  it('null은 냉장고 재료라 첫 장보기로 잇지 않는다', () => {
+    const links = collectPurchaseLinks(
+      [{ name: '두부찌개', ingredients: [{ spoken: '두부', purchase_index: null, amount: 1 }] }],
+      purchases,
+    );
+    assert.deepEqual(links, []);
+  });
+});
+
+describe('syncPurchaseLink', () => {
+  const link = {
+    dish_name: '볶음',
+    purchase_index: 0,
+    amount: 2,
+    usage_status: 'used' as const,
+  };
+  const [purchase] = resolvePurchases(
+    [{ name: '양파', unit: 'count', count: 3 }],
+    matchItem,
+    CATEGORIES,
+  );
+
+  it('산 개수를 줄이면 그 안으로 줄인다', () => {
+    assert.equal(syncPurchaseLink(link, { ...purchase, count: 1 }).amount, 1);
+  });
+
+  it('무게에서 개로 바꾸면 최소 1개로 잇는다', () => {
+    assert.equal(syncPurchaseLink({ ...link, amount: 0 }, purchase).amount, 1);
+  });
+
+  it('개에서 무게로 바꾸면 썼다고만 남긴다', () => {
+    assert.equal(syncPurchaseLink(link, { ...purchase, unit: 'g' }).amount, 0);
   });
 });
 
@@ -172,7 +257,7 @@ describe('resolveStockUpdates', () => {
     assert.equal(updates.length, 0);
     assert.deepEqual(pending, [
       {
-        id: 'stock:우유',
+        id: 'stock:우유:0',
         spoken: '우유',
         action: 'discard',
         remaining: null,

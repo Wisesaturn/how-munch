@@ -80,16 +80,31 @@ function activeBatches(item: VoiceFridgeItem) {
     .sort((a, b) => a.purchased_date.localeCompare(b.purchased_date));
 }
 
+/** 단위를 바꿔 양을 환산한다. 개와 무게, 무게와 부피처럼 환산할 수 없으면 null */
+function convertQuantity(quantity: number, from: VoiceUnit, to: VoiceUnit): number | null {
+  if (from === to) return quantity;
+  if ((from === 'kg' && to === 'g') || (from === 'l' && to === 'ml')) return quantity * 1000;
+  if ((from === 'g' && to === 'kg') || (from === 'ml' && to === 'l')) return quantity / 1000;
+  return null;
+}
+
+function canApplyPurchaseItem(purchase: ParsedPurchase, item: VoiceFridgeItem) {
+  return convertQuantity(purchase.count, purchase.unit, item.unit) !== null;
+}
+
 /**
  * @description 장보기 한 줄을 고른 냉장고 품목에 맞춘다. 이름과 브랜드, 단위, 분류를 품목과 같게 해야 저장할 때 같은 품목으로 합쳐진다.
+ * 양은 품목 단위로 환산한다. 환산할 수 없는 품목은 후보에서 미리 빼므로 여기 오면 새 품목으로 둔다.
  */
 export function applyPurchaseItem(purchase: ParsedPurchase, item: VoiceFridgeItem): ParsedPurchase {
+  const count = convertQuantity(purchase.count, purchase.unit, item.unit);
+  if (count === null) return { ...purchase, fridge_item_id: null, candidate_ids: undefined };
   return {
     ...purchase,
     name: item.name.slice(0, NAME_MAX),
     brand: (item.brand ?? '').slice(0, NAME_MAX),
     unit: item.unit,
-    count: resolveCount(purchase.count, item.unit),
+    count,
     category_id: item.category_id,
     fridge_item_id: item.id,
     candidate_ids: undefined,
@@ -100,6 +115,7 @@ export function applyPurchaseItem(purchase: ParsedPurchase, item: VoiceFridgeIte
  * @description Claude가 뽑은 장보기를 저장할 모양으로 바꾼다.
  * 이름 전체가 같은 품목이 하나면 그 품목의 새 구매분으로 잇는다. 부분일치로 걸린 품목은 다른 상품일 수 있어
  * ("우유"를 샀는데 "딸기우유"에 입고) 자동으로 잇지 않고 후보로 남겨 고르거나 새 품목으로 두게 한다.
+ * 개 단위로 산 것을 ml 품목에 넣는 것처럼 환산할 수 없는 품목에는 잇지 않는다.
  * 분류 코드가 목록에 없으면 "기타"(code etc), 그것도 없으면 첫 분류로 둔다.
  */
 export function resolvePurchases(
@@ -135,9 +151,12 @@ export function resolvePurchases(
     };
 
     const match = matchItem(`${purchase.brand}${name}`);
-    if (match.best && match.isWhole) return [applyPurchaseItem(purchase, match.best)];
-    if (match.candidates.length > 0) {
-      return [{ ...purchase, candidate_ids: match.candidates.map((item) => item.id) }];
+    if (match.best && match.isWhole && canApplyPurchaseItem(purchase, match.best)) {
+      return [applyPurchaseItem(purchase, match.best)];
+    }
+    const candidates = match.candidates.filter((item) => canApplyPurchaseItem(purchase, item));
+    if (candidates.length > 0) {
+      return [{ ...purchase, candidate_ids: candidates.map((item) => item.id) }];
     }
     return [purchase];
   });
@@ -163,8 +182,10 @@ export function collectPurchaseLinks(
     return dish.ingredients.flatMap((rawIngredient: unknown) => {
       if (typeof rawIngredient !== 'object' || rawIngredient === null) return [];
       const record = rawIngredient as Record<string, unknown>;
-      const index = Number(record.purchase_index);
-      const purchase = Number.isInteger(index) ? purchases[index] : undefined;
+      // null은 냉장고 재료라는 뜻이다. Number(null)이 0이라 첫 장보기로 잘못 이어지지 않게 숫자만 받는다
+      const index = record.purchase_index;
+      if (typeof index !== 'number' || !Number.isInteger(index)) return [];
+      const purchase = purchases[index];
       if (!purchase) return [];
       const isDepleted = record.depleted === true;
 
@@ -185,10 +206,24 @@ export function collectPurchaseLinks(
       if (amount <= 0) return [];
       usedByPurchase.set(index, (usedByPurchase.get(index) ?? 0) + amount);
       return [
-        { dish_name: dishName, purchase_index: index, amount, usage_status: 'used' as const },
+        {
+          dish_name: dishName,
+          purchase_index: index,
+          amount,
+          usage_status: 'used' as const,
+        },
       ];
     });
   });
+}
+
+/**
+ * @description 편집한 장보기 값에 메뉴 연결을 맞춘다. 무게·부피는 썼다고만 남기고, 개 단위는 1개 이상 산 개수 안으로 둔다.
+ */
+export function syncPurchaseLink(link: PurchaseLink, purchase: ParsedPurchase): PurchaseLink {
+  if (purchase.unit !== 'count') return { ...link, amount: 0 };
+  const amount = Math.min(Math.max(link.amount, 1), purchase.count);
+  return { ...link, amount, usage_status: 'used' };
 }
 
 /**
@@ -265,7 +300,7 @@ export function resolveStockUpdates(
     if (!match.best) {
       const remaining = typeof record.remaining === 'number' ? record.remaining : null;
       pending.push({
-        id: `stock:${spoken}`,
+        id: `stock:${spoken}:${pending.length}`,
         spoken,
         action: record.action,
         remaining,
