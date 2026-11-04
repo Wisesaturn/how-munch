@@ -24,6 +24,7 @@ export {
   normalizeSearchText,
 } from './search/hangulSearch';
 export { splitByMatchedTerms, type HighlightSegment } from './search/highlight';
+export { matchTerm, type TermMatch } from './search/matchTerm';
 export {
   createSynonymIndex,
   expandWithSynonyms,
