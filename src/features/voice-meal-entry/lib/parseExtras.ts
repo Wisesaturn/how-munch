@@ -1,4 +1,4 @@
-import { type VoiceFridgeItem, type VoiceUnit } from './parseMeal';
+import { type VoiceFridgeItem, type VoiceItemMatcher, type VoiceUnit } from './parseMeal';
 
 /** 장보기 분류. ingredient_categories의 id, code, 이름 */
 export interface VoiceCategory {
@@ -18,6 +18,8 @@ export interface ParsedPurchase {
   price: number;
   /** 냉장고에 같은 품목이 있으면 그 id. 저장하면 이 품목의 새 구매분으로 들어간다 */
   fridge_item_id: string | null;
+  /** 같은 품목인지 사용자가 골라야 할 때의 후보. 고르면 비운다 */
+  candidate_ids?: string[];
   /** 품목별 가게. 없으면 장보기 가게(purchaseStore)를 쓴다 */
   store?: string;
   /** 편집 화면에서 정한 유통기한. undefined면 분류 기본값, null이면 유통기한 없음 */
@@ -49,6 +51,15 @@ export interface StockUpdate {
   spoken: string;
 }
 
+/** 후보가 여러 건이라 사용자가 품목을 골라야 하는 재고 정리 */
+export interface PendingStockUpdate {
+  id: string;
+  spoken: string;
+  action: StockUpdate['action'];
+  remaining: number | null;
+  candidate_ids: string[];
+}
+
 const UNITS: VoiceUnit[] = ['count', 'g', 'kg', 'ml', 'l'];
 const NAME_MAX = 30;
 const PRICE_MAX = 100_000_000;
@@ -70,46 +81,65 @@ function activeBatches(item: VoiceFridgeItem) {
 }
 
 /**
+ * @description 장보기 한 줄을 고른 냉장고 품목에 맞춘다. 이름과 브랜드, 단위, 분류를 품목과 같게 해야 저장할 때 같은 품목으로 합쳐진다.
+ */
+export function applyPurchaseItem(purchase: ParsedPurchase, item: VoiceFridgeItem): ParsedPurchase {
+  return {
+    ...purchase,
+    name: item.name.slice(0, NAME_MAX),
+    brand: (item.brand ?? '').slice(0, NAME_MAX),
+    unit: item.unit,
+    count: resolveCount(purchase.count, item.unit),
+    category_id: item.category_id,
+    fridge_item_id: item.id,
+    candidate_ids: undefined,
+  };
+}
+
+/**
  * @description Claude가 뽑은 장보기를 저장할 모양으로 바꾼다.
- * 냉장고에 같은 품목이 있으면 그 이름과 브랜드, 단위를 써서 저장 때 같은 품목으로 합쳐지게 한다.
+ * 이름 전체가 같은 품목이 하나면 그 품목의 새 구매분으로 잇는다. 부분일치로 걸린 품목은 다른 상품일 수 있어
+ * ("우유"를 샀는데 "딸기우유"에 입고) 자동으로 잇지 않고 후보로 남겨 고르거나 새 품목으로 두게 한다.
  * 분류 코드가 목록에 없으면 "기타"(code etc), 그것도 없으면 첫 분류로 둔다.
  */
 export function resolvePurchases(
   rawPurchases: unknown,
-  items: VoiceFridgeItem[],
+  matchItem: VoiceItemMatcher,
   categories: VoiceCategory[],
 ): ParsedPurchase[] {
   if (!Array.isArray(rawPurchases) || categories.length === 0) return [];
-  const itemById = new Map(items.map((item) => [item.id, item]));
   const fallbackCategory = categories.find((category) => category.code === 'etc') ?? categories[0];
 
   return rawPurchases.flatMap((rawPurchase: unknown) => {
     if (typeof rawPurchase !== 'object' || rawPurchase === null) return [];
     const record = rawPurchase as Record<string, unknown>;
-    const matched = itemById.get(asText(record.fridge_item_id));
-    const name = (matched?.name ?? asText(record.name)).slice(0, NAME_MAX);
+    const spokenName = asText(record.name);
+    const name = spokenName.slice(0, NAME_MAX);
     if (!name) return [];
 
     const rawUnit = asText(record.unit) as VoiceUnit;
-    const unit = matched?.unit ?? (UNITS.includes(rawUnit) ? rawUnit : 'count');
-    const count = resolveCount(Number(record.count), unit);
+    const unit = UNITS.includes(rawUnit) ? rawUnit : 'count';
     const rawPrice = Math.round(Number(record.price));
     const price = Number.isFinite(rawPrice) && rawPrice > 0 && rawPrice <= PRICE_MAX ? rawPrice : 0;
     const category =
       categories.find((candidate) => candidate.code === asText(record.category_code)) ??
       fallbackCategory;
+    const purchase: ParsedPurchase = {
+      name,
+      brand: asText(record.brand).slice(0, NAME_MAX),
+      category_id: category.id,
+      unit,
+      count: resolveCount(Number(record.count), unit),
+      price,
+      fridge_item_id: null,
+    };
 
-    return [
-      {
-        name,
-        brand: (matched ? (matched.brand ?? '') : asText(record.brand)).slice(0, NAME_MAX),
-        category_id: category.id,
-        unit,
-        count,
-        price,
-        fridge_item_id: matched?.id ?? null,
-      },
-    ];
+    const match = matchItem(`${purchase.brand}${name}`);
+    if (match.best && match.isWhole) return [applyPurchaseItem(purchase, match.best)];
+    if (match.candidates.length > 0) {
+      return [{ ...purchase, candidate_ids: match.candidates.map((item) => item.id) }];
+    }
+    return [purchase];
   });
 }
 
@@ -162,73 +192,98 @@ export function collectPurchaseLinks(
 }
 
 /**
- * @description 재고만 바꾸는 말을 구매분 변경으로 바꾼다.
- * 버림은 품목 전체를 0으로, 남은 수량은 개 단위 품목만 받아 오래된 구매분부터 줄인다. 늘리는 말은 장보기로 본다.
+ * @description 품목 하나에 재고만 바꾸는 말을 적용한다. 버림은 품목 전체를 0으로, 남은 수량은 개 단위 품목만 받아
+ * 오래된 구매분부터 줄인다. 늘리는 말은 장보기로 보고, 적용할 수 없으면 `reason`을 돌려준다.
+ */
+export function toStockUpdate(
+  item: VoiceFridgeItem,
+  input: { action: unknown; remaining: unknown; spoken: string },
+): { update: StockUpdate } | { reason: string } | null {
+  const { action, spoken } = input;
+  const batches = activeBatches(item);
+  const before = batches.reduce((sum, batch) => sum + batch.quantity, 0);
+  if (before <= 0) return { reason: '이미 남은 재고가 없어요' };
+  const base = { fridge_item_id: item.id, name: item.name, unit: item.unit, before, spoken };
+
+  if (action === 'discard') {
+    return { update: { ...base, action: 'discard', after: 0, batches: [] } };
+  }
+
+  const remaining = Number(input.remaining);
+  if (
+    action !== 'set_remaining' ||
+    input.remaining === null ||
+    !Number.isFinite(remaining) ||
+    remaining < 0
+  ) {
+    return null;
+  }
+  if (item.unit !== 'count') return { reason: '무게·부피 재료는 남은 양을 말로 바꿀 수 없어요' };
+  const target = Math.floor(remaining);
+  if (target >= before) return { reason: '지금 재고보다 많아요. 산 것이면 장보기로 말해 주세요' };
+  if (target === 0) return { update: { ...base, action: 'discard', after: 0, batches: [] } };
+
+  let toRemove = before - target;
+  const changed = batches.flatMap((batch) => {
+    if (toRemove <= 0) return [];
+    const removed = Math.min(batch.quantity, toRemove);
+    toRemove -= removed;
+    return [{ batch_id: batch.id, current_quantity: batch.quantity - removed }];
+  });
+  return { update: { ...base, action: 'set_remaining', after: target, batches: changed } };
+}
+
+/**
+ * @description 재고만 바꾸는 말의 품목을 찾아 구매분 변경으로 바꾼다.
+ * 품목이 하나로 좁혀지지 않으면 후보를 남겨 사용자가 고르게 한다.
  */
 export function resolveStockUpdates(
   rawUpdates: unknown,
-  items: VoiceFridgeItem[],
-): { updates: StockUpdate[]; skipped: Array<{ spoken: string; reason: string }> } {
+  matchItem: VoiceItemMatcher,
+): {
+  updates: StockUpdate[];
+  pending: PendingStockUpdate[];
+  skipped: Array<{ spoken: string; reason: string }>;
+} {
   const updates: StockUpdate[] = [];
+  const pending: PendingStockUpdate[] = [];
   const skipped: Array<{ spoken: string; reason: string }> = [];
-  if (!Array.isArray(rawUpdates)) return { updates, skipped };
-  const itemById = new Map(items.map((item) => [item.id, item]));
+  if (!Array.isArray(rawUpdates)) return { updates, pending, skipped };
 
   for (const rawUpdate of rawUpdates) {
     if (typeof rawUpdate !== 'object' || rawUpdate === null) continue;
     const record = rawUpdate as Record<string, unknown>;
     const spoken = asText(record.spoken);
-    const item = itemById.get(asText(record.fridge_item_id));
-    if (!item) {
-      if (spoken) skipped.push({ spoken, reason: '냉장고에서 찾지 못했어요' });
+    if (!spoken) continue;
+    if (record.action !== 'discard' && record.action !== 'set_remaining') continue;
+
+    const match = matchItem(spoken);
+    if (match.candidates.length === 0) {
+      skipped.push({ spoken, reason: '냉장고에서 찾지 못했어요' });
       continue;
     }
-    if (updates.some((update) => update.fridge_item_id === item.id)) continue;
-
-    const batches = activeBatches(item);
-    const before = batches.reduce((sum, batch) => sum + batch.quantity, 0);
-    if (before <= 0) {
-      skipped.push({ spoken: spoken || item.name, reason: '이미 남은 재고가 없어요' });
-      continue;
-    }
-    const base = { fridge_item_id: item.id, name: item.name, unit: item.unit, before, spoken };
-
-    if (record.action === 'discard') {
-      updates.push({ ...base, action: 'discard', after: 0, batches: [] });
-      continue;
-    }
-
-    const remaining = Number(record.remaining);
-    if (record.action !== 'set_remaining' || !Number.isFinite(remaining) || remaining < 0) continue;
-    if (item.unit !== 'count') {
-      skipped.push({
-        spoken: spoken || item.name,
-        reason: '무게·부피 재료는 남은 양을 말로 바꿀 수 없어요',
+    if (!match.best) {
+      const remaining = typeof record.remaining === 'number' ? record.remaining : null;
+      pending.push({
+        id: `stock:${spoken}`,
+        spoken,
+        action: record.action,
+        remaining,
+        candidate_ids: match.candidates.map((item) => item.id),
       });
       continue;
     }
-    const target = Math.floor(remaining);
-    if (target >= before) {
-      skipped.push({
-        spoken: spoken || item.name,
-        reason: '지금 재고보다 많아요. 산 것이면 장보기로 말해 주세요',
-      });
-      continue;
-    }
-    if (target === 0) {
-      updates.push({ ...base, action: 'discard', after: 0, batches: [] });
-      continue;
-    }
+    if (updates.some((update) => update.fridge_item_id === match.best?.id)) continue;
 
-    let toRemove = before - target;
-    const changed = batches.flatMap((batch) => {
-      if (toRemove <= 0) return [];
-      const removed = Math.min(batch.quantity, toRemove);
-      toRemove -= removed;
-      return [{ batch_id: batch.id, current_quantity: batch.quantity - removed }];
+    const resolved = toStockUpdate(match.best, {
+      action: record.action,
+      remaining: record.remaining,
+      spoken,
     });
-    updates.push({ ...base, action: 'set_remaining', after: target, batches: changed });
+    if (!resolved) continue;
+    if ('reason' in resolved) skipped.push({ spoken, reason: resolved.reason });
+    else updates.push(resolved.update);
   }
 
-  return { updates, skipped };
+  return { updates, pending, skipped };
 }

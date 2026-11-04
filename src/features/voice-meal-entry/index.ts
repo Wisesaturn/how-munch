@@ -3,6 +3,7 @@ export { type VoiceResultAdapters, VoiceMealResultScreen } from './ui/VoiceMealR
 export { type VoiceDraftDish } from './model';
 export {
   buildParseMealPrompt,
+  createFridgeItemMatcher,
   extractJsonObject,
   resolveParsedMeal,
   type ParsedExpense,
