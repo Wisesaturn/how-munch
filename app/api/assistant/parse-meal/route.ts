@@ -9,6 +9,7 @@ import { apiResponse } from '@/commons/lib/http/apiResponse';
 
 import {
   buildParseMealPrompt,
+  createFridgeItemMatcher,
   extractJsonObject,
   resolveParsedMeal,
   type VoiceCategory,
@@ -32,7 +33,7 @@ interface FridgeBatchRow {
 
 /**
  * POST /api/assistant/parse-meal — 말하거나 적은 글을 식단, 냉장고 재고 차감, 외식비로 나눈다.
- * Claude는 날짜, 끼니, 메뉴, 재료 연결, 금액만 뽑고 구매분 선택과 재고 미리보기는 서버가 계산한다.
+ * Claude는 날짜, 끼니, 메뉴, 말한 재료 표현, 금액만 뽑고 품목 찾기와 구매분 선택, 재고 미리보기는 서버가 계산한다.
  * 저장은 하지 않는다. 클라이언트가 결과를 확인한 뒤 기존 식단, 외식비 저장 경로로 보낸다.
  */
 export const POST = withAuth(async (req: NextRequest, { supabase }) => {
@@ -55,7 +56,9 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
 
   const { data: fridgeRows, error } = await supabase
     .from('fridge_items')
-    .select('id, name, brand, unit, fridge_item_batches(id, purchased_date, quantity, deleted_at)')
+    .select(
+      'id, name, brand, unit, category_id, fridge_item_batches(id, purchased_date, quantity, deleted_at)',
+    )
     .eq('household_id', householdId)
     .is('deleted_at', null)
     .order('name', { ascending: true });
@@ -66,6 +69,7 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
     name: row.name,
     brand: row.brand,
     unit: row.unit as VoiceFridgeItem['unit'],
+    category_id: row.category_id,
     // 생성된 타입은 1:1 조인으로 잡지만 실제로는 구매분 배열이 온다
     batches: ((row.fridge_item_batches ?? []) as unknown as FridgeBatchRow[])
       .filter((batch) => batch.deleted_at === null)
@@ -76,10 +80,14 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
       })),
   }));
 
-  const categories = await fetchCategories(supabase, householdId);
+  const [categories, synonymTerms] = await Promise.all([
+    fetchCategories(supabase, householdId),
+    fetchSynonymTerms(supabase, householdId),
+  ]);
+  const matchItem = createFridgeItemMatcher(items, synonymTerms);
 
   const anthropic = createAnthropic(apiKey);
-  const system = buildParseMealPrompt(items, today, now, categories);
+  const system = buildParseMealPrompt(today, now, categories);
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     let answer: string;
@@ -103,7 +111,12 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
 
     try {
       return apiResponse.OK(
-        resolveParsedMeal(extractJsonObject(answer), items, { today, now, categories }),
+        resolveParsedMeal(extractJsonObject(answer), items, {
+          today,
+          now,
+          categories,
+          matchItem,
+        }),
       );
     } catch (err) {
       console.error(`[parse-meal] 응답 JSON 해석 실패 (${attempt}/${MAX_ATTEMPTS})`, err);
@@ -112,6 +125,15 @@ export const POST = withAuth(async (req: NextRequest, { supabase }) => {
 
   return apiResponse.INTERNAL_ERROR('말한 내용을 정리하지 못했어요.');
 });
+
+/** 가구 유사어. 읽지 못하면 유사어 없이 직접 일치로만 찾는다 */
+async function fetchSynonymTerms(supabase: AuthContext['supabase'], householdId: string) {
+  const { data } = await supabase
+    .from('search_synonym_terms')
+    .select('group_key, term')
+    .eq('household_id', householdId);
+  return data ?? [];
+}
 
 /** 장보기 분류 목록 — 분류 목록 경로와 같이 전역 분류에 가구 분류를 code 기준으로 덮어쓴다 */
 async function fetchCategories(

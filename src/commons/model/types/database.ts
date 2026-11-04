@@ -824,6 +824,19 @@ export interface Database {
         Args: { p_household_id: string; p_year_month: string };
         Returns: { year_month: string; expense_date: string; kind: string; total: number }[];
       };
+      create_voice_record_with_usage: {
+        Args: {
+          p_household_id: string;
+          p_date: string;
+          p_meal_type?: string | null;
+          p_purchases?: Json;
+          p_stock_updates?: Json;
+          p_dishes?: Json;
+          p_purchase_links?: Json;
+          p_expense?: Json;
+        };
+        Returns: Json;
+      };
       add_ingredient_with_fridge: {
         Args: {
           p_household_id: string;

@@ -1,9 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
+// 테스트 실행기가 경로 별칭을 풀지 못해 상대 경로로 가져온다
+import { matchTerm } from '../../../commons/lib/search/matchTerm';
+import { createSynonymIndex } from '../../../commons/lib/search/synonym';
+
 import {
+  allocateIngredient,
   extractJsonObject,
   guessMealType,
+  mapDishNames,
   resolveParsedMeal,
   type VoiceFridgeItem,
 } from './parseMeal';
@@ -14,24 +20,62 @@ const ITEMS: VoiceFridgeItem[] = [
     name: '돼지고기',
     brand: null,
     unit: 'g',
-    batches: [{ id: 'pork-1', purchased_date: '2026-11-01', quantity: 500 }],
+    category_id: 'c-meat',
+    batches: [
+      { id: 'pork-new', purchased_date: '2026-11-02', quantity: 300 },
+      { id: 'pork-old', purchased_date: '2026-11-01', quantity: 500 },
+    ],
   },
   {
     id: 'egg',
     name: '계란',
     brand: null,
     unit: 'count',
+    category_id: 'c-egg',
     batches: [
       { id: 'egg-new', purchased_date: '2026-11-02', quantity: 10 },
       { id: 'egg-old', purchased_date: '2026-10-28', quantity: 3 },
       { id: 'egg-empty', purchased_date: '2026-10-20', quantity: 0 },
     ],
   },
+  {
+    id: 'seoul-milk',
+    name: '서울우유',
+    brand: null,
+    unit: 'count',
+    category_id: 'c-dairy',
+    batches: [{ id: 'seoul-1', purchased_date: '2026-11-01', quantity: 1 }],
+  },
+  {
+    id: 'berry-milk',
+    name: '딸기우유',
+    brand: null,
+    unit: 'count',
+    category_id: 'c-dairy',
+    batches: [{ id: 'berry-1', purchased_date: '2026-11-01', quantity: 2 }],
+  },
+  {
+    id: 'tofu',
+    name: '두부',
+    brand: null,
+    unit: 'count',
+    category_id: 'c-etc',
+    batches: [{ id: 'tofu-1', purchased_date: '2026-11-01', quantity: 0 }],
+  },
 ];
-const CONTEXT = { today: '2026-11-03', now: '12:30' };
+const SYNONYMS = createSynonymIndex([{ groupKey: 'egg', terms: ['계란', '달걀'] }]);
+const matchItem = (term: string) =>
+  matchTerm(
+    ITEMS,
+    term,
+    (item) => [item.name],
+    () => [],
+    SYNONYMS,
+  );
+const CONTEXT = { today: '2026-11-03', now: '12:30', matchItem };
 
 describe('resolveParsedMeal', () => {
-  it('구매일이 가장 오래된 남은 구매분을 고르고 재고 미리보기를 만든다', () => {
+  it('유사어로 찾은 품목의 오래된 구매분을 고르고 재고 미리보기를 만든다', () => {
     const result = resolveParsedMeal(
       {
         date: '2026-11-02',
@@ -39,9 +83,7 @@ describe('resolveParsedMeal', () => {
         dishes: [
           {
             name: '계란말이',
-            ingredients: [
-              { fridge_item_id: 'egg', spoken: '계란 두 개', amount: 2, depleted: false },
-            ],
+            ingredients: [{ spoken: '달걀', amount: 2, depleted: false }],
           },
         ],
       },
@@ -51,6 +93,7 @@ describe('resolveParsedMeal', () => {
     assert.equal(result.date, '2026-11-02');
     assert.equal(result.type, 'dinner');
     assert.equal(result.dishes[0].ingredients[0].batch_id, 'egg-old');
+    assert.equal(result.dishes[0].ingredients[0].spoken, '달걀');
     assert.deepEqual(
       result.stock.map(({ batch_id, before, after, mode }) => ({ batch_id, before, after, mode })),
       [{ batch_id: 'egg-old', before: 3, after: 1, mode: 'subtract' }],
@@ -58,71 +101,213 @@ describe('resolveParsedMeal', () => {
     assert.equal(result.mealKind, 'home');
   });
 
-  it('개 단위 수량은 남은 재고를 넘지 않는다', () => {
+  it('오래된 구매분보다 많이 말하면 다음 구매분까지 나눠 잡는다', () => {
     const result = resolveParsedMeal(
-      {
-        dishes: [
-          {
-            name: '계란찜',
-            ingredients: [{ fridge_item_id: 'egg', spoken: '계란 다섯 개', amount: 5 }],
-          },
-        ],
-      },
+      { dishes: [{ name: '계란찜', ingredients: [{ spoken: '계란', amount: 5 }] }] },
       ITEMS,
       CONTEXT,
     );
-    assert.equal(result.dishes[0].ingredients[0].amount, 3);
+    assert.deepEqual(
+      result.dishes[0].ingredients.map(({ batch_id, amount }) => ({ batch_id, amount })),
+      [
+        { batch_id: 'egg-old', amount: 3 },
+        { batch_id: 'egg-new', amount: 2 },
+      ],
+    );
+    assert.deepEqual(result.shortages, []);
   });
 
-  it('무게 단위의 "다 썼어"는 소진으로 두고 재고를 0으로 보인다', () => {
+  it('전체 재고보다 많이 말하면 있는 만큼만 잡고 부족을 알린다', () => {
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '계란찜', ingredients: [{ spoken: '계란', amount: 15 }] }] },
+      ITEMS,
+      CONTEXT,
+    );
+    assert.equal(
+      result.dishes[0].ingredients.reduce((sum, row) => sum + row.amount, 0),
+      13,
+    );
+    assert.deepEqual(result.shortages, [{ name: '계란', available: 13, unit: 'count' }]);
+  });
+
+  it('여러 메뉴에 나눠 말해도 끼니 전체 재고를 넘지 않는다', () => {
     const result = resolveParsedMeal(
       {
         dishes: [
-          {
-            name: '제육볶음',
-            ingredients: [{ fridge_item_id: 'pork', spoken: '돼지고기 다', depleted: true }],
-          },
+          { name: '계란찜', ingredients: [{ spoken: '계란', amount: 12 }] },
+          { name: '계란말이', ingredients: [{ spoken: '계란', amount: 3 }] },
         ],
       },
       ITEMS,
       CONTEXT,
     );
-    assert.equal(result.dishes[0].ingredients[0].usage_status, 'depleted');
+    assert.equal(
+      result.dishes[1].ingredients.reduce((sum, row) => sum + row.amount, 0),
+      1,
+    );
+    assert.deepEqual(result.shortages, [{ name: '계란', available: 1, unit: 'count' }]);
+  });
+
+  it('무게 단위의 "다 썼어"는 남은 구매분을 모두 소진으로 둔다', () => {
+    const result = resolveParsedMeal(
+      {
+        dishes: [{ name: '제육볶음', ingredients: [{ spoken: '돼지고기', depleted: true }] }],
+      },
+      ITEMS,
+      CONTEXT,
+    );
+    assert.deepEqual(
+      result.dishes[0].ingredients.map(({ batch_id, usage_status }) => ({
+        batch_id,
+        usage_status,
+      })),
+      [
+        { batch_id: 'pork-old', usage_status: 'depleted' },
+        { batch_id: 'pork-new', usage_status: 'depleted' },
+      ],
+    );
     assert.equal(result.stock[0].after, 0);
     assert.equal(result.stock[0].mode, 'deplete');
   });
 
-  it('목록에 없는 품목은 unmatched로 옮긴다', () => {
+  it('같은 메뉴에서 같은 표현을 두 번 말해도 고를 항목 id가 겹치지 않는다', () => {
     const result = resolveParsedMeal(
       {
-        dishes: [{ name: '토스트', ingredients: [{ fridge_item_id: 'bread', spoken: '식빵' }] }],
+        dishes: [
+          {
+            name: '시리얼',
+            ingredients: [
+              { spoken: '우유', amount: 1 },
+              { spoken: '우유', amount: 2 },
+            ],
+          },
+        ],
+      },
+      ITEMS,
+      CONTEXT,
+    );
+    const ids = result.pendingIngredients.map((pending) => pending.id);
+    assert.equal(new Set(ids).size, 2);
+  });
+
+  it('무게 단위를 썼다고만 말하면 오래된 구매분 하나에 남긴다', () => {
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '제육볶음', ingredients: [{ spoken: '돼지고기' }] }] },
+      ITEMS,
+      CONTEXT,
+    );
+    assert.equal(result.dishes[0].ingredients.length, 1);
+    assert.equal(result.dishes[0].ingredients[0].batch_id, 'pork-old');
+    assert.equal(result.stock[0].mode, 'use');
+  });
+
+  it('후보가 여러 건이면 재료로 넣지 않고 고를 항목으로 남긴다', () => {
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '시리얼', ingredients: [{ spoken: '우유', amount: 1 }] }] },
+      ITEMS,
+      CONTEXT,
+    );
+    assert.equal(result.dishes[0].ingredients.length, 0);
+    assert.deepEqual(result.pendingIngredients, [
+      {
+        id: '시리얼:우유:0',
+        dish_name: '시리얼',
+        spoken: '우유',
+        amount: 1,
+        depleted: false,
+        candidate_ids: ['seoul-milk', 'berry-milk'],
+        reason: 'ambiguous',
+      },
+    ]);
+  });
+
+  it('못 찾은 재료가 있어도 메뉴는 남기고 찾은 재료는 연결한다', () => {
+    const result = resolveParsedMeal(
+      {
+        dishes: [
+          { name: '토스트', ingredients: [{ spoken: '식빵' }, { spoken: '계란', amount: 1 }] },
+        ],
+      },
+      ITEMS,
+      CONTEXT,
+    );
+    assert.equal(result.dishes[0].name, '토스트');
+    assert.equal(result.dishes[0].ingredients.length, 1);
+    assert.equal(result.pendingIngredients[0].reason, 'none');
+    assert.deepEqual(result.pendingIngredients[0].candidate_ids, []);
+  });
+
+  it('찾았지만 재고가 없으면 재고 없음으로 구분한다', () => {
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '두부조림', ingredients: [{ spoken: '두부', amount: 1 }] }] },
+      ITEMS,
+      CONTEXT,
+    );
+    assert.equal(result.dishes[0].ingredients.length, 0);
+    assert.equal(result.pendingIngredients[0].reason, 'no_stock');
+  });
+
+  it('메뉴만 말하면 재고가 있는 품목만 미선택 추천으로 돌려준다', () => {
+    const result = resolveParsedMeal(
+      {
+        dishes: [
+          {
+            name: '찌개',
+            ingredients: [],
+            suggested_ingredients: ['두부', '계란', '양파', '우유'],
+          },
+        ],
       },
       ITEMS,
       CONTEXT,
     );
     assert.equal(result.dishes[0].ingredients.length, 0);
-    assert.deepEqual(result.unmatched, [{ spoken: '식빵', reason: '냉장고에서 찾지 못했어요' }]);
+    assert.deepEqual(result.suggestions, [
+      { dish_name: '찌개', item_ids: ['egg', 'seoul-milk', 'berry-milk'] },
+    ]);
+    assert.deepEqual(result.stock, []);
+  });
+
+  it('외식 메뉴는 재료를 찾지 않고 추천도 만들지 않는다', () => {
+    const result = resolveParsedMeal(
+      {
+        dishes: [
+          {
+            name: '계란찜',
+            is_out: true,
+            ingredients: [{ spoken: '계란' }],
+            suggested_ingredients: ['계란'],
+          },
+        ],
+      },
+      ITEMS,
+      CONTEXT,
+    );
+    assert.equal(result.dishes[0].isOut, true);
+    assert.equal(result.dishes[0].ingredients.length, 0);
+    assert.deepEqual(result.pendingIngredients, []);
+    assert.deepEqual(result.suggestions, []);
   });
 
   it('금액이 있으면 외식비를 만들고 메뉴 이름을 채운다', () => {
     const result = resolveParsedMeal(
       {
         meal_type: 'lunch',
-        dishes: [{ name: '김치찌개', ingredients: [] }],
-        expense: { price: 15000, kind: 'restaurant', brand: null, store: '배민', menu: null },
+        dishes: [{ name: '김치찌개', is_out: true, ingredients: [] }],
+        expense: { price: 15000, kind: 'delivery', store: '배달의민족', brand: null, menu: null },
       },
       ITEMS,
       CONTEXT,
     );
+    assert.equal(result.mealKind, 'out');
     assert.deepEqual(result.expense, {
-      kind: 'restaurant',
+      kind: 'delivery',
       brand: '',
       name: '김치찌개',
-      store: '',
+      store: '배달의민족',
       price: 15000,
       date: '2026-11-03',
     });
-    assert.equal(result.mealKind, 'out');
   });
 
   it('금액이 0이거나 없으면 식비를 만들지 않는다', () => {
@@ -131,17 +316,50 @@ describe('resolveParsedMeal', () => {
   });
 
   it('끼니가 없으면 지금 시각으로 짐작한다', () => {
-    const result = resolveParsedMeal({ dishes: [] }, ITEMS, { today: '2026-11-03', now: '08:10' });
-    assert.equal(result.type, 'breakfast');
+    assert.equal(resolveParsedMeal({}, ITEMS, CONTEXT).type, 'lunch');
+    assert.equal(resolveParsedMeal({}, ITEMS, { ...CONTEXT, now: '08:00' }).type, 'breakfast');
+  });
+});
+
+describe('mapDishNames', () => {
+  it('유지한 이름과 같은 자리의 바뀐 이름을 잇는다', () => {
+    const names = mapDishNames(
+      [{ name: '찌개' }, { name: '볶음' }],
+      [{ name: '된장찌개' }, { name: '볶음' }],
+    );
+    assert.equal(names.get('찌개'), '된장찌개');
+    assert.equal(names.get('볶음'), '볶음');
+  });
+
+  it('메뉴 수가 줄면 없어진 이름을 지운 것으로 본다', () => {
+    const names = mapDishNames([{ name: '찌개' }, { name: '볶음' }], [{ name: '볶음' }]);
+    assert.equal(names.get('찌개'), null);
+  });
+});
+
+describe('allocateIngredient', () => {
+  it('이미 잡은 수량을 빼고 나눠 잡는다', () => {
+    const usedByBatch = new Map([['egg-old', 3]]);
+    const { rows } = allocateIngredient(
+      ITEMS[1],
+      { spoken: '계란', amount: 2, depleted: false },
+      usedByBatch,
+    );
+    assert.deepEqual(
+      rows.map(({ batch_id, amount }) => ({ batch_id, amount })),
+      [{ batch_id: 'egg-new', amount: 2 }],
+    );
+    assert.equal(usedByBatch.get('egg-new'), 2);
   });
 });
 
 describe('guessMealType', () => {
   it('시간대별로 끼니를 고른다', () => {
-    assert.equal(guessMealType('07:00'), 'breakfast');
-    assert.equal(guessMealType('13:00'), 'lunch');
-    assert.equal(guessMealType('19:00'), 'dinner');
-    assert.equal(guessMealType('23:30'), 'snack');
+    assert.equal(guessMealType('05:00'), 'breakfast');
+    assert.equal(guessMealType('11:00'), 'lunch');
+    assert.equal(guessMealType('16:00'), 'dinner');
+    assert.equal(guessMealType('23:00'), 'snack');
+    assert.equal(guessMealType('invalid'), 'snack');
   });
 });
 
@@ -153,6 +371,6 @@ describe('extractJsonObject', () => {
   });
 
   it('JSON이 없으면 오류를 낸다', () => {
-    assert.throws(() => extractJsonObject('정리하지 못했어요'));
+    assert.throws(() => extractJsonObject('없음'));
   });
 });
