@@ -10,6 +10,7 @@ export {
   type ParsedMealResult,
   type ParsedPurchase,
   type VoiceFridgeItem,
+  type VoiceRecordPayload,
 } from './lib';
 export { type VoiceCategory } from './lib';
 export { useVoiceRecordStore } from './model';

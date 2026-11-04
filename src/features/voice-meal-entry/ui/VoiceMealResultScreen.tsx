@@ -28,11 +28,7 @@ import {
 } from '../lib';
 import {
   useVoiceRecordStore,
-  attachPurchaseLinks,
-  saveVoiceExpense,
-  saveVoiceMeal,
-  saveVoicePurchase,
-  saveVoiceStockUpdate,
+  saveVoiceRecord,
   toSavableDishes,
   type VoiceDraftDish,
 } from '../model';
@@ -61,10 +57,7 @@ const MESSAGE = {
   outMenu: '사 먹은 메뉴는 식단 탭에 남지 않아요. 외식비에 메뉴 이름을 남겨 둘게요',
   outMenuNoExpense: '사 먹은 메뉴는 식단 탭에 남지 않아요. 금액을 말하면 외식비로 기록돼요',
   brandRequired: '가게 이름을 적으면 외식비를 기록할 수 있어요',
-  expenseFailed: '다른 기록은 저장했지만 외식비는 기록하지 못했어요. 외식비만 다시 저장해 주세요',
-  mealFailed: '식단을 기록하지 못했어요. 잠시 뒤 다시 저장해 주세요',
-  purchaseFailed: '장보기를 기록하지 못했어요. 잠시 뒤 다시 저장해 주세요',
-  stockFailed: '냉장고 정리를 기록하지 못했어요. 잠시 뒤 다시 저장해 주세요',
+  saveFailed: '기록하지 못했어요. 아무것도 저장되지 않았으니 다시 저장해 주세요',
 };
 
 /* -------------------------------------------------------------------------------------------------
@@ -196,7 +189,6 @@ function VoiceMealReview({
   const setIsPurchaseOn = (next: boolean) => update({ isPurchaseOn: next });
   const setIsStockOn = (next: boolean) => update({ isStockOn: next });
   const setIsExpenseOn = (next: boolean) => update({ isExpenseOn: next });
-  const [isMealSaved, setIsMealSaved] = useState(false);
   const savableDishes = toSavableDishes(dishes);
   const stock = buildStockPreview(savableDishes, itemById);
   const linkedDishNames = new Set(result.purchaseLinks.map((link) => link.dish_name));
@@ -218,26 +210,22 @@ function VoiceMealReview({
     (isStockOn ? pendingStockUpdates.length : 0) +
     (isPurchaseOn ? unpickedPurchases.length : 0);
 
-  const [isPurchaseSaved, setIsPurchaseSaved] = useState(false);
   const savablePurchaseCount = purchases.length - unpickedPurchases.length;
-  const willSavePurchases = isPurchaseOn && !isPurchaseSaved && savablePurchaseCount > 0;
+  const willSavePurchases = isPurchaseOn && savablePurchaseCount > 0;
   const savablePurchaseLinks = result.purchaseLinks.filter(
     (link) => purchases[link.purchase_index] && !purchases[link.purchase_index].candidate_ids,
   );
   const willLinkPurchases = isPurchaseOn && savablePurchaseLinks.length > 0;
 
-  const [isStockSaved, setIsStockSaved] = useState(false);
-  const willSaveStock = isStockOn && !isStockSaved && stockUpdates.length > 0;
+  const willSaveStock = isStockOn && stockUpdates.length > 0;
 
-  const [expenseError, setExpenseError] = useState<string | null>(null);
   const willSaveExpense = expense !== null && isExpenseOn;
   const isBrandMissing = willSaveExpense && !expense.brand.trim();
 
-  const willSaveMeal = (savableDishes.length > 0 || willLinkPurchases) && isMealOn && !isMealSaved;
-  const purchaseTotal =
-    willSavePurchases || isPurchaseSaved
-      ? sumPrices(purchases.filter((purchase) => !purchase.candidate_ids))
-      : 0;
+  const willSaveMeal = (savableDishes.length > 0 || willLinkPurchases) && isMealOn;
+  const purchaseTotal = willSavePurchases
+    ? sumPrices(purchases.filter((purchase) => !purchase.candidate_ids))
+    : 0;
   const expenseTotal = willSaveExpense ? expense.price : 0;
   const [isSaving, setIsSaving] = useState(false);
 
@@ -268,10 +256,7 @@ function VoiceMealReview({
     if (!expense) return;
     adapters.editExpense({
       expense,
-      onDone: (nextExpense) => {
-        update({ expense: nextExpense });
-        setExpenseError(null);
-      },
+      onDone: (nextExpense) => update({ expense: nextExpense }),
     });
   }
 
@@ -291,7 +276,7 @@ function VoiceMealReview({
     if (reason) Toast.warn(reason);
   }
 
-  /** 저장 순서: 장보기(새 구매분이 생김) → 냉장고 정리 → 식단(산 재료 잇기) → 외식비. 실패하면 그 단계에서 멈추고 앞 단계는 저장된 채로 둔다 */
+  /** 켜 둔 묶음을 한 번에 저장한다. 실패하면 전부 취소되므로 고친 값을 그대로 두고 다시 저장하게 한다 */
   async function save() {
     if (isBrandMissing) {
       Toast.warn(MESSAGE.brandRequired);
@@ -300,85 +285,31 @@ function VoiceMealReview({
     }
 
     setIsSaving(true);
-    setExpenseError(null);
-    const done: string[] = [];
-
-    const fridgeItemIdByPurchase: Array<string | null> = purchases.map(() => null);
-    if (willSavePurchases) {
-      try {
-        for (const [index, purchase] of purchases.entries()) {
-          if (purchase.candidate_ids) continue;
-          fridgeItemIdByPurchase[index] = await saveVoicePurchase({
-            householdId,
-            date: result.date,
-            store: result.purchaseStore,
-            purchase,
-          });
-        }
-        setIsPurchaseSaved(true);
-        done.push(`장보기 ${savablePurchaseCount}건`);
-      } catch (error) {
-        invalidate();
-        Toast.error(error instanceof Error ? error.message : MESSAGE.purchaseFailed);
-        setIsSaving(false);
-        return;
-      }
-    }
-
-    if (willSaveStock) {
-      try {
-        for (const update of stockUpdates) await saveVoiceStockUpdate(update);
-        setIsStockSaved(true);
-        done.push('냉장고 정리');
-      } catch (error) {
-        invalidate();
-        Toast.error(error instanceof Error ? error.message : MESSAGE.stockFailed);
-        setIsSaving(false);
-        return;
-      }
-    }
-
-    if (willSaveMeal) {
-      try {
-        const mealDishes = toSavableDishes(
-          await attachPurchaseLinks({
-            householdId,
-            dishes: savableDishes,
-            links: savablePurchaseLinks,
-            purchases,
-            fridgeItemIdByPurchase,
-          }),
-        );
-        if (mealDishes.length > 0) {
-          await saveVoiceMeal({ householdId, date: result.date, type, dishes: mealDishes });
-          done.push(`${dateLabel} ${MEAL_TYPE_LABEL[type]} 식단`);
-        }
-        setIsMealSaved(true);
-      } catch (error) {
-        invalidate();
-        Toast.error(error instanceof Error ? error.message : MESSAGE.mealFailed);
-        setIsSaving(false);
-        return;
-      }
-    }
-
-    if (willSaveExpense) {
-      try {
-        await saveVoiceExpense(householdId, expense);
-        done.push(`외식비 ${expense.price.toLocaleString('ko-KR')}원`);
-      } catch {
-        invalidate();
-        setExpenseError(
-          done.length > 0
-            ? MESSAGE.expenseFailed
-            : '외식비를 기록하지 못했어요. 잠시 뒤 다시 저장해 주세요',
-        );
-        setIsSaving(false);
-        return;
-      }
+    try {
+      await saveVoiceRecord({
+        householdId,
+        date: result.date,
+        type,
+        purchaseStore: result.purchaseStore,
+        dishes: isMealOn ? savableDishes : null,
+        purchases: isPurchaseOn ? purchases : null,
+        purchaseLinks: result.purchaseLinks,
+        stockUpdates: isStockOn ? stockUpdates : null,
+        expense: willSaveExpense ? expense : null,
+      });
+    } catch (error) {
+      Toast.error(error instanceof Error ? error.message : MESSAGE.saveFailed);
+      setIsSaving(false);
+      return;
     }
 
     invalidate();
+    const done = [
+      willSavePurchases && `장보기 ${savablePurchaseCount}건`,
+      willSaveStock && '냉장고 정리',
+      willSaveMeal && `${dateLabel} ${MEAL_TYPE_LABEL[type]} 식단`,
+      willSaveExpense && `외식비 ${expense.price.toLocaleString('ko-KR')}원`,
+    ].filter(Boolean);
     Toast.success(`${done.join(', ')}을 기록했어요`);
     setIsSaving(false);
     onSaved();
@@ -398,10 +329,7 @@ function VoiceMealReview({
           )}
         </div>
 
-        <ReviewSection
-          title="식단"
-          toggle={!isMealSaved ? { checked: isMealOn, onChange: setIsMealOn } : undefined}
-        >
+        <ReviewSection title="식단" toggle={{ checked: isMealOn, onChange: setIsMealOn }}>
           <div className={cn('flex flex-col gap-3', !isMealOn && 'opacity-50')}>
             <dl>
               <ReceiptRow label="날짜" value={dateLabel} />
@@ -417,13 +345,11 @@ function VoiceMealReview({
                 </SegmentControl.Item>
               ))}
             </SegmentControl>
-            {!isMealSaved &&
-              adapters.renderMealCard({
-                title: MEAL_TYPE_LABEL[type],
-                dishes,
-                onPress: editDishes,
-              })}
-            {isMealSaved && <p className="text-[15px] text-emerald-700">식단은 기록했어요</p>}
+            {adapters.renderMealCard({
+              title: MEAL_TYPE_LABEL[type],
+              dishes,
+              onPress: editDishes,
+            })}
             {willLinkPurchases && (
               <dl className="flex flex-col gap-1.5">
                 {savablePurchaseLinks.map((link) => (
@@ -435,7 +361,7 @@ function VoiceMealReview({
                 ))}
               </dl>
             )}
-            {isMealOn && !isMealSaved && (
+            {isMealOn && (
               <VoiceDishChoices
                 result={result}
                 linkedDishNames={linkedDishNames}
@@ -464,9 +390,7 @@ function VoiceMealReview({
         <ReviewSection
           title="장보기"
           toggle={
-            purchases.length > 0 && !isPurchaseSaved
-              ? { checked: isPurchaseOn, onChange: setIsPurchaseOn }
-              : undefined
+            purchases.length > 0 ? { checked: isPurchaseOn, onChange: setIsPurchaseOn } : undefined
           }
         >
           {purchases.length === 0 ? (
@@ -475,10 +399,7 @@ function VoiceMealReview({
             <div className={cn('flex flex-col gap-2', !isPurchaseOn && 'opacity-50')}>
               {purchases.map((purchase, index) => (
                 <div key={index} className="flex flex-col gap-2">
-                  <ListItemButton
-                    onClick={() => editPurchase(index)}
-                    disabled={!isPurchaseOn || isPurchaseSaved}
-                  >
+                  <ListItemButton onClick={() => editPurchase(index)} disabled={!isPurchaseOn}>
                     {adapters.renderPurchaseItem({ purchase })}
                   </ListItemButton>
                   {purchase.candidate_ids && (
@@ -536,7 +457,7 @@ function VoiceMealReview({
         {(stockUpdates.length > 0 || pendingStockUpdates.length > 0) && (
           <ReviewSection
             title="냉장고 정리"
-            toggle={!isStockSaved ? { checked: isStockOn, onChange: setIsStockOn } : undefined}
+            toggle={{ checked: isStockOn, onChange: setIsStockOn }}
           >
             <div className={cn('flex flex-col gap-3', !isStockOn && 'opacity-50')}>
               {stockUpdates.length > 0 && (
@@ -574,11 +495,6 @@ function VoiceMealReview({
               </ListItemButton>
               {isBrandMissing && (
                 <p className="text-[15px] break-keep text-red-600">{MESSAGE.brandRequired}</p>
-              )}
-              {expenseError && (
-                <p role="alert" className="text-[15px] break-keep text-red-600">
-                  {expenseError}
-                </p>
               )}
             </div>
           ) : (

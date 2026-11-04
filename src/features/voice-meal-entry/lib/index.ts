@@ -38,3 +38,8 @@ export {
   type StockUpdate,
   type VoiceCategory,
 } from './parseExtras';
+export {
+  buildVoiceRecordPayload,
+  type VoiceRecordPayload,
+  type VoiceRecordPayloadInput,
+} from './voiceRecordPayload';
