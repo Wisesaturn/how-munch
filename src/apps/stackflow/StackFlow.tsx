@@ -754,6 +754,10 @@ function VoiceMealResultActivity({
         },
       });
     },
+    searchFridgeItem: ({ items, onSelect }) => {
+      setPendingFridgeItemCallback(onSelect);
+      push('FridgeItemSearchActivity', { fieldLabel: '재료', items });
+    },
   };
 
   return (

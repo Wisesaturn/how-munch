@@ -37,6 +37,7 @@ import {
   type VoiceDraftDish,
 } from '../model';
 
+import { CandidateChips, SynonymOfferBanner, VoiceDishChoices } from './VoiceMatchChoices';
 import { openVoiceMealEntrySheet } from './VoiceMealEntrySheet';
 
 /* -------------------------------------------------------------------------------------------------
@@ -57,8 +58,8 @@ const MESSAGE = {
   noStock: '빠지는 재료가 없어요',
   noPurchase: '"마트에서 계란 샀어"처럼 말하면 장보기도 함께 기록돼요',
   noExpense: '"점심에 김치찌개 사 먹고 9,000원 냈어"처럼 말하면 외식비도 함께 기록돼요',
-  outMenu: '재료가 없는 메뉴는 식단 탭에 남지 않아요. 외식비에 메뉴 이름을 남겨 둘게요',
-  noIngredient: '냉장고 재료를 연결하지 못해 식단에는 남지 않아요. 식단을 눌러 재료를 골라 주세요',
+  outMenu: '사 먹은 메뉴는 식단 탭에 남지 않아요. 외식비에 메뉴 이름을 남겨 둘게요',
+  outMenuNoExpense: '사 먹은 메뉴는 식단 탭에 남지 않아요. 금액을 말하면 외식비로 기록돼요',
   brandRequired: '가게 이름을 적으면 외식비를 기록할 수 있어요',
   expenseFailed: '다른 기록은 저장했지만 외식비는 기록하지 못했어요. 외식비만 다시 저장해 주세요',
   mealFailed: '식단을 기록하지 못했어요. 잠시 뒤 다시 저장해 주세요',
@@ -95,6 +96,11 @@ export interface VoiceResultAdapters {
   editExpense: (props: {
     expense: ParsedExpense;
     onDone: (expense: ParsedExpense) => void;
+  }) => void;
+  /** 냉장고 품목 검색 화면을 열어 고른 품목 id를 돌려준다 */
+  searchFridgeItem: (props: {
+    items: Array<{ id: string; name: string; brand: string | null; depleted: boolean }>;
+    onSelect: (itemId: string) => void;
   }) => void;
 }
 
@@ -174,6 +180,11 @@ function VoiceMealReview({
     dishes,
     purchases,
     expense,
+    pendingIngredients,
+    stockUpdates,
+    pendingStockUpdates,
+    pickStockItem,
+    pickPurchaseItem,
     isMealOn,
     isPurchaseOn,
     isStockOn,
@@ -189,23 +200,44 @@ function VoiceMealReview({
   const savableDishes = toSavableDishes(dishes);
   const stock = buildStockPreview(savableDishes, itemById);
   const linkedDishNames = new Set(result.purchaseLinks.map((link) => link.dish_name));
-  const outDishes = result.dishes.filter(
-    (dish) => dish.ingredients.length === 0 && !linkedDishNames.has(dish.name),
+  const outDishes = result.dishes.filter((dish) => dish.isOut);
+  const dishNames = new Set(dishes.map((dish) => dish.name));
+  const openPendingIngredients = pendingIngredients.filter((pending) =>
+    dishNames.has(pending.dish_name),
   );
+  const unpickedPurchases = purchases.filter((purchase) => purchase.candidate_ids);
+  /** 재료가 없어 저장할 때 빠지는 메뉴. 고를 재료가 남은 메뉴는 그 재료로 세므로 뺀다 */
+  const emptyDishCount = dishes.filter(
+    (dish) =>
+      dish.ingredients.length === 0 &&
+      !linkedDishNames.has(dish.name) &&
+      !openPendingIngredients.some((pending) => pending.dish_name === dish.name),
+  ).length;
+  const skippedCount =
+    (isMealOn ? openPendingIngredients.length + emptyDishCount : 0) +
+    (isStockOn ? pendingStockUpdates.length : 0) +
+    (isPurchaseOn ? unpickedPurchases.length : 0);
 
   const [isPurchaseSaved, setIsPurchaseSaved] = useState(false);
-  const willSavePurchases = isPurchaseOn && !isPurchaseSaved && purchases.length > 0;
-  const willLinkPurchases = isPurchaseOn && result.purchaseLinks.length > 0;
+  const savablePurchaseCount = purchases.length - unpickedPurchases.length;
+  const willSavePurchases = isPurchaseOn && !isPurchaseSaved && savablePurchaseCount > 0;
+  const savablePurchaseLinks = result.purchaseLinks.filter(
+    (link) => purchases[link.purchase_index] && !purchases[link.purchase_index].candidate_ids,
+  );
+  const willLinkPurchases = isPurchaseOn && savablePurchaseLinks.length > 0;
 
   const [isStockSaved, setIsStockSaved] = useState(false);
-  const willSaveStock = isStockOn && !isStockSaved && result.stockUpdates.length > 0;
+  const willSaveStock = isStockOn && !isStockSaved && stockUpdates.length > 0;
 
   const [expenseError, setExpenseError] = useState<string | null>(null);
   const willSaveExpense = expense !== null && isExpenseOn;
   const isBrandMissing = willSaveExpense && !expense.brand.trim();
 
   const willSaveMeal = (savableDishes.length > 0 || willLinkPurchases) && isMealOn && !isMealSaved;
-  const purchaseTotal = willSavePurchases || isPurchaseSaved ? sumPrices(purchases) : 0;
+  const purchaseTotal =
+    willSavePurchases || isPurchaseSaved
+      ? sumPrices(purchases.filter((purchase) => !purchase.candidate_ids))
+      : 0;
   const expenseTotal = willSaveExpense ? expense.price : 0;
   const [isSaving, setIsSaving] = useState(false);
 
@@ -254,6 +286,11 @@ function VoiceMealReview({
     queryClient.invalidateQueries({ queryKey: budgetKeys.all });
   }
 
+  function pickStock(pendingId: string, itemId: string) {
+    const reason = pickStockItem(pendingId, itemId);
+    if (reason) Toast.warn(reason);
+  }
+
   /** 저장 순서: 장보기(새 구매분이 생김) → 냉장고 정리 → 식단(산 재료 잇기) → 외식비. 실패하면 그 단계에서 멈추고 앞 단계는 저장된 채로 둔다 */
   async function save() {
     if (isBrandMissing) {
@@ -270,6 +307,7 @@ function VoiceMealReview({
     if (willSavePurchases) {
       try {
         for (const [index, purchase] of purchases.entries()) {
+          if (purchase.candidate_ids) continue;
           fridgeItemIdByPurchase[index] = await saveVoicePurchase({
             householdId,
             date: result.date,
@@ -278,7 +316,7 @@ function VoiceMealReview({
           });
         }
         setIsPurchaseSaved(true);
-        done.push(`장보기 ${purchases.length}건`);
+        done.push(`장보기 ${savablePurchaseCount}건`);
       } catch (error) {
         invalidate();
         Toast.error(error instanceof Error ? error.message : MESSAGE.purchaseFailed);
@@ -289,7 +327,7 @@ function VoiceMealReview({
 
     if (willSaveStock) {
       try {
-        for (const update of result.stockUpdates) await saveVoiceStockUpdate(update);
+        for (const update of stockUpdates) await saveVoiceStockUpdate(update);
         setIsStockSaved(true);
         done.push('냉장고 정리');
       } catch (error) {
@@ -306,7 +344,7 @@ function VoiceMealReview({
           await attachPurchaseLinks({
             householdId,
             dishes: savableDishes,
-            links: result.purchaseLinks,
+            links: savablePurchaseLinks,
             purchases,
             fridgeItemIdByPurchase,
           }),
@@ -388,7 +426,7 @@ function VoiceMealReview({
             {isMealSaved && <p className="text-[15px] text-emerald-700">식단은 기록했어요</p>}
             {willLinkPurchases && (
               <dl className="flex flex-col gap-1.5">
-                {result.purchaseLinks.map((link) => (
+                {savablePurchaseLinks.map((link) => (
                   <ReceiptRow
                     key={`${link.dish_name}-${link.purchase_index}`}
                     label={link.dish_name}
@@ -397,18 +435,29 @@ function VoiceMealReview({
                 ))}
               </dl>
             )}
+            {isMealOn && !isMealSaved && (
+              <VoiceDishChoices
+                result={result}
+                linkedDishNames={linkedDishNames}
+                onSearchFridgeItem={adapters.searchFridgeItem}
+              />
+            )}
+            <SynonymOfferBanner />
             {outDishes.length > 0 && (
               <p className="text-[15px] leading-relaxed break-keep text-gray-500">
                 {outDishes.map((dish) => dish.name).join(', ')}:{' '}
-                {expense ? MESSAGE.outMenu : MESSAGE.noIngredient}
+                {expense ? MESSAGE.outMenu : MESSAGE.outMenuNoExpense}
               </p>
             )}
-            {result.unmatched.length > 0 && (
-              <p className="text-[15px] leading-relaxed break-keep text-amber-700">
-                냉장고에서 찾지 못한 재료:{' '}
-                {result.unmatched.map((entry) => entry.spoken).join(', ')}
+            {result.shortages.map((shortage) => (
+              <p
+                key={shortage.name}
+                className="text-[15px] leading-relaxed break-keep text-amber-700"
+              >
+                {shortage.name}은 {shortage.available.toLocaleString('ko-KR')}
+                {UNIT_LABEL[shortage.unit]}만 남아 있어요
               </p>
-            )}
+            ))}
           </div>
         </ReviewSection>
 
@@ -425,13 +474,26 @@ function VoiceMealReview({
           ) : (
             <div className={cn('flex flex-col gap-2', !isPurchaseOn && 'opacity-50')}>
               {purchases.map((purchase, index) => (
-                <ListItemButton
-                  key={index}
-                  onClick={() => editPurchase(index)}
-                  disabled={!isPurchaseOn || isPurchaseSaved}
-                >
-                  {adapters.renderPurchaseItem({ purchase })}
-                </ListItemButton>
+                <div key={index} className="flex flex-col gap-2">
+                  <ListItemButton
+                    onClick={() => editPurchase(index)}
+                    disabled={!isPurchaseOn || isPurchaseSaved}
+                  >
+                    {adapters.renderPurchaseItem({ purchase })}
+                  </ListItemButton>
+                  {purchase.candidate_ids && (
+                    <CandidateChips
+                      label={`'${purchase.name}'은 어떤 품목에 넣을까요?`}
+                      itemIds={purchase.candidate_ids}
+                      items={result.fridgeItems}
+                      onPick={(itemId) => pickPurchaseItem(index, itemId)}
+                      extra={{
+                        label: '새 품목으로',
+                        onPress: () => pickPurchaseItem(index, null),
+                      }}
+                    />
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -446,7 +508,7 @@ function VoiceMealReview({
                 <ReceiptRow key={row.batch_id} label={row.name} value={formatStock(row)} />
               ))}
               {willLinkPurchases &&
-                result.purchaseLinks.map((link) => {
+                savablePurchaseLinks.map((link) => {
                   const purchase = purchases[link.purchase_index];
                   if (!purchase) return null;
                   return (
@@ -461,20 +523,43 @@ function VoiceMealReview({
           )}
         </ReviewSection>
 
-        {result.stockUpdates.length > 0 && (
+        {result.unmatched.length > 0 && (
+          <ul className="flex flex-col gap-1 text-[15px] leading-relaxed break-keep text-amber-700">
+            {result.unmatched.map((entry) => (
+              <li key={entry.spoken}>
+                {entry.spoken}: {entry.reason}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {(stockUpdates.length > 0 || pendingStockUpdates.length > 0) && (
           <ReviewSection
             title="냉장고 정리"
             toggle={!isStockSaved ? { checked: isStockOn, onChange: setIsStockOn } : undefined}
           >
-            <dl className={cn('flex flex-col gap-1.5', !isStockOn && 'opacity-50')}>
-              {result.stockUpdates.map((update) => (
-                <ReceiptRow
-                  key={update.fridge_item_id}
-                  label={update.name}
-                  value={formatStockUpdate(update)}
+            <div className={cn('flex flex-col gap-3', !isStockOn && 'opacity-50')}>
+              {stockUpdates.length > 0 && (
+                <dl className="flex flex-col gap-1.5">
+                  {stockUpdates.map((update) => (
+                    <ReceiptRow
+                      key={update.fridge_item_id}
+                      label={update.name}
+                      value={formatStockUpdate(update)}
+                    />
+                  ))}
+                </dl>
+              )}
+              {pendingStockUpdates.map((pending) => (
+                <CandidateChips
+                  key={pending.id}
+                  label={`'${pending.spoken}'은 어떤 품목인가요?`}
+                  itemIds={pending.candidate_ids}
+                  items={result.fridgeItems}
+                  onPick={(itemId) => pickStock(pending.id, itemId)}
                 />
               ))}
-            </dl>
+            </div>
           </ReviewSection>
         )}
 
@@ -514,6 +599,11 @@ function VoiceMealReview({
               <dd>{(purchaseTotal + expenseTotal).toLocaleString('ko-KR')}원</dd>
             </div>
           </dl>
+        )}
+        {skippedCount > 0 && (
+          <p className="text-[15px] break-keep text-amber-700">
+            {skippedCount}개는 고르지 않아 빠져요
+          </p>
         )}
       </div>
 
