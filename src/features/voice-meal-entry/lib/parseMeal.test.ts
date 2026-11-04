@@ -73,6 +73,17 @@ const matchItem = (term: string) =>
     SYNONYMS,
   );
 const CONTEXT = { today: '2026-11-03', now: '12:30', matchItem };
+const withItems = (items: VoiceFridgeItem[]) => ({
+  ...CONTEXT,
+  matchItem: (term: string) =>
+    matchTerm(
+      items,
+      term,
+      (item) => [item.name],
+      () => [],
+      SYNONYMS,
+    ),
+});
 
 describe('resolveParsedMeal', () => {
   it('유사어로 찾은 품목의 오래된 구매분을 고르고 재고 미리보기를 만든다', () => {
@@ -250,22 +261,80 @@ describe('resolveParsedMeal', () => {
   it('메뉴만 말하면 재고가 있는 품목만 미선택 추천으로 돌려준다', () => {
     const result = resolveParsedMeal(
       {
-        dishes: [
-          {
-            name: '찌개',
-            ingredients: [],
-            suggested_ingredients: ['두부', '계란', '양파', '우유'],
-          },
-        ],
+        dishes: [{ name: '우유', ingredients: [] }],
       },
       ITEMS,
       CONTEXT,
     );
     assert.equal(result.dishes[0].ingredients.length, 0);
     assert.deepEqual(result.suggestions, [
-      { dish_name: '찌개', item_ids: ['egg', 'seoul-milk', 'berry-milk'] },
+      { dish_name: '우유', item_ids: ['seoul-milk', 'berry-milk'] },
     ]);
     assert.deepEqual(result.stock, []);
+  });
+
+  it('메뉴 이름으로 찾은 재고 품목만 추천하고 소진 품목은 뺀다', () => {
+    const items: VoiceFridgeItem[] = [
+      { ...ITEMS[0], id: 'bagel', name: '베이글' },
+      { ...ITEMS[0], id: 'dongchimi', name: '천수무 동치미' },
+      { ...ITEMS[0], id: 'old-dongchimi', name: '열무 동치미', batches: [] },
+    ];
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '동치미', ingredients: [], suggested_ingredients: ['베이글'] }] },
+      items,
+      withItems(items),
+    );
+    assert.deepEqual(result.suggestions, [{ dish_name: '동치미', item_ids: ['dongchimi'] }]);
+  });
+
+  it('메뉴가 품목 이름을 품으면 그 품목을 추천한다', () => {
+    const items: VoiceFridgeItem[] = [
+      { ...ITEMS[0], id: 'kimchi', name: '김치' },
+      { ...ITEMS[0], id: 'bagel', name: '베이글' },
+    ];
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '김치찌개', ingredients: [] }] },
+      items,
+      withItems(items),
+    );
+    assert.deepEqual(result.suggestions, [{ dish_name: '김치찌개', item_ids: ['kimchi'] }]);
+  });
+
+  it('이름이 정확히 같은 품목을 앞에 두고 검색 후보를 함께 보여 준다', () => {
+    const items: VoiceFridgeItem[] = [
+      { ...ITEMS[0], id: 'berry', name: '딸기우유' },
+      { ...ITEMS[0], id: 'milk', name: '우유' },
+    ];
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '우유', ingredients: [] }] },
+      items,
+      withItems(items),
+    );
+    assert.deepEqual(result.suggestions, [{ dish_name: '우유', item_ids: ['milk', 'berry'] }]);
+  });
+
+  it('메뉴 이름으로 찾지 못하면 Claude가 제안한 재료를 검색해 추천한다', () => {
+    const items: VoiceFridgeItem[] = [
+      { ...ITEMS[0], id: 'tofu', name: '두부' },
+      { ...ITEMS[0], id: 'bagel', name: '베이글' },
+      { ...ITEMS[0], id: 'pasta', name: '파스타' },
+    ];
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '된장찌개', ingredients: [], suggested_ingredients: ['두부', '파'] }] },
+      items,
+      withItems(items),
+    );
+    assert.deepEqual(result.suggestions, [{ dish_name: '된장찌개', item_ids: ['tofu'] }]);
+  });
+
+  it('한 글자 메뉴는 품목 이름이 같을 때만 추천한다', () => {
+    const items: VoiceFridgeItem[] = [{ ...ITEMS[0], id: 'soy', name: '국간장' }];
+    const result = resolveParsedMeal(
+      { dishes: [{ name: '국', ingredients: [] }] },
+      items,
+      withItems(items),
+    );
+    assert.deepEqual(result.suggestions, []);
   });
 
   it('외식 메뉴는 재료를 찾지 않고 추천도 만들지 않는다', () => {
@@ -276,7 +345,6 @@ describe('resolveParsedMeal', () => {
             name: '계란찜',
             is_out: true,
             ingredients: [{ spoken: '계란' }],
-            suggested_ingredients: ['계란'],
           },
         ],
       },
