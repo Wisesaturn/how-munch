@@ -1,4 +1,4 @@
-import { type EditorDish, type IngredientUsageStatus } from './types';
+import { type EditorDish, type EditorIngredient, type IngredientUsageStatus } from './types';
 import { parseIngredientAmount } from './unit';
 
 /**
@@ -178,11 +178,31 @@ function replaceIngredientUsageStatus(
   });
 }
 
+/**
+ * @description 재고 품목이 선택된(저장 대상) 재료인지 판별합니다.
+ * 품목을 고르지 않은 빈 재료 행은 저장 시 무시됩니다.
+ */
+function isFilledIngredient(ingredient: EditorIngredient) {
+  return ingredient.fridge_item_id.trim().length > 0;
+}
+
+/**
+ * @description 저장 직전에 빈 재료 행과 재료가 하나도 없는 메뉴를 제거합니다.
+ * 품목을 선택하지 않은 재료는 버리고, 그 결과 재료가 없는 메뉴도 함께 제외합니다.
+ */
+function pruneEmptyDishes(dishes: EditorDish[]) {
+  return dishes
+    .map((dish) => ({ ...dish, ingredients: dish.ingredients.filter(isFilledIngredient) }))
+    .filter((dish) => dish.ingredients.length > 0);
+}
+
 export {
   appendDish,
   appendIngredient,
   excludeDish,
   excludeIngredient,
+  isFilledIngredient,
+  pruneEmptyDishes,
   renameDish,
   replaceIngredientAmount,
   replaceIngredientBatch,
