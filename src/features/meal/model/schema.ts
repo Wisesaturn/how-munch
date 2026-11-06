@@ -9,7 +9,7 @@ import {
   validateAmountPrecisionByUnit,
 } from '@/entities/ingredient';
 
-import { formatIngredientAmountInfo, type FridgeBatchInfo } from '../lib';
+import { formatIngredientAmountInfo, isFilledIngredient, type FridgeBatchInfo } from '../lib';
 
 import { addAmount, isGreaterAmount, normalizeAmount } from './amount';
 
@@ -27,31 +27,48 @@ function createMealEditorDishesSchema(
         name: z
           .string()
           .trim()
-          .min(1, ERROR_MSG.INPUT.REQUIRED({ fieldName: '메뉴명' }))
           .max(20, ERROR_MSG.RANGE.MAX({ fieldName: '메뉴명', max: '20자' })),
-        ingredients: z
-          .array(
-            z.object({
-              fridge_item_id: z
-                .string()
-                .trim()
-                .min(1, ERROR_MSG.SELECT.REQUIRED({ fieldName: '재료' })),
-              batch_id: z.string().trim(),
-              amount: z.number().min(0, ERROR_MSG.RANGE.MIN({ fieldName: '재료 수량', min: 0 })),
-              usage_status: z.enum(['used', 'depleted']),
-            }),
-          )
-          .min(1, '메뉴마다 재료를 1개 이상 추가해 주세요'),
+        ingredients: z.array(
+          z.object({
+            // 품목을 선택하지 않은 빈 재료 행은 저장 시 무시되므로 빈 값을 허용한다
+            fridge_item_id: z.string().trim(),
+            batch_id: z.string().trim(),
+            amount: z.number().min(0, ERROR_MSG.RANGE.MIN({ fieldName: '재료 수량', min: 0 })),
+            usage_status: z.enum(['used', 'depleted']),
+          }),
+        ),
       }),
     )
-    .min(1, '메뉴를 1개 이상 추가해 주세요')
     .superRefine((parsedDishes, ctx) => {
       const usedAmountByBatchId: Record<string, number> = {};
+      const hasFilledDish = parsedDishes.some((dish) => dish.ingredients.some(isFilledIngredient));
+
+      // 빈 메뉴/빈 재료는 저장 시 제외되므로, 저장할 메뉴가 하나도 없을 때만 막는다
+      if (!hasFilledDish) {
+        ctx.addIssue({
+          code: 'custom',
+          message: '재료를 선택한 메뉴를 1개 이상 추가해 주세요',
+          path: [],
+        });
+        return;
+      }
 
       parsedDishes.forEach((dish, dishIndex) => {
+        const filledIngredientCount = dish.ingredients.filter(isFilledIngredient).length;
+        // 재료가 없는 메뉴는 저장 대상이 아니므로 검증하지 않는다
+        if (filledIngredientCount === 0) return;
+
         const dishLabel = dish.name.trim() || `메뉴 ${dishIndex + 1}`;
 
-        if (dish.ingredients.length > maxIngredientCount) {
+        if (!dish.name.trim()) {
+          ctx.addIssue({
+            code: 'custom',
+            message: ERROR_MSG.INPUT.REQUIRED({ fieldName: `${dishLabel}의 메뉴명` }),
+            path: [dishIndex, 'name'],
+          });
+        }
+
+        if (filledIngredientCount > maxIngredientCount) {
           ctx.addIssue({
             code: 'custom',
             message: `${dishLabel}의 재료는 최대 ${maxIngredientCount}개까지 추가할 수 있습니다`,

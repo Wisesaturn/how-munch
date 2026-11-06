@@ -19,6 +19,7 @@ import { useFridgeItemsForMealQuery } from '../api/queries';
 import {
   appendDish,
   createFridgeBatchInfoById,
+  pruneEmptyDishes,
   type FridgeBatchSelectOption,
   type FridgeItemSearchOption,
 } from '../lib';
@@ -121,8 +122,11 @@ export function MealEditorScreen({
       onChange: mealEditorFormSchema,
     },
     onSubmit: ({ value }) => {
+      // 재료를 선택하지 않은 빈 재료 행과 재료가 없는 메뉴는 무시하고 저장한다
+      const dishesToSave = pruneEmptyDishes(value.dishes);
+
       upsertMutation.mutate(
-        { householdId, date, type, dishes: value.dishes, skipNotification: isEditMode },
+        { householdId, date, type, dishes: dishesToSave, skipNotification: isEditMode },
         {
           onSuccess: () => {
             Toast.success(ALERT_MSG.saveSuccess);

@@ -23,6 +23,8 @@ export {
   appendIngredient,
   excludeDish,
   excludeIngredient,
+  isFilledIngredient,
+  pruneEmptyDishes,
   renameDish,
   replaceIngredientAmount,
   replaceIngredientBatch,
