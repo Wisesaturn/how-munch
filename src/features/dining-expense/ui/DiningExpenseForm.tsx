@@ -32,6 +32,9 @@ export interface DiningExpenseFormValues {
   memo: string;
 }
 
+/** 폼 입력 중 값 — 금액은 입력 전까지 비어 있다 */
+type DiningExpenseFormDraft = Omit<DiningExpenseFormValues, 'price'> & { price: number | null };
+
 const diningExpenseFormSchema = z.object({
   date: z
     .string()
@@ -48,7 +51,9 @@ const diningExpenseFormSchema = z.object({
   price: z
     .number()
     .min(100, ERROR_MSG.RANGE.MIN({ fieldName: '금액', min: '100원' }))
-    .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '금액', max: '1억원' })),
+    .max(100_000_000, ERROR_MSG.RANGE.MAX({ fieldName: '금액', max: '1억원' }))
+    .nullable()
+    .refine((value) => value !== null, ERROR_MSG.INPUT.REQUIRED({ fieldName: '금액' })),
   memo: z.string().max(100, ERROR_MSG.RANGE.MAX({ fieldName: '메모', max: '100자' })),
 });
 
@@ -91,15 +96,17 @@ export function DiningExpenseForm({
       brand: defaultValues?.brand ?? '',
       name: defaultValues?.name ?? '',
       store: defaultValues?.store ?? '',
-      price: defaultValues?.price ?? 100,
+      price: defaultValues?.price ?? null,
       memo: defaultValues?.memo ?? '',
-    },
+    } as DiningExpenseFormDraft,
     validators: {
       onSubmit: diningExpenseFormSchema,
       onChange: diningExpenseFormSchema,
     },
     onSubmit: async ({ value }) => {
-      onSubmit(value);
+      // 검증을 통과했으면 가격은 항상 채워져 있다 — 타입만 좁힌다
+      if (value.price === null) return;
+      onSubmit({ ...value, price: value.price });
     },
   });
 

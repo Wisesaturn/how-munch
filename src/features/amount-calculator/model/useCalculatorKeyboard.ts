@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useConditionalEffect } from 'react-simplikit';
 
 import { type CalculatorKey } from '../lib/calculatorInput';
 import { type ExpressionOperator } from '../lib/expression';
@@ -25,18 +25,20 @@ function resolveCalculatorKey(key: string): CalculatorKey | null {
 
 /**
  * @description 금액 칸이 키보드 입력을 받지 않으므로, PC에서는 계산기 화면이 키보드 입력을 받습니다.
- * Enter는 확인, Esc는 닫기로 동작합니다.
+ * Enter는 확인, Esc는 닫기로 동작합니다. enabled가 false면(예: 확인 Dialog가 열려 있을 때) 입력을 받지 않습니다.
  */
 export function useCalculatorKeyboard({
   onKeyPress,
   onConfirm,
   onClose,
+  enabled = true,
 }: {
   onKeyPress: (key: CalculatorKey) => void;
   onConfirm: () => void;
   onClose: () => void;
+  enabled?: boolean;
 }) {
-  useEffect(
+  useConditionalEffect(
     function registerCalculatorKeyboard() {
       function handleKeyDown(event: KeyboardEvent) {
         if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -63,6 +65,7 @@ export function useCalculatorKeyboard({
         window.removeEventListener('keydown', handleKeyDown);
       };
     },
-    [onKeyPress, onConfirm, onClose],
+    [onKeyPress, onConfirm, onClose, enabled],
+    () => enabled,
   );
 }

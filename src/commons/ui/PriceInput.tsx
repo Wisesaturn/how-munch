@@ -34,7 +34,8 @@ interface PriceInputBaseProps extends Omit<
 
 interface RequiredPriceInputProps extends PriceInputBaseProps {
   nullable?: false;
-  value: number;
+  /** null이면 아직 입력하지 않은 상태 — 확인한 값은 항상 숫자로 받는다 */
+  value: number | null;
   onValueChange: (value: number) => void;
 }
 
@@ -71,7 +72,8 @@ function PriceInput(props: PriceInputProps) {
     if (next !== null) props.onValueChange(next);
   }
 
-  const amountText = value === null ? '미설정' : `${value.toLocaleString('ko-KR')}원`;
+  const emptyText = nullable ? '미설정' : '금액을 입력해 주세요';
+  const amountText = value === null ? emptyText : `${value.toLocaleString('ko-KR')}원`;
 
   return (
     <button
@@ -92,7 +94,7 @@ function PriceInput(props: PriceInputProps) {
       <span
         className={cn('min-w-0 flex-1 truncate tabular-nums', value === null && 'text-gray-400')}
       >
-        {value === null ? '미설정' : value.toLocaleString('ko-KR')}
+        {value === null ? emptyText : value.toLocaleString('ko-KR')}
       </span>
       {value === null ? null : <span className="font-medium text-gray-500">원</span>}
       <Calculator className="size-4 shrink-0 text-gray-400" aria-hidden />

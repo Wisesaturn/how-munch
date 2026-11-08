@@ -14,6 +14,7 @@ const ERROR_MESSAGE: Partial<Record<ExpressionResult['status'], string>> = {
 
 function resolveNotice(result: ExpressionResult, nullable: boolean) {
   if (result.status === 'empty' && nullable) return '비워두고 확인하면 미설정으로 둘 수 있어요';
+  if (result.status === 'ok' && result.value === 0) return '0원은 입력할 수 없어요';
   if (result.status === 'ok' && result.rounded) return '소수점 아래는 반올림해서 입력해요';
   return '';
 }

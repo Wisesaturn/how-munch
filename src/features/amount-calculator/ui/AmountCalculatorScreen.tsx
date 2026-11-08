@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
+
 import { AppScreen } from '@stackflow/plugin-basic-ui';
 
-import { CTAButton } from '@/commons/ui';
+import { CTAButton, ConfirmDialog } from '@/commons/ui';
 
 import { useAmountCalculator } from '../model/useAmountCalculator';
 import { useCalculatorKeyboard } from '../model/useCalculatorKeyboard';
@@ -31,16 +33,36 @@ export function AmountCalculatorScreen({
   onClose,
   onConfirm,
 }: AmountCalculatorScreenProps) {
-  const { tokens, result, pressKey, canConfirm, confirmValue } = useAmountCalculator({
+  const { tokens, result, pressKey, isDirty, canConfirm, confirmValue } = useAmountCalculator({
     initialValue: value,
     nullable,
   });
+  const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
 
   function confirm() {
     if (canConfirm) onConfirm(confirmValue);
   }
 
-  useCalculatorKeyboard({ onKeyPress: pressKey, onConfirm: confirm, onClose });
+  // 입력하던 값이 있으면 바로 닫지 않고 나갈지 한 번 더 묻는다
+  function requestClose() {
+    if (isDirty) {
+      setIsLeaveConfirmOpen(true);
+      return;
+    }
+    onClose();
+  }
+
+  function leave() {
+    setIsLeaveConfirmOpen(false);
+    onClose();
+  }
+
+  useCalculatorKeyboard({
+    onKeyPress: pressKey,
+    onConfirm: confirm,
+    onClose: requestClose,
+    enabled: !isLeaveConfirmOpen,
+  });
 
   return (
     <AppScreen
@@ -52,7 +74,7 @@ export function AmountCalculatorScreen({
           // 기본 pop 대신 onClose로 닫아 대기 중인 콜백을 함께 정리한다
           onClick: (event) => {
             event.preventDefault();
-            onClose();
+            requestClose();
           },
         },
       }}
@@ -70,6 +92,15 @@ export function AmountCalculatorScreen({
       >
         확인
       </CTAButton>
+      <ConfirmDialog
+        open={isLeaveConfirmOpen}
+        onOpenChange={setIsLeaveConfirmOpen}
+        title="나가시겠습니까?"
+        description="지금 나가면 수정 사항이 반영되지 않아요"
+        cancelLabel="계속 수정하기"
+        confirmLabel="나가기"
+        onConfirm={leave}
+      />
     </AppScreen>
   );
 }
